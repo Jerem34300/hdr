@@ -14,7 +14,9 @@ import { Mark, Wordmark } from "./logo";
 import { Me } from "./me";
 import { Celebrate, Sheets } from "./overlays";
 import { PocketChat } from "./pocket";
+import { useConversationsSync, useProfileSync } from "@/lib/hdar/sync";
 import { CallLayer } from "./call-layer";
+import { ProfileView } from "./profile-view";
 import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
 
@@ -26,10 +28,13 @@ export function App() {
   const openTonight = useHdar((s) => s.openTonight);
   const me = useHdar((s) => s.me);
   const now = useHdar((s) => s.now);
-  const matches = useHdar((s) => s.matches);
-  const unread = matches.reduce((n, m) => n + (isExpired(m.expiresAt, now) ? 0 : m.unread), 0);
+  const liveConvos = useHdar((s) => s.liveConvos);
+  const seenAt = useHdar((s) => s.seenAt);
+  const unread = liveConvos.filter((c) => !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0)).length;
   const tonight = me.tonight && !isExpired(me.tonight.expiresAt, now) ? me.tonight : null;
   useLiveSpotsSync();
+  useProfileSync();
+  useConversationsSync();
 
   useEffect(() => {
     installTouchTap();
@@ -62,7 +67,7 @@ export function App() {
             <ul className="mt-8 space-y-3 text-sm text-muted">
               <li>La carte montre qui est connecté.</li>
               <li>Un profil ouvre une discussion privée.</li>
-              <li>Les annonces restent à côté, sans nom imposé.</li>
+              <li>Le chat du quartier réunit les gens autour.</li>
             </ul>
           </div>
           <p className="text-xs text-muted">18+ · distances arrondies · position exacte jamais publiée</p>
@@ -72,6 +77,8 @@ export function App() {
             <Chat />
           ) : view.name === "live" ? (
             <LiveChat userId={view.userId} pseudo={view.pseudo} />
+          ) : view.name === "profile" ? (
+            <ProfileView userId={view.userId} pseudo={view.pseudo} />
           ) : view.name === "pocket" ? (
             <PocketChat />
           ) : view.name === "spot" ? (

@@ -13,7 +13,7 @@ import {
   type TonightLen,
 } from "./data";
 import { deviceId } from "./device";
-import { closeSpot, createSpot as createLiveSpot, type SpotRow } from "./live";
+import { closeSpot, createSpot as createLiveSpot, type Conversation, type SpotRow } from "./live";
 import { playPop, uid } from "./media";
 import { conversationExpiry, isExpired } from "./rules";
 
@@ -102,7 +102,8 @@ export type View =
   | { name: "chat"; personId: string }
   | { name: "spot"; id: string }
   | { name: "pocket" }
-  | { name: "live"; userId: string; pseudo: string };
+  | { name: "live"; userId: string; pseudo: string }
+  | { name: "profile"; userId: string; pseudo: string };
 
 export type PocketMsg = { id: string; from: "me" | "Anonyme"; text: string; at: number };
 
@@ -160,6 +161,12 @@ type State = {
   customSpots: CustomSpot[];
   /** Places shared through the database (everyone nearby sees them). Not persisted. */
   liveSpots: SpotRow[];
+  /** Last real GPS fix (not persisted); the neighbourhood chat is centred on it. */
+  here: { lat: number; lng: number } | null;
+  /** Real private conversations (not persisted). */
+  liveConvos: Conversation[];
+  /** Last time each live conversation was opened, to show unread dots. */
+  seenAt: Record<string, number>;
   pendingSpot: { title: string; hours: number } | null;
   spotExtras: Record<string, SpotMsg[]>;
   deletedMsgs: string[];
@@ -191,6 +198,8 @@ type State = {
   openChat: (personId: string) => void;
   closeView: () => void;
   openLive: (userId: string, pseudo: string) => void;
+  openProfile: (userId: string, pseudo: string) => void;
+  markSeen: (userId: string) => void;
   sendChat: (personId: string, partial: Omit<ChatMsg, "id" | "from" | "at">) => void;
   openOnce: (personId: string, msgId: string) => void;
   togglePin: (personId: string) => void;
@@ -262,6 +271,9 @@ const base = () => {
     clock: ensureClock(undefined, now),
     customSpots: [] as CustomSpot[],
     liveSpots: [] as SpotRow[],
+    here: null as { lat: number; lng: number } | null,
+    liveConvos: [] as Conversation[],
+    seenAt: {} as Record<string, number>,
     pendingSpot: null as { title: string; hours: number } | null,
     spotExtras: {} as Record<string, SpotMsg[]>,
     deletedMsgs: [] as string[],
@@ -293,6 +305,7 @@ export const useHdar = create<State>()(
             set({
               cityId: "ici",
               customCenter: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+              here: { lat: pos.coords.latitude, lng: pos.coords.longitude },
               sheet: null,
             });
             toast("Autour de toi · position arrondie");
@@ -431,7 +444,12 @@ export const useHdar = create<State>()(
           matches: get().matches.map((m) => (m.personId === personId ? { ...m, unread: 0 } : m)),
         }),
       closeView: () => set({ view: { name: "tabs" } }),
-      openLive: (userId, pseudo) => set({ view: { name: "live", userId, pseudo }, sheet: null }),
+      openLive: (userId, pseudo) => {
+        get().markSeen(userId);
+        set({ view: { name: "live", userId, pseudo }, sheet: null });
+      },
+      openProfile: (userId, pseudo) => set({ view: { name: "profile", userId, pseudo }, sheet: null }),
+      markSeen: (userId) => set({ seenAt: { ...get().seenAt, [userId]: Date.now() } }),
       sendChat: (personId, partial) => {
         const text = partial.text?.trim();
         if (!text && !partial.photo && !partial.voiceSec) return;
@@ -689,6 +707,7 @@ export const useHdar = create<State>()(
         deletedMsgs: s.deletedMsgs,
         joined: s.joined,
         safetyCode: s.safetyCode,
+        seenAt: s.seenAt,
       }),
     },
   ),

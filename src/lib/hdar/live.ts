@@ -66,6 +66,13 @@ async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+/** Postgres `timestamptz::text` ("2026-10-10 17:50:31.88+00") to ms; Safari needs strict ISO. */
+export function pgTime(v: string): number {
+  const iso = v.trim().replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00");
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? ms : Date.now();
+}
+
 function selfId(value: string) {
   const id = String(value || "").trim().slice(0, 80);
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Identité invalide");
@@ -211,7 +218,7 @@ export async function listSpots(self: string, lat: number, lng: number): Promise
     title: r.title,
     lat: Number(r.lat),
     lng: Number(r.lng),
-    closesAt: Date.parse(r.closes_at),
+    closesAt: pgTime(r.closes_at),
     mine: r.mine,
     members: Number(r.members) || 1,
   }));
@@ -234,4 +241,132 @@ export async function sendSpotMessage(self: string, id: string, pseudo: string, 
 
 export async function hideSpotMessage(self: string, id: string) {
   await rpc("hdar_spot_msg_hide", { p_self: selfId(self), p_id: id });
+}
+
+// Public profiles ------------------------------------------------------------
+
+export type PublicProfile = {
+  id: string;
+  pseudo: string;
+  age: number | null;
+  bio: string;
+  tags: string[];
+  desires: string[];
+  photo: string;
+  online: boolean;
+  lat: number | null;
+  lng: number | null;
+};
+
+export async function saveProfile(input: {
+  self: string;
+  pseudo: string;
+  age: number | null;
+  bio: string;
+  tags: string[];
+  photo: string;
+}) {
+  await rpc("hdar_profile_set", {
+    p_self: selfId(input.self),
+    p_pseudo: input.pseudo,
+    p_age: input.age,
+    p_bio: input.bio,
+    p_tags: input.tags.join(","),
+    p_photo: input.photo.startsWith("data:image/") ? input.photo : "",
+  });
+}
+
+const split = (v: string | null | undefined) => (v ? v.split(",").filter(Boolean) : []);
+
+export async function getProfile(self: string, id: string): Promise<PublicProfile | null> {
+  const rows = await rpc<
+    {
+      id: string;
+      pseudo: string;
+      age: number | null;
+      bio: string;
+      tags: string;
+      desires: string;
+      photo: string | null;
+      online: boolean;
+      lat: number | null;
+      lng: number | null;
+    }[]
+  >("hdar_profile_get", { p_self: selfId(self), p_id: otherId(id) });
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    id: r.id,
+    pseudo: r.pseudo,
+    age: r.age,
+    bio: r.bio,
+    tags: split(r.tags),
+    desires: split(r.desires),
+    photo: r.photo ?? "",
+    online: r.online,
+    lat: r.lat,
+    lng: r.lng,
+  };
+}
+
+// Neighbourhood chat ---------------------------------------------------------
+
+export type AreaLine = {
+  id: string;
+  fromId: string;
+  pseudo: string;
+  body: string;
+  at: string;
+  mine: boolean;
+  lat: number;
+  lng: number;
+};
+
+export async function areaFeed(self: string, lat: number, lng: number): Promise<AreaLine[]> {
+  const rows = await rpc<
+    { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean; lat: number; lng: number }[]
+  >("hdar_area_feed", { p_self: selfId(self), p_lat: lat, p_lng: lng });
+  return rows.map((r) => ({
+    id: r.id,
+    fromId: r.from_id,
+    pseudo: r.pseudo,
+    body: r.body,
+    at: r.at,
+    mine: r.mine,
+    lat: Number(r.lat),
+    lng: Number(r.lng),
+  }));
+}
+
+export async function areaSend(self: string, lat: number, lng: number, pseudo: string, body: string) {
+  await rpc("hdar_area_send", { p_self: selfId(self), p_lat: lat, p_lng: lng, p_pseudo: pseudo, p_body: body });
+}
+
+export async function areaHide(self: string, id: string) {
+  await rpc("hdar_area_hide", { p_self: selfId(self), p_id: id });
+}
+
+// Conversations list ---------------------------------------------------------
+
+export type Conversation = {
+  otherId: string;
+  pseudo: string;
+  lastKind: LiveMsg["kind"];
+  lastBody: string;
+  lastAt: number;
+  lastMine: boolean;
+};
+
+export async function listConversations(self: string): Promise<Conversation[]> {
+  const rows = await rpc<
+    { other_id: string; pseudo: string; last_kind: LiveMsg["kind"]; last_body: string; last_at: string; last_mine: boolean }[]
+  >("hdar_conversations", { p_self: selfId(self) });
+  return rows.map((r) => ({
+    otherId: r.other_id,
+    pseudo: r.pseudo,
+    lastKind: r.last_kind,
+    lastBody: r.last_body,
+    lastAt: pgTime(r.last_at),
+    lastMine: r.last_mine,
+  }));
 }

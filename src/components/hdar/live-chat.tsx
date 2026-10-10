@@ -20,6 +20,8 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
   const closeView = useHdar((s) => s.closeView);
+  const openProfile = useHdar((s) => s.openProfile);
+  const markSeen = useHdar((s) => s.markSeen);
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState<LiveMsg[]>([]);
   const [busy, setBusy] = useState(false);
@@ -59,7 +61,8 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   const lastId = msgs[msgs.length - 1]?.id;
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
-  }, [lastId]);
+    markSeen(userId);
+  }, [lastId, markSeen, userId]);
 
   async function sendPhoto(file: File) {
     setBusy(true);
@@ -127,7 +130,14 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         <button type="button" className="flex size-11 items-center justify-center" aria-label="Retour" onClick={closeView}>
           <ChevronLeft />
         </button>
-        <p className="min-w-0 flex-1 truncate font-display font-bold">{pseudo}</p>
+        <button
+          type="button"
+          className="min-w-0 flex-1 truncate text-left font-display font-bold"
+          aria-label={`Voir le profil de ${pseudo}`}
+          onClick={() => openProfile(userId, pseudo)}
+        >
+          {pseudo}
+        </button>
         <button
           type="button"
           className="flex size-10 items-center justify-center rounded-full bg-signal text-night"

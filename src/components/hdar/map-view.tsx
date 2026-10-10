@@ -122,6 +122,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   function applyFix(lat: number, lng: number, recenter: boolean) {
     setYou({ lat, lng });
     setLocated(true);
+    useHdar.setState({ here: { lat, lng } });
     const first = !locked.current;
     if (first) {
       locked.current = true;
@@ -330,7 +331,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             }
             style={{ left: p.x, top: p.y, width: face, height: face }}
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => useHdar.getState().openLive(pin.id, pin.pseudo)}
+            onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}
           >
             {pin.pseudo.slice(0, 1).toUpperCase()}
           </button>

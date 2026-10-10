@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CITIES, HERE_ZONES, PEOPLE, spotsFor, type City, type Person, type Zone } from "./data";
+import { CITIES, HERE_ZONES, PEOPLE, type City, type Person, type Zone } from "./data";
 import { hiddenIds, bucketDistance, cellForPerson, destination, haversine, HOT_ANON, isExpired, publishDistance } from "./rules";
 import type { SpotRow } from "./live";
 import { useHdar, type CustomSpot } from "./store";
@@ -105,20 +105,6 @@ export function projectSpots(
   custom: CustomSpot[],
   shared: SpotRow[] = [],
 ): LiveSpot[] {
-  const slug = place.slug === "ici" ? "paris" : place.slug;
-  const seeds: LiveSpot[] = spotsFor(slug).map((s) => {
-    const at = destination(place.lat, place.lng, s.east, s.north);
-    const dist = haversine(place, at);
-    return {
-      ...s,
-      creator: false,
-      closesAt: clock[s.id] ?? now + s.hours * 3_600_000,
-      lat: at.lat,
-      lng: at.lng,
-      dist,
-      distanceLabel: bucketDistance(Math.max(300, dist)),
-    };
-  });
   const mine: LiveSpot[] = custom.map((s) => {
     const at =
       s.lat != null && s.lng != null
@@ -161,7 +147,8 @@ export function projectSpots(
       live: true,
     };
   });
-  return [...live, ...mine, ...seeds]
+  // Only real places: ones shared through the database, plus older ones kept on this device.
+  return [...live, ...mine]
     .filter((s) => !hidden.includes(s.id) && !isExpired(s.closesAt, now))
     .sort((a, b) => a.dist - b.dist);
 }

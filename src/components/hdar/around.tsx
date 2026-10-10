@@ -28,7 +28,7 @@ export function Around() {
           {...bindTap(openPocket)}
           className="h-11 shrink-0 rounded-full bg-signal px-4 text-sm text-night"
         >
-          Annonces
+          Chat du quartier
         </button>
       </header>
       <div className="relative min-h-0 flex-1">
