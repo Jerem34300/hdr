@@ -3,13 +3,17 @@ import { toast } from "sonner";
 import { deviceId } from "./device";
 import { listConversations, saveProfile } from "./live";
 import { playPop } from "./media";
-import { useHdar } from "./store";
+import { myPhotos, useHdar } from "./store";
 
 /** Publishes the local profile (pseudo, age, tags, bio, photo) so others can see it. */
 export function useProfileSync() {
   const me = useHdar((s) => s.me);
-  const { onboarded, pseudo, age, bio, photo } = me;
+  const { onboarded, pseudo, age, bio, voiceSec } = me;
+  const voice = me.voice ?? "";
+  const photos = myPhotos(me);
   const tags = me.tags.join(",");
+  // Cheap change key for the album (data URLs are large).
+  const photosKey = photos.map((p) => `${p.length}:${p.slice(-24)}`).join("|");
   useEffect(() => {
     if (!onboarded) return;
     const id = window.setTimeout(() => {
@@ -19,11 +23,13 @@ export function useProfileSync() {
         age,
         bio,
         tags: tags ? tags.split(",") : [],
-        photo,
+        photos: myPhotos(useHdar.getState().me),
+        voice,
+        voiceSec,
       }).catch(() => undefined);
     }, 1200);
     return () => window.clearTimeout(id);
-  }, [onboarded, pseudo, age, bio, tags, photo]);
+  }, [onboarded, pseudo, age, bio, tags, photosKey, voice, voiceSec]);
 }
 
 /** Keeps the Messages tab fresh and announces new private messages. */

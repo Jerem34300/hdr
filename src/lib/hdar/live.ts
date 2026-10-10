@@ -264,16 +264,32 @@ export async function saveProfile(input: {
   age: number | null;
   bio: string;
   tags: string[];
-  photo: string;
+  photos: string[];
+  voice: string;
+  voiceSec: number;
 }) {
-  await rpc("hdar_profile_set", {
+  await rpc("hdar_profile_save", {
     p_self: selfId(input.self),
     p_pseudo: input.pseudo,
     p_age: input.age,
     p_bio: input.bio,
     p_tags: input.tags.join(","),
-    p_photo: input.photo.startsWith("data:image/") ? input.photo : "",
+    p_photos: input.photos.filter((p) => p.startsWith("data:image/")).slice(0, 5),
+    p_voice: input.voice.startsWith("data:audio/") ? input.voice : "",
+    p_voice_sec: input.voiceSec,
   });
+}
+
+export type ProfileExtras = { album: string[]; voice: string; voiceSec: number };
+
+/** Album and voice intro, loaded only when a profile page is opened. */
+export async function getProfileExtras(self: string, id: string): Promise<ProfileExtras> {
+  const rows = await rpc<{ album: string[] | null; voice: string | null; voice_sec: number | null }[]>(
+    "hdar_profile_extras",
+    { p_self: selfId(self), p_id: otherId(id) },
+  );
+  const r = rows[0];
+  return { album: r?.album ?? [], voice: r?.voice ?? "", voiceSec: r?.voice_sec ?? 0 };
 }
 
 const split = (v: string | null | undefined) => (v ? v.split(",").filter(Boolean) : []);

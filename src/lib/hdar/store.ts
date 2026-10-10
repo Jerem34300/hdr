@@ -32,6 +32,10 @@ export type Me = {
   tags: Desire[];
   bio: string;
   photo: string;
+  /** Album, up to 5 photos; the first one is the main photo (mirrored in `photo`). */
+  photos?: string[];
+  /** 10 s voice intro as a data URL, shared with the public profile. */
+  voice?: string;
   voiceSec: number;
   visibility: "zone" | "ghost";
   homeZone: boolean;
@@ -126,6 +130,12 @@ const emptyMe = (): Me => ({
   email: "",
   tonight: null,
 });
+
+/** Album of the local user, including profiles saved before albums existed. */
+export function myPhotos(me: Me): string[] {
+  if (me.photos) return me.photos;
+  return me.photo ? [me.photo] : [];
+}
 
 export function ensureClock(clock: Clock | undefined, now: number): Clock {
   const people = { ...(clock?.people ?? {}) };
@@ -331,7 +341,13 @@ export const useHdar = create<State>()(
         if (!partial.adult || (partial.age ?? 0) < 18) return;
         const intent = get().intent;
         set({
-          me: { ...get().me, ...partial, adult: true, onboarded: true },
+          me: {
+            ...get().me,
+            ...partial,
+            photos: partial.photo ? [partial.photo, ...myPhotos(get().me).filter((p) => p !== partial.photo)].slice(0, 5) : myPhotos(get().me),
+            adult: true,
+            onboarded: true,
+          },
           sheet: null,
           intent: null,
         });
@@ -685,7 +701,12 @@ export const useHdar = create<State>()(
       dismissCelebrate: () => set({ celebrate: null }),
       setCover: (cover) => set({ cover }),
       setDiscreet: (discreet) => set({ discreet }),
-      patchMe: (partial) => set({ me: { ...get().me, ...partial } }),
+      patchMe: (partial) => {
+        const next = { ...get().me, ...partial };
+        // The main photo is always the first of the album.
+        if (partial.photos) next.photo = partial.photos[0] ?? "";
+        set({ me: next });
+      },
       saveEmail: (email) => {
         const clean = email.trim().slice(0, 80);
         if (!clean.includes("@")) {

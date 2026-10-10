@@ -1,229 +1,359 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Eye, Mic, Plus, Square, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { DESIRES, PEOPLE, type Desire } from "@/lib/hdar/data";
-import { mediaUrl, readImage, rememberMedia } from "@/lib/hdar/media";
-import { useHdar } from "@/lib/hdar/store";
-import { Avatar } from "./avatar";
+import { askConfirm } from "@/lib/hdar/confirm";
+import { DESIRES, type Desire } from "@/lib/hdar/data";
+import { deviceId } from "@/lib/hdar/device";
+import { goDark, saveProfile } from "@/lib/hdar/live";
+import { readImage } from "@/lib/hdar/media";
+import { myPhotos, useHdar } from "@/lib/hdar/store";
 import { DESIRE_ICON } from "./icons";
+
+const MAX_PHOTOS = 5;
+const MAX_VOICE_SEC = 10;
 
 export function Me() {
   const me = useHdar((s) => s.me);
   const patchMe = useHdar((s) => s.patchMe);
-  const discreet = useHdar((s) => s.discreet);
-  const setDiscreet = useHdar((s) => s.setDiscreet);
-  const setCover = useHdar((s) => s.setCover);
-  const openShare = useHdar((s) => s.openShare);
-  const saveEmail = useHdar((s) => s.saveEmail);
+  const openProfile = useHdar((s) => s.openProfile);
   const reset = useHdar((s) => s.reset);
-  const reports = useHdar((s) => s.reports);
-  const [email, setEmail] = useState(me.email);
+  const photos = myPhotos(me);
+  const [pseudo, setPseudo] = useState(me.pseudo);
+  const [age, setAge] = useState(me.age ? String(me.age) : "");
   const [bio, setBio] = useState(me.bio);
-  const voice = mediaUrl("me-voice");
+
+  async function addPhotos(files: FileList) {
+    const room = MAX_PHOTOS - photos.length;
+    const picked = Array.from(files).slice(0, room);
+    if (files.length > room) toast(`${MAX_PHOTOS} photos maximum`);
+    const added: string[] = [];
+    for (const file of picked) {
+      try {
+        added.push(await readImage(file, 900));
+      } catch {
+        toast("Une photo est illisible");
+      }
+    }
+    if (added.length)
+      patchMe({ photos: [...myPhotos(useHdar.getState().me), ...added].slice(0, MAX_PHOTOS) });
+  }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-8">
-      <h1 className="font-display text-3xl font-extrabold tracking-tight">Réglages</h1>
-      <div className="mt-4 flex items-center gap-4">
-        <Avatar src={me.photo} name={me.pseudo || "?"} className="size-20 rounded-full" />
-        <div>
-          <p className="font-display text-xl font-bold">{me.pseudo || "Pas encore de pseudo"}</p>
-          <p className="text-sm text-muted">{me.age ? `${me.age} ans` : "18+ à confirmer au premier geste"}</p>
-        </div>
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight">Mon profil</h1>
+        <button
+          type="button"
+          className="flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-night disabled:opacity-40"
+          disabled={!me.onboarded}
+          onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
+        >
+          <Eye className="size-4" />
+          Voir mon profil
+        </button>
       </div>
-      <label className="mt-4 flex h-11 items-center justify-center rounded-full border border-line text-sm">
-        Changer la photo
-        <input
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            void readImage(file)
-              .then((photo) => patchMe({ photo }))
-              .catch(() => toast("Photo illisible"));
-          }}
-        />
-      </label>
-      <label className="mt-4 block text-sm">
-        Intro
-        <textarea
-          className="mt-1 h-20 w-full rounded-2xl border border-line bg-night px-4 py-3 outline-none focus-visible:border-signal"
-          maxLength={80}
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          onBlur={() => patchMe({ bio: bio.slice(0, 80) })}
-        />
-      </label>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {DESIRES.map((d) => {
-          const on = me.tags.includes(d.id);
-          const Icon = DESIRE_ICON[d.id];
-          return (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => {
-                const tags: Desire[] = on ? me.tags.filter((t) => t !== d.id) : [...me.tags, d.id];
-                patchMe({ tags });
-              }}
-              className={"flex h-11 items-center gap-2 rounded-full px-3 text-sm " + (on ? "bg-signal text-night" : "border border-line")}
+      <p className="mt-1 text-sm text-muted">
+        C'est ce que les autres voient quand ils touchent ton pin.
+      </p>
+
+      <section className="mt-6">
+        <h2 className="font-display text-lg font-bold">Photos</h2>
+        <p className="text-xs text-muted">
+          Jusqu'à {MAX_PHOTOS}, facultatif. Touche une photo pour la mettre en premier.
+        </p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {photos.map((src, i) => (
+            <div
+              key={`${i}-${src.length}`}
+              className="relative aspect-square overflow-hidden rounded-2xl bg-surface"
             >
-              <Icon className="size-4" />
-              {d.label}
-            </button>
-          );
-        })}
-      </div>
-      <section className="mt-6 space-y-3">
-        <h2 className="font-display text-lg font-bold">Visibilité</h2>
-        <Toggle
-          on={me.visibility === "ghost"}
-          label="Mode fantôme"
-          hint="Retiré de la carte et de la grille. Tu restes dans les spots où tu écris."
-          onClick={() => patchMe({ visibility: me.visibility === "ghost" ? "zone" : "ghost" })}
-        />
-        <Toggle
-          on={me.homeZone}
-          label="Zone domicile"
-          hint="Dans ce cercle, tu n'apparais pas sur la carte."
-          onClick={() => patchMe({ homeZone: !me.homeZone })}
-        />
-      </section>
-      <section className="mt-6">
-        <h2 className="font-display text-lg font-bold">Intro vocale · 10 s</h2>
-        <VoiceIntro />
-        {me.voiceSec > 0 && <p className="mt-2 text-xs text-muted">Enregistrée · {me.voiceSec}s</p>}
-        {voice && <audio controls src={voice} className="mt-2 h-9 w-full" />}
-      </section>
-      <section className="mt-6 space-y-3">
-        <h2 className="font-display text-lg font-bold">Sécurité</h2>
-        <p className="text-sm text-muted">Sortie rapide : l'écran devient Notes ou Météo. Pour revenir, maintiens l'heure trois secondes.</p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setDiscreet("notes")}
-            className={"h-11 flex-1 rounded-full text-sm " + (discreet === "notes" ? "bg-ink text-night" : "border border-line")}
-          >
-            Notes
-          </button>
-          <button
-            type="button"
-            onClick={() => setDiscreet("meteo")}
-            className={"h-11 flex-1 rounded-full text-sm " + (discreet === "meteo" ? "bg-ink text-night" : "border border-line")}
-          >
-            Météo
-          </button>
+              <button
+                type="button"
+                className="block size-full"
+                aria-label={i === 0 ? "Photo principale" : "Mettre en photo principale"}
+                onClick={() =>
+                  i > 0 && patchMe({ photos: [src, ...photos.filter((_, j) => j !== i)] })
+                }
+              >
+                <img src={src} alt="" className="size-full object-cover" />
+              </button>
+              {i === 0 && (
+                <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded-full bg-signal px-2 py-0.5 text-[10px] font-bold text-night">
+                  Principale
+                </span>
+              )}
+              <button
+                type="button"
+                aria-label="Retirer cette photo"
+                className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-night/85"
+                onClick={() => patchMe({ photos: photos.filter((_, j) => j !== i) })}
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line text-xs text-muted">
+              <Plus className="size-6" />
+              Ajouter
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="sr-only"
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files?.length) void addPhotos(files);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
         </div>
-        <Button variant="line" className="w-full" onClick={() => setCover(true)}>
-          Sortie rapide
-        </Button>
-        <Button variant="line" className="w-full" onClick={openShare}>
-          Prévenir un proche
-        </Button>
       </section>
+
       <section className="mt-6">
-        <h2 className="font-display text-lg font-bold">Signalements</h2>
-        <p className="mt-1 text-sm text-muted">Les personnes signalées sont bloquées des deux côtés et listées ici.</p>
-        <ul className="mt-3 space-y-2">
-          {reports.length === 0 && <li className="text-sm text-muted">Aucun signalement.</li>}
-          {reports.map((id) => {
-            const person = PEOPLE.find((p) => p.id === id);
+        <h2 className="font-display text-lg font-bold">Intro vocale</h2>
+        <p className="text-xs text-muted">
+          {MAX_VOICE_SEC} secondes pour te présenter, facultatif.
+        </p>
+        <VoiceIntro />
+      </section>
+
+      <section className="mt-6 space-y-3">
+        <h2 className="font-display text-lg font-bold">Toi</h2>
+        <div className="grid grid-cols-[1fr_6rem] gap-2">
+          <label className="block text-xs text-muted">
+            Pseudo
+            <input
+              className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
+              value={pseudo}
+              maxLength={24}
+              onChange={(e) => setPseudo(e.target.value)}
+              onBlur={() => {
+                const clean = pseudo.trim().slice(0, 24);
+                if (clean.length >= 2) patchMe({ pseudo: clean });
+                else setPseudo(me.pseudo);
+              }}
+            />
+          </label>
+          <label className="block text-xs text-muted">
+            Âge
+            <input
+              className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
+              inputMode="numeric"
+              value={age}
+              maxLength={2}
+              onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))}
+              onBlur={() => {
+                const n = Number(age);
+                if (n >= 18 && n <= 99) patchMe({ age: n });
+                else {
+                  if (age) toast("Âge entre 18 et 99 ans");
+                  setAge(me.age ? String(me.age) : "");
+                }
+              }}
+            />
+          </label>
+        </div>
+        <label className="block text-xs text-muted">
+          À propos
+          <textarea
+            className="mt-1 h-24 w-full rounded-2xl border border-line bg-night px-4 py-3 text-base text-ink outline-none focus-visible:border-signal"
+            maxLength={300}
+            value={bio}
+            placeholder="Quelques mots sur toi, ce que tu cherches…"
+            onChange={(e) => setBio(e.target.value)}
+            onBlur={() => patchMe({ bio: bio.slice(0, 300) })}
+          />
+        </label>
+      </section>
+
+      <section className="mt-6">
+        <h2 className="font-display text-lg font-bold">Envies</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {DESIRES.map((d) => {
+            const on = me.tags.includes(d.id);
+            const Icon = DESIRE_ICON[d.id];
             return (
-              <li key={id} className="rounded-2xl border border-line px-4 py-3 text-sm">
-                {person?.pseudo ?? id} · bloqué
-              </li>
+              <button
+                key={d.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => {
+                  const tags: Desire[] = on
+                    ? me.tags.filter((t) => t !== d.id)
+                    : [...me.tags, d.id];
+                  patchMe({ tags });
+                }}
+                className={
+                  "flex h-11 items-center gap-2 rounded-full px-3 text-sm " +
+                  (on ? "bg-signal text-night" : "border border-line")
+                }
+              >
+                <Icon className="size-4" />
+                {d.label}
+              </button>
             );
           })}
-        </ul>
+        </div>
       </section>
-      <section className="mt-6">
-        <h2 className="font-display text-lg font-bold">Garder mon profil</h2>
-        <p className="mt-1 text-sm text-muted">Facultatif. Enregistré sur cet appareil pour le retrouver ici.</p>
-        <form
-          className="mt-3 flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            saveEmail(email);
-          }}
+
+      <section className="mt-10 border-t border-line pt-6">
+        <button
+          type="button"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-signal/60 text-sm text-signal"
+          onClick={() =>
+            void askConfirm({
+              title: "Supprimer mon profil ?",
+              body: "Ta photo, ton intro et tes infos sont effacées, tu disparais de la carte. Tes conversations restent chez les autres.",
+              confirm: "Supprimer",
+              danger: true,
+            }).then(async (ok) => {
+              if (!ok) return;
+              const self = deviceId();
+              await Promise.allSettled([
+                goDark({ data: self }),
+                saveProfile({
+                  self,
+                  pseudo: "Anonyme",
+                  age: null,
+                  bio: "",
+                  tags: [],
+                  photos: [],
+                  voice: "",
+                  voiceSec: 0,
+                }),
+              ]);
+              reset();
+            })
+          }
         >
-          <input
-            className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none"
-            value={email}
-            type="email"
-            placeholder="email"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Button type="submit" variant="line">
-            Sauver
-          </Button>
-        </form>
+          <Trash2 className="size-4" />
+          Supprimer mon profil
+        </button>
       </section>
-      <button type="button" className="mt-8 text-sm text-muted underline" onClick={reset}>
-        Effacer cet appareil
-      </button>
-      <a href="/debug" className="mt-4 block text-sm text-muted underline">
-        Diagnostic
-      </a>
     </div>
   );
 }
 
-function Toggle({ on, label, hint, onClick }: { on: boolean; label: string; hint: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3 text-left">
-      <span>
-        <span className="block text-sm">{label}</span>
-        <span className="block text-xs text-muted">{hint}</span>
-      </span>
-      <span className={"h-7 w-12 shrink-0 rounded-full p-1 " + (on ? "bg-signal" : "bg-line")}>
-        <span className={"block size-5 rounded-full bg-night transition-transform " + (on ? "translate-x-5" : "")} />
-      </span>
-    </button>
-  );
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("audio"));
+    reader.readAsDataURL(blob);
+  });
 }
 
 function VoiceIntro() {
+  const voice = useHdar((s) => s.me.voice ?? "");
+  const voiceSec = useHdar((s) => s.me.voiceSec);
   const patchMe = useHdar((s) => s.patchMe);
-  const [sec, setSec] = useState(0);
-  const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const [sec, setSec] = useState<number | null>(null);
+  const recRef = useRef<MediaRecorder | null>(null);
+  const timer = useRef(0);
 
-  async function start() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-      const t0 = Date.now();
-      mr.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
-      };
-      mr.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const url = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || "audio/webm" }));
-        rememberMedia("me-voice", url);
-        patchMe({ voiceSec: Math.min(10, Math.max(1, Math.round((Date.now() - t0) / 1000))) });
-        setSec(0);
-        setRec(null);
-      };
-      mr.start();
-      setRec(mr);
-      const id = window.setInterval(() => {
-        const s = Math.round((Date.now() - t0) / 1000);
-        setSec(s);
-        if (s >= 10) {
-          window.clearInterval(id);
-          mr.stop();
-        }
-      }, 250);
-    } catch {
-      toast("Micro indisponible");
-    }
+  useEffect(
+    () => () => {
+      window.clearInterval(timer.current);
+      const mr = recRef.current;
+      if (mr && mr.state !== "inactive") {
+        mr.onstop = null;
+        mr.stop();
+        mr.stream.getTracks().forEach((t) => t.stop());
+      }
+    },
+    [],
+  );
+
+  function stop() {
+    window.clearInterval(timer.current);
+    const mr = recRef.current;
+    recRef.current = null;
+    if (mr && mr.state !== "inactive") mr.stop();
   }
 
+  async function start() {
+    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      toast("Ton navigateur ne gère pas l'enregistrement");
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      toast("Micro refusé. Autorise-le dans ton navigateur.");
+      return;
+    }
+    const mr = new MediaRecorder(stream, { audioBitsPerSecond: 24000 });
+    const chunks: Blob[] = [];
+    const t0 = Date.now();
+    mr.ondataavailable = (e) => {
+      if (e.data.size) chunks.push(e.data);
+    };
+    mr.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      setSec(null);
+      const length = Math.min(MAX_VOICE_SEC, Math.max(1, Math.round((Date.now() - t0) / 1000)));
+      void blobToDataUrl(new Blob(chunks, { type: mr.mimeType || "audio/webm" }))
+        .then((data) => patchMe({ voice: data, voiceSec: length }))
+        .catch(() => toast("Enregistrement illisible"));
+    };
+    mr.start();
+    recRef.current = mr;
+    setSec(0);
+    timer.current = window.setInterval(() => {
+      const s = Math.round((Date.now() - t0) / 1000);
+      setSec(s);
+      if (s >= MAX_VOICE_SEC) stop();
+    }, 250);
+  }
+
+  if (sec !== null) {
+    return (
+      <button
+        type="button"
+        className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-signal font-bold text-night"
+        onClick={stop}
+      >
+        <Square className="size-4" />
+        Arrêter · {sec}s / {MAX_VOICE_SEC}
+      </button>
+    );
+  }
+  if (voice) {
+    return (
+      <div className="mt-3 flex items-center gap-2">
+        <audio controls src={voice} className="h-10 min-w-0 flex-1" />
+        <button
+          type="button"
+          aria-label="Refaire l'intro vocale"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line"
+          onClick={() => void start()}
+        >
+          <Mic className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label="Supprimer l'intro vocale"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line"
+          onClick={() => patchMe({ voice: "", voiceSec: 0 })}
+        >
+          <Trash2 className="size-4" />
+        </button>
+        <span className="sr-only">{voiceSec} secondes</span>
+      </div>
+    );
+  }
   return (
-    <Button variant="line" className="mt-2 w-full" onClick={() => (rec ? rec.stop() : void start())}>
-      {rec ? `Stop · ${sec}s` : "Enregistrer 10 s"}
-    </Button>
+    <button
+      type="button"
+      className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-line"
+      onClick={() => void start()}
+    >
+      <Mic className="size-4" />
+      Enregistrer
+    </button>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { MessageCircle, Radar, Settings, MapPin } from "lucide-react";
+import { MessageCircle, Radar, UserRound, MapPin } from "lucide-react";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/cn";
 import { logClientError } from "@/lib/hdar/media";
@@ -113,7 +113,7 @@ export function App() {
                   icon={<MessageCircle className="size-5" />}
                   onClick={setTab}
                 />
-                <DockButton id="me" label="Réglages" current={tab} icon={<Settings className="size-5" />} onClick={setTab} />
+                <DockButton id="me" label="Profil" current={tab} icon={<UserRound className="size-5" />} onClick={setTab} />
               </nav>
             </>
           )}
