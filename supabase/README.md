@@ -9,3 +9,4 @@ tables live in the private `hdar` schema.
 - `hdar_round_presence` (migration) — `hdar_pulse` stores presence on a ~200 m grid
 - `hdar_v4_hide_conversations.sql` — per-user conversation deletion
 - `hdar_v5_profile_album_voice.sql` — photo album (5) and voice intro on profiles
+- `hdar_v6_admin_moderation.sql` — admin dashboard, visits, report reasons, bans

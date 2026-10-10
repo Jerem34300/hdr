@@ -8,11 +8,11 @@ import {
   blockLive,
   getProfile,
   getProfileExtras,
-  reportLive,
   type ProfileExtras,
   type PublicProfile,
 } from "@/lib/hdar/live";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
+import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 
@@ -134,12 +134,7 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
               type="button"
               className="underline"
               onClick={() =>
-                void reportLive({ data: { self: deviceId(), other: userId } })
-                  .then(() => {
-                    toast("Signalé et bloqué");
-                    closeView();
-                  })
-                  .catch(() => toast("Action impossible"))
+                void reportUser(userId, name).then((sent) => sent && closeView())
               }
             >
               Signaler

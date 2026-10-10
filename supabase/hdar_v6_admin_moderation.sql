@@ -1,0 +1,16 @@
+-- Applied as migrations hdar_admin_moderation_stats, hdar_bans_active,
+-- hdar_admin_user_active_ban, hdar_report_reason_fix.
+--
+-- * hdar.admin_keys: SHA-256 of the admin password (never the password itself).
+--   hdar.admin_check(p_key) guards every hdar_admin_* function.
+-- * hdar.bans (active flag): hdar.check_id() now refuses banned devices
+--   ("Compte suspendu"), so a ban blocks every action.
+-- * hdar.devices / hdar.daily_visits filled by hdar_hit(p_self) (app open +
+--   every 2 min): people online now, visitors per day, sessions.
+-- * live_reports.reason / handled_at; hdar_report_reason(p_self, p_other, p_reason).
+-- * Admin: hdar_admin_stats, hdar_admin_reports(p_all), hdar_admin_user,
+--   hdar_admin_ban(p_ban), hdar_admin_dismiss, hdar_admin_area,
+--   hdar_admin_hide_area, hdar_admin_banned.
+--
+-- To change the admin password: insert the SHA-256 hex of the new one into
+-- hdar.admin_keys and remove the old row from the Supabase dashboard.

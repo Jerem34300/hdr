@@ -26,7 +26,7 @@ function CityPage() {
   const city = SEO_CITIES.find((c) => c.slug === ville);
   if (!city) {
     return (
-      <main className="min-h-dvh bg-night px-5 py-16 text-ink">
+      <main className="h-dvh overflow-y-auto bg-night px-5 py-16 text-ink">
         <h1 className="font-display text-3xl font-extrabold">Ville inconnue</h1>
         <Link to="/" className="mt-6 inline-flex h-11 items-center text-signal">
           Ouvrir hdar
@@ -66,7 +66,7 @@ function CityPage() {
     })),
   };
   return (
-    <main className="min-h-dvh bg-night text-ink">
+    <main className="h-dvh overflow-y-auto bg-night text-ink">
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       <article className="mx-auto max-w-lg px-5 py-10">
         <Link to="/" className="font-display text-sm font-extrabold tracking-tight">

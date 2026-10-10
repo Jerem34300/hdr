@@ -5,6 +5,7 @@ import { deviceId } from "@/lib/hdar/device";
 import { areaFeed, areaHide, areaSend, pgTime, type AreaLine } from "@/lib/hdar/live";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { resolvePlace } from "@/lib/hdar/scene";
+import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
 
@@ -68,17 +69,30 @@ export function PocketChat() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center gap-2 border-b border-line px-2 py-2">
-        <button type="button" className="flex size-11 items-center justify-center" aria-label="Retour à la carte" data-act="close-view" onClick={closeView}>
+        <button
+          type="button"
+          className="flex size-11 items-center justify-center"
+          aria-label="Retour à la carte"
+          data-act="close-view"
+          onClick={closeView}
+        >
           <ChevronLeft />
         </button>
         <div className="min-w-0 flex-1">
           <p className="font-display font-bold">Chat du quartier</p>
           <p className="truncate text-xs text-muted">
-            {here ? "Les gens à ~3 km de toi · 24 h" : `Autour de ${fallback.name} · active ta position`}
+            {here
+              ? "Les gens à ~3 km de toi · 24 h"
+              : `Autour de ${fallback.name} · active ta position`}
           </p>
         </div>
         {!here && (
-          <button type="button" className="flex size-11 items-center justify-center" aria-label="Utiliser ma position" onClick={locate}>
+          <button
+            type="button"
+            className="flex size-11 items-center justify-center"
+            aria-label="Utiliser ma position"
+            onClick={locate}
+          >
             <LocateFixed className="size-5" />
           </button>
         )}
@@ -94,44 +108,66 @@ export function PocketChat() {
         {lines.map((m) => (
           <div key={m.id} className={m.mine ? "text-right" : "flex items-start gap-2 text-left"}>
             {!m.mine && (
-              <button type="button" className="mt-4 shrink-0" aria-label={`Voir le profil de ${m.pseudo}`} onClick={() => openProfile(m.fromId, m.pseudo)}>
+              <button
+                type="button"
+                className="mt-4 shrink-0"
+                aria-label={`Voir le profil de ${m.pseudo}`}
+                onClick={() => openProfile(m.fromId, m.pseudo)}
+              >
                 <UserAvatar id={m.fromId} name={m.pseudo} className="size-9 rounded-full" />
               </button>
             )}
             <div className="min-w-0">
-            <p className="text-xs text-muted">
-              {m.mine ? (
-                "Toi"
-              ) : (
-                <button type="button" className="font-bold text-ink underline-offset-2 hover:underline" onClick={() => openProfile(m.fromId, m.pseudo)}>
-                  {m.pseudo}
+              <p className="text-xs text-muted">
+                {m.mine ? (
+                  "Toi"
+                ) : (
+                  <button
+                    type="button"
+                    className="font-bold text-ink underline-offset-2 hover:underline"
+                    onClick={() => openProfile(m.fromId, m.pseudo)}
+                  >
+                    {m.pseudo}
+                  </button>
+                )}
+                {" · "}
+                {ago(m.at)}
+                {!m.mine && here ? ` · ${bucketDistance(haversine(here, m))}` : ""}
+              </p>
+              <p
+                className={
+                  "mt-1 inline-block max-w-[85%] rounded-2xl px-3 py-2 text-left text-sm break-words whitespace-pre-wrap " +
+                  (m.mine ? "bg-signal text-night" : "bg-surface")
+                }
+              >
+                {m.body}
+              </p>
+              {m.mine && (
+                <button
+                  type="button"
+                  className="mt-1 block w-full text-right text-xs text-muted"
+                  onClick={() => {
+                    void areaHide(deviceId(), m.id)
+                      .then(refresh)
+                      .catch(() => toast("Impossible de retirer ce message"));
+                  }}
+                >
+                  Retirer
                 </button>
               )}
-              {" · "}
-              {ago(m.at)}
-              {!m.mine && here ? ` · ${bucketDistance(haversine(here, m))}` : ""}
-            </p>
-            <p
-              className={
-                "mt-1 inline-block max-w-[85%] rounded-2xl px-3 py-2 text-left text-sm break-words whitespace-pre-wrap " +
-                (m.mine ? "bg-signal text-night" : "bg-surface")
-              }
-            >
-              {m.body}
-            </p>
-            {m.mine && (
-              <button
-                type="button"
-                className="mt-1 block w-full text-right text-xs text-muted"
-                onClick={() => {
-                  void areaHide(deviceId(), m.id)
-                    .then(refresh)
-                    .catch(() => toast("Impossible de retirer ce message"));
-                }}
-              >
-                Retirer
-              </button>
-            )}
+              {!m.mine && (
+                <button
+                  type="button"
+                  className="mt-1 block text-xs text-muted"
+                  onClick={() =>
+                    void reportUser(m.fromId, m.pseudo, m.body).then((sent) => {
+                      if (sent) void refresh();
+                    })
+                  }
+                >
+                  Signaler
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -159,7 +195,11 @@ export function PocketChat() {
           placeholder="Écrire au quartier"
           onChange={(e) => setText(e.target.value)}
         />
-        <button type="submit" className="flex size-11 items-center justify-center rounded-full bg-signal text-night" aria-label="Envoyer">
+        <button
+          type="submit"
+          className="flex size-11 items-center justify-center rounded-full bg-signal text-night"
+          aria-label="Envoyer"
+        >
           <Send className="size-5" />
         </button>
       </form>

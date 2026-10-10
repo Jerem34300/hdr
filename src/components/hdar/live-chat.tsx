@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Image as ImageIcon, Mic, MoreVertical, Send, Square, Video } from "lucide-react";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
-import { blockLive, getMedia, getProfile, readThread, reportLive, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
+import { blockLive, getMedia, getProfile, readThread, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
 import { askConfirm } from "@/lib/hdar/confirm";
+import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 
@@ -200,12 +201,8 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               type="button"
               className="block w-full border-t border-line px-4 py-3 text-left text-signal"
               onClick={() => {
-                void reportLive({ data: { self: deviceId(), other: userId } })
-                  .then(() => {
-                    toast("Signalé et bloqué");
-                    closeView();
-                  })
-                  .catch(() => toast("Action impossible"));
+                setMenu(false);
+                void reportUser(userId, pseudo).then((sent) => sent && closeView());
               }}
             >
               Signaler

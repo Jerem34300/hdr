@@ -391,3 +391,63 @@ export async function listConversations(self: string): Promise<Conversation[]> {
 export async function hideConversation(self: string, other: string) {
   await rpc("hdar_conversation_hide", { p_self: selfId(self), p_other: otherId(other) });
 }
+
+// Activity & moderation ------------------------------------------------------
+
+/** Marks this device as active (app open). Throws "Compte suspendu" for a banned device. */
+export async function hit(self: string) {
+  await rpc("hdar_hit", { p_self: selfId(self) });
+}
+
+/** Reports someone with a reason; also blocks them both ways. */
+export async function reportWithReason(self: string, other: string, reason: string) {
+  await rpc("hdar_report_reason", { p_self: selfId(self), p_other: otherId(other), p_reason: reason.slice(0, 200) });
+}
+
+// Admin (every call is checked against the admin key in the database) ----------
+
+export type AdminStats = Record<string, number> & {
+  days: { day: string; visitors: number; new_profiles: number; messages: number }[];
+};
+export type AdminReportRow = {
+  target_id: string;
+  pseudo: string;
+  photo: string | null;
+  reports: number;
+  reasons: string | null;
+  last_at: string;
+  banned: boolean;
+};
+export type AdminUser = {
+  id: string;
+  profile: {
+    pseudo: string;
+    age: number | null;
+    bio: string;
+    tags: string;
+    album: string[];
+    voice: string | null;
+    created_at: string;
+    online: boolean;
+  } | null;
+  device: { first_seen: string; last_seen: string; sessions: number } | null;
+  banned: { reason: string; at: string } | null;
+  reports: { reporter: string; reporter_id: string; reason: string; at: string; handled: boolean }[];
+  sent_to_reporters: { to: string; kind: string; body: string; media: string | null; at: string }[];
+  area_messages: { id: string; body: string; at: string; removed: boolean }[];
+  stats: { pm_sent: number; people_contacted: number; blocked_by: number };
+};
+export type AdminAreaRow = { id: string; from_id: string; pseudo: string; body: string; at: string; removed: boolean };
+export type AdminBanRow = { user_id: string; pseudo: string; reason: string; at: string };
+
+export const admin = {
+  stats: (key: string) => rpc<AdminStats>("hdar_admin_stats", { p_key: key }),
+  reports: (key: string, all: boolean) => rpc<AdminReportRow[]>("hdar_admin_reports", { p_key: key, p_all: all }),
+  user: (key: string, id: string) => rpc<AdminUser>("hdar_admin_user", { p_key: key, p_id: id }),
+  ban: (key: string, id: string, reason: string, ban: boolean) =>
+    rpc("hdar_admin_ban", { p_key: key, p_id: id, p_reason: reason, p_ban: ban }),
+  dismiss: (key: string, id: string) => rpc("hdar_admin_dismiss", { p_key: key, p_id: id }),
+  area: (key: string) => rpc<AdminAreaRow[]>("hdar_admin_area", { p_key: key }),
+  hideArea: (key: string, id: string) => rpc("hdar_admin_hide_area", { p_key: key, p_id: id }),
+  banned: (key: string) => rpc<AdminBanRow[]>("hdar_admin_banned", { p_key: key }),
+};

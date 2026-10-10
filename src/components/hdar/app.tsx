@@ -14,9 +14,10 @@ import { Mark, Wordmark } from "./logo";
 import { Me } from "./me";
 import { Celebrate, Sheets } from "./overlays";
 import { PocketChat } from "./pocket";
-import { useConversationsSync, useProfileSync } from "@/lib/hdar/sync";
+import { useConversationsSync, useHeartbeat, useProfileSync } from "@/lib/hdar/sync";
 import { CallLayer } from "./call-layer";
 import { ConfirmSheet } from "./confirm-sheet";
+import { ReportSheet } from "./report-sheet";
 import { ProfileView } from "./profile-view";
 import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
@@ -36,6 +37,7 @@ export function App() {
   useLiveSpotsSync();
   useProfileSync();
   useConversationsSync();
+  const banned = useHeartbeat();
 
   useEffect(() => {
     installTouchTap();
@@ -48,11 +50,24 @@ export function App() {
     };
   }, []);
 
+  if (banned) {
+    return (
+      <main className="flex h-dvh flex-col items-center justify-center gap-3 bg-night px-8 text-center text-ink">
+        <Mark className="size-12" />
+        <h1 className="font-display text-2xl font-extrabold">Compte suspendu</h1>
+        <p className="text-sm text-muted">
+          Ton profil a été suspendu suite à des signalements. Tu ne peux plus utiliser hdar sur cet appareil.
+        </p>
+      </main>
+    );
+  }
+
   return (
     <>
       <Toaster theme="dark" position="top-center" />
       <CallLayer />
       <ConfirmSheet />
+      <ReportSheet />
       {cover && <Cover />}
       <div className={cn("app-frame text-ink", cover && "hidden")}>
         <aside className="hidden flex-col justify-between border-r border-line px-10 py-12 lg:flex">

@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deviceId } from "./device";
-import { listConversations, saveProfile } from "./live";
+import { hit, listConversations, saveProfile } from "./live";
 import { playPop } from "./media";
 import { myPhotos, useHdar } from "./store";
 
@@ -70,4 +70,30 @@ export function useConversationsSync() {
       document.removeEventListener("visibilitychange", load);
     };
   }, []);
+}
+
+/**
+ * Tells the server the app is open (visits, people online now) every 2 minutes
+ * while visible. Returns true when this device has been suspended by moderation.
+ */
+export function useHeartbeat() {
+  const [banned, setBanned] = useState(false);
+  useEffect(() => {
+    let stop = false;
+    const beat = () => {
+      if (document.visibilityState !== "visible") return;
+      void hit(deviceId()).catch((err: unknown) => {
+        if (!stop && err instanceof Error && err.message.includes("suspendu")) setBanned(true);
+      });
+    };
+    beat();
+    const id = window.setInterval(beat, 120_000);
+    document.addEventListener("visibilitychange", beat);
+    return () => {
+      stop = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", beat);
+    };
+  }, []);
+  return banned;
 }
