@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
+import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
 import type { Zone } from "@/lib/hdar/data";
 import type { LivePerson, LiveSpot, Place } from "@/lib/hdar/scene";
@@ -215,6 +216,33 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const youPx = project(you.lat, you.lng);
   const face = zoom >= 10.5 ? 46 : 34;
 
+  // Nearest connected person, measured from where you are.
+  const nearest = live.reduce<{ pin: LivePin; d: number } | null>((best, p) => {
+    const d = haversine(you, p);
+    return !best || d < best.d ? { pin: p, d } : best;
+  }, null);
+  const halfViewM = (156543.03392 * Math.cos((view.lat * Math.PI) / 180) * (Math.min(size.w, size.h) / 2 - 40)) / 2 ** zoom;
+  const nearestHidden = nearest != null && nearest.d > halfViewM;
+
+  /** Zooms out (centred on you) until the nearest connected person is on screen. */
+  function fitNearest() {
+    if (!nearest) return;
+    const half = Math.max(60, Math.min(size.w, size.h) / 2 - 40);
+    const target = Math.log2((156543.03392 * Math.cos((you.lat * Math.PI) / 180) * half) / (nearest.d * 1.15));
+    follow.current = false;
+    setView((v) => ({ ...v, lat: you.lat, lng: you.lng }));
+    animateTo(Math.min(16, Math.max(4, target)));
+  }
+
+  // Never open on an empty map: once located, zoom out to the nearest person if needed.
+  const autoFitted = useRef(false);
+  useEffect(() => {
+    if (autoFitted.current || finding || !nearestHidden) return;
+    autoFitted.current = true;
+    fitNearest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finding, nearestHidden]);
+
   function animateTo(nextZoom: number) {
     cancelAnimationFrame(anim.current);
     const from = viewRef.current.zoom;
@@ -321,8 +349,18 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       ))}
       {pins.length === 0 && !finding && (
         <p className="pointer-events-none absolute top-4 left-1/2 z-20 max-w-[70%] -translate-x-1/2 rounded-full bg-night/85 px-4 py-2 text-center text-xs text-muted">
-          {visible ? "Personne d'autre autour pour l'instant" : "Touche Connexion pour apparaître sur la carte"}
+          {visible ? "Personne d'autre en ligne pour l'instant" : "Touche Connexion pour apparaître sur la carte"}
         </p>
+      )}
+      {nearest && nearestHidden && !finding && (
+        <button
+          type="button"
+          className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full bg-night/90 px-4 py-2 text-xs text-ink"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={fitNearest}
+        >
+          Le plus proche : {bucketDistance(nearest.d)} · <span className="text-signal">Voir</span>
+        </button>
       )}
       {finding && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-night">

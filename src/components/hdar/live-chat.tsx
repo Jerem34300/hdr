@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Image as ImageIcon, Mic, Send, Square, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, Image as ImageIcon, Mic, MoreVertical, Send, Square, Video } from "lucide-react";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
-import { blockLive, getMedia, readThread, reportLive, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
+import { blockLive, getMedia, getProfile, readThread, reportLive, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
 import { useHdar } from "@/lib/hdar/store";
+import { Avatar } from "./avatar";
 
 const MAX_VOICE_SEC = 60;
 
@@ -22,6 +23,9 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   const closeView = useHdar((s) => s.closeView);
   const openProfile = useHdar((s) => s.openProfile);
   const markSeen = useHdar((s) => s.markSeen);
+  const deleteConversation = useHdar((s) => s.deleteConversation);
+  const [menu, setMenu] = useState(false);
+  const [photo, setPhoto] = useState("");
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState<LiveMsg[]>([]);
   const [busy, setBusy] = useState(false);
@@ -55,6 +59,16 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         mr.stop();
         mr.stream.getTracks().forEach((t) => t.stop());
       }
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    let alive = true;
+    getProfile(deviceId(), userId)
+      .then((p) => alive && p?.photo && setPhoto(p.photo))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
     };
   }, [userId]);
 
@@ -126,21 +140,27 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center gap-2 border-b border-line px-2 py-2">
-        <button type="button" className="flex size-11 items-center justify-center" aria-label="Retour" onClick={closeView}>
+      <header className="relative flex items-center gap-1 border-b border-line px-2 py-2">
+        <button type="button" className="flex size-11 shrink-0 items-center justify-center" aria-label="Retour" onClick={closeView}>
           <ChevronLeft />
         </button>
         <button
           type="button"
-          className="min-w-0 flex-1 truncate text-left font-display font-bold"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-1 py-1 text-left active:bg-surface"
           aria-label={`Voir le profil de ${pseudo}`}
           onClick={() => openProfile(userId, pseudo)}
         >
-          {pseudo}
+          <Avatar src={photo} name={pseudo} className="size-10 shrink-0 rounded-full" />
+          <span className="min-w-0">
+            <span className="block truncate font-display font-bold">{pseudo}</span>
+            <span className="flex items-center text-xs text-muted">
+              Voir le profil <ChevronRight className="size-3" />
+            </span>
+          </span>
         </button>
         <button
           type="button"
-          className="flex size-10 items-center justify-center rounded-full bg-signal text-night"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-signal text-night"
           aria-label="Appel vidéo"
           onClick={() => void startCall(userId, pseudo)}
         >
@@ -148,22 +168,60 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         </button>
         <button
           type="button"
-          className="h-9 rounded-full border border-line px-3 text-xs"
-          onClick={() => {
-            void reportLive({ data: { self: deviceId(), other: userId } }).then(() => closeView());
-          }}
+          className="flex size-10 shrink-0 items-center justify-center"
+          aria-label="Plus d'options"
+          aria-expanded={menu}
+          onClick={() => setMenu((v) => !v)}
         >
-          Signaler
+          <MoreVertical className="size-5" />
         </button>
-        <button
-          type="button"
-          className="h-9 rounded-full border border-line px-3 text-xs"
-          onClick={() => {
-            void blockLive({ data: { self: deviceId(), other: userId } }).then(() => closeView());
-          }}
-        >
-          Bloquer
-        </button>
+        {menu && (
+          <div className="absolute top-full right-2 z-30 mt-1 w-56 overflow-hidden rounded-2xl border border-line bg-surface text-sm shadow-2xl">
+            <button type="button" className="block w-full px-4 py-3 text-left" onClick={() => openProfile(userId, pseudo)}>
+              Voir le profil
+            </button>
+            <button
+              type="button"
+              className="block w-full border-t border-line px-4 py-3 text-left"
+              onClick={() => {
+                setMenu(false);
+                if (window.confirm(`Supprimer la conversation avec ${pseudo} ? Elle disparaît pour toi seulement.`)) {
+                  deleteConversation(userId);
+                }
+              }}
+            >
+              Supprimer la conversation
+            </button>
+            <button
+              type="button"
+              className="block w-full border-t border-line px-4 py-3 text-left text-signal"
+              onClick={() => {
+                void reportLive({ data: { self: deviceId(), other: userId } })
+                  .then(() => {
+                    toast("Signalé et bloqué");
+                    closeView();
+                  })
+                  .catch(() => toast("Action impossible"));
+              }}
+            >
+              Signaler
+            </button>
+            <button
+              type="button"
+              className="block w-full border-t border-line px-4 py-3 text-left text-signal"
+              onClick={() => {
+                void blockLive({ data: { self: deviceId(), other: userId } })
+                  .then(() => {
+                    toast("Bloqué");
+                    closeView();
+                  })
+                  .catch(() => toast("Action impossible"));
+              }}
+            >
+              Bloquer
+            </button>
+          </div>
+        )}
       </header>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4">
         {msgs.length === 0 && <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>}

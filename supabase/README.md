@@ -7,3 +7,4 @@ tables live in the private `hdar` schema.
 - `hdar_v2_media_calls_spots.sql` — photos/voice, call signaling, shared places
 - `hdar_v3_profiles_area_inbox.sql` — public profiles, neighbourhood chat, conversations list
 - `hdar_round_presence` (migration) — `hdar_pulse` stores presence on a ~200 m grid
+- `hdar_v4_hide_conversations.sql` — per-user conversation deletion

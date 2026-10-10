@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 import { bindTap } from "./tap";
@@ -16,10 +18,19 @@ export function Inbox() {
   const seenAt = useHdar((s) => s.seenAt);
   const openLive = useHdar((s) => s.openLive);
   const openPocket = useHdar((s) => s.openPocket);
+  const deleteConversation = useHdar((s) => s.deleteConversation);
+  const [editing, setEditing] = useState(false);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6">
-      <h1 className="font-display text-3xl font-extrabold tracking-tight">Messages</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight">Messages</h1>
+        {convos.length > 0 && (
+          <button type="button" className="h-9 rounded-full border border-line px-4 text-sm" onClick={() => setEditing((v) => !v)}>
+            {editing ? "Terminé" : "Modifier"}
+          </button>
+        )}
+      </div>
       <p className="mt-1 text-sm text-muted">Tes discussions privées.</p>
       {convos.length === 0 && (
         <div className="py-16 text-center text-sm text-muted">
@@ -36,13 +47,13 @@ export function Inbox() {
           const preview =
             c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastBody;
           return (
-            <li key={c.otherId}>
+            <li key={c.otherId} className="flex items-stretch gap-2">
               <button
                 type="button"
                 data-act="live-chat"
                 data-id={c.otherId}
                 {...bindTap(() => openLive(c.otherId, c.pseudo))}
-                className="flex h-20 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
+                className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
               >
                 <Avatar name={c.pseudo} className="size-12 shrink-0 rounded-full" />
                 <span className="min-w-0 flex-1">
@@ -57,6 +68,21 @@ export function Inbox() {
                 </span>
                 {unread && <span className="size-2.5 shrink-0 rounded-full bg-signal" aria-label="Non lu" />}
               </button>
+              {editing && (
+                <button
+                  type="button"
+                  aria-label={`Supprimer la conversation avec ${c.pseudo}`}
+                  className="flex w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-signal text-xs text-night"
+                  onClick={() => {
+                    if (window.confirm(`Supprimer la conversation avec ${c.pseudo} ? Elle disparaît pour toi seulement.`)) {
+                      deleteConversation(c.otherId);
+                    }
+                  }}
+                >
+                  <Trash2 className="size-5" />
+                  Suppr.
+                </button>
+              )}
             </li>
           );
         })}

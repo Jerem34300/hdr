@@ -37,7 +37,7 @@ function runControl(btn: HTMLElement) {
   else if (act === "create") s.openCreate();
   else if (act === "close") s.closeSheet();
   else if (act === "near" || act === "line") s.enterLine(id);
-  else if (act === "live") s.openLive(id, btn.dataset.pseudo || "Anonyme");
+  else if (act === "live") s.openProfile(id, btn.dataset.pseudo || "Anonyme");
   else if (act === "pocket") s.openPocket();
   else if (act === "signal") s.signal(id, (btn.dataset.kind ?? "verre") as SignalKind);
   else if (act === "chat") s.openChat(id);

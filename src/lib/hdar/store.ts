@@ -13,7 +13,7 @@ import {
   type TonightLen,
 } from "./data";
 import { deviceId } from "./device";
-import { closeSpot, createSpot as createLiveSpot, type Conversation, type SpotRow } from "./live";
+import { closeSpot, createSpot as createLiveSpot, hideConversation, type Conversation, type SpotRow } from "./live";
 import { playPop, uid } from "./media";
 import { conversationExpiry, isExpired } from "./rules";
 
@@ -200,6 +200,7 @@ type State = {
   openLive: (userId: string, pseudo: string) => void;
   openProfile: (userId: string, pseudo: string) => void;
   markSeen: (userId: string) => void;
+  deleteConversation: (userId: string) => void;
   sendChat: (personId: string, partial: Omit<ChatMsg, "id" | "from" | "at">) => void;
   openOnce: (personId: string, msgId: string) => void;
   togglePin: (personId: string) => void;
@@ -450,6 +451,18 @@ export const useHdar = create<State>()(
       },
       openProfile: (userId, pseudo) => set({ view: { name: "profile", userId, pseudo }, sheet: null }),
       markSeen: (userId) => set({ seenAt: { ...get().seenAt, [userId]: Date.now() } }),
+      deleteConversation: (userId) => {
+        const previous = get().liveConvos;
+        set({ liveConvos: previous.filter((c) => c.otherId !== userId) });
+        const view = get().view;
+        if (view.name === "live" && view.userId === userId) set({ view: { name: "tabs" }, tab: "inbox" });
+        void hideConversation(deviceId(), userId)
+          .then(() => toast("Conversation supprimée"))
+          .catch(() => {
+            set({ liveConvos: previous });
+            toast("Suppression impossible, réessaie");
+          });
+      },
       sendChat: (personId, partial) => {
         const text = partial.text?.trim();
         if (!text && !partial.photo && !partial.voiceSec) return;

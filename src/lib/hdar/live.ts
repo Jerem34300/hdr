@@ -370,3 +370,8 @@ export async function listConversations(self: string): Promise<Conversation[]> {
     lastMine: r.last_mine,
   }));
 }
+
+/** Hides a private conversation for the caller only; a new message brings it back. */
+export async function hideConversation(self: string, other: string) {
+  await rpc("hdar_conversation_hide", { p_self: selfId(self), p_other: otherId(other) });
+}
