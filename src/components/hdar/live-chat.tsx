@@ -1,13 +1,36 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
-import { blockLive, readThread, reportLive, sendLive, type LiveMsg } from "@/lib/hdar/live";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, Image as ImageIcon, Mic, Send, Square, Video } from "lucide-react";
+import { toast } from "sonner";
+import { startCall } from "@/lib/hdar/call";
+import { blockLive, getMedia, readThread, reportLive, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
+import { readImage } from "@/lib/hdar/media";
 import { useHdar } from "@/lib/hdar/store";
+
+const MAX_VOICE_SEC = 60;
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("audio"));
+    reader.readAsDataURL(blob);
+  });
+}
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
   const closeView = useHdar((s) => s.closeView);
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState<LiveMsg[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [rec, setRec] = useState<number | null>(null);
+  const recRef = useRef<MediaRecorder | null>(null);
+  const recTimer = useRef(0);
+  const recStart = useRef(0);
+  const end = useRef<HTMLDivElement>(null);
+
+  const refresh = () =>
+    readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs);
 
   useEffect(() => {
     let stop = false;
@@ -23,8 +46,80 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
     return () => {
       stop = true;
       window.clearInterval(id);
+      window.clearInterval(recTimer.current);
+      const mr = recRef.current;
+      if (mr && mr.state !== "inactive") {
+        mr.onstop = null;
+        mr.stop();
+        mr.stream.getTracks().forEach((t) => t.stop());
+      }
     };
   }, [userId]);
+
+  const lastId = msgs[msgs.length - 1]?.id;
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [lastId]);
+
+  async function sendPhoto(file: File) {
+    setBusy(true);
+    try {
+      const media = await readImage(file, 1280);
+      await sendMedia({ data: { self: deviceId(), to: userId, kind: "image", media } });
+      await refresh();
+    } catch (err) {
+      toast(err instanceof Error && err.message !== "image" ? err.message : "Photo illisible");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startRec() {
+    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      toast("Ton navigateur ne gère pas les vocaux");
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      toast("Micro refusé. Autorise-le dans ton navigateur.");
+      return;
+    }
+    const mr = new MediaRecorder(stream, { audioBitsPerSecond: 32000 });
+    const chunks: Blob[] = [];
+    mr.ondataavailable = (e) => {
+      if (e.data.size) chunks.push(e.data);
+    };
+    mr.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const sec = Math.min(MAX_VOICE_SEC, Math.max(1, Math.round((Date.now() - recStart.current) / 1000)));
+      const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" });
+      setBusy(true);
+      void blobToDataUrl(blob)
+        .then((media) => sendMedia({ data: { self: deviceId(), to: userId, kind: "audio", media, duration: sec } }))
+        .then(refresh)
+        .catch((err) => toast(err instanceof Error ? err.message : "Vocal non envoyé"))
+        .finally(() => setBusy(false));
+    };
+    mr.start();
+    recRef.current = mr;
+    recStart.current = Date.now();
+    setRec(0);
+    recTimer.current = window.setInterval(() => {
+      const s = Math.round((Date.now() - recStart.current) / 1000);
+      setRec(s);
+      if (s >= MAX_VOICE_SEC) stopRec();
+    }, 250);
+  }
+
+  function stopRec() {
+    window.clearInterval(recTimer.current);
+    setRec(null);
+    const mr = recRef.current;
+    recRef.current = null;
+    if (mr && mr.state !== "inactive") mr.stop();
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -33,6 +128,14 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
           <ChevronLeft />
         </button>
         <p className="min-w-0 flex-1 truncate font-display font-bold">{pseudo}</p>
+        <button
+          type="button"
+          className="flex size-10 items-center justify-center rounded-full bg-signal text-night"
+          aria-label="Appel vidéo"
+          onClick={() => void startCall(userId, pseudo)}
+        >
+          <Video className="size-5" />
+        </button>
         <button
           type="button"
           className="h-9 rounded-full border border-line px-3 text-xs"
@@ -55,34 +158,117 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4">
         {msgs.length === 0 && <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>}
         {msgs.map((m) => (
-          <p key={m.id} className={"max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (m.mine ? "ml-auto bg-signal text-night" : "bg-surface")}>
-            {m.body}
-          </p>
+          <div key={m.id} className={m.mine ? "flex justify-end" : "flex justify-start"}>
+            <div className={"max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (m.mine ? "bg-signal text-night" : "bg-surface")}>
+              {m.kind === "text" ? <p className="break-words whitespace-pre-wrap">{m.body}</p> : <LiveMedia msg={m} />}
+            </div>
+          </div>
         ))}
+        <div ref={end} />
       </div>
+      {rec !== null && (
+        <p className="px-4 pb-2 text-xs text-signal">
+          ● Enregistrement · {rec}s / {MAX_VOICE_SEC} — appuie sur ■ pour envoyer
+        </p>
+      )}
+      {busy && rec === null && <p className="px-4 pb-2 text-xs text-muted">Envoi…</p>}
       <form
-        className="dock flex gap-2 border-t border-line px-3 pt-2"
+        className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
         onSubmit={(e) => {
           e.preventDefault();
           const body = text.trim();
           if (!body) return;
           setText("");
           void sendLive({ data: { self: deviceId(), to: userId, body } })
-            .then(() => readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs))
+            .then(refresh)
             // Keep the draft so a failed send (network, flood guard) isn't lost.
-            .catch(() => setText((t) => t || body));
+            .catch((err) => {
+              setText((t) => t || body);
+              toast(err instanceof Error ? err.message : "Message non envoyé");
+            });
         }}
       >
+        <label
+          className={"flex size-11 shrink-0 items-center justify-center rounded-full border border-line " + (busy ? "opacity-40" : "")}
+          aria-label="Envoyer une photo"
+        >
+          <ImageIcon className="size-5" />
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            disabled={busy || rec !== null}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void sendPhoto(file);
+            }}
+          />
+        </label>
+        <button
+          type="button"
+          disabled={busy && rec === null}
+          className={
+            "flex size-11 shrink-0 items-center justify-center rounded-full border " +
+            (rec !== null ? "border-signal bg-signal text-night" : "border-line")
+          }
+          aria-label={rec !== null ? "Arrêter et envoyer le vocal" : "Enregistrer un vocal"}
+          onClick={() => (rec !== null ? stopRec() : void startRec())}
+        >
+          {rec !== null ? <Square className="size-4" /> : <Mic className="size-5" />}
+        </button>
         <input
           className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none"
           value={text}
+          maxLength={500}
           placeholder="Message"
           onChange={(e) => setText(e.target.value)}
         />
-        <button type="submit" className="h-11 rounded-full bg-signal px-4 text-night">
-          Envoyer
+        <button type="submit" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-signal text-night" aria-label="Envoyer">
+          <Send className="size-5" />
         </button>
       </form>
     </div>
+  );
+}
+
+function LiveMedia({ msg }: { msg: LiveMsg }) {
+  const [src, setSrc] = useState("");
+  const [failed, setFailed] = useState(false);
+  const [zoom, setZoom] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getMedia(deviceId(), msg.id)
+      .then((v) => {
+        if (!alive) return;
+        if (v) setSrc(v);
+        else setFailed(true);
+      })
+      .catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, [msg.id]);
+
+  if (failed) return <p>{msg.kind === "image" ? "Photo indisponible" : "Vocal indisponible"}</p>;
+  if (!src) return <p className="opacity-70">{msg.kind === "image" ? "Photo…" : `Vocal · ${msg.duration ?? 1}s…`}</p>;
+  if (msg.kind === "audio") return <audio controls preload="metadata" src={src} className="h-10 w-60 max-w-full" />;
+  return (
+    <>
+      <button type="button" className="block" onClick={() => setZoom(true)} aria-label="Agrandir la photo">
+        <img src={src} alt="Photo" className="max-h-64 rounded-xl" />
+      </button>
+      {zoom && (
+        <button
+          type="button"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setZoom(false)}
+          aria-label="Fermer la photo"
+        >
+          <img src={src} alt="Photo" className="max-h-full max-w-full rounded-xl" />
+        </button>
+      )}
+    </>
   );
 }

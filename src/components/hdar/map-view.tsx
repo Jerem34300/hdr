@@ -336,7 +336,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </button>
         );
       })}
-      {spots.filter((s) => s.creator).map((spot) => {
+      {spots.filter((s) => s.creator || s.live).map((spot) => {
         const p = project(spot.lat, spot.lng);
         if (p.x < -20 || p.y < -20 || p.x > size.w + 20 || p.y > size.h + 20) return null;
         return (

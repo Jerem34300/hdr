@@ -1,19 +1,55 @@
-import { createServerFn } from "@tanstack/react-start";
+/**
+ * Presence, live chat, call signaling and shared places, stored in a shared
+ * Supabase project. Called straight from the browser: the publishable key is
+ * public by design, tables sit in a private schema, and every operation goes
+ * through a validated `hdar_*` SQL function (see supabase/*.sql). Talking to
+ * Supabase directly keeps polling off the host's serverless function quota.
+ *
+ * Each call keeps the `{ data }` argument shape of the server functions it
+ * replaced, so call sites read the same.
+ */
 
-// Shared Supabase project that stores presence and live chat. The publishable
-// key is public by design: tables sit in a private schema and are reachable
-// only through the validated `hdar_*` RPC functions (supabase/hdar_live.sql).
-const SUPABASE_URL = process.env.HDAR_SUPABASE_URL || "https://hoomzhgqzwuystwburfa.supabase.co";
+const SUPABASE_URL =
+  import.meta.env.VITE_HDAR_SUPABASE_URL || "https://hoomzhgqzwuystwburfa.supabase.co";
 const SUPABASE_KEY =
-  process.env.HDAR_SUPABASE_KEY || "sb_publishable_BWmk7ZH_jG2Vp2muud3w_w_TllpzneU";
+  import.meta.env.VITE_HDAR_SUPABASE_KEY || "sb_publishable_BWmk7ZH_jG2Vp2muud3w_w_TllpzneU";
+
+export type LivePin = {
+  id: string;
+  pseudo: string;
+  lat: number;
+  lng: number;
+  hot: boolean;
+};
+
+export type LiveMsg = {
+  id: string;
+  mine: boolean;
+  body: string;
+  at: string;
+  kind: "text" | "image" | "audio";
+  duration: number | null;
+};
+
+export type SignalKind = "offer" | "answer" | "hangup";
+export type SignalRow = { id: number; from_id: string; pseudo: string; kind: SignalKind; payload: string };
+
+export type SpotRow = {
+  id: string;
+  title: string;
+  lat: number;
+  lng: number;
+  closesAt: number;
+  mine: boolean;
+  members: number;
+};
+
+export type SpotLine = { id: string; fromId: string; pseudo: string; body: string; at: string; mine: boolean };
 
 async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      "content-type": "application/json",
-    },
+    headers: { apikey: SUPABASE_KEY, "content-type": "application/json" },
     body: JSON.stringify(args),
   });
   if (!res.ok) {
@@ -30,112 +66,172 @@ async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
-export type LivePin = {
-  id: string;
-  pseudo: string;
-  lat: number;
-  lng: number;
-  hot: boolean;
-};
-
-export type LiveMsg = {
-  id: string;
-  mine: boolean;
-  body: string;
-  at: string;
-};
-
 function selfId(value: string) {
   const id = String(value || "").trim().slice(0, 80);
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Identité invalide");
-  return id;
+  return id.toLowerCase();
 }
 
-export const pulse = createServerFn({ method: "POST" })
-  .validator((input: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number }) => ({
-    self: selfId(input.self),
-    lat: Number(input.lat),
-    lng: Number(input.lng),
-    pseudo: String(input.pseudo || "Anonyme").trim().slice(0, 24) || "Anonyme",
-    desires: String(input.desires || "").slice(0, 80),
-    hours: Math.min(12, Math.max(1, Number(input.hours) || 3)),
-  }))
-  .handler(async ({ data }) => {
-    if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
-    await rpc("hdar_pulse", {
-      p_self: data.self,
-      p_lat: data.lat,
-      p_lng: data.lng,
-      p_pseudo: data.pseudo,
-      p_desires: data.desires,
-      p_hours: Math.round(data.hours),
-    });
-  });
+function otherId(value: string) {
+  return String(value || "").trim().slice(0, 80).toLowerCase();
+}
 
-export const goDark = createServerFn({ method: "POST" })
-  .validator((self: string) => selfId(self))
-  .handler(async ({ data }) => {
-    await rpc("hdar_go_dark", { p_self: data });
-  });
+// Presence ---------------------------------------------------------------
 
-export const listLive = createServerFn({ method: "GET" })
-  .validator((self: string) => selfId(self))
-  .handler(async ({ data }) => {
-    const rows = await rpc<{ id: string; pseudo: string; lat: number; lng: number; desires: string }[]>(
-      "hdar_list_live",
-      { p_self: data },
-    );
-    return rows.map((r) => ({
-      id: r.id,
-      pseudo: r.pseudo,
-      lat: Number(r.lat),
-      lng: Number(r.lng),
-      hot: r.desires.split(",").includes("plan"),
-    })) satisfies LivePin[];
+export async function pulse({
+  data,
+}: {
+  data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number };
+}) {
+  if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
+  await rpc("hdar_pulse", {
+    p_self: selfId(data.self),
+    p_lat: data.lat,
+    p_lng: data.lng,
+    p_pseudo: String(data.pseudo || "Anonyme").trim().slice(0, 24) || "Anonyme",
+    p_desires: String(data.desires || "").slice(0, 80),
+    p_hours: Math.round(Math.min(12, Math.max(1, Number(data.hours) || 3))),
   });
+}
 
-export const readThread = createServerFn({ method: "GET" })
-  .validator((input: { self: string; withId: string }) => ({
-    self: selfId(input.self),
-    withId: String(input.withId || "").slice(0, 80),
-  }))
-  .handler(async ({ data }) => {
-    if (!data.withId || data.withId === data.self) return [] as LiveMsg[];
-    const rows = await rpc<{ id: string; from_id: string; body: string; at: string }[]>(
-      "hdar_read_thread",
-      { p_self: data.self, p_with: data.withId },
-    );
-    const self = data.self.toLowerCase();
-    return rows.map((r) => ({ id: r.id, mine: r.from_id === self, body: r.body, at: r.at }));
-  });
+export async function goDark({ data }: { data: string }) {
+  await rpc("hdar_go_dark", { p_self: selfId(data) });
+}
 
-export const sendLive = createServerFn({ method: "POST" })
-  .validator((input: { self: string; to: string; body: string }) => ({
-    self: selfId(input.self),
-    to: String(input.to || "").slice(0, 80),
-    body: String(input.body || "").trim().slice(0, 500),
-  }))
-  .handler(async ({ data }) => {
-    if (!data.to || !data.body || data.to === data.self) return;
-    await rpc("hdar_send", { p_self: data.self, p_to: data.to, p_body: data.body });
-  });
+export async function listLive({ data }: { data: string }): Promise<LivePin[]> {
+  const rows = await rpc<{ id: string; pseudo: string; lat: number; lng: number; desires: string }[]>(
+    "hdar_list_live",
+    { p_self: selfId(data) },
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    pseudo: r.pseudo,
+    lat: Number(r.lat),
+    lng: Number(r.lng),
+    hot: r.desires.split(",").includes("plan"),
+  }));
+}
 
-export const blockLive = createServerFn({ method: "POST" })
-  .validator((input: { self: string; other: string }) => ({
-    self: selfId(input.self),
-    other: String(input.other || "").slice(0, 80),
-  }))
-  .handler(async ({ data }) => {
-    if (!data.other || data.other === data.self) return;
-    await rpc("hdar_block", { p_self: data.self, p_other: data.other });
-  });
+// Private chat -------------------------------------------------------------
 
-export const reportLive = createServerFn({ method: "POST" })
-  .validator((input: { self: string; other: string }) => ({
-    self: selfId(input.self),
-    other: String(input.other || "").slice(0, 80),
-  }))
-  .handler(async ({ data }) => {
-    if (!data.other || data.other === data.self) return;
-    await rpc("hdar_report", { p_self: data.self, p_other: data.other });
+export async function readThread({ data }: { data: { self: string; withId: string } }): Promise<LiveMsg[]> {
+  const self = selfId(data.self);
+  const withId = otherId(data.withId);
+  if (!withId || withId === self) return [];
+  const rows = await rpc<
+    { id: string; from_id: string; body: string; at: string; kind: LiveMsg["kind"]; duration: number | null }[]
+  >("hdar_thread", { p_self: self, p_with: withId });
+  return rows.map((r) => ({
+    id: r.id,
+    mine: r.from_id === self,
+    body: r.body,
+    at: r.at,
+    kind: r.kind,
+    duration: r.duration,
+  }));
+}
+
+export async function sendLive({ data }: { data: { self: string; to: string; body: string } }) {
+  const body = String(data.body || "").trim().slice(0, 500);
+  if (!body) return;
+  await rpc("hdar_send", { p_self: selfId(data.self), p_to: otherId(data.to), p_body: body });
+}
+
+export async function sendMedia({
+  data,
+}: {
+  data: { self: string; to: string; kind: "image" | "audio"; media: string; duration?: number };
+}) {
+  await rpc("hdar_send_media", {
+    p_self: selfId(data.self),
+    p_to: otherId(data.to),
+    p_kind: data.kind,
+    p_media: data.media,
+    p_duration: data.duration ?? null,
   });
+}
+
+const mediaCache = new Map<string, Promise<string>>();
+
+/** Loads a photo / voice note once per session; only the two people in the thread can read it. */
+export function getMedia(self: string, id: string): Promise<string> {
+  let hit = mediaCache.get(id);
+  if (!hit) {
+    hit = rpc<string | null>("hdar_get_media", { p_self: selfId(self), p_id: id }).then((v) => v ?? "");
+    hit.catch(() => mediaCache.delete(id));
+    mediaCache.set(id, hit);
+  }
+  return hit;
+}
+
+export async function blockLive({ data }: { data: { self: string; other: string } }) {
+  await rpc("hdar_block", { p_self: selfId(data.self), p_other: otherId(data.other) });
+}
+
+export async function reportLive({ data }: { data: { self: string; other: string } }) {
+  await rpc("hdar_report", { p_self: selfId(data.self), p_other: otherId(data.other) });
+}
+
+// Video call signaling -----------------------------------------------------
+
+export async function sendSignal(self: string, to: string, kind: SignalKind, payload = "") {
+  await rpc("hdar_signal_send", { p_self: selfId(self), p_to: selfId(to), p_kind: kind, p_payload: payload });
+}
+
+export async function pollSignals(self: string, after: number): Promise<SignalRow[]> {
+  return rpc<SignalRow[]>("hdar_signal_poll", { p_self: selfId(self), p_after: after });
+}
+
+// Shared places --------------------------------------------------------------
+
+export async function createSpot(input: {
+  self: string;
+  title: string;
+  hours: number;
+  lat: number;
+  lng: number;
+  pseudo: string;
+}): Promise<string> {
+  return rpc<string>("hdar_spot_create", {
+    p_self: selfId(input.self),
+    p_title: input.title,
+    p_hours: Math.round(input.hours),
+    p_lat: input.lat,
+    p_lng: input.lng,
+    p_pseudo: input.pseudo,
+  });
+}
+
+export async function listSpots(self: string, lat: number, lng: number): Promise<SpotRow[]> {
+  const rows = await rpc<
+    { id: string; title: string; lat: number; lng: number; closes_at: string; mine: boolean; members: number }[]
+  >("hdar_spot_list", { p_self: selfId(self), p_lat: lat, p_lng: lng });
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    lat: Number(r.lat),
+    lng: Number(r.lng),
+    closesAt: Date.parse(r.closes_at),
+    mine: r.mine,
+    members: Number(r.members) || 1,
+  }));
+}
+
+export async function closeSpot(self: string, id: string): Promise<boolean> {
+  return rpc<boolean>("hdar_spot_close", { p_self: selfId(self), p_id: id });
+}
+
+export async function spotMessages(self: string, id: string): Promise<SpotLine[]> {
+  const rows = await rpc<
+    { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean }[]
+  >("hdar_spot_messages", { p_self: selfId(self), p_id: id });
+  return rows.map((r) => ({ id: r.id, fromId: r.from_id, pseudo: r.pseudo, body: r.body, at: r.at, mine: r.mine }));
+}
+
+export async function sendSpotMessage(self: string, id: string, pseudo: string, body: string) {
+  await rpc("hdar_spot_send", { p_self: selfId(self), p_id: id, p_pseudo: pseudo, p_body: body });
+}
+
+export async function hideSpotMessage(self: string, id: string) {
+  await rpc("hdar_spot_msg_hide", { p_self: selfId(self), p_id: id });
+}

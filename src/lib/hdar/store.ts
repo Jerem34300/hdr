@@ -12,6 +12,8 @@ import {
   type SignalKind,
   type TonightLen,
 } from "./data";
+import { deviceId } from "./device";
+import { closeSpot, createSpot as createLiveSpot, type SpotRow } from "./live";
 import { playPop, uid } from "./media";
 import { conversationExpiry, isExpired } from "./rules";
 
@@ -156,6 +158,8 @@ type State = {
   reports: string[];
   clock: Clock;
   customSpots: CustomSpot[];
+  /** Places shared through the database (everyone nearby sees them). Not persisted. */
+  liveSpots: SpotRow[];
   pendingSpot: { title: string; hours: number } | null;
   spotExtras: Record<string, SpotMsg[]>;
   deletedMsgs: string[];
@@ -196,6 +200,7 @@ type State = {
   armSpot: (title: string, hours: number) => void;
   dropSpot: (lat: number, lng: number) => void;
   cancelSpot: () => void;
+  deleteSpot: (id: string) => void;
   sendSpot: (id: string, text: string) => void;
   removeSpotMsg: (spotId: string, msgId: string) => void;
   block: (id: string) => void;
@@ -256,6 +261,7 @@ const base = () => {
     reports: [] as string[],
     clock: ensureClock(undefined, now),
     customSpots: [] as CustomSpot[],
+    liveSpots: [] as SpotRow[],
     pendingSpot: null as { title: string; hours: number } | null,
     spotExtras: {} as Record<string, SpotMsg[]>,
     deletedMsgs: [] as string[],
@@ -534,7 +540,7 @@ export const useHdar = create<State>()(
       armSpot: (title, hours) => {
         const clean = title.trim().slice(0, 40);
         if (clean.length < 2) return;
-        if (get().customSpots.length >= 5) {
+        if (get().liveSpots.filter((s) => s.mine && s.closesAt > Date.now()).length >= 5) {
           toast("Tu as assez de lieux ouverts");
           return;
         }
@@ -548,35 +554,44 @@ export const useHdar = create<State>()(
       dropSpot: (lat, lng) => {
         const pending = get().pendingSpot;
         if (!pending) return;
-        const spot: CustomSpot = {
-          id: uid("spot"),
-          title: pending.title,
-          east: 0,
-          north: 0,
-          lat,
-          lng,
-          radiusM: 300,
-          closesAt: Date.now() + pending.hours * 3_600_000,
-          messages: [
-            {
-              id: uid("sm"),
-              from: get().me.pseudo || "Toi",
+        set({ pendingSpot: null, tab: "around", view: { name: "tabs" }, sheet: null });
+        const pseudo = get().me.pseudo || "Anonyme";
+        void createLiveSpot({ self: deviceId(), title: pending.title, hours: pending.hours, lat, lng, pseudo })
+          .then((id) => {
+            const row: SpotRow = {
+              id,
+              title: pending.title,
+              lat,
+              lng,
+              closesAt: Date.now() + pending.hours * 3_600_000,
               mine: true,
-              text: "Lieu ouvert.",
-              at: Date.now(),
-            },
-          ],
-        };
-        set({
-          customSpots: [spot, ...get().customSpots],
-          pendingSpot: null,
-          tab: "around",
-          view: { name: "tabs" },
-          sheet: null,
-        });
-        toast("Lieu posé");
+              members: 1,
+            };
+            set({ liveSpots: [row, ...get().liveSpots.filter((s) => s.id !== id)] });
+            toast("Lieu posé · visible par les gens autour");
+          })
+          .catch((err) => toast(err instanceof Error ? err.message : "Lieu non créé"));
       },
       cancelSpot: () => set({ pendingSpot: null }),
+      deleteSpot: (id) => {
+        const leave = () => {
+          const view = get().view;
+          if (view.name === "spot" && view.id === id) set({ view: { name: "tabs" }, tab: "spots" });
+        };
+        if (get().customSpots.some((s) => s.id === id)) {
+          set({ customSpots: get().customSpots.filter((s) => s.id !== id) });
+          leave();
+          toast("Lieu supprimé");
+          return;
+        }
+        void closeSpot(deviceId(), id)
+          .then((ok) => {
+            set({ liveSpots: get().liveSpots.filter((s) => s.id !== id) });
+            leave();
+            toast(ok ? "Lieu supprimé" : "Ce lieu était déjà fermé");
+          })
+          .catch((err) => toast(err instanceof Error ? err.message : "Suppression impossible"));
+      },
       sendSpot: (id, text) => {
         const body = text.trim().slice(0, 240);
         if (!body) return;

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { CITIES, HERE_ZONES, PEOPLE, spotsFor, type City, type Person, type Zone } from "./data";
 import { hiddenIds, bucketDistance, cellForPerson, destination, haversine, HOT_ANON, isExpired, publishDistance } from "./rules";
+import type { SpotRow } from "./live";
 import { useHdar, type CustomSpot } from "./store";
 
 export type Place = {
@@ -92,6 +93,8 @@ export type LiveSpot = {
   dist: number;
   distanceLabel: string;
   messages?: CustomSpot["messages"];
+  /** Shared through the database: messages and deletion go to the server. */
+  live?: boolean;
 };
 
 export function projectSpots(
@@ -100,6 +103,7 @@ export function projectSpots(
   clock: Record<string, number>,
   hidden: readonly string[],
   custom: CustomSpot[],
+  shared: SpotRow[] = [],
 ): LiveSpot[] {
   const slug = place.slug === "ici" ? "paris" : place.slug;
   const seeds: LiveSpot[] = spotsFor(slug).map((s) => {
@@ -138,7 +142,26 @@ export function projectSpots(
       distanceLabel: bucketDistance(Math.max(100, dist)),
     };
   });
-  return [...mine, ...seeds]
+  const live: LiveSpot[] = shared.map((s) => {
+    const dist = haversine(place, s);
+    return {
+      id: s.id,
+      title: s.title,
+      east: 0,
+      north: 0,
+      radiusM: 300,
+      members: s.members,
+      closesAt: s.closesAt,
+      creator: s.mine,
+      thread: [],
+      lat: s.lat,
+      lng: s.lng,
+      dist,
+      distanceLabel: bucketDistance(Math.max(100, dist)),
+      live: true,
+    };
+  });
+  return [...live, ...mine, ...seeds]
     .filter((s) => !hidden.includes(s.id) && !isExpired(s.closesAt, now))
     .sort((a, b) => a.dist - b.dist);
 }
@@ -161,14 +184,15 @@ export function useScene() {
   const blocks = useHdar((s) => s.blocks);
   const reports = useHdar((s) => s.reports);
   const customSpots = useHdar((s) => s.customSpots);
+  const liveSpots = useHdar((s) => s.liveSpots);
   return useMemo(() => {
     const place = resolvePlace(cityId, customCenter);
     const hidden = hiddenIds(blocks, reports);
     const people = projectPeople(place, now, clock.people, hidden);
-    const spots = projectSpots(place, now, clock.spots, hidden, customSpots);
+    const spots = projectSpots(place, now, clock.spots, hidden, customSpots, liveSpots);
     const zones = zoneStats(place.zones, people);
     return { place, people, spots, zones, hidden };
-  }, [blocks, cityId, clock, customCenter, customSpots, now, reports]);
+  }, [blocks, cityId, clock, customCenter, customSpots, liveSpots, now, reports]);
 }
 
 export type { City };

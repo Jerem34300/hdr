@@ -14,7 +14,8 @@ import { Mark, Wordmark } from "./logo";
 import { Me } from "./me";
 import { Celebrate, Sheets } from "./overlays";
 import { PocketChat } from "./pocket";
-import { SpotRoom, Spots } from "./spots";
+import { CallLayer } from "./call-layer";
+import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
 
 export function App() {
@@ -28,6 +29,7 @@ export function App() {
   const matches = useHdar((s) => s.matches);
   const unread = matches.reduce((n, m) => n + (isExpired(m.expiresAt, now) ? 0 : m.unread), 0);
   const tonight = me.tonight && !isExpired(me.tonight.expiresAt, now) ? me.tonight : null;
+  useLiveSpotsSync();
 
   useEffect(() => {
     installTouchTap();
@@ -43,6 +45,7 @@ export function App() {
   return (
     <>
       <Toaster theme="dark" position="top-center" />
+      <CallLayer />
       {cover && <Cover />}
       <div className={cn("app-frame text-ink", cover && "hidden")}>
         <aside className="hidden flex-col justify-between border-r border-line px-10 py-12 lg:flex">
