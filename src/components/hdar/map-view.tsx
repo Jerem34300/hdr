@@ -38,7 +38,9 @@ function latFromY(y: number, zoom: number) {
 export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 520 });
-  const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: 13 });
+  const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
+  // First launch (no saved position): hide the default city until the GPS answers.
+  const [finding, setFinding] = useState(place.slug !== "ici");
   const [you, setYou] = useState({ lat: place.lat, lng: place.lng });
   const [located, setLocated] = useState(false);
   const follow = useRef(true);
@@ -126,6 +128,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     const first = !locked.current;
     if (first) {
       locked.current = true;
+      setFinding(false);
+      // Remember where the user is so the next launch opens right here.
+      useHdar.setState({ cityId: "ici", customCenter: { lat, lng } });
       const mine = useHdar.getState().customSpots;
       if (mine.some((s) => s.lat == null || s.lng == null)) {
         useHdar.setState({
@@ -153,13 +158,23 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   }
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    const giveUp = window.setTimeout(() => setFinding(false), 7000);
+    if (!navigator.geolocation) {
+      setFinding(false);
+      return () => window.clearTimeout(giveUp);
+    }
     const id = navigator.geolocation.watchPosition(
       (pos) => applyFix(pos.coords.latitude, pos.coords.longitude, follow.current),
-      () => setLocated(false),
+      () => {
+        setLocated(false);
+        setFinding(false);
+      },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 12000 },
     );
-    return () => navigator.geolocation.clearWatch(id);
+    return () => {
+      window.clearTimeout(giveUp);
+      navigator.geolocation.clearWatch(id);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -304,10 +319,19 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           style={{ left: tile.left, top: tile.top, width: tilePx, height: tilePx }}
         />
       ))}
-      {pins.length === 0 && (
-        <p className="pointer-events-none absolute inset-x-6 top-16 z-20 text-center text-sm text-white">
-          Personne d'autre en ligne. Connexion, puis la même chose sur un autre téléphone : le pin apparaît ici.
+      {pins.length === 0 && !finding && (
+        <p className="pointer-events-none absolute top-4 left-1/2 z-20 max-w-[70%] -translate-x-1/2 rounded-full bg-night/85 px-4 py-2 text-center text-xs text-muted">
+          {visible ? "Personne d'autre autour pour l'instant" : "Touche Connexion pour apparaître sur la carte"}
         </p>
+      )}
+      {finding && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-night">
+          <span className="relative block size-12 rounded-full">
+            <span className="ping-ring rounded-full" />
+            <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-signal" />
+          </span>
+          <p className="text-sm text-muted">Localisation…</p>
+        </div>
       )}
       <div className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: youPx.x, top: youPx.y }}>
         <span className="radar-sweep block size-48" />

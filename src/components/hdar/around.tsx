@@ -11,7 +11,7 @@ export function Around() {
   const openCity = useHdar((s) => s.openCity);
   const joinSpot = useHdar((s) => s.joinSpot);
   const { place, people, spots, zones } = useScene();
-  const [area, setArea] = useState(place.name);
+  const [area, setArea] = useState<string | null>(null);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -19,7 +19,7 @@ export function Around() {
         <div className="min-w-0">
           <Wordmark />
           <button type="button" data-act="city" className="mt-1 block truncate text-left text-sm text-muted" {...bindTap(openCity)}>
-            {area}
+            {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
           </button>
         </div>
         <button

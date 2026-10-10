@@ -104,13 +104,15 @@ export function projectSpots(
   hidden: readonly string[],
   custom: CustomSpot[],
   shared: SpotRow[] = [],
+  /** Where distances are measured from: the real GPS position when known. */
+  origin: { lat: number; lng: number } = place,
 ): LiveSpot[] {
   const mine: LiveSpot[] = custom.map((s) => {
     const at =
       s.lat != null && s.lng != null
         ? { lat: s.lat, lng: s.lng }
         : destination(place.lat, place.lng, s.east, s.north);
-    const dist = haversine(place, at);
+    const dist = haversine(origin, at);
     return {
       id: s.id,
       title: s.title,
@@ -129,7 +131,7 @@ export function projectSpots(
     };
   });
   const live: LiveSpot[] = shared.map((s) => {
-    const dist = haversine(place, s);
+    const dist = haversine(origin, s);
     return {
       id: s.id,
       title: s.title,
@@ -172,14 +174,15 @@ export function useScene() {
   const reports = useHdar((s) => s.reports);
   const customSpots = useHdar((s) => s.customSpots);
   const liveSpots = useHdar((s) => s.liveSpots);
+  const here = useHdar((s) => s.here);
   return useMemo(() => {
     const place = resolvePlace(cityId, customCenter);
     const hidden = hiddenIds(blocks, reports);
     const people = projectPeople(place, now, clock.people, hidden);
-    const spots = projectSpots(place, now, clock.spots, hidden, customSpots, liveSpots);
+    const spots = projectSpots(place, now, clock.spots, hidden, customSpots, liveSpots, here ?? place);
     const zones = zoneStats(place.zones, people);
     return { place, people, spots, zones, hidden };
-  }, [blocks, cityId, clock, customCenter, customSpots, liveSpots, now, reports]);
+  }, [blocks, cityId, clock, customCenter, customSpots, here, liveSpots, now, reports]);
 }
 
 export type { City };

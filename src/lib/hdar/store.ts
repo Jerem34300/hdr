@@ -350,7 +350,7 @@ export const useHdar = create<State>()(
           expiresAt: Date.now() + hours * 3_600_000,
         };
         set({ me: { ...get().me, tonight }, sheet: null, now: Date.now() });
-        toast("Ta ligne est ouverte. Elle s'éteint seule.");
+        toast(`Tu es visible sur la carte pendant ${hours} h`);
       },
       clearTonight: () => set({ me: { ...get().me, tonight: null }, sheet: null }),
       signal: (id, kind) => {
