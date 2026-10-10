@@ -1,5 +1,34 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSql } from "@/lib/db";
+
+// Shared Supabase project that stores presence and live chat. The publishable
+// key is public by design: tables sit in a private schema and are reachable
+// only through the validated `hdar_*` RPC functions (supabase/hdar_live.sql).
+const SUPABASE_URL = process.env.HDAR_SUPABASE_URL || "https://hoomzhgqzwuystwburfa.supabase.co";
+const SUPABASE_KEY =
+  process.env.HDAR_SUPABASE_KEY || "sb_publishable_BWmk7ZH_jG2Vp2muud3w_w_TllpzneU";
+
+async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) {
+    let message = `Serveur indisponible (${res.status})`;
+    try {
+      const err = (await res.json()) as { message?: string };
+      if (err.message) message = err.message;
+    } catch {
+      // keep the generic message
+    }
+    throw new Error(message);
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
 
 export type LivePin = {
   id: string;
@@ -22,10 +51,6 @@ function selfId(value: string) {
   return id;
 }
 
-function threadId(a: string, b: string) {
-  return [a, b].sort().join(":");
-}
-
 export const pulse = createServerFn({ method: "POST" })
   .validator((input: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number }) => ({
     self: selfId(input.self),
@@ -37,44 +62,29 @@ export const pulse = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
-    const until = new Date(Date.now() + data.hours * 3_600_000).toISOString();
-    const sql = await getSql();
-    await sql`
-      insert into profiles (user_id, pseudo, lat, lng, desires, visible_until, updated_at)
-      values (${data.self}, ${data.pseudo}, ${data.lat}, ${data.lng}, ${data.desires}, ${until}, now())
-      on conflict (user_id) do update set
-        pseudo = excluded.pseudo,
-        lat = excluded.lat,
-        lng = excluded.lng,
-        desires = excluded.desires,
-        visible_until = excluded.visible_until,
-        updated_at = now()
-    `;
+    await rpc("hdar_pulse", {
+      p_self: data.self,
+      p_lat: data.lat,
+      p_lng: data.lng,
+      p_pseudo: data.pseudo,
+      p_desires: data.desires,
+      p_hours: Math.round(data.hours),
+    });
   });
 
 export const goDark = createServerFn({ method: "POST" })
   .validator((self: string) => selfId(self))
   .handler(async ({ data }) => {
-    const sql = await getSql();
-    await sql`update profiles set visible_until = now() where user_id = ${data}`;
+    await rpc("hdar_go_dark", { p_self: data });
   });
 
 export const listLive = createServerFn({ method: "GET" })
   .validator((self: string) => selfId(self))
   .handler(async ({ data }) => {
-    const sql = await getSql();
-    const rows = await sql<{ id: string; pseudo: string; lat: number; lng: number; desires: string }>`
-      select p.user_id as id, p.pseudo, p.lat, p.lng, p.desires
-      from profiles p
-      where p.visible_until > now()
-        and p.user_id <> ${data}
-        and p.lat is not null
-        and not exists (
-          select 1 from live_blocks b
-          where (b.user_id = ${data} and b.blocked_id = p.user_id)
-             or (b.user_id = p.user_id and b.blocked_id = ${data})
-        )
-    `;
+    const rows = await rpc<{ id: string; pseudo: string; lat: number; lng: number; desires: string }[]>(
+      "hdar_list_live",
+      { p_self: data },
+    );
     return rows.map((r) => ({
       id: r.id,
       pseudo: r.pseudo,
@@ -91,15 +101,12 @@ export const readThread = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }) => {
     if (!data.withId || data.withId === data.self) return [] as LiveMsg[];
-    const sql = await getSql();
-    const rows = await sql<{ id: string; from_id: string; body: string; at: string }>`
-      select id, from_id, body, created_at::text as at
-      from live_messages
-      where thread_id = ${threadId(data.self, data.withId)}
-      order by created_at asc
-      limit 200
-    `;
-    return rows.map((r) => ({ id: r.id, mine: r.from_id === data.self, body: r.body, at: r.at }));
+    const rows = await rpc<{ id: string; from_id: string; body: string; at: string }[]>(
+      "hdar_read_thread",
+      { p_self: data.self, p_with: data.withId },
+    );
+    const self = data.self.toLowerCase();
+    return rows.map((r) => ({ id: r.id, mine: r.from_id === self, body: r.body, at: r.at }));
   });
 
 export const sendLive = createServerFn({ method: "POST" })
@@ -110,18 +117,7 @@ export const sendLive = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     if (!data.to || !data.body || data.to === data.self) return;
-    const sql = await getSql();
-    const blocked = await sql<{ n: number }>`
-      select 1 as n from live_blocks
-      where (user_id = ${data.self} and blocked_id = ${data.to})
-         or (user_id = ${data.to} and blocked_id = ${data.self})
-      limit 1
-    `;
-    if (blocked.length) return;
-    await sql`
-      insert into live_messages (id, thread_id, from_id, body)
-      values (${crypto.randomUUID()}, ${threadId(data.self, data.to)}, ${data.self}, ${data.body})
-    `;
+    await rpc("hdar_send", { p_self: data.self, p_to: data.to, p_body: data.body });
   });
 
 export const blockLive = createServerFn({ method: "POST" })
@@ -131,15 +127,7 @@ export const blockLive = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     if (!data.other || data.other === data.self) return;
-    const sql = await getSql();
-    await sql`
-      insert into live_blocks (user_id, blocked_id) values (${data.self}, ${data.other})
-      on conflict do nothing
-    `;
-    await sql`
-      insert into live_blocks (user_id, blocked_id) values (${data.other}, ${data.self})
-      on conflict do nothing
-    `;
+    await rpc("hdar_block", { p_self: data.self, p_other: data.other });
   });
 
 export const reportLive = createServerFn({ method: "POST" })
@@ -149,17 +137,5 @@ export const reportLive = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     if (!data.other || data.other === data.self) return;
-    const sql = await getSql();
-    await sql`
-      insert into live_reports (id, reporter_id, target_id)
-      values (${crypto.randomUUID()}, ${data.self}, ${data.other})
-    `;
-    await sql`
-      insert into live_blocks (user_id, blocked_id) values (${data.self}, ${data.other})
-      on conflict do nothing
-    `;
-    await sql`
-      insert into live_blocks (user_id, blocked_id) values (${data.other}, ${data.self})
-      on conflict do nothing
-    `;
+    await rpc("hdar_report", { p_self: data.self, p_other: data.other });
   });

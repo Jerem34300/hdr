@@ -67,9 +67,10 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
           const body = text.trim();
           if (!body) return;
           setText("");
-          void sendLive({ data: { self: deviceId(), to: userId, body } }).then(() =>
-            readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs),
-          );
+          void sendLive({ data: { self: deviceId(), to: userId, body } })
+            .then(() => readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs))
+            // Keep the draft so a failed send (network, flood guard) isn't lost.
+            .catch(() => setText((t) => t || body));
         }}
       >
         <input
