@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DebugRouteImport } from './routes/debug'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as FrRencontreGayChar123villeChar125RouteImport } from './routes/fr/rencontre-gay-{$ville}'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -30,6 +32,16 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FrRencontreGayChar123villeChar125Route =
   FrRencontreGayChar123villeChar125RouteImport.update({
     id: '/fr/rencontre-gay-{$ville}',
@@ -46,6 +58,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/debug': typeof DebugRoute
   '/login': typeof LoginRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -53,6 +67,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/debug': typeof DebugRoute
   '/login': typeof LoginRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -61,20 +77,37 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/debug': typeof DebugRoute
   '/login': typeof LoginRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/debug' | '/login' | '/fr/rencontre-gay-{$ville}' | '/api/auth/$'
+    | '/'
+    | '/debug'
+    | '/login'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/fr/rencontre-gay-{$ville}'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/debug' | '/login' | '/fr/rencontre-gay-{$ville}' | '/api/auth/$'
+  to:
+    | '/'
+    | '/debug'
+    | '/login'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/fr/rencontre-gay-{$ville}'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/debug'
     | '/login'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/fr/rencontre-gay-{$ville}'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -83,6 +116,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DebugRoute: typeof DebugRoute
   LoginRoute: typeof LoginRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   FrRencontreGayChar123villeChar125Route: typeof FrRencontreGayChar123villeChar125Route
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -110,6 +145,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fr/rencontre-gay-{$ville}': {
       id: '/fr/rencontre-gay-{$ville}'
       path: '/fr/rencontre-gay-{$ville}'
@@ -131,6 +180,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DebugRoute: DebugRoute,
   LoginRoute: LoginRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   FrRencontreGayChar123villeChar125Route:
     FrRencontreGayChar123villeChar125Route,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

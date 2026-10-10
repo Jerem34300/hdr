@@ -1,20 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CITIES, PEOPLE, spotsFor } from "@/lib/hdar/data";
-import { HOT_ANON } from "@/lib/hdar/rules";
+import { SEO_CITIES, SITE_URL } from "@/lib/hdar/seo";
 
 export const Route = createFileRoute("/fr/rencontre-gay-{$ville}")({
   head: ({ params }) => {
-    const city = CITIES.find((c) => c.slug === params.ville);
-    const name = city?.name ?? "Ville";
+    const city = SEO_CITIES.find((c) => c.slug === params.ville);
+    if (!city) return { meta: [{ title: "Ville inconnue — hdar." }, { name: "robots", content: "noindex" }] };
+    const url = `${SITE_URL}/fr/rencontre-gay-${city.slug}`;
     return {
       meta: [
-        { title: `Rencontre gay à ${name} — hdar.` },
+        { title: `Rencontre gay à ${city.name} : qui est autour, en direct — hdar.` },
         {
           name: "description",
-          content: `Qui est autour à ${name}, ce soir. Distances arrondies, 18 ans et plus, aucune photo explicite.`,
+          content: `Rencontre gay à ${city.name} : vois sur la carte qui est connecté autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`,
         },
         { name: "robots", content: "index, follow" },
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: CityPage,
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/fr/rencontre-gay-{$ville}")({
 
 function CityPage() {
   const { ville } = Route.useParams();
-  const city = CITIES.find((c) => c.slug === ville);
+  const city = SEO_CITIES.find((c) => c.slug === ville);
   if (!city) {
     return (
       <main className="min-h-dvh bg-night px-5 py-16 text-ink">
@@ -33,22 +34,26 @@ function CityPage() {
       </main>
     );
   }
-  const online = PEOPLE.filter((p) => p.online).length;
-  const dispo = PEOPLE.filter((p) => p.tonight).length;
-  const spots = spotsFor(city.slug);
-  const zoneCount = online + HOT_ANON;
   const faq = [
     {
+      q: `Comment faire une rencontre gay à ${city.name} avec hdar ?`,
+      a: `Ouvre hdar, autorise ta position et touche Connexion : tu apparais sur la carte de ${city.name} pour quelques heures. Touche un profil pour le voir, puis écris-lui, envoie une photo, un vocal ou lance un appel vidéo.`,
+    },
+    {
       q: "Faut-il créer un compte ?",
-      a: "Non. Tu arrives sur la carte. Le pseudo et la confirmation des 18 ans n'arrivent qu'au premier message.",
+      a: "Non. Tu choisis un pseudo et tu confirmes avoir 18 ans au premier message. Pas d'e-mail, pas de mot de passe.",
     },
     {
       q: "Ma position exacte est-elle visible ?",
-      a: "Non. Elle reste sur ton appareil. Les autres voient une zone arrondie, jamais une adresse.",
+      a: "Non. Les autres voient une position arrondie à environ 200 mètres et une distance approximative, jamais une adresse.",
     },
     {
-      q: `Où ça bouge à ${city.name} ?`,
-      a: `${city.line} Quartiers suivis : ${city.quartiers.join(", ")}.`,
+      q: `C'est quoi le chat du quartier à ${city.name} ?`,
+      a: "Un chat ouvert à tous les gens connectés dans un rayon d'environ 3 km. Les messages disparaissent au bout de 24 heures.",
+    },
+    {
+      q: "C'est gratuit ?",
+      a: "Oui. La carte, le chat du quartier, les messages privés et les lieux sont gratuits.",
     },
   ];
   const jsonLd = {
@@ -64,34 +69,34 @@ function CityPage() {
     <main className="min-h-dvh bg-night text-ink">
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       <article className="mx-auto max-w-lg px-5 py-10">
-        <p className="font-display text-sm font-extrabold tracking-tight">
+        <Link to="/" className="font-display text-sm font-extrabold tracking-tight">
           hdar<span className="text-signal">.</span>
-        </p>
+        </Link>
         <h1 className="mt-6 font-display text-4xl font-extrabold tracking-tight">Rencontre gay à {city.name}</h1>
-        <p className="mt-3 text-muted">{city.line} Who's around. Right now.</p>
-        <dl className="mt-8 grid grid-cols-3 gap-2">
-          <Stat label="En ligne" value={String(online)} />
-          <Stat label="Dispo" value={String(dispo)} />
-          <Stat label="Dans la zone" value={String(zoneCount)} />
-        </dl>
-        <h2 className="mt-10 font-display text-xl font-bold">Spots ouverts</h2>
-        <ul className="mt-3 space-y-2">
-          {spots.map((spot) => (
-            <li key={spot.id} className="rounded-2xl border border-line bg-surface px-4 py-3">
-              <p className="font-display font-bold">{spot.title}</p>
-              <p className="text-sm text-muted">{spot.members} personnes · ferme dans {spot.hours} h</p>
-            </li>
-          ))}
+        <p className="mt-3 text-lg">{city.line}</p>
+        <p className="mt-3 text-muted">
+          hdar est une appli de rencontre gay géolocalisée, en direct, pour {city.name} et toute la région {city.region}.
+          Pas de profil à remplir pendant des heures : tu ouvres, tu vois qui est connecté autour, tu discutes.
+        </p>
+        <Link to="/" className="mt-6 inline-flex h-12 items-center rounded-full bg-signal px-6 font-medium text-night">
+          Voir qui est autour à {city.name}
+        </Link>
+        <h2 className="mt-10 font-display text-xl font-bold">Ce que tu peux faire</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
+            <strong>La carte en direct</strong> — les gens connectés autour de toi, avec une distance arrondie.
+          </li>
+          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
+            <strong>Le chat du quartier</strong> — un fil ouvert aux gens à ~3 km, effacé après 24 h.
+          </li>
+          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
+            <strong>Messages privés</strong> — texte, photos, vocaux et appel vidéo.
+          </li>
+          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
+            <strong>Les lieux</strong> — crée un lieu pour quelques heures (bar, soirée, plage) et retrouve-toi avec ceux du coin.
+          </li>
         </ul>
-        <h2 className="mt-10 font-display text-xl font-bold">Quartiers</h2>
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {city.quartiers.map((q) => (
-            <li key={q} className="rounded-full border border-line px-3 py-2 text-sm">
-              {q}
-            </li>
-          ))}
-        </ul>
-        <h2 className="mt-10 font-display text-xl font-bold">Questions</h2>
+        <h2 className="mt-10 font-display text-xl font-bold">Questions fréquentes</h2>
         <div className="mt-3 space-y-2">
           {faq.map((item) => (
             <details key={item.q} className="rounded-2xl border border-line px-4 py-3">
@@ -100,27 +105,16 @@ function CityPage() {
             </details>
           ))}
         </div>
-        <p className="mt-8 text-sm text-muted">18 ans et plus. Aucune photo explicite sur les pages publiques.</p>
-        <Link to="/" className="mt-4 inline-flex h-12 items-center rounded-full bg-signal px-5 font-medium text-night">
-          Voir qui est autour
-        </Link>
-        <nav className="mt-10 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted">
-          {CITIES.map((c) => (
-            <Link key={c.slug} to="/fr/rencontre-gay-{$ville}" params={{ ville: c.slug }}>
+        <p className="mt-8 text-sm text-muted">Réservé aux 18 ans et plus. Aucune photo explicite sur les pages publiques.</p>
+        <h2 className="mt-10 font-display text-lg font-bold">Rencontre gay dans d'autres villes</h2>
+        <nav className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted">
+          {SEO_CITIES.filter((c) => c.slug !== city.slug).map((c) => (
+            <Link key={c.slug} to="/fr/rencontre-gay-{$ville}" params={{ ville: c.slug }} className="underline-offset-2 hover:underline">
               {c.name}
             </Link>
           ))}
         </nav>
       </article>
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-line bg-surface px-3 py-3">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="font-display text-2xl font-extrabold">{value}</dd>
-    </div>
   );
 }
