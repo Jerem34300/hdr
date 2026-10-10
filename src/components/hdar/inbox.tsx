@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { askConfirm } from "@/lib/hdar/confirm";
 import { useHdar } from "@/lib/hdar/store";
-import { Avatar } from "./avatar";
+import { UserAvatar } from "./avatar";
 import { bindTap } from "./tap";
 
 function when(ms: number) {
@@ -55,7 +56,7 @@ export function Inbox() {
                 {...bindTap(() => openLive(c.otherId, c.pseudo))}
                 className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
               >
-                <Avatar name={c.pseudo} className="size-12 shrink-0 rounded-full" />
+                <UserAvatar id={c.otherId} name={c.pseudo} className="size-12 shrink-0 rounded-full" />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
                     <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>{c.pseudo}</span>
@@ -74,9 +75,12 @@ export function Inbox() {
                   aria-label={`Supprimer la conversation avec ${c.pseudo}`}
                   className="flex w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-signal text-xs text-night"
                   onClick={() => {
-                    if (window.confirm(`Supprimer la conversation avec ${c.pseudo} ? Elle disparaît pour toi seulement.`)) {
-                      deleteConversation(c.otherId);
-                    }
+                    void askConfirm({
+                      title: `Supprimer la conversation avec ${c.pseudo} ?`,
+                      body: "Elle disparaît pour toi seulement.",
+                      confirm: "Supprimer",
+                      danger: true,
+                    }).then((ok) => ok && deleteConversation(c.otherId));
                   }}
                 >
                   <Trash2 className="size-5" />

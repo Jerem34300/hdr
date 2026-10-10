@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
+import { usePhoto } from "@/lib/hdar/photos";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
 import type { Zone } from "@/lib/hdar/data";
@@ -216,6 +217,24 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const youPx = project(you.lat, you.lng);
   const face = zoom >= 10.5 ? 46 : 34;
 
+  // Group pins that would overlap on screen (only matters when zoomed out).
+  const clusterPx = zoom < 12 ? 56 : 0;
+  const clusters: { key: string; x: number; y: number; lat: number; lng: number; pins: typeof pins }[] = [];
+  for (const pin of pins) {
+    const pt = project(pin.at.lat, pin.at.lng);
+    const near = clusterPx ? clusters.find((c) => Math.hypot(c.x - pt.x, c.y - pt.y) < clusterPx) : undefined;
+    if (near) {
+      near.pins.push(pin);
+      const k = near.pins.length;
+      near.x += (pt.x - near.x) / k;
+      near.y += (pt.y - near.y) / k;
+      near.lat += (pin.at.lat - near.lat) / k;
+      near.lng += (pin.at.lng - near.lng) / k;
+    } else {
+      clusters.push({ key: `c-${pin.id}`, x: pt.x, y: pt.y, lat: pin.at.lat, lng: pin.at.lng, pins: [pin] });
+    }
+  }
+
   // Nearest connected person, measured from where you are.
   const nearest = live.reduce<{ pin: LivePin; d: number } | null>((best, p) => {
     const d = haversine(you, p);
@@ -373,29 +392,50 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       )}
       <div className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: youPx.x, top: youPx.y }}>
         <span className="radar-sweep block size-48" />
-        <span className="ping-ring absolute top-1/2 left-1/2 size-16 -translate-x-1/2 -translate-y-1/2" />
         <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-signal" />
       </div>
-      {pins.map((pin) => {
-        const p = project(pin.at.lat, pin.at.lng);
-        if (p.x < -40 || p.y < -40 || p.x > size.w + 40 || p.y > size.h + 40) return null;
+      {clusters.map((c) => {
+        if (c.x < -40 || c.y < -40 || c.x > size.w + 40 || c.y > size.h + 40) return null;
+        if (c.pins.length === 1) {
+          const pin = c.pins[0];
+          return (
+            <button
+              key={pin.id}
+              type="button"
+              data-act="live"
+              data-id={pin.id}
+              data-pseudo={pin.pseudo}
+              aria-label={`Voir le profil de ${pin.pseudo}`}
+              className={
+                "absolute z-20 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 border-white bg-surface " +
+                (pin.hot ? "pin-hot" : "")
+              }
+              style={{ left: c.x, top: c.y, width: face, height: face }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}
+            >
+              <PinFace id={pin.id} pseudo={pin.pseudo} />
+            </button>
+          );
+        }
+        // Zoomed out: people close together become one glowing bubble showing where it's busy.
+        const n = c.pins.length;
+        const d = Math.min(76, 40 + n * 4);
         return (
           <button
-            key={pin.id}
+            key={c.key}
             type="button"
-            data-act="live"
-            data-id={pin.id}
-            data-pseudo={pin.pseudo}
-            aria-label={pin.pseudo}
-            className={
-              "absolute z-20 grid -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-full border-2 border-white bg-surface font-display text-sm font-bold " +
-              (pin.hot ? "pin-hot" : "")
-            }
-            style={{ left: p.x, top: p.y, width: face, height: face }}
+            aria-label={`${n} personnes connectées ici, zoomer`}
+            className="cluster-glow absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-signal font-display font-extrabold text-night"
+            style={{ left: c.x, top: c.y, width: d, height: d }}
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}
+            onClick={() => {
+              follow.current = false;
+              setView((v) => ({ ...v, lat: c.lat, lng: c.lng }));
+              animateTo(Math.max(viewRef.current.zoom + 2, 12));
+            }}
           >
-            {pin.pseudo.slice(0, 1).toUpperCase()}
+            {n}
           </button>
         );
       })}
@@ -442,5 +482,15 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+function PinFace({ id, pseudo }: { id: string; pseudo: string }) {
+  const photo = usePhoto(id);
+  if (photo) return <img src={photo} alt="" draggable={false} className="pointer-events-none size-full object-cover" />;
+  return (
+    <span className="flex size-full items-center justify-center font-display text-sm font-bold">
+      {pseudo.slice(0, 1).toUpperCase()}
+    </span>
   );
 }

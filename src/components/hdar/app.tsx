@@ -16,6 +16,7 @@ import { Celebrate, Sheets } from "./overlays";
 import { PocketChat } from "./pocket";
 import { useConversationsSync, useProfileSync } from "@/lib/hdar/sync";
 import { CallLayer } from "./call-layer";
+import { ConfirmSheet } from "./confirm-sheet";
 import { ProfileView } from "./profile-view";
 import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
@@ -51,6 +52,7 @@ export function App() {
     <>
       <Toaster theme="dark" position="top-center" />
       <CallLayer />
+      <ConfirmSheet />
       {cover && <Cover />}
       <div className={cn("app-frame text-ink", cover && "hidden")}>
         <aside className="hidden flex-col justify-between border-r border-line px-10 py-12 lg:flex">

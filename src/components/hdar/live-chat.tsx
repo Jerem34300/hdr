@@ -5,6 +5,7 @@ import { startCall } from "@/lib/hdar/call";
 import { blockLive, getMedia, getProfile, readThread, reportLive, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
+import { askConfirm } from "@/lib/hdar/confirm";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 
@@ -185,9 +186,12 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               className="block w-full border-t border-line px-4 py-3 text-left"
               onClick={() => {
                 setMenu(false);
-                if (window.confirm(`Supprimer la conversation avec ${pseudo} ? Elle disparaît pour toi seulement.`)) {
-                  deleteConversation(userId);
-                }
+                void askConfirm({
+                  title: `Supprimer la conversation avec ${pseudo} ?`,
+                  body: "Elle disparaît pour toi seulement.",
+                  confirm: "Supprimer",
+                  danger: true,
+                }).then((ok) => ok && deleteConversation(userId));
               }}
             >
               Supprimer la conversation

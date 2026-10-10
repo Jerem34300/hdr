@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { safeSrc } from "@/lib/hdar/media";
+import { usePhoto } from "@/lib/hdar/photos";
 
 export function Avatar({
   src,
@@ -30,4 +31,10 @@ export function Avatar({
       )}
     </span>
   );
+}
+
+/** Avatar of another live user: loads their profile photo, falls back to the initial. */
+export function UserAvatar({ id, name, className }: { id: string; name: string; className?: string }) {
+  const photo = usePhoto(id);
+  return <Avatar src={photo} name={name} className={className} />;
 }

@@ -95,6 +95,19 @@
   animation: sweep 4.8s linear infinite;
 }
 
+.cluster-glow {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-signal) 55%, transparent);
+  animation: cluster-pulse 2.2s ease-out infinite;
+}
+@keyframes cluster-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-signal) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 22px transparent;
+  }
+}
+
 .ping-ring {
   position: absolute;
   inset: 0;
@@ -168,6 +181,7 @@
 @media (prefers-reduced-motion: reduce) {
   .radar-sweep,
   .ping-ring,
+  .cluster-glow,
   .pop-in,
   .pin-hot {
     animation: none !important;

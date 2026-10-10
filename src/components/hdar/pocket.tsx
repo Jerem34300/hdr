@@ -6,6 +6,7 @@ import { areaFeed, areaHide, areaSend, pgTime, type AreaLine } from "@/lib/hdar/
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
+import { UserAvatar } from "./avatar";
 
 function ago(at: string) {
   const min = Math.max(0, Math.round((Date.now() - pgTime(at)) / 60000));
@@ -91,7 +92,13 @@ export function PocketChat() {
           </p>
         )}
         {lines.map((m) => (
-          <div key={m.id} className={m.mine ? "text-right" : "text-left"}>
+          <div key={m.id} className={m.mine ? "text-right" : "flex items-start gap-2 text-left"}>
+            {!m.mine && (
+              <button type="button" className="mt-4 shrink-0" aria-label={`Voir le profil de ${m.pseudo}`} onClick={() => openProfile(m.fromId, m.pseudo)}>
+                <UserAvatar id={m.fromId} name={m.pseudo} className="size-9 rounded-full" />
+              </button>
+            )}
+            <div className="min-w-0">
             <p className="text-xs text-muted">
               {m.mine ? (
                 "Toi"
@@ -125,6 +132,7 @@ export function PocketChat() {
                 Retirer
               </button>
             )}
+            </div>
           </div>
         ))}
         <div ref={end} />
