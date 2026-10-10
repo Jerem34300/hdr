@@ -1,5 +1,5 @@
 /** Public site address, used for canonical links. Override with VITE_SITE_URL on a custom domain. */
-export const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://hornidar.netlify.app").replace(/\/$/, "");
+export const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://hdar.chat").replace(/\/$/, "");
 
 export type SeoCity = { slug: string; name: string; region: string; line: string };
 
