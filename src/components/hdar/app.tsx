@@ -87,7 +87,7 @@ export function App() {
               <li>Le chat du quartier réunit les gens autour.</li>
             </ul>
           </div>
-          <p className="text-xs text-muted">Distances arrondies · position exacte jamais publiée</p>
+          <p className="text-xs text-muted">18+ · distances arrondies · position exacte jamais publiée</p>
         </aside>
         <section className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-night">
           {view.name === "chat" ? (
