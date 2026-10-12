@@ -647,7 +647,7 @@ export function activity(lat: number | null, lng: number | null, areaSince: stri
   return rpc<{ area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
 }
 
-export type PlaceKind = "cruising" | "beach" | "park" | "aire" | "other" | "bar" | "club" | "sauna";
+export type PlaceKind = "cruising" | "beach" | "park" | "aire" | "other" | "toilets" | "bar" | "club" | "sauna";
 export type PlacePin = { id: string; kind: PlaceKind; name: string; lat: number; lng: number; partner: boolean };
 export type PlaceDetail = PlacePin & { description: string; source: string; source_ref: string | null };
 export function listPlaces(s: number, w: number, n: number, e: number) {
@@ -675,4 +675,8 @@ export function placeSend(id: string, body: string, lat: number | null, lng: num
 }
 export function placeHide(msg: string) {
   return rpc("hdar_place_hide", { p_msg: msg });
+}
+
+export function listToilets(s: number, w: number, n: number, e: number) {
+  return rpc<{ id: string; lat: number; lng: number }[]>("hdar_toilets", { p_s: s, p_w: w, p_n: n, p_e: e });
 }

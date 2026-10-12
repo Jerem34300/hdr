@@ -1,6 +1,6 @@
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
-import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, usePlaces } from "./places-layer";
+import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { Layers, LocateFixed } from "lucide-react";
 import { Safe } from "./safe";
@@ -47,8 +47,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const favIds = new Set(useFavorites().map((f) => f.id));
   const act = useActivity();
   const [placesOn, setPlacesOn] = useState(true);
+  const [toiletsOn, setToiletsOn] = useState(true);
   useEffect(() => {
     setPlacesOn(placesLayerOn());
+    setToiletsOn(toiletsLayerOn());
   }, []);
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [proposing, setProposing] = useState(false);
@@ -220,7 +222,18 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     y: worldY(lat, z) * scale - top,
   });
   frame.current = { left, top, z, scale };
-  const places = usePlaces(placesOn);
+  const basePlaces = usePlaces(placesOn);
+  const toilets = useToilets(
+    toiletsOn,
+    {
+      s: latFromY((top + size.h) / scale, z),
+      n: latFromY(top / scale, z),
+      w: lngFromX(left / scale, z),
+      e: lngFromX((left + size.w) / scale, z),
+    },
+    zoom,
+  );
+  const places = toilets.length ? [...basePlaces, ...toilets] : basePlaces;
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {
@@ -614,6 +627,19 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 }}
               />
             </label>
+            <label className="flex h-10 items-center justify-between px-2">
+              <span>
+                🚻 Toilettes <span className="text-xs text-muted">(zoom proche)</span>
+              </span>
+              <input
+                type="checkbox"
+                checked={toiletsOn}
+                onChange={(e) => {
+                  setToiletsOn(e.target.checked);
+                  setToiletsLayer(e.target.checked);
+                }}
+              />
+            </label>
             <button
               type="button"
               className="flex h-10 w-full items-center rounded-xl px-2 text-left hover:bg-surface"
@@ -627,7 +653,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </div>
         )}
       </div>
-      {placesOn && places.length > 0 && (
+      {places.length > 0 && (
         <p className="pointer-events-none absolute bottom-1 left-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
       )}
       {placeId && (

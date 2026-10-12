@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { getPlace, listPlaces, placeHide, placeMessages, placeSend, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, listPlaces, listToilets, placeHide, placeMessages, placeSend, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
@@ -12,6 +12,7 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   park: { label: "Parc / jardin", icon: "🌳", color: "#a3e635" },
   aire: { label: "Aire / parking", icon: "🅿️", color: "#fbbf24" },
   other: { label: "Autre lieu", icon: "📌", color: "#c4b5fd" },
+  toilets: { label: "Toilettes publiques", icon: "🚻", color: "#94a3b8" },
   // Réservés aux futurs partenaires (annonces payantes) — aucun affiché aujourd'hui.
   bar: { label: "Bar partenaire", icon: "🍸", color: "#f472b6" },
   club: { label: "Club partenaire", icon: "🪩", color: "#f472b6" },
@@ -19,6 +20,40 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
 };
 const PROPOSABLE: PlaceKind[] = ["cruising", "beach", "park", "aire", "other"];
 const LAYER_KEY = "hdar-places-layer";
+const TOILETS_KEY = "hdar-toilets-layer";
+export function toiletsLayerOn() {
+  return typeof localStorage === "undefined" || localStorage.getItem(TOILETS_KEY) !== "off";
+}
+export function setToiletsLayer(on: boolean) {
+  localStorage.setItem(TOILETS_KEY, on ? "on" : "off");
+}
+
+/** Public toilets, fetched for the visible box only from zoom 12 (there are tens of thousands). */
+export function useToilets(on: boolean, box: { s: number; w: number; n: number; e: number }, zoom: number): PlacePin[] {
+  const [rows, setRows] = useState<PlacePin[]>([]);
+  const active = on && zoom >= 12;
+  const key = [box.s, box.w, box.n, box.e].map((v) => v.toFixed(2)).join(",");
+  useEffect(() => {
+    if (!active) {
+      setRows([]);
+      return;
+    }
+    const [s, w, n, e] = key.split(",").map(Number);
+    let stop = false;
+    const t = window.setTimeout(() => {
+      void listToilets(s - 0.02, w - 0.02, n + 0.02, e + 0.02)
+        .then((r) => {
+          if (!stop) setRows(r.map((x) => ({ ...x, kind: "toilets" as const, name: "Toilettes publiques", partner: false })));
+        })
+        .catch(() => undefined);
+    }, 400);
+    return () => {
+      stop = true;
+      window.clearTimeout(t);
+    };
+  }, [active, key]);
+  return active ? rows : [];
+}
 
 export function placesLayerOn() {
   return typeof localStorage === "undefined" || localStorage.getItem(LAYER_KEY) !== "off";
@@ -75,6 +110,11 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
           >
             Voir sur la carte / itinéraire
           </a>
+          {p.kind === "toilets" ? (
+            <p className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
+              Toilettes publiques issues d'OpenStreetMap : horaires et accès peuvent varier. Respecte les lieux et les autres usagers.
+            </p>
+          ) : (
           <div className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
             <p className="font-bold text-ink">Avant d'y aller</p>
             <ul className="mt-1 list-disc space-y-1 pl-4">
@@ -91,6 +131,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
               </li>
             </ul>
           </div>
+          )}
           <PlaceChat place={p} />
           {p.source === "osm" && <p className="mt-3 text-[11px] text-muted">Données © OpenStreetMap contributors (ODbL).</p>}
         </>
