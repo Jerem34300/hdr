@@ -705,7 +705,7 @@ begin
     raise exception 'Position invalide';
   end if;
   if (select count(*) from hdar.spots where creator_id = s and closes_at > now()) >= 5 then
-    raise exception 'Tu as dÃ©jÃ  5 lieux ouverts';
+    raise exception 'Tu as déjà 5 lieux ouverts';
   end if;
   insert into hdar.spots (creator_id, title, lat, lng, closes_at)
   values (s, ti, p_lat, p_lng, now() + make_interval(hours => h))
@@ -782,7 +782,7 @@ declare
 begin
   if b = '' then return; end if;
   if not exists (select 1 from hdar.spots where id = p_id and closes_at > now()) then
-    raise exception 'Ce lieu est fermÃ©';
+    raise exception 'Ce lieu est fermé';
   end if;
   if (select count(*) from hdar.spot_messages where from_id = s and created_at > now() - interval '1 minute') >= 30 then
     raise exception 'Trop de messages, patiente un peu';
