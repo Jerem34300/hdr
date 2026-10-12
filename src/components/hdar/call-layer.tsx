@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Mic, MicOff, Phone, PhoneOff, Video, VideoOff } from "lucide-react";
-import { acceptCall, hangUp, toggleCam, toggleMic, useCall, watchSignals } from "@/lib/hdar/call";
+import { Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff } from "lucide-react";
+import { acceptCall, hangUp, switchCamera, toggleCam, toggleMic, useCall, watchSignals } from "@/lib/hdar/call";
 
 function StreamVideo({ stream, muted, className }: { stream: MediaStream | null; muted?: boolean; className: string }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -14,7 +14,7 @@ function StreamVideo({ stream, muted, className }: { stream: MediaStream | null;
 }
 
 export function CallLayer() {
-  const { phase, peerPseudo, local, remote, micOn, camOn } = useCall();
+  const { phase, peerPseudo, local, remote, micOn, camOn, facing, switching } = useCall();
 
   useEffect(() => watchSignals(), []);
 
@@ -65,7 +65,10 @@ export function CallLayer() {
       <StreamVideo
         stream={local}
         muted
-        className="absolute top-4 right-4 aspect-[3/4] w-28 rounded-2xl border border-line bg-surface object-cover"
+        className={
+          "absolute top-4 right-4 aspect-[3/4] w-28 rounded-2xl border border-line bg-surface object-cover " +
+          (facing === "user" ? "-scale-x-100" : "")
+        }
       />
       <div className="dock absolute inset-x-0 bottom-0 flex items-center justify-center gap-5 pt-4 pb-8">
         <button
@@ -91,6 +94,15 @@ export function CallLayer() {
           onClick={toggleCam}
         >
           {camOn ? <Video className="size-6" /> : <VideoOff className="size-6 text-signal" />}
+        </button>
+        <button
+          type="button"
+          aria-label={facing === "user" ? "Passer à la caméra arrière" : "Passer à la caméra avant"}
+          disabled={switching}
+          className="flex size-14 items-center justify-center rounded-full bg-surface/90 disabled:opacity-40"
+          onClick={() => void switchCamera()}
+        >
+          <SwitchCamera className="size-6" />
         </button>
       </div>
     </div>

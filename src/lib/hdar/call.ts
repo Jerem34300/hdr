@@ -20,6 +20,8 @@ type CallState = {
   remote: MediaStream | null;
   micOn: boolean;
   camOn: boolean;
+  facing: "user" | "environment";
+  switching: boolean;
 };
 
 export const useCall = create<CallState>(() => ({
@@ -30,6 +32,8 @@ export const useCall = create<CallState>(() => ({
   remote: null,
   micOn: true,
   camOn: true,
+  facing: "user",
+  switching: false,
 }));
 
 function iceServers(): RTCIceServer[] {
@@ -59,7 +63,7 @@ function reset() {
   pc = null;
   pendingOffer = "";
   useCall.getState().local?.getTracks().forEach((t) => t.stop());
-  useCall.setState({ phase: "idle", peerId: "", peerPseudo: "", local: null, remote: null, micOn: true, camOn: true });
+  useCall.setState({ phase: "idle", peerId: "", peerPseudo: "", local: null, remote: null, micOn: true, camOn: true, facing: "user", switching: false });
 }
 
 async function openCamera(): Promise<MediaStream | null> {
@@ -187,6 +191,35 @@ export function toggleMic() {
   const { local, micOn } = useCall.getState();
   local?.getAudioTracks().forEach((t) => (t.enabled = !micOn));
   useCall.setState({ micOn: !micOn });
+}
+
+/** Front/back camera: swaps the outgoing video track in place (replaceTrack, no renegotiation). */
+export async function switchCamera() {
+  const { local, facing, camOn, switching } = useCall.getState();
+  if (!local || switching) return;
+  const next = facing === "user" ? "environment" : "user";
+  useCall.setState({ switching: true });
+  try {
+    const fresh = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: next }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    }).catch(() =>
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: next, width: { ideal: 640 }, height: { ideal: 480 } }, audio: false }),
+    );
+    const track = fresh.getVideoTracks()[0];
+    if (!track) throw new Error("no track");
+    track.enabled = camOn;
+    const sender = pc?.getSenders().find((s) => s.track?.kind === "video");
+    if (sender) await sender.replaceTrack(track);
+    const old = local.getVideoTracks();
+    const stream = new MediaStream([...local.getAudioTracks(), track]);
+    old.forEach((t) => t.stop());
+    useCall.setState({ local: stream, facing: next });
+  } catch {
+    toast("Impossible de changer de caméra sur cet appareil");
+  } finally {
+    useCall.setState({ switching: false });
+  }
 }
 
 export function toggleCam() {
