@@ -46,7 +46,7 @@ export function Inbox() {
         {convos.map((c) => {
           const unread = !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0);
           const preview =
-            c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastBody;
+            c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastKind === "location" ? "📍 Position" : c.lastBody;
           return (
             <li key={c.otherId} className="flex items-stretch gap-2">
               <button

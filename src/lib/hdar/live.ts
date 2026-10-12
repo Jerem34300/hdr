@@ -24,7 +24,7 @@ export type LiveMsg = {
   mine: boolean;
   body: string;
   at: string;
-  kind: "text" | "image" | "audio";
+  kind: "text" | "image" | "audio" | "location";
   duration: number | null;
 };
 
@@ -465,4 +465,9 @@ export function toggleFavorite(self: string, id: string) {
 
 export function listFavorites(self: string) {
   return rpc<FavoriteRow[]>("hdar_favorites", { p_self: selfId(self) });
+}
+
+/** Exact position, sent only to one person on explicit request. Expires after `minutes` (0 = never). */
+export async function sendLocation(self: string, to: string, lat: number, lng: number, minutes = 60) {
+  await rpc("hdar_send_location", { p_self: selfId(self), p_to: otherId(to), p_lat: lat, p_lng: lng, p_minutes: minutes });
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Image as ImageIcon, Mic, MoreVertical, Send, Square, Video } from "lucide-react";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
-import { blockLive, getMedia, getProfile, readThread, sendLive, sendMedia, type LiveMsg } from "@/lib/hdar/live";
+import { blockLive, getMedia, getProfile, readThread, sendLive, sendLocation, sendMedia, type LiveMsg } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
 import { askConfirm } from "@/lib/hdar/confirm";
@@ -39,6 +39,26 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
 
   const refresh = () =>
     readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs);
+
+  async function shareExactLocation() {
+    const ok = await askConfirm({
+      title: `Envoyer ta position exacte à ${pseudo} ?`,
+      body: `Seul ${pseudo} la verra, dans cette conversation, pendant 1 h. Sur la carte, ta position reste arrondie.`,
+      confirm: "Envoyer ma position",
+    });
+    if (!ok) return;
+    if (!navigator.geolocation) return toast("Localisation indisponible sur cet appareil");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        void sendLocation(deviceId(), userId, pos.coords.latitude, pos.coords.longitude, 60)
+          .then(refresh)
+          .then(() => toast("Position envoyée"))
+          .catch((e: unknown) => toast(e instanceof Error ? e.message : "Envoi impossible"));
+      },
+      () => toast("Autorise la localisation pour partager ta position"),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  }
 
   useEffect(() => {
     let stop = false;
@@ -187,6 +207,16 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               className="block w-full border-t border-line px-4 py-3 text-left"
               onClick={() => {
                 setMenu(false);
+                void shareExactLocation();
+              }}
+            >
+              📍 Partager ma position exacte
+            </button>
+            <button
+              type="button"
+              className="block w-full border-t border-line px-4 py-3 text-left"
+              onClick={() => {
+                setMenu(false);
                 void askConfirm({
                   title: `Supprimer la conversation avec ${pseudo} ?`,
                   body: "Elle disparaît pour toi seulement.",
@@ -229,7 +259,13 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         {msgs.map((m) => (
           <div key={m.id} className={m.mine ? "flex justify-end" : "flex justify-start"}>
             <div className={"max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (m.mine ? "bg-signal text-night" : "bg-surface")}>
-              {m.kind === "text" ? <p className="break-words whitespace-pre-wrap">{m.body}</p> : <LiveMedia msg={m} />}
+              {m.kind === "text" ? (
+                <p className="break-words whitespace-pre-wrap">{m.body}</p>
+              ) : m.kind === "location" ? (
+                <LocationBubble msg={m} />
+              ) : (
+                <LiveMedia msg={m} />
+              )}
             </div>
           </div>
         ))}
@@ -339,5 +375,41 @@ function LiveMedia({ msg }: { msg: LiveMsg }) {
         </button>
       )}
     </>
+  );
+}
+
+function LocationBubble({ msg }: { msg: LiveMsg }) {
+  const [lat, lng] = msg.body.split(",").map(Number);
+  if (!msg.body || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return <p className="opacity-70">📍 Position partagée (expirée)</p>;
+  }
+  const until = msg.duration ? new Date(Date.parse(msg.at.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00")) + msg.duration * 60000) : null;
+  return (
+    <div className="space-y-1">
+      <p className="font-bold">📍 {msg.mine ? "Tu as partagé ta position" : "Position exacte"}</p>
+      <div className="flex flex-wrap gap-2">
+        <a
+          className="underline"
+          href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ouvrir dans Maps
+        </a>
+        <a
+          className="underline"
+          href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          OpenStreetMap
+        </a>
+      </div>
+      {until && Number.isFinite(until.getTime()) && (
+        <p className="text-xs opacity-70">
+          Visible jusqu'à {until.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+        </p>
+      )}
+    </div>
   );
 }
