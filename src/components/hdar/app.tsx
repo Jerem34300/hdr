@@ -18,6 +18,7 @@ import { useConversationsSync, useHeartbeat, useProfileSync } from "@/lib/hdar/s
 import { CallLayer } from "./call-layer";
 import { ConfirmSheet } from "./confirm-sheet";
 import { ReportSheet } from "./report-sheet";
+import { PushPrompt } from "./push-prompt";
 import { ProfileView } from "./profile-view";
 import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
@@ -68,6 +69,7 @@ export function App() {
       <CallLayer />
       <ConfirmSheet />
       <ReportSheet />
+      <PushPrompt />
       {cover && <Cover />}
       <div className={cn("app-frame text-ink", cover && "hidden")}>
         <aside className="hidden flex-col justify-between border-r border-line px-10 py-12 lg:flex">

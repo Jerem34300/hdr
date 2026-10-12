@@ -480,3 +480,13 @@ export async function flagMyPhoto(self: string, reason: string) {
 export async function deleteMyData() {
   await rpc("hdar_delete_me", {});
 }
+
+// Web Push -----------------------------------------------------------------
+
+export async function pushSubscribe(self: string, endpoint: string, p256dh: string, auth: string) {
+  await rpc("hdar_push_subscribe", { p_self: selfId(self), p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth });
+}
+
+export async function pushUnsubscribe(self: string, endpoint: string | null) {
+  await rpc("hdar_push_unsubscribe", { p_self: selfId(self), p_endpoint: endpoint });
+}

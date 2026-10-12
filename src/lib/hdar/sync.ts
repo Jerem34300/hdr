@@ -18,7 +18,7 @@ async function checkMainPhoto(photo: string | undefined) {
   }
   localStorage.setItem(CHECKED_KEY, key);
 }
-import { playPop } from "./media";
+import { playMessageSound } from "./sounds";
 import { myPhotos, useHdar } from "./store";
 
 /** Publishes the local profile (pseudo, age, tags, bio, photo) so others can see it. */
@@ -70,7 +70,7 @@ export function useConversationsSync() {
                 toast(`Nouveau message de ${c.pseudo}`, {
                   action: { label: "Ouvrir", onClick: () => useHdar.getState().openLive(c.otherId, c.pseudo) },
                 });
-                playPop();
+                playMessageSound();
               }
             }
           }

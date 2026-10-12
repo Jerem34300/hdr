@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deviceId } from "./device";
+import { playFavoriteSound } from "./sounds";
 import { listFavorites, toggleFavorite, type FavoriteRow } from "./live";
 
 let rows: FavoriteRow[] = [];
@@ -44,6 +45,7 @@ export function noticeLiveFavorites(live: { id: string; pseudo: string }[]) {
     if (isFavorite(p.id) && !announced.has(p.id)) {
       announced.add(p.id);
       toast(`★ ${p.pseudo} est sur la carte`);
+      playFavoriteSound();
     }
   }
 }

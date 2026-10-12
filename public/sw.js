@@ -1,6 +1,6 @@
 // hdar service worker: makes the web app installable and shows a page offline.
 // Never caches API traffic (Supabase) or private data.
-const CACHE = "hdar-v1";
+const CACHE = "hdar-v2";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/favicon.svg"];
 
 self.addEventListener("install", (e) => {
@@ -35,4 +35,45 @@ self.addEventListener("fetch", (e) => {
       ),
     );
   }
+});
+
+// Web Push: new private message / favorite on the map.
+self.addEventListener("push", (e) => {
+  let d = {};
+  try {
+    d = e.data ? e.data.json() : {};
+  } catch {
+    d = { title: "hdar.", body: e.data ? e.data.text() : "" };
+  }
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      // App open and visible: it already plays its own sound + toast.
+      if (wins.some((w) => w.visibilityState === "visible")) return;
+      return self.registration.showNotification(d.title || "hdar.", {
+        body: d.body || "",
+        tag: d.tag || "hdar",
+        renotify: true,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        vibrate: d.type === "favorite" ? [40, 30, 40, 30, 90] : [60, 40, 60],
+        data: { url: d.url || "/" },
+      });
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ("focus" in w) {
+          w.navigate(url).catch(() => undefined);
+          return w.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
 });

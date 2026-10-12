@@ -1,3 +1,4 @@
+import { NotifySettings } from "./notify-settings";
 import { deleteMyData } from "@/lib/hdar/live";
 import { wipeLocalSession } from "@/lib/hdar/session";
 import { useFavorites } from "@/lib/hdar/favorites";
@@ -60,6 +61,8 @@ export function Me() {
       </p>
 
       <Favorites />
+
+      <NotifySettings />
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Photos</h2>
