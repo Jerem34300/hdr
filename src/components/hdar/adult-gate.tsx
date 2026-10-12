@@ -76,16 +76,22 @@ export function AdultGate({ children }: { children: ReactNode }) {
           sitekey: TURNSTILE_SITE_KEY,
           theme: "dark",
           language: "fr",
-          callback: (t: string) => setToken(t),
+          callback: (t: string) => {
+            setToken(t);
+            setError("");
+          },
           "expired-callback": () => setToken(""),
-          "error-callback": () => setWidgetFailed(true),
+          "error-callback": () => {
+            setToken("");
+            setError("Vérification anti-robot échouée, réessaie.");
+          },
         });
       } catch {
         setWidgetFailed(true);
       }
     });
-    // Never lock people out if the widget hangs: the server decides anyway.
-    const t = window.setTimeout(() => alive && setWidgetFailed(true), 15000);
+    // Fallback only if the widget never loaded at all (script blocked/unreachable).
+    const t = window.setTimeout(() => alive && !widget.current && setWidgetFailed(true), 15000);
     return () => {
       alive = false;
       window.clearTimeout(t);
