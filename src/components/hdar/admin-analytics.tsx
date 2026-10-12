@@ -34,9 +34,9 @@ export function useAsync<T>(load: () => Promise<T>, everyMs = 0) {
   return { data, error, reload: run };
 }
 
-const fmt = (n: number) => n.toLocaleString("fr-FR");
-const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} %` : "—");
-const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+export const fmt = (n: number) => n.toLocaleString("fr-FR");
+export const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} %` : "—");
+export const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const dt = (v: string | null) =>
   v ? new Date(v).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 
@@ -57,7 +57,7 @@ export function Period({ value, onChange }: { value: number; onChange: (d: numbe
   );
 }
 
-function Kpi({ label, value, hint, accent }: { label: string; value: ReactNode; hint?: string; accent?: boolean }) {
+export function Kpi({ label, value, hint, accent }: { label: string; value: ReactNode; hint?: string; accent?: boolean }) {
   return (
     <div className="rounded-2xl border border-line bg-surface px-4 py-3">
       <p className="text-xs text-muted">{label}</p>
@@ -67,7 +67,7 @@ function Kpi({ label, value, hint, accent }: { label: string; value: ReactNode; 
   );
 }
 
-function Card({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
+export function Card({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
   return (
     <section className="mt-5 rounded-2xl border border-line bg-surface p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -196,7 +196,7 @@ const CITIES: [string, number, number][] = [
   ["Annecy", 45.899, 6.129], ["Mulhouse", 47.75, 7.336], ["Le Mans", 48.006, 0.199], ["Bruxelles", 50.85, 4.352],
   ["Genève", 46.204, 6.143], ["Lausanne", 46.52, 6.633], ["Luxembourg", 49.611, 6.13], ["Montréal", 45.502, -73.567],
 ];
-function nearestCity(lat: number, lng: number) {
+export function nearestCity(lat: number, lng: number) {
   let best = "";
   let bd = Infinity;
   for (const [n, a, b] of CITIES) {

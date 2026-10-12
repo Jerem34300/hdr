@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { getPlace, listPlaces, listToilets, placeHide, placeMessages, placeSend, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, placeHide, placeMessages, placeSend, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
@@ -84,6 +84,8 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
   const [p, setP] = useState<PlaceDetail | null>(null);
   useEffect(() => {
     void getPlace(id).then(setP).catch(() => undefined);
+    const h = useHdar.getState().here;
+    void placeSeen(id, h?.lat ?? null, h?.lng ?? null).catch(() => undefined);
     setOpenPlace(id);
     return () => setOpenPlace(null);
   }, [id]);
@@ -102,6 +104,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
           </p>
           <h2 className="mt-1 pr-10 font-display text-2xl font-extrabold">{p.name}</h2>
           {p.description && <p className="mt-2 text-sm">{p.description}</p>}
+          {p.kind !== "toilets" && <PlaceExtras id={p.id} />}
           <a
             className="mt-3 inline-block text-sm text-signal underline"
             href={`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=17/${p.lat}/${p.lng}`}
@@ -293,5 +296,146 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
         </p>
       )}
     </div>
+  );
+}
+
+function Stars({ value, onPick, size = "text-2xl" }: { value: number; onPick?: (n: number) => void; size?: string }) {
+  return (
+    <span className={"inline-flex " + size}>
+      {[1, 2, 3, 4, 5].map((n) =>
+        onPick ? (
+          <button key={n} type="button" aria-label={`${n} étoile${n > 1 ? "s" : ""}`} className="px-0.5" onClick={() => onPick(n)}>
+            <span className={n <= value ? "text-[#fbbf24]" : "text-line"}>★</span>
+          </button>
+        ) : (
+          <span key={n} className={n <= Math.round(value) ? "text-[#fbbf24]" : "text-line"}>★</span>
+        ),
+      )}
+    </span>
+  );
+}
+
+/** Photos, site, contact (lieux partenaires), puis notes et commentaires selon les réglages du propriétaire. */
+function PlaceExtras({ id }: { id: string }) {
+  const onboarded = useHdar((s) => s.me.onboarded);
+  const openGate = useHdar((s) => s.openGate);
+  const [info, setInfo] = useState<PlaceInfo | null>(null);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = () => void placeInfo(id).then(setInfo).catch(() => undefined);
+  useEffect(load, [id]);
+  if (!info) return null;
+  const rate = (n: number) => {
+    if (!onboarded) return openGate();
+    placeRate(id, info.mine === n ? null : n).then(load).catch((e: Error) => toast(e.message));
+  };
+  const send = () => {
+    setBusy(true);
+    placeComment(id, text)
+      .then(() => {
+        setText("");
+        toast(info.comments_public ? "Commentaire publié" : "Commentaire envoyé au lieu");
+        load();
+      })
+      .catch((e: Error) => toast(e.message))
+      .finally(() => setBusy(false));
+  };
+  return (
+    <>
+      {info.photos.length > 0 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto">
+          {info.photos.map((src, i) => (
+            <img key={i} src={src.startsWith("data:image/") ? src : ""} alt="" className="h-32 shrink-0 rounded-2xl object-cover" />
+          ))}
+        </div>
+      )}
+      {(info.website || info.contact) && (
+        <div className="mt-3 flex flex-wrap gap-2 text-sm">
+          {info.website && (
+            <a
+              className="rounded-full bg-signal px-4 py-2 font-bold text-night"
+              href={info.website}
+              target="_blank"
+              rel="noopener nofollow"
+              onClick={() => void placeClick(id).catch(() => undefined)}
+            >
+              Site web ↗
+            </a>
+          )}
+          {info.contact && <span className="rounded-full border border-line px-4 py-2">{info.contact}</span>}
+        </div>
+      )}
+      {info.ratings_on && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2">
+            <Stars value={info.avg ?? 0} size="text-lg" />
+            <span className="text-sm text-muted">{info.count ? `${info.avg} / 5 · ${info.count} note${info.count > 1 ? "s" : ""}` : "Pas encore de note"}</span>
+          </div>
+          {!info.owner && (
+            <p className="mt-1 flex items-center gap-2 text-xs text-muted">
+              {info.mine ? "Ta note (touche pour changer, retouche pour retirer) :" : "Note ce lieu :"} <Stars value={info.mine ?? 0} onPick={rate} />
+            </p>
+          )}
+        </div>
+      )}
+      {info.comments_on && (
+        <div className="mt-4">
+          <h3 className="font-display font-bold">{info.comments_public || info.owner ? "Commentaires" : "Laisser un commentaire au lieu"}</h3>
+          {!info.comments_public && !info.owner && <p className="text-xs text-muted">Ton commentaire sera lu uniquement par l'établissement.</p>}
+          <ul className="mt-2 space-y-2">
+            {info.comments.map((c) => (
+              <li key={c.id} className="rounded-2xl bg-night p-3 text-sm">
+                <p className="text-xs text-muted">
+                  <b className="text-ink">{c.mine ? "Toi" : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString("fr-FR")}
+                </p>
+                <p className="mt-1 break-words">{c.body}</p>
+                <div className="mt-1 text-right text-xs text-muted">
+                  {c.mine ? (
+                    <button type="button" className="underline" onClick={() => void placeCommentDelete(c.id).then(load)}>Supprimer</button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="underline"
+                      onClick={() => {
+                        const r = window.prompt("Pourquoi signaler ce commentaire ?");
+                        if (r !== null) void placeCommentReport(c.id, r).then(() => toast("Merci, on regarde ça."));
+                      }}
+                    >
+                      Signaler
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+            {info.comments.length === 0 && (info.comments_public || info.owner) && <li className="text-xs text-muted">Aucun commentaire pour l'instant.</li>}
+          </ul>
+          {!info.owner &&
+            (onboarded ? (
+              <form
+                className="mt-2 flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  send();
+                }}
+              >
+                <input
+                  className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 text-sm outline-none focus:border-signal"
+                  placeholder="Ton avis sur ce lieu…"
+                  maxLength={500}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                />
+                <button type="submit" disabled={busy || text.trim().length < 2} className="h-11 rounded-full bg-signal px-4 text-sm font-bold text-night disabled:opacity-50">
+                  Publier
+                </button>
+              </form>
+            ) : (
+              <button type="button" className="mt-2 text-sm text-signal underline" onClick={openGate}>
+                Crée ton profil pour commenter
+              </button>
+            ))}
+        </div>
+      )}
+    </>
   );
 }

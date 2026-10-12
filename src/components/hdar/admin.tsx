@@ -15,10 +15,11 @@ import {
 } from "@/lib/hdar/live";
 import { Avatar } from "./avatar";
 import { Heat, Influencers, Monetization, Overview, TopPlaces, Week } from "./admin-analytics";
+import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places";
 
 function readKey() {
   try {
@@ -163,8 +164,12 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
+              ["roi", "ROI lieux"],
+              ["growth", "Croissance & revenus"],
               ["influencers", "Influenceurs"],
               ["money", "Boosts & partenaires"],
+              ["pricing", "Tarifs"],
+              ["comments", "Avis"],
               ["stats", "Temps réel"],
               ["reports", `Signalements${openReports ? ` (${openReports})` : ""}`],
               ["area", "Chat du quartier"],
@@ -193,6 +198,10 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "heat" && <Heat adminKey={adminKey} />}
         {tab === "week" && <Week adminKey={adminKey} />}
         {tab === "top" && <TopPlaces adminKey={adminKey} />}
+        {tab === "roi" && <RoiTab adminKey={adminKey} />}
+        {tab === "growth" && <GrowthTab adminKey={adminKey} />}
+        {tab === "pricing" && <PricingTab adminKey={adminKey} />}
+        {tab === "comments" && <CommentsTab adminKey={adminKey} />}
         {tab === "influencers" && (
           <Influencers
             adminKey={adminKey}

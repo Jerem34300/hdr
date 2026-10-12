@@ -15,6 +15,7 @@ import { Route as CguRouteImport } from './routes/cgu'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProRouteImport } from './routes/pro'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as FrRencontreGayChar123villeChar125RouteImport } from './routes/fr/rencontre-gay-{$ville}'
@@ -50,6 +51,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/login'
+    | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/fr/rencontre-gay-{$ville}'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/login'
+    | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/fr/rencontre-gay-{$ville}'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/login'
+    | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/fr/rencontre-gay-{$ville}'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
+  ProRoute: typeof ProRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   FrRencontreGayChar123villeChar125Route: typeof FrRencontreGayChar123villeChar125Route
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robots.txt': {
       id: '/robots.txt'
       path: '/robots.txt'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
+  ProRoute: ProRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   FrRencontreGayChar123villeChar125Route:

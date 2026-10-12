@@ -747,3 +747,104 @@ export async function listBoosted(): Promise<string[]> {
   const rows = await rpc<{ id: string }[]>("hdar_boosted", {});
   return rows.map((r) => r.id);
 }
+
+// Avis, espace partenaire, boosts payants, paiements (v25) ---------------------
+export type PlaceComment = { id: string; body: string; at: string; pseudo: string; mine: boolean; stars: number | null };
+export type PlaceInfo = {
+  website: string | null; contact: string | null; photos: string[]; owner: boolean;
+  ratings_on: boolean; comments_on: boolean; comments_public: boolean;
+  avg: number | null; count: number; mine: number | null; comments: PlaceComment[];
+};
+export const placeInfo = (id: string) => rpc<PlaceInfo | null>("hdar_place_info", { p_id: id });
+export const placeRate = (id: string, stars: number | null) => rpc("hdar_place_rate", { p_id: id, p_stars: stars });
+export const placeComment = (id: string, body: string) => rpc("hdar_place_comment", { p_id: id, p_body: body });
+export const placeCommentDelete = (id: string) => rpc("hdar_place_comment_delete", { p_id: id });
+export const placeCommentReport = (id: string, reason: string) => rpc("hdar_place_comment_report", { p_id: id, p_reason: reason });
+export const placeClick = (id: string) => rpc("hdar_place_click", { p_id: id });
+export const placeSeen = (id: string, lat: number | null, lng: number | null) => rpc("hdar_place_seen", { p_id: id, p_lat: lat, p_lng: lng });
+
+export type PriceRow = { product: string; kind: "listing" | "boost"; label: string; price_cents: number };
+export const pricing = () => rpc<PriceRow[]>("hdar_pricing", {});
+
+export type MyPlace = {
+  id: string; kind: PlaceKind; name: string; description: string; lat: number; lng: number;
+  website: string | null; contact: string | null; photos: string[];
+  ratings_on: boolean; comments_on: boolean; comments_public: boolean;
+  partner_until: string | null; active: boolean; status: string; sub_status: string | null;
+};
+export type PartnerInput = Omit<MyPlace, "id" | "partner_until" | "active" | "status" | "sub_status"> & { id: string | null };
+export const myPlaces = () => rpc<MyPlace[]>("hdar_my_places", {});
+export const partnerSave = (p: PartnerInput) =>
+  rpc<string>("hdar_partner_save", {
+    p_id: p.id, p_kind: p.kind, p_name: p.name, p_description: p.description, p_lat: p.lat, p_lng: p.lng,
+    p_website: p.website, p_contact: p.contact, p_photos: p.photos,
+    p_ratings_on: p.ratings_on, p_comments_on: p.comments_on, p_comments_public: p.comments_public,
+  });
+export type ZoneCount = { lat: number; lng: number; n: number };
+export type PartnerStats = {
+  views: number; clicks: number; messages: number; visitors: number; avg: number | null; ratings: number; comments: number;
+  days: { day: string; views: number; clicks: number; messages: number; visitors: number }[];
+  zones: ZoneCount[]; hours: { hour: number; n: number }[];
+};
+export const partnerStats = (id: string, days: number) => rpc<PartnerStats>("hdar_partner_stats", { p_id: id, p_days: days });
+export type MyBoost = { id: string; starts_at: string; ends_at: string; active: boolean; cancelled: boolean; views: number; messages: number };
+export const myBoosts = () => rpc<MyBoost[]>("hdar_my_boosts", {});
+
+async function checkoutCall(method: "GET" | "POST", body?: unknown) {
+  const token = await accessToken();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-checkout`, {
+    method,
+    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const b = (await res.json().catch(() => ({}))) as { url?: string; enabled?: boolean; error?: string; message?: string };
+  if (res.status === 503 || b.error === "not_configured") throw new Error("Paiement bientôt disponible");
+  if (!res.ok) throw new Error(b.message || `Serveur indisponible (${res.status})`);
+  return b;
+}
+export async function paymentsEnabled() {
+  try {
+    return !!(await checkoutCall("GET")).enabled;
+  } catch {
+    return false;
+  }
+}
+export async function startCheckout(product: string, placeId: string | null) {
+  const b = await checkoutCall("POST", { product, place_id: placeId });
+  if (b.url) window.location.assign(b.url);
+}
+export async function openBillingPortal() {
+  const b = await checkoutCall("POST", { action: "portal" });
+  if (b.url) window.location.assign(b.url);
+}
+
+export type AdminComment = {
+  id: string; body: string; at: string; hidden: boolean; user_id: string; pseudo: string; place_id: string; place: string;
+  reports: number; reasons: string[] | null;
+};
+export type PricingRow = PriceRow & { duration: string; active: boolean; sort: number; stripe_interval: string | null; stripe_interval_count: number | null };
+export type RoiRow = {
+  id: string; name: string; kind: string; partner: boolean; active: boolean; lat: number; lng: number;
+  views: number; visitors: number; clicks: number; messages: number; ratings: number; avg_stars: number | null; comments: number; revenue_cents: number;
+};
+export type Growth = {
+  funnel: { visitors: number; profiles: number; first_message: number };
+  retention: { w1: number; w1_cohort: number; m1: number; m1_cohort: number };
+  trend_zones: { lat: number; lng: number; now: number; prev: number | null }[];
+  trend_places: { id: string; name: string; kind: string; lat: number; lng: number; now: number; prev: number | null }[];
+  revenue: { total: number; count: number; payers: number; listings: number; boosts: number; mau: number };
+  revenue_zones: { lat: number; lng: number; cents: number; payers: number }[];
+  payments: { at: string; kind: string; product: string; cents: number; user_id: string; place: string | null }[];
+};
+export const business = {
+  growth: (key: string, days: number) => rpc<Growth>("hdar_admin_growth", { p_key: key, p_days: days }),
+  roi: async (key: string, days: number) => num(await rpc<RoiRow[]>("hdar_admin_places_roi", { p_key: key, p_days: days })),
+  origin: (key: string, place: string, days: number) =>
+    rpc<{ zones: ZoneCount[]; hours: { hour: number; n: number }[] }>("hdar_admin_place_origin", { p_key: key, p_place: place, p_days: days }),
+  comments: (key: string, reported: boolean) => rpc<AdminComment[]>("hdar_admin_comments", { p_key: key, p_reported: reported }),
+  moderate: (key: string, id: string, action: "hide" | "show" | "delete" | "ok") =>
+    rpc("hdar_admin_comment_moderate", { p_key: key, p_id: id, p_action: action }),
+  pricing: (key: string) => rpc<PricingRow[]>("hdar_admin_pricing", { p_key: key }),
+  pricingSet: (key: string, product: string, label: string, price: number, active: boolean) =>
+    rpc("hdar_admin_pricing_set", { p_key: key, p_product: product, p_label: label, p_price: price, p_active: active }),
+};

@@ -238,6 +238,9 @@ export function Me() {
           <Trash2 className="size-4" />
           Supprimer toutes mes données
         </button>
+        <a href="/pro#boost" className="mt-4 flex h-12 items-center justify-center gap-2 rounded-full border border-[#f472b6] text-sm font-bold text-[#f472b6]">
+          ✨ Booster mon profil · Espace pro (lieux partenaires)
+        </a>
         <p className="mt-4 text-center text-xs text-muted">
           <a className="underline" href="/confidentialite">
             Confidentialité

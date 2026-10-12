@@ -19,3 +19,17 @@ tables live in the private `hdar` schema.
   `hdar_place_get`) ; RPC admin `hdar_admin_overview/heat/week/top_places/influencers`. Appliqué en
   `hdar_v24_analytics` + correctifs `hdar_v24b_analytics_fix` (variable_conflict) et `hdar_v24c_revoke_triggers`
   (déjà intégrés au fichier).
+
+## v25 — Avis, espace pro, paiements Stripe
+
+Migrations `hdar_v25_selfserve`, `hdar_v25b_portal`. Fonctions edge `hdar-checkout` (JWT requis) et `hdar-stripe-webhook` (sans JWT, signature Stripe vérifiée).
+
+Pour activer les paiements (Supabase → Edge Functions → Secrets) :
+1. `STRIPE_SECRET_KEY` = clé secrète Stripe (`sk_live_…`, ou `sk_test_…` pour tester).
+2. Stripe → Développeurs → Webhooks → Ajouter un endpoint :
+   `https://hoomzhgqzwuystwburfa.supabase.co/functions/v1/hdar-stripe-webhook`
+   Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `invoice.paid`,
+   `customer.subscription.updated`, `customer.subscription.deleted`.
+3. `STRIPE_WEBHOOK_SECRET` = secret de signature de cet endpoint (`whsec_…`).
+4. Stripe → Paramètres → Billing → Portail client : activer (pour « Gérer / résilier mon abonnement »).
+Tant que `STRIPE_SECRET_KEY` manque, /pro affiche « Paiement bientôt disponible ». Prix : table `hdar.pricing` (onglet admin « Tarifs »).
