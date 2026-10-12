@@ -53,7 +53,8 @@ export type Person = {
   openTo: SignalKind[];
 };
 
-export const PEOPLE: Person[] = [
+/** Ancien jeu de profils de démo : plus jamais affiché en production. */
+const DEMO_PEOPLE: Person[] = [
   {
     id: "milo",
     pseudo: "Milo",
@@ -264,6 +265,10 @@ export const PEOPLE: Person[] = [
   },
 ];
 
+/** Pas de faux profils : seules les vraies personnes connectées apparaissent. */
+export const PEOPLE: Person[] = [];
+void DEMO_PEOPLE;
+
 export type Zone = { id: string; name: string; east: number; north: number; radius: number };
 
 export type City = {
@@ -409,6 +414,7 @@ const SPOT_TITLES: Record<string, [string, string, string]> = {
 };
 
 export function spotsFor(slug: string): SpotSeed[] {
+  if (slug) return [];
   const titles = SPOT_TITLES[slug] ?? SPOT_TITLES.paris;
   const geom = [
     { east: 70, north: 40, radiusM: 220, hours: 3, members: 11 },

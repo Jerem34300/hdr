@@ -5,7 +5,6 @@ import {
   CITIES,
   LENGTHS,
   PEOPLE,
-  SPOT_REPLIES,
   spotsFor,
   type Desire,
   type PlaceKind,
@@ -437,20 +436,6 @@ export const useHdar = create<State>()(
         if (!value) return;
         const mine: PocketMsg = { id: uid("p"), from: "me", text: value, at: Date.now() };
         set({ pocket: [...get().pocket, mine] });
-        const replies = [
-          "Je suis dans le coin.",
-          "Si tu me vois sur la carte, le privé est ouvert.",
-          "Je reste anonyme ici.",
-        ];
-        window.setTimeout(() => {
-          const reply: PocketMsg = {
-            id: uid("p"),
-            from: "Anonyme",
-            text: replies[Math.floor(Math.random() * replies.length)] ?? replies[0],
-            at: Date.now(),
-          };
-          set({ pocket: [...get().pocket, reply] });
-        }, 700);
       },
       openChat: (personId) =>
         set({
@@ -489,34 +474,6 @@ export const useHdar = create<State>()(
             m.personId === personId ? { ...m, messages: [...m.messages, msg] } : m,
           ),
         });
-        const person = PEOPLE.find((p) => p.id === personId);
-        if (!person) return;
-        const cursor = get().matches.find((m) => m.personId === personId)?.replyCursor ?? 1;
-        const line = person.replies[cursor % person.replies.length] ?? person.replies[0];
-        window.setTimeout(() => {
-          const cur = get().matches.find((m) => m.personId === personId);
-          if (!cur || isExpired(cur.expiresAt, Date.now())) return;
-          const replyCursor = cur.replyCursor + 1;
-          const pinnedThem = replyCursor >= 3 ? true : cur.pinnedThem;
-          const both = cur.pinnedMe && pinnedThem;
-          const view = get().view;
-          const viewing = view.name === "chat" && view.personId === personId;
-          if (pinnedThem && !cur.pinnedThem) toast("Il a épinglé la conversation");
-          set({
-            matches: get().matches.map((m) =>
-              m.personId !== personId
-                ? m
-                : {
-                    ...m,
-                    replyCursor,
-                    pinnedThem,
-                    expiresAt: conversationExpiry(m.createdAt, both),
-                    unread: viewing ? 0 : m.unread + 1,
-                    messages: [...m.messages, { id: uid("m"), from: "them", at: Date.now(), text: line }],
-                  },
-            ),
-          });
-        }, 1000);
       },
       openOnce: (personId, msgId) =>
         set({
@@ -654,21 +611,6 @@ export const useHdar = create<State>()(
           const prev = get().spotExtras[id] ?? [];
           set({ spotExtras: { ...get().spotExtras, [id]: [...prev, msg] } });
         }
-        const reply = SPOT_REPLIES[Math.floor(Math.random() * SPOT_REPLIES.length)] ?? "Ok.";
-        const from = ["Sam", "Noé", "Alex", "Jo"][Math.floor(Math.random() * 4)] ?? "Sam";
-        window.setTimeout(() => {
-          const back: SpotMsg = { id: uid("sm"), from, mine: false, text: reply, at: Date.now() };
-          if (get().customSpots.some((s) => s.id === id)) {
-            set({
-              customSpots: get().customSpots.map((s) =>
-                s.id === id ? { ...s, messages: [...s.messages, back] } : s,
-              ),
-            });
-          } else {
-            const prev = get().spotExtras[id] ?? [];
-            set({ spotExtras: { ...get().spotExtras, [id]: [...prev, back] } });
-          }
-        }, 900);
       },
       removeSpotMsg: (spotId, msgId) => {
         set({
