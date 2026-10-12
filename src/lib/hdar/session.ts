@@ -29,6 +29,19 @@ export function confirmAdult() {
 let pending: Promise<string> | null = null;
 
 /** Ensures an anonymous session and binds it to this device's hdar id. Returns the access token. */
+export const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAFUvihI1by_YuomX";
+
+let captchaToken: string | undefined;
+/** Turnstile token from the first-visit screen; consumed by the next anonymous sign-in. */
+export function setCaptchaToken(token: string | undefined) {
+  captchaToken = token;
+}
+
+export async function hasSession() {
+  const { data } = await supabase().auth.getSession();
+  return !!data.session;
+}
+
 export function ensureSession(): Promise<string> {
   if (!pending) {
     pending = (async () => {
@@ -36,7 +49,8 @@ export function ensureSession(): Promise<string> {
       const sb = supabase();
       let { data } = await sb.auth.getSession();
       if (!data.session) {
-        const res = await sb.auth.signInAnonymously();
+        const res = await sb.auth.signInAnonymously(captchaToken ? { options: { captchaToken } } : undefined);
+        captchaToken = undefined;
         if (res.error || !res.data.session) throw new Error(res.error?.message || "Connexion impossible");
         data = { session: res.data.session };
       }
