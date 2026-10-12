@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     return new Response("bad json", { status: 400 });
   }
   if (!body?.secret || (await sha256(body.secret)) !== RELAY_HASH) return new Response("forbidden", { status: 403 });
-  webpush.setVapidDetails("mailto:jerem34300@gmail.com", VAPID_PUBLIC, body.vapid_private);
+  webpush.setVapidDetails("https://hdar.chat", VAPID_PUBLIC, body.vapid_private);
   const data = JSON.stringify(body.payload ?? {});
   const gone: string[] = [];
   await Promise.all(

@@ -105,7 +105,7 @@ function Privacy() {
         </li>
         <li>
           Pour toute question ou demande (accès, rectification, opposition) : via le <ContactLink />{" "}
-          (sujet « RGPD / suppression »). Les messages de contact sont conservés au maximum 1 an.
+          (sujet « RGPD / suppression »). Les messages envoyés via ce formulaire sont conservés au maximum 1 an pour traiter ta demande, y compris après « Supprimer toutes mes données » (ils sont ensuite effacés automatiquement).
         </li>
         <li>Tu peux aussi saisir la CNIL (cnil.fr).</li>
       </ul>
