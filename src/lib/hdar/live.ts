@@ -644,7 +644,7 @@ export function sendContact(subject: ContactSubject, body: string, reply: string
 
 export type ActivitySpot = { id: string; created: string; mine: boolean; joined: boolean; last: string | null; near: boolean };
 export function activity(lat: number | null, lng: number | null, areaSince: string | null) {
-  return rpc<{ area: number; spots: ActivitySpot[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
+  return rpc<{ area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
 }
 
 export type PlaceKind = "cruising" | "beach" | "park" | "aire" | "other" | "bar" | "club" | "sauna";
@@ -665,3 +665,14 @@ export const adminPlaces = {
   list: (key: string) => rpc<AdminPlaceRow[]>("hdar_admin_places", { p_key: key }),
   review: (key: string, id: string, ok: boolean) => rpc("hdar_admin_place_review", { p_key: key, p_id: id, p_ok: ok }),
 };
+
+export type PlaceLine = { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean };
+export function placeMessages(id: string) {
+  return rpc<PlaceLine[]>("hdar_place_messages", { p_id: id });
+}
+export function placeSend(id: string, body: string, lat: number | null, lng: number | null) {
+  return rpc("hdar_place_send", { p_id: id, p_body: body, p_lat: lat, p_lng: lng });
+}
+export function placeHide(msg: string) {
+  return rpc("hdar_place_hide", { p_msg: msg });
+}

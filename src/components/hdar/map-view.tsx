@@ -2,7 +2,7 @@ import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, usePlaces } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
-import { LocateFixed } from "lucide-react";
+import { Layers, LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { usePhoto } from "@/lib/hdar/photos";
@@ -49,6 +49,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   useEffect(() => setPlacesOn(placesLayerOn()), []);
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [proposing, setProposing] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(false);
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
   // First launch (no saved position): hide the default city until the GPS answers.
   const [finding, setFinding] = useState(place.slug !== "ici");
@@ -216,17 +217,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     y: worldY(lat, z) * scale - top,
   });
   frame.current = { left, top, z, scale };
-  const places = usePlaces(
-    placesOn,
-    {
-      s: latFromY((top + size.h) / scale, z),
-      n: latFromY(top / scale, z),
-      w: lngFromX(left / scale, z),
-      e: lngFromX((left + size.w) / scale, z),
-    },
-    zoom,
-  );
-  const placeClusterPx = zoom < 14 ? 44 : 0;
+  const places = usePlaces(placesOn);
+  const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {
     const pt = project(pl.lat, pl.lng);
@@ -513,6 +505,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               }}
             >
               {c.items.length}
+              {c.items.some((x) => act.places.has(x.id)) && (
+                <span className="absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-night bg-signal" />
+              )}
             </button>
           );
         }
@@ -529,6 +524,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             onClick={() => setPlaceId(pl.id)}
           >
             {k.icon}
+            {act.places.has(pl.id) && <span className="absolute -top-1 -right-1 size-3 rounded-full border-2 border-night bg-signal" />}
           </button>
         );
       })}
@@ -592,22 +588,40 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       >
         <LocateFixed className="size-5" />
       </button>
-      <div className="absolute top-16 left-3 z-30 flex flex-col items-start gap-2">
+      <div className="absolute top-16 left-3 z-30">
         <button
           type="button"
-          aria-pressed={placesOn}
-          className={"h-9 rounded-full px-3 text-xs " + (placesOn ? "bg-emerald-300 text-night" : "bg-night/90 text-ink")}
-          onClick={() => {
-            setPlacesOn(!placesOn);
-            setPlacesLayer(!placesOn);
-          }}
+          aria-label="Calques de la carte"
+          aria-expanded={layersOpen}
+          className="flex size-11 items-center justify-center rounded-full bg-night/90 text-ink"
+          onClick={() => setLayersOpen((v) => !v)}
         >
-          🌲 Lieux permanents
+          <Layers className="size-5" />
         </button>
-        {placesOn && (
-          <button type="button" className="h-9 rounded-full bg-night/90 px-3 text-xs text-ink" onClick={() => setProposing(true)}>
-            + Proposer un lieu
-          </button>
+        {layersOpen && (
+          <div className="mt-2 w-56 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
+            <label className="flex h-10 items-center justify-between px-2">
+              Lieux permanents
+              <input
+                type="checkbox"
+                checked={placesOn}
+                onChange={(e) => {
+                  setPlacesOn(e.target.checked);
+                  setPlacesLayer(e.target.checked);
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              className="flex h-10 w-full items-center rounded-xl px-2 text-left hover:bg-surface"
+              onClick={() => {
+                setLayersOpen(false);
+                setProposing(true);
+              }}
+            >
+              + Proposer un lieu ici
+            </button>
+          </div>
         )}
       </div>
       {placesOn && places.length > 0 && (

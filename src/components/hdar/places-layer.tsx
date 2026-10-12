@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { getPlace, listPlaces, proposePlace, type PlaceDetail, type PlaceKind, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, listPlaces, placeHide, placeMessages, placeSend, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { setOpenPlace } from "@/lib/hdar/activity";
+import { haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
 
 export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color: string }> = {
@@ -25,30 +27,30 @@ export function setPlacesLayer(on: boolean) {
   localStorage.setItem(LAYER_KEY, on ? "on" : "off");
 }
 
-/** Fetches permanent places in the visible box (debounced, only from zoom 7). */
-export function usePlaces(on: boolean, box: { s: number; w: number; n: number; e: number }, zoom: number) {
-  const [rows, setRows] = useState<PlacePin[]>([]);
-  const key = [box.s, box.w, box.n, box.e].map((v) => v.toFixed(1)).join(",");
+let cache: PlacePin[] | null = null;
+let loading: Promise<PlacePin[]> | null = null;
+
+/** All permanent places (~2 000) are loaded once and clustered on screen at every zoom level. */
+export function usePlaces(on: boolean) {
+  const [rows, setRows] = useState<PlacePin[]>(cache ?? []);
   useEffect(() => {
-    if (!on || zoom < 7) {
-      setRows([]);
-      return;
-    }
-    const [s, w, n, e] = key.split(",").map(Number);
-    const t = window.setTimeout(() => {
-      void listPlaces(s - 0.1, w - 0.1, n + 0.1, e + 0.1)
-        .then(setRows)
-        .catch(() => undefined);
-    }, 350);
-    return () => window.clearTimeout(t);
-  }, [on, key, zoom >= 7]); // eslint-disable-line react-hooks/exhaustive-deps
-  return rows;
+    if (!on || cache) return;
+    loading ??= listPlaces(-90, -180, 90, 180).then((r) => (cache = r)).finally(() => (loading = null));
+    let stop = false;
+    void loading.then((r) => !stop && setRows(r)).catch(() => undefined);
+    return () => {
+      stop = true;
+    };
+  }, [on]);
+  return on ? rows : [];
 }
 
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {
   const [p, setP] = useState<PlaceDetail | null>(null);
   useEffect(() => {
     void getPlace(id).then(setP).catch(() => undefined);
+    setOpenPlace(id);
+    return () => setOpenPlace(null);
   }, [id]);
   const k = p ? PLACE_KINDS[p.kind] : null;
   return (
@@ -89,6 +91,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
               </li>
             </ul>
           </div>
+          <PlaceChat place={p} />
           {p.source === "osm" && <p className="mt-3 text-[11px] text-muted">Données © OpenStreetMap contributors (ODbL).</p>}
         </>
       )}
@@ -150,6 +153,100 @@ export function ProposePlaceSheet({ at, onClose }: { at: { lat: number; lng: num
             {busy ? "Envoi…" : "Envoyer pour vérification"}
           </button>
         </form>
+      )}
+    </div>
+  );
+}
+
+function PlaceChat({ place }: { place: PlaceDetail }) {
+  const here = useHdar((s) => s.here);
+  const [lines, setLines] = useState<PlaceLine[]>([]);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const end = useRef<HTMLDivElement>(null);
+  const distKm = here ? haversine(here, { lat: place.lat, lng: place.lng }) / 1000 : null;
+  const canPost = distKm != null && distKm <= 2;
+  useEffect(() => {
+    let stop = false;
+    const load = () => {
+      if (document.visibilityState !== "visible") return;
+      void placeMessages(place.id)
+        .then((r) => {
+          if (!stop) setLines(r);
+          setOpenPlace(place.id);
+        })
+        .catch(() => undefined);
+    };
+    load();
+    const t = window.setInterval(load, 5000);
+    return () => {
+      stop = true;
+      window.clearInterval(t);
+    };
+  }, [place.id]);
+  useEffect(() => end.current?.scrollIntoView({ block: "nearest" }), [lines.length]);
+  const send = () => {
+    const b = text.trim();
+    if (!b || !here) return;
+    setBusy(true);
+    placeSend(place.id, b, here.lat, here.lng)
+      .then(() => placeMessages(place.id))
+      .then((r) => {
+        setLines(r);
+        setText("");
+      })
+      .catch((e: Error) => toast(e.message))
+      .finally(() => setBusy(false));
+  };
+  return (
+    <div className="mt-4">
+      <h3 className="font-display font-bold">Chat du lieu</h3>
+      <p className="text-xs text-muted">Lisible par tous · messages effacés après 24 h · écrire : à moins de 2 km.</p>
+      <div className="mt-2 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
+        {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">Aucun message pour l'instant.</p>}
+        {lines.map((l) => (
+          <p key={l.id} className={l.mine ? "text-right" : ""}>
+            <span className="text-xs font-bold text-muted">{l.mine ? "Toi" : l.pseudo}</span>{" "}
+            <span className="break-words">{l.body}</span>
+            {l.mine && (
+              <button
+                type="button"
+                aria-label="Supprimer"
+                className="ml-1 text-xs text-muted"
+                onClick={() => void placeHide(l.id).then(() => setLines((x) => x.filter((y) => y.id !== l.id)))}
+              >
+                ×
+              </button>
+            )}
+          </p>
+        ))}
+        <div ref={end} />
+      </div>
+      {canPost ? (
+        <form
+          className="mt-2 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
+          <input
+            className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 text-sm outline-none focus:border-signal"
+            placeholder="Écrire aux gens du coin…"
+            maxLength={240}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <button type="submit" disabled={busy || !text.trim()} className="h-11 rounded-full bg-signal px-4 text-sm font-bold text-night disabled:opacity-50">
+            Envoyer
+          </button>
+        </form>
+      ) : (
+        <p className="mt-2 rounded-2xl border border-line px-3 py-2 text-xs text-muted">
+          {distKm == null
+            ? "Active ta localisation (bouton viseur) pour écrire ici."
+            : `Tu es à ${distKm < 10 ? distKm.toFixed(1) : Math.round(distKm)} km : rapproche-toi à moins de 2 km pour écrire.`}
+        </p>
       )}
     </div>
   );
