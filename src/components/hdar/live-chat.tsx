@@ -1,3 +1,4 @@
+import { useFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import {
   Camera,
@@ -44,6 +45,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
+  const favs = useFavorites();
   const onboarded = useHdar((s) => s.me.onboarded);
   const [camera, setCamera] = useState(false);
   const [seenAt, setSeenAt] = useState<number | null>(null);
@@ -240,7 +242,12 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         >
           <Avatar src={photo} name={pseudo} className="size-10 shrink-0 rounded-full" />
           <span className="min-w-0">
-            <span className="block truncate font-display font-bold">{pseudo}</span>
+            <span className="block truncate font-display font-bold">
+              {pseudo}
+              {favs.some((f) => f.id === userId) && (
+                <span className="ml-1 text-amber-400" aria-label="Favori">★</span>
+              )}
+            </span>
             <span className="flex items-center text-xs text-muted">
               Voir le profil <ChevronRight className="size-3" />
             </span>

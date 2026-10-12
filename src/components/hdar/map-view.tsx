@@ -1,4 +1,4 @@
-import { noticeLiveFavorites } from "@/lib/hdar/favorites";
+import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
@@ -41,6 +41,7 @@ function latFromY(y: number, zoom: number) {
 export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 520 });
+  const favIds = new Set(useFavorites().map((f) => f.id));
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
   // First launch (no saved position): hide the default city until the GPS answers.
   const [finding, setFinding] = useState(place.slug !== "ici");
@@ -427,9 +428,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               data-act="live"
               data-id={pin.id}
               data-pseudo={pin.pseudo}
-              aria-label={`Voir le profil de ${pin.pseudo}`}
+              aria-label={`Voir le profil de ${pin.pseudo}${favIds.has(pin.id) ? " (favori)" : ""}`}
               className={
-                "absolute z-20 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 border-white bg-surface " +
+                "absolute z-20 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 bg-surface " +
+                (favIds.has(pin.id) ? "border-amber-400 ring-2 ring-amber-400/50 " : "border-white ") +
                 (pin.hot ? "pin-hot" : "")
               }
               style={{ left: c.x, top: c.y, width: face, height: face }}

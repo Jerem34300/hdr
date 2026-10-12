@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import { askConfirm } from "@/lib/hdar/confirm";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
+import { useFavorites } from "@/lib/hdar/favorites";
 import { bindTap } from "./tap";
 
 function when(ms: number) {
@@ -15,7 +16,11 @@ function when(ms: number) {
 }
 
 export function Inbox() {
-  const convos = useHdar((s) => s.liveConvos);
+  const rawConvos = useHdar((s) => s.liveConvos);
+  const favs = useFavorites();
+  const favIds = new Set(favs.map((f) => f.id));
+  // Favorites pinned on top, each group keeps its most-recent-first order.
+  const convos = [...rawConvos.filter((c) => favIds.has(c.otherId)), ...rawConvos.filter((c) => !favIds.has(c.otherId))];
   const seenAt = useHdar((s) => s.seenAt);
   const openLive = useHdar((s) => s.openLive);
   const openPocket = useHdar((s) => s.openPocket);
@@ -59,7 +64,12 @@ export function Inbox() {
                 <UserAvatar id={c.otherId} name={c.pseudo} className="size-12 shrink-0 rounded-full" />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
-                    <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>{c.pseudo}</span>
+                    <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>
+                      {c.pseudo}
+                      {favIds.has(c.otherId) && (
+                        <span className="ml-1 text-amber-400" aria-label="Favori">★</span>
+                      )}
+                    </span>
                     <span className="shrink-0 text-xs text-muted">{when(c.lastAt)}</span>
                   </span>
                   <span className={"block truncate text-sm " + (unread ? "text-ink" : "text-muted")}>
