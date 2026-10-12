@@ -1,18 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SEO_CITIES, SITE_URL } from "@/lib/hdar/seo";
+import { LOCAL } from "@/lib/hdar/seo-local";
 
 export const Route = createFileRoute("/fr/rencontre-gay-{$ville}")({
   head: ({ params }) => {
     const city = SEO_CITIES.find((c) => c.slug === params.ville);
     if (!city) return { meta: [{ title: "Ville inconnue — hdar." }, { name: "robots", content: "noindex" }] };
     const url = `${SITE_URL}/fr/rencontre-gay-${city.slug}`;
+    const local = LOCAL[city.slug];
+    const desc =
+      local?.description ??
+      `Rencontre gay à ${city.name} : vois sur la carte qui est connecté autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`;
+    const title = `Rencontre gay à ${city.name} : qui est autour, en direct — hdar.`;
+    const og = `${SITE_URL}${local?.og ?? "/og.jpg"}`;
     return {
       meta: [
-        { title: `Rencontre gay à ${city.name} : qui est autour, en direct — hdar.` },
-        {
-          name: "description",
-          content: `Rencontre gay à ${city.name} : vois sur la carte qui est connecté autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`,
-        },
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+        { property: "og:image", content: og },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: og },
         { name: "robots", content: "index, follow" },
       ],
       links: [{ rel: "canonical", href: url }],
@@ -34,6 +45,8 @@ function CityPage() {
       </main>
     );
   }
+  const local = LOCAL[city.slug];
+  const url = `${SITE_URL}/fr/rencontre-gay-${city.slug}`;
   const faq = [
     {
       q: `Comment faire une rencontre gay à ${city.name} avec hdar ?`,
@@ -45,7 +58,7 @@ function CityPage() {
     },
     {
       q: "Ma position exacte est-elle visible ?",
-      a: "Non. Les autres voient une position arrondie à environ 200 mètres et une distance approximative, jamais une adresse.",
+      a: "Non. Les autres voient une position arrondie à environ 110 mètres et une distance approximative, jamais une adresse.",
     },
     {
       q: `C'est quoi le chat du quartier à ${city.name} ?`,
@@ -55,6 +68,7 @@ function CityPage() {
       q: "C'est gratuit ?",
       a: "Oui. La carte, le chat du quartier, les messages privés et les lieux sont gratuits.",
     },
+    ...(local?.faq ?? []),
   ];
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,6 +82,27 @@ function CityPage() {
   return (
     <main className="h-dvh overflow-y-auto bg-night text-ink">
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "hdar.", item: SITE_URL + "/" },
+            { "@type": "ListItem", position: 2, name: `Rencontre gay à ${city.name}`, item: url },
+          ],
+        })}
+      </script>
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "hdar.",
+          url: SITE_URL,
+          applicationCategory: "SocialNetworkingApplication",
+          operatingSystem: "Web, iOS, Android",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+        })}
+      </script>
       <article className="mx-auto max-w-lg px-5 py-10">
         <Link to="/" className="font-display text-sm font-extrabold tracking-tight">
           hdar<span className="text-signal">.</span>
@@ -96,6 +131,7 @@ function CityPage() {
             <strong>Les lieux</strong> — crée un lieu pour quelques heures (bar, soirée, plage) et retrouve-toi avec ceux du coin.
           </li>
         </ul>
+        {local?.body}
         <h2 className="mt-10 font-display text-xl font-bold">Questions fréquentes</h2>
         <div className="mt-3 space-y-2">
           {faq.map((item) => (
@@ -106,6 +142,21 @@ function CityPage() {
           ))}
         </div>
         <p className="mt-8 text-sm text-muted">Réservé aux 18 ans et plus. Aucune photo explicite sur les pages publiques.</p>
+        {local?.nearby && (
+          <>
+            <h2 className="mt-10 font-display text-lg font-bold">Rencontre gay près de {city.name}</h2>
+            <nav className="mt-3 flex flex-wrap gap-2 text-sm">
+              {local.nearby
+                .map((slug) => SEO_CITIES.find((c) => c.slug === slug))
+                .filter((c) => !!c)
+                .map((c) => (
+                  <Link key={c.slug} to="/fr/rencontre-gay-{$ville}" params={{ ville: c.slug }} className="rounded-full border border-line px-3 py-1.5">
+                    {c.name}
+                  </Link>
+                ))}
+            </nav>
+          </>
+        )}
         <h2 className="mt-10 font-display text-lg font-bold">Rencontre gay dans d'autres villes</h2>
         <nav className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted">
           {SEO_CITIES.filter((c) => c.slug !== city.slug).map((c) => (

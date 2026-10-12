@@ -14,6 +14,7 @@ export const SEO_CITIES: SeoCity[] = [
   { slug: "cap-d-agde", name: "Cap d'Agde", region: "Occitanie", line: "Au Cap d'Agde, toute la saison : qui est là, maintenant, et où ça bouge." },
   { slug: "beziers", name: "Béziers", region: "Occitanie", line: "Béziers et alentours : la carte des gens connectés, distances arrondies." },
   { slug: "nimes", name: "Nîmes", region: "Occitanie", line: "Autour des Arènes et de l'Écusson, vois qui est dispo ce soir." },
+  { slug: "sete", name: "Sète", region: "Occitanie", line: "Du port aux plages du lido, vois qui est connecté autour de toi à Sète." },
   { slug: "perpignan", name: "Perpignan", region: "Occitanie", line: "Perpignan et la côte catalane : chat de quartier et discussions privées." },
   { slug: "bordeaux", name: "Bordeaux", region: "Nouvelle-Aquitaine", line: "Saint-Pierre, Chartrons, Victoire : qui est connecté autour de toi." },
   { slug: "nantes", name: "Nantes", region: "Pays de la Loire", line: "Du Bouffay à l'île de Nantes, trouve qui est dispo à quelques minutes." },
