@@ -15,12 +15,12 @@ export const LOCAL: Record<string, LocalContent> = {
   montpellier: {
     og: "/og-montpellier.jpg",
     description:
-      "Rencontre gay à Montpellier : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Bars, prévention, conseils. Gratuit, anonyme, sans compte, 18+.",
+      "Rencontre gay à Montpellier : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Lieux de drague, prévention, conseils. Gratuit, anonyme, sans compte, 18+.",
     nearby: ["sete", "nimes", "agde", "cap-d-agde", "beziers"],
     faq: [
       {
         q: "Où sortir gay à Montpellier ?",
-        a: "Le cœur de la vie gay est dans l'Écusson et autour de Saint-Roch, notamment rue Jules Latreilhe (Le Coxx, Kaleido Bar), ainsi que Madrediosa aux Beaux-Arts et l'HypnoBar rue des Trésoriers de la Bourse. Vérifie les horaires auprès des lieux avant de sortir.",
+        a: "La vie gay se concentre dans l'Écusson et autour de Saint-Roch et des Beaux-Arts. Pour les soirées de la semaine, consulte l'agenda LGBT de Montpellier, et ouvre la carte hdar pour voir qui est sorti ce soir.",
       },
       {
         q: "Où se faire dépister ou trouver de la prévention à Montpellier ?",
@@ -42,37 +42,42 @@ export const LOCAL: Record<string, LocalContent> = {
           Sur hdar, tu apparais sur la carte de Montpellier seulement quand tu le décides, pour 1 h, 3 h ou 12 h. Ta
           position est arrondie à environ 110 mètres puis effacée : personne ne peut deviner ton adresse. Un soir dans
           l'Écusson, la carte montre qui est connecté autour de la place de la Comédie ou de Saint-Roch, et le chat du
-          quartier permet de demander simplement « quelqu'un au Coxx ce soir ? ».
+          quartier permet de demander simplement « qui sort ce soir ? ».
         </p>
 
-        <h2 className="mt-10 font-display text-xl font-bold">Où sortir gay à Montpellier</h2>
-        <p className="mt-3 text-sm text-muted">
-          Lieux vérifiés en ligne en octobre 2026. Les horaires changent souvent : confirme auprès des lieux ou sur{" "}
+        <h2 className="mt-10 font-display text-xl font-bold">Sortir gay à Montpellier</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Bars, terrasses et soirées se trouvent pour l'essentiel dans l'Écusson, autour de Saint-Roch et vers les
+          Beaux-Arts. Une bonne partie de la nuit est animée par des collectifs qui organisent des soirées ponctuelles :
+          l'agenda change chaque semaine, consulte{" "}
           <a className={ext} href="https://agendalgbt.com/montpellier" rel="noopener" target="_blank">
             Agenda LGBT Montpellier
-          </a>
-          .
+          </a>{" "}
+          avant de sortir. Dans hdar, crée un « lieu » éphémère pour ta soirée afin que les gens autour te retrouvent.
+        </p>
+
+        <h2 className="mt-10 font-display text-xl font-bold">Lieux de drague et plages naturistes</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          La drague en plein air (parcs, bois, plages, aires) fait partie de la culture gay depuis longtemps. Sur la carte
+          hdar, la couche <strong>« Lieux permanents »</strong> affiche des lieux publics et gratuits : plages naturistes
+          issues d'OpenStreetMap et lieux proposés par la communauté, vérifiés avant publication. Sur le littoral
+          héraultais, plusieurs plages naturistes officielles existent, comme celle du Cap d'Agde ou de Sérignan.
         </p>
         <ul className="mt-3 space-y-2 text-sm">
-          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>Rue Jules Latreilhe</strong> : la rue la plus gay de la ville, avec <strong>Le Coxx</strong> (DJ le
-            week-end, drag shows) et le <strong>Kaleido Bar</strong>. Le point de départ classique d'une soirée.
+          <li>
+            <strong>La loi s'applique partout</strong> : l'exhibition sexuelle dans un lieu accessible au public est un
+            délit. Le naturisme n'est autorisé que sur les zones prévues.
           </li>
-          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>Madrediosa</strong>, 5 rue Belmont aux Beaux-Arts : bar queer, ambiance plus mixte, événements
-            réguliers. Souvent recommandé pour se faire des amis quand on arrive à Montpellier.
+          <li>
+            <strong>Respect</strong> des autres usagers, des familles et des riverains ; discrétion et consentement
+            toujours, uniquement entre adultes.
           </li>
-          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>HypnoBar</strong>, 4 rue des Trésoriers de la Bourse, en plein Écusson.
+          <li>
+            <strong>Sécurité</strong> : préviens un proche, méfie-toi des guet-apens, ne garde pas d'objets de valeur.
           </li>
-          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>Soirées</strong> : la ville n'a pas vraiment de club gay permanent, ce sont les collectifs qui font
-            la nuit, comme <strong>Folle de Rage</strong> (tea dances, soirées au <strong>Rockstore</strong>, 20 rue de
-            Verdun).
-          </li>
-          <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>Saunas</strong> : <strong>ONE Sauna</strong> près de la gare (1 rue de la Victoire de la Marne) et{" "}
-            <strong>Koncept Sauna</strong> avenue de Lodève.
+          <li>
+            <strong>Prévention</strong> : AIDES mène des actions de réduction des risques sur les lieux de drague
+            (préservatifs, PrEP, dépistage).
           </li>
         </ul>
 
@@ -109,11 +114,12 @@ export const LOCAL: Record<string, LocalContent> = {
           <li>Regarde qui est autour, écris dans le chat du quartier (effacé après 24 h) ou crée un « lieu » pour ta soirée.</li>
           <li>Pour les messages privés, crée un pseudo : texte, photos, vocaux, appel vidéo et partage de position exacte facultatif (1 h).</li>
           <li>Ajoute des favoris : tu es prévenu quand ils se connectent à Montpellier.</li>
+          <li>Active la couche « Lieux permanents » pour voir les plages naturistes et lieux de drague publics, ou proposer un lieu.</li>
         </ol>
 
         <h2 className="mt-10 font-display text-xl font-bold">Rencontrer en sécurité</h2>
         <ul className="mt-3 space-y-2 text-sm">
-          <li>Premier rendez-vous dans un lieu public : une terrasse de l'Écusson ou un bar de la rue Jules Latreilhe plutôt qu'un appartement.</li>
+          <li>Premier rendez-vous dans un lieu public, par exemple une terrasse de l'Écusson, plutôt qu'un appartement.</li>
           <li>Préviens un proche de l'endroit où tu vas. Le partage de position exacte de hdar expire seul au bout d'une heure.</li>
           <li>Garde ta PrEP, tes préservatifs, et pense au dépistage régulier (AIDES, CeGIDD).</li>
           <li>Si quelqu'un insiste, bloque-le et signale-le dans l'appli : les signalements sont examinés.</li>

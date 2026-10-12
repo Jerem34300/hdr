@@ -1,5 +1,6 @@
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
+import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, usePlaces } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
@@ -44,6 +45,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const [size, setSize] = useState({ w: 390, h: 520 });
   const favIds = new Set(useFavorites().map((f) => f.id));
   const act = useActivity();
+  const [placesOn, setPlacesOn] = useState(true);
+  useEffect(() => setPlacesOn(placesLayerOn()), []);
+  const [placeId, setPlaceId] = useState<string | null>(null);
+  const [proposing, setProposing] = useState(false);
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
   // First launch (no saved position): hide the default city until the GPS answers.
   const [finding, setFinding] = useState(place.slug !== "ici");
@@ -211,6 +216,31 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     y: worldY(lat, z) * scale - top,
   });
   frame.current = { left, top, z, scale };
+  const places = usePlaces(
+    placesOn,
+    {
+      s: latFromY((top + size.h) / scale, z),
+      n: latFromY(top / scale, z),
+      w: lngFromX(left / scale, z),
+      e: lngFromX((left + size.w) / scale, z),
+    },
+    zoom,
+  );
+  const placeClusterPx = zoom < 14 ? 44 : 0;
+  const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
+  for (const pl of places) {
+    const pt = project(pl.lat, pl.lng);
+    if (pt.x < -40 || pt.y < -40 || pt.x > size.w + 40 || pt.y > size.h + 40) continue;
+    const near = placeClusterPx ? placeClusters.find((c) => Math.hypot(c.x - pt.x, c.y - pt.y) < placeClusterPx) : undefined;
+    if (near) {
+      near.items.push(pl);
+      const k = near.items.length;
+      near.x += (pt.x - near.x) / k;
+      near.y += (pt.y - near.y) / k;
+      near.lat += (pl.lat - near.lat) / k;
+      near.lng += (pl.lng - near.lng) / k;
+    } else placeClusters.push({ key: `p-${pl.id}`, x: pt.x, y: pt.y, lat: pl.lat, lng: pl.lng, items: [pl] });
+  }
 
   const pins = live.map((p) => ({
     id: p.id,
@@ -465,6 +495,43 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </button>
         );
       })}
+      {placeClusters.map((c) => {
+        if (c.items.length > 1) {
+          const d = Math.min(52, 26 + c.items.length * 2);
+          return (
+            <button
+              key={c.key}
+              type="button"
+              aria-label={`${c.items.length} lieux permanents ici, zoomer`}
+              className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-emerald-300/70 bg-night/85 text-xs font-bold text-emerald-200"
+              style={{ left: c.x, top: c.y, width: d, height: d }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => {
+                follow.current = false;
+                setView((v) => ({ ...v, lat: c.lat, lng: c.lng }));
+                animateTo(Math.min(17, Math.max(viewRef.current.zoom + 2, 10)));
+              }}
+            >
+              {c.items.length}
+            </button>
+          );
+        }
+        const pl = c.items[0];
+        const k = PLACE_KINDS[pl.kind];
+        return (
+          <button
+            key={pl.id}
+            type="button"
+            aria-label={`${k.label} : ${pl.name}`}
+            className="absolute z-10 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow"
+            style={{ left: c.x, top: c.y, borderColor: k.color }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => setPlaceId(pl.id)}
+          >
+            {k.icon}
+          </button>
+        );
+      })}
       {spotClusters.map((c) => {
         if (c.x < -40 || c.y < -40 || c.x > size.w + 40 || c.y > size.h + 40) return null;
         if (c.items.length > 1) {
@@ -525,6 +592,32 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       >
         <LocateFixed className="size-5" />
       </button>
+      <div className="absolute top-16 left-3 z-30 flex flex-col items-start gap-2">
+        <button
+          type="button"
+          aria-pressed={placesOn}
+          className={"h-9 rounded-full px-3 text-xs " + (placesOn ? "bg-emerald-300 text-night" : "bg-night/90 text-ink")}
+          onClick={() => {
+            setPlacesOn(!placesOn);
+            setPlacesLayer(!placesOn);
+          }}
+        >
+          🌲 Lieux permanents
+        </button>
+        {placesOn && (
+          <button type="button" className="h-9 rounded-full bg-night/90 px-3 text-xs text-ink" onClick={() => setProposing(true)}>
+            + Proposer un lieu
+          </button>
+        )}
+      </div>
+      {placesOn && places.length > 0 && (
+        <p className="pointer-events-none absolute bottom-1 left-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
+      )}
+      {placeId && <PlaceSheet id={placeId} onClose={() => setPlaceId(null)} />}
+      {proposing && <ProposePlaceSheet at={{ lat: view.lat, lng: view.lng }} onClose={() => setProposing(false)} />}
+      {proposing && (
+        <span className="pointer-events-none absolute top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-3xl">⌖</span>
+      )}
       <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
         <button type="button" className="size-11 rounded-full bg-night/90 text-lg text-ink" aria-label="Zoom avant" onClick={() => animateTo(viewRef.current.zoom + 1)}>
           +

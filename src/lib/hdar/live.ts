@@ -646,3 +646,22 @@ export type ActivitySpot = { id: string; created: string; mine: boolean; joined:
 export function activity(lat: number | null, lng: number | null, areaSince: string | null) {
   return rpc<{ area: number; spots: ActivitySpot[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
 }
+
+export type PlaceKind = "cruising" | "beach" | "park" | "aire" | "other" | "bar" | "club" | "sauna";
+export type PlacePin = { id: string; kind: PlaceKind; name: string; lat: number; lng: number; partner: boolean };
+export type PlaceDetail = PlacePin & { description: string; source: string; source_ref: string | null };
+export function listPlaces(s: number, w: number, n: number, e: number) {
+  return rpc<PlacePin[]>("hdar_places", { p_s: s, p_w: w, p_n: n, p_e: e });
+}
+export async function getPlace(id: string) {
+  const rows = await rpc<PlaceDetail[]>("hdar_place_get", { p_id: id });
+  return rows[0] ?? null;
+}
+export function proposePlace(kind: PlaceKind, name: string, description: string, lat: number, lng: number) {
+  return rpc("hdar_place_propose", { p_kind: kind, p_name: name, p_description: description, p_lat: lat, p_lng: lng });
+}
+export type AdminPlaceRow = { id: string; kind: PlaceKind; name: string; description: string; lat: number; lng: number; submitted_by: string | null; at: string };
+export const adminPlaces = {
+  list: (key: string) => rpc<AdminPlaceRow[]>("hdar_admin_places", { p_key: key }),
+  review: (key: string, id: string, ok: boolean) => rpc("hdar_admin_place_review", { p_key: key, p_id: id, p_ok: ok }),
+};

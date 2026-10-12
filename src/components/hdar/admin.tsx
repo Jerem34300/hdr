@@ -8,7 +8,7 @@ import {
   type AdminAreaRow,
   type AdminBanRow,
   type AdminPhotoRow,
-  type AdminContactRow,
+  type AdminContactRow, type AdminPlaceRow, adminPlaces,
   type AdminReportRow,
   type AdminStats,
   type AdminUser,
@@ -16,7 +16,7 @@ import {
 import { Avatar } from "./avatar";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "stats" | "photos" | "reports" | "area" | "bans" | "contacts";
+type Tab = "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places";
 
 function readKey() {
   try {
@@ -158,6 +158,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["area", "Chat du quartier"],
               ["photos", "Photos"],
               ["contacts", "Messages"],
+              ["places", "Lieux proposés"],
               ["bans", "Bannis"],
             ] as [Tab, string][]
           ).map(([id, label]) => (
@@ -181,6 +182,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
+        {tab === "places" && <ProposedPlaces adminKey={adminKey} onOpen={setUserId} />}
         {tab === "bans" && <Bans adminKey={adminKey} onOpen={setUserId} />}
       </div>
     </main>
@@ -775,6 +777,50 @@ function Contacts({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string)
                 Marquer comme traité
               </button>
             )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ProposedPlaces({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) => void }) {
+  const load = useCallback(() => adminPlaces.list(adminKey), [adminKey]);
+  const { data, error, reload } = useLoad<AdminPlaceRow[]>(load, 30000);
+  const [busy, setBusy] = useState("");
+  const review = (id: string, ok: boolean) => {
+    setBusy(id);
+    adminPlaces.review(adminKey, id, ok).then(reload).catch(() => undefined).finally(() => setBusy(""));
+  };
+  return (
+    <div>
+      <p className="mb-3 text-sm text-muted">Lieux gratuits proposés par les utilisateurs. Valider les publie sur la carte (couche « Lieux permanents »).</p>
+      {error && <p className="text-signal">{error}</p>}
+      {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucun lieu en attente.</p>}
+      <ul className="space-y-3">
+        {data?.map((p) => (
+          <li key={p.id} className="rounded-2xl border border-line bg-surface p-3 text-sm">
+            <p className="text-xs text-muted">
+              {p.kind} · {when(p.at)}
+              {p.submitted_by && (
+                <button type="button" className="ml-2 underline" onClick={() => onOpen(p.submitted_by!)}>
+                  auteur
+                </button>
+              )}
+            </p>
+            <p className="mt-1 font-bold">{p.name}</p>
+            {p.description && <p className="mt-1 whitespace-pre-wrap">{p.description}</p>}
+            <a className="mt-1 inline-block text-xs underline" target="_blank" rel="noopener" href={`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=16/${p.lat}/${p.lng}`}>
+              {p.lat.toFixed(5)}, {p.lng.toFixed(5)} — voir
+            </a>
+            <div className="mt-2 flex gap-2">
+              <button type="button" disabled={busy === p.id} className="h-9 flex-1 rounded-full bg-online text-night disabled:opacity-40" onClick={() => review(p.id, true)}>
+                Valider
+              </button>
+              <button type="button" disabled={busy === p.id} className="h-9 flex-1 rounded-full border border-signal text-signal disabled:opacity-40" onClick={() => review(p.id, false)}>
+                Refuser
+              </button>
+            </div>
           </li>
         ))}
       </ul>

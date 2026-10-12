@@ -50,7 +50,9 @@ function Terms() {
         </a>
         .
       </p>
-      <h2>7. Contact</h2>
+      <h2>7. Lieux permanents</h2>
+      <p>La couche « Lieux permanents » affiche des lieux publics et gratuits. Une partie provient d'OpenStreetMap (© OpenStreetMap contributors, licence ODbL). Les lieux proposés par les utilisateurs sont vérifiés avant publication. hdar. n'encourage aucune pratique illégale : la loi, le consentement et le respect des autres usagers s'appliquent partout.</p>
+      <h2>8. Contact</h2>
       <p>
         Via le <ContactLink /> (accessible aussi depuis « Mon profil »).
       </p>
