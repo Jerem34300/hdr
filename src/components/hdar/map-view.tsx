@@ -237,6 +237,26 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     }
   }
 
+  // Places (lieux) cluster too when zoomed out; numbered groups split as you zoom in.
+  const spotClusterPx = zoom < 15 ? 48 : 0;
+  const spotClusters: { key: string; x: number; y: number; lat: number; lng: number; items: LiveSpot[] }[] = [];
+  for (const spot of spots.filter((sp) => sp.creator || sp.live)) {
+    const pt = project(spot.lat, spot.lng);
+    const near = spotClusterPx
+      ? spotClusters.find((c) => Math.hypot(c.x - pt.x, c.y - pt.y) < spotClusterPx)
+      : undefined;
+    if (near) {
+      near.items.push(spot);
+      const k = near.items.length;
+      near.x += (pt.x - near.x) / k;
+      near.y += (pt.y - near.y) / k;
+      near.lat += (spot.lat - near.lat) / k;
+      near.lng += (spot.lng - near.lng) / k;
+    } else {
+      spotClusters.push({ key: `s-${spot.id}`, x: pt.x, y: pt.y, lat: spot.lat, lng: spot.lng, items: [spot] });
+    }
+  }
+
   // Nearest connected person, measured from where you are.
   const nearest = live.reduce<{ pin: LivePin; d: number } | null>((best, p) => {
     const d = haversine(you, p);
@@ -441,21 +461,48 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </button>
         );
       })}
-      {spots.filter((s) => s.creator || s.live).map((spot) => {
-        const p = project(spot.lat, spot.lng);
-        if (p.x < -20 || p.y < -20 || p.x > size.w + 20 || p.y > size.h + 20) return null;
+      {spotClusters.map((c) => {
+        if (c.x < -40 || c.y < -40 || c.x > size.w + 40 || c.y > size.h + 40) return null;
+        if (c.items.length > 1) {
+          const n = c.items.length;
+          const d = Math.min(64, 30 + n * 4);
+          return (
+            <button
+              key={c.key}
+              type="button"
+              aria-label={`${n} lieux ici, zoomer`}
+              className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border-2 border-spot bg-night/95 font-display text-sm font-extrabold text-ink shadow-lg"
+              style={{ left: c.x, top: c.y, width: d, height: d }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => {
+                follow.current = false;
+                setView((v) => ({ ...v, lat: c.lat, lng: c.lng }));
+                animateTo(Math.min(17, Math.max(viewRef.current.zoom + 2, 14)));
+              }}
+            >
+              📍{n}
+            </button>
+          );
+        }
+        const spot = c.items[0];
+        const compact = zoom < 13;
         return (
           <button
             key={spot.id}
             type="button"
             data-act="join"
             data-id={spot.id}
-            className="absolute z-20 h-8 max-w-36 -translate-x-1/2 -translate-y-1/2 truncate rounded-full border border-spot bg-night/90 px-3 text-xs text-ink"
-            style={{ left: p.x, top: p.y }}
+            aria-label={`Lieu : ${spot.title}`}
+            className={
+              compact
+                ? "absolute z-20 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-spot bg-night/90 text-xs"
+                : "absolute z-20 h-8 max-w-36 -translate-x-1/2 -translate-y-1/2 truncate rounded-full border border-spot bg-night/90 px-3 text-xs text-ink"
+            }
+            style={{ left: c.x, top: c.y }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => onSpot(spot.id)}
           >
-            {spot.title}
+            {compact ? "📍" : spot.title}
           </button>
         );
       })}
