@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Camera,
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
@@ -29,6 +30,7 @@ import { askConfirm } from "@/lib/hdar/confirm";
 import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
+import { CameraSheet } from "./camera";
 
 const MAX_VOICE_SEC = 60;
 
@@ -43,6 +45,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
   const onboarded = useHdar((s) => s.me.onboarded);
+  const [camera, setCamera] = useState(false);
   const [seenAt, setSeenAt] = useState<number | null>(null);
   const openGate = useHdar((s) => s.openGate);
   const closeView = useHdar((s) => s.closeView);
@@ -219,6 +222,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {camera && <CameraSheet onClose={() => setCamera(false)} onSend={(f) => void sendPhoto(f)} />}
       <header className="relative flex items-center gap-1 border-b border-line px-2 py-2">
         <button
           type="button"
@@ -384,6 +388,15 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               });
           }}
         >
+          <button
+            type="button"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line disabled:opacity-40"
+            aria-label="Prendre une photo"
+            disabled={busy || rec !== null}
+            onClick={() => setCamera(true)}
+          >
+            <Camera className="size-5" />
+          </button>
           <label
             className={
               "flex size-11 shrink-0 items-center justify-center rounded-full border border-line " +
