@@ -184,7 +184,10 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
       window.clearInterval(t);
     };
   }, [place.id]);
-  useEffect(() => end.current?.scrollIntoView({ block: "nearest" }), [lines.length]);
+  useEffect(() => {
+    // scrollIntoView returns a Promise in recent Chrome: never return it from an effect.
+    end.current?.scrollIntoView({ block: "nearest" });
+  }, [lines.length]);
   const send = () => {
     const b = text.trim();
     if (!b || !here) return;

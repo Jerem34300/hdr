@@ -3,6 +3,7 @@ import { useActivity } from "@/lib/hdar/activity";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, usePlaces } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { Layers, LocateFixed } from "lucide-react";
+import { Safe } from "./safe";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { usePhoto } from "@/lib/hdar/photos";
@@ -46,7 +47,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const favIds = new Set(useFavorites().map((f) => f.id));
   const act = useActivity();
   const [placesOn, setPlacesOn] = useState(true);
-  useEffect(() => setPlacesOn(placesLayerOn()), []);
+  useEffect(() => {
+    setPlacesOn(placesLayerOn());
+  }, []);
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [proposing, setProposing] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
@@ -627,8 +630,16 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       {placesOn && places.length > 0 && (
         <p className="pointer-events-none absolute bottom-1 left-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
       )}
-      {placeId && <PlaceSheet id={placeId} onClose={() => setPlaceId(null)} />}
-      {proposing && <ProposePlaceSheet at={{ lat: view.lat, lng: view.lng }} onClose={() => setProposing(false)} />}
+      {placeId && (
+        <Safe key={placeId} onError={() => setPlaceId(null)}>
+          <PlaceSheet id={placeId} onClose={() => setPlaceId(null)} />
+        </Safe>
+      )}
+      {proposing && (
+        <Safe onError={() => setProposing(false)}>
+          <ProposePlaceSheet at={{ lat: view.lat, lng: view.lng }} onClose={() => setProposing(false)} />
+        </Safe>
+      )}
       {proposing && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-3xl">⌖</span>
       )}

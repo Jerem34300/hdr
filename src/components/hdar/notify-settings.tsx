@@ -61,7 +61,9 @@ export function NotifySettings() {
 
 function SoftToggle({ kind, label }: { kind: SoftKind; label: string }) {
   const [on, setOn] = useState(true);
-  useEffect(() => setOn(softEnabled(kind)), [kind]);
+  useEffect(() => {
+    setOn(softEnabled(kind));
+  }, [kind]);
   return (
     <label className="flex h-11 items-center justify-between text-sm">
       {label}
