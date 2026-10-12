@@ -1,3 +1,5 @@
+import { AdultGate } from "./adult-gate";
+import { authUserId, ensureSession } from "@/lib/hdar/session";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, LogOut, RefreshCw } from "lucide-react";
 import {
@@ -33,6 +35,22 @@ function when(v: string) {
 }
 
 export function AdminApp() {
+  const [uid, setUid] = useState<string | null>(null);
+  useEffect(() => {
+    void ensureSession()
+      .then(() => authUserId())
+      .then(setUid)
+      .catch(() => undefined);
+  }, []);
+  return (
+    <AdultGate>
+      <AdminInner />
+      <p className="fixed bottom-1 left-2 text-[10px] text-muted">auth.uid : {uid ?? "…"}</p>
+    </AdultGate>
+  );
+}
+
+function AdminInner() {
   const [key, setKey] = useState("");
   const [ready, setReady] = useState(false);
   useEffect(() => {

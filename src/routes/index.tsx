@@ -1,3 +1,4 @@
+import { AdultGate } from "@/components/hdar/adult-gate";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { App } from "@/components/hdar/app";
@@ -36,7 +37,11 @@ function Home() {
     });
   }, []);
   if (!ready) return <Splash />;
-  return <App />;
+  return (
+    <AdultGate>
+      <App />
+    </AdultGate>
+  );
 }
 
 /**

@@ -55,12 +55,11 @@ function Gate() {
   const complete = useHdar((s) => s.completeGate);
   const [pseudo, setPseudo] = useState("");
   const [age, setAge] = useState("");
-  const [adult, setAdult] = useState(false);
   const [tags, setTags] = useState<Desire[]>([]);
   const [photo, setPhoto] = useState("");
   const [error, setError] = useState("");
   const years = Number(age);
-  const ready = pseudo.trim().length >= 2 && years >= 18 && adult;
+  const ready = pseudo.trim().length >= 2 && years >= 18;
 
   return (
     <form
@@ -72,7 +71,7 @@ function Gate() {
           return;
         }
         if (!ready) {
-          setError("Pseudo, 18 ans, et la case à cocher.");
+          setError("Pseudo et âge requis.");
           return;
         }
         complete({ pseudo: pseudo.trim().slice(0, 16), age: years, adult: true, tags, photo });
@@ -99,10 +98,6 @@ function Gate() {
           value={age}
           onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
         />
-      </label>
-      <label className="flex items-center gap-3 text-sm">
-        <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
-        J'ai 18 ans ou plus
       </label>
       <div className="flex flex-wrap gap-2">
         {DESIRES.map((d) => {
