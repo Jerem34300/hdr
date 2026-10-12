@@ -7,6 +7,7 @@ import {
   pgTime,
   type AdminAreaRow,
   type AdminBanRow,
+  type AdminPhotoRow,
   type AdminReportRow,
   type AdminStats,
   type AdminUser,
@@ -14,7 +15,7 @@ import {
 import { Avatar } from "./avatar";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "stats" | "reports" | "area" | "bans";
+type Tab = "stats" | "photos" | "reports" | "area" | "bans";
 
 function readKey() {
   try {
@@ -154,6 +155,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["stats", "Tableau de bord"],
               ["reports", `Signalements${openReports ? ` (${openReports})` : ""}`],
               ["area", "Chat du quartier"],
+              ["photos", "Photos"],
               ["bans", "Bannis"],
             ] as [Tab, string][]
           ).map(([id, label]) => (
@@ -175,6 +177,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "stats" && <Stats adminKey={adminKey} onReports={setOpenReports} />}
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
+        {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "bans" && <Bans adminKey={adminKey} onOpen={setUserId} />}
       </div>
     </main>
@@ -647,5 +650,57 @@ function UserDetail({
         )}
       </div>
     </main>
+  );
+}
+
+function Photos({ adminKey }: { adminKey: string }) {
+  const load = useCallback(() => admin.photos(adminKey), [adminKey]);
+  const { data, error, reload } = useLoad<AdminPhotoRow[]>(load, 30000);
+  const [busy, setBusy] = useState("");
+  const review = (id: string, ok: boolean) => {
+    setBusy(id);
+    admin
+      .reviewPhoto(adminKey, id, ok)
+      .then(reload)
+      .catch(() => undefined)
+      .finally(() => setBusy(""));
+  };
+  return (
+    <div>
+      <p className="mb-3 text-sm text-muted">
+        Photo principale uniquement. Tant qu'elle n'est pas validée, seul son auteur la voit. L'album n'est pas modéré.
+      </p>
+      {error && <p className="text-signal">{error}</p>}
+      {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucune photo en attente.</p>}
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {data?.map((p) => (
+          <li key={p.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
+            <img src={p.photo} alt={p.pseudo} className="aspect-square w-full object-cover" />
+            <div className="p-2 text-sm">
+              <p className="truncate font-bold">{p.pseudo}</p>
+              <p className="text-xs text-muted">{when(p.at)}</p>
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  disabled={busy === p.id}
+                  className="h-9 flex-1 rounded-full bg-online text-night disabled:opacity-40"
+                  onClick={() => review(p.id, true)}
+                >
+                  Valider
+                </button>
+                <button
+                  type="button"
+                  disabled={busy === p.id}
+                  className="h-9 flex-1 rounded-full border border-signal text-signal disabled:opacity-40"
+                  onClick={() => review(p.id, false)}
+                >
+                  Refuser
+                </button>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

@@ -438,6 +438,8 @@ export type AdminUser = {
 export type AdminAreaRow = { id: string; from_id: string; pseudo: string; body: string; at: string; removed: boolean };
 export type AdminBanRow = { user_id: string; pseudo: string; reason: string; at: string };
 
+export type AdminPhotoRow = { id: string; pseudo: string; photo: string; at: string };
+
 export const admin = {
   stats: (key: string) => rpc<AdminStats>("hdar_admin_stats", { p_key: key }),
   reports: (key: string, all: boolean) => rpc<AdminReportRow[]>("hdar_admin_reports", { p_key: key, p_all: all }),
@@ -448,6 +450,9 @@ export const admin = {
   area: (key: string) => rpc<AdminAreaRow[]>("hdar_admin_area", { p_key: key }),
   hideArea: (key: string, id: string) => rpc("hdar_admin_hide_area", { p_key: key, p_id: id }),
   banned: (key: string) => rpc<AdminBanRow[]>("hdar_admin_banned", { p_key: key }),
+  photos: (key: string) => rpc<AdminPhotoRow[]>("hdar_admin_photos", { p_key: key }),
+  reviewPhoto: (key: string, id: string, ok: boolean) =>
+    rpc("hdar_admin_photo_review", { p_key: key, p_id: id, p_ok: ok }),
 };
 
 // Favorites --------------------------------------------------------------
