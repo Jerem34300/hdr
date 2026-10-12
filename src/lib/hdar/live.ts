@@ -490,3 +490,9 @@ export async function pushSubscribe(self: string, endpoint: string, p256dh: stri
 export async function pushUnsubscribe(self: string, endpoint: string | null) {
   await rpc("hdar_push_unsubscribe", { p_self: selfId(self), p_endpoint: endpoint });
 }
+
+/** Marks the thread read by me; returns when the other person last read it (ms) or null. */
+export async function markRead(self: string, withId: string): Promise<number | null> {
+  const r = await rpc<string | null>("hdar_mark_read", { p_self: selfId(self), p_with: otherId(withId) });
+  return r ? pgTime(r) : null;
+}

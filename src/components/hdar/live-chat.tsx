@@ -41,6 +41,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
   const onboarded = useHdar((s) => s.me.onboarded);
+  const [seenAt, setSeenAt] = useState<number | null>(null);
   const openGate = useHdar((s) => s.openGate);
   const closeView = useHdar((s) => s.closeView);
   const openProfile = useHdar((s) => s.openProfile);
@@ -50,6 +51,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   const [photo, setPhoto] = useState("");
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState<LiveMsg[]>([]);
+  const lastMine = msgs.map((m) => m.mine).lastIndexOf(true);
   const [busy, setBusy] = useState(false);
   const [rec, setRec] = useState<number | null>(null);
   const recRef = useRef<MediaRecorder | null>(null);
@@ -101,6 +103,10 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
             lastChange = Date.now();
           }
           setMsgs(rows);
+          if (!document.hidden)
+            void markRead(deviceId(), userId)
+              .then((t) => !stop && setSeenAt(t))
+              .catch(() => undefined);
         })
         .catch(() => undefined)
         .finally(() => {
@@ -317,8 +323,8 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         {msgs.length === 0 && (
           <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>
         )}
-        {msgs.map((m) => (
-          <div key={m.id} className={m.mine ? "flex justify-end" : "flex justify-start"}>
+        {msgs.map((m, i) => (
+          <div key={m.id} className={m.mine ? "flex flex-col items-end" : "flex justify-start"}>
             <div
               className={
                 "max-w-[80%] rounded-2xl px-3 py-2 text-sm " +
@@ -333,6 +339,9 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
                 <LiveMedia msg={m} />
               )}
             </div>
+            {m.mine && i === lastMine && seenAt !== null && seenAt >= pgTime(m.at) && (
+              <p className="mt-0.5 text-[11px] text-muted">Vu</p>
+            )}
           </div>
         ))}
         <div ref={end} />
