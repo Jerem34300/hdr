@@ -14,6 +14,13 @@ const ADULT_KEY = "hdar-adult";
 const DEVICE_KEY = "hdar-device";
 
 let client: SupabaseClient | null = null;
+
+// Another tab deleted the account: reload this one so it stops using (and re-saving) the old profile.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === "hdar-owner" && e.newValue === "deleted") window.location.reload();
+  });
+}
 export function supabase() {
   if (!client) client = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
   return client;
@@ -42,6 +49,9 @@ export async function hasSession() {
   return !!data.session;
 }
 
+const OWNER_KEY = "hdar-owner";
+const STORE_KEY = "hdar-v1";
+
 export function ensureSession(): Promise<string> {
   if (!pending) {
     pending = (async () => {
@@ -67,7 +77,21 @@ export function ensureSession(): Promise<string> {
       });
       if (res.ok) {
         const id = (await res.json()) as string;
-        if (id) localStorage.setItem(DEVICE_KEY, id);
+        if (id) {
+          localStorage.setItem(DEVICE_KEY, id);
+          // The saved local profile belongs to one identity only. If this session maps to a
+          // different one (e.g. after "Supprimer mes données", or another tab rewrote old state),
+          // drop the cached profile so it can never be re-uploaded under the new identity.
+          const owner = localStorage.getItem(OWNER_KEY);
+          if (owner !== id) {
+            localStorage.setItem(OWNER_KEY, id);
+            if (owner !== null && localStorage.getItem(STORE_KEY)) {
+              localStorage.removeItem(STORE_KEY);
+              window.location.reload();
+              await new Promise(() => undefined);
+            }
+          }
+        }
       }
       return data.session!.access_token;
     })().finally(() => {
@@ -99,4 +123,6 @@ export async function wipeLocalSession() {
     if (k === ADULT_KEY) continue;
     if (k.startsWith("hdar") || k.startsWith("sb-")) localStorage.removeItem(k);
   }
+  // Marks the local state as orphaned: whatever another tab writes back is discarded on next sign-in.
+  localStorage.setItem(OWNER_KEY, "deleted");
 }
