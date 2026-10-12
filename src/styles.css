@@ -190,3 +190,8 @@
     opacity: 0.4;
   }
 }
+
+@keyframes hdar-sheet-up { from { transform: translateY(105%); } to { transform: translateY(0); } }
+@keyframes hdar-fade { from { opacity: 0; } to { opacity: 1; } }
+.hdar-sheet-up { animation: hdar-sheet-up .42s cubic-bezier(.2,.9,.25,1) both; }
+.hdar-fade { animation: hdar-fade .3s ease-out both; }
