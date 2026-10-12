@@ -1,3 +1,5 @@
+import { deleteMyData } from "@/lib/hdar/live";
+import { wipeLocalSession } from "@/lib/hdar/session";
 import { useFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import { Eye, Mic, Plus, Square, Trash2, X } from "lucide-react";
@@ -211,33 +213,31 @@ export function Me() {
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-signal/60 text-sm text-signal"
           onClick={() =>
             void askConfirm({
-              title: "Supprimer mon profil ?",
-              body: "Ta photo, ton intro et tes infos sont effacées, tu disparais de la carte. Tes conversations restent chez les autres.",
-              confirm: "Supprimer",
+              title: "Supprimer toutes mes données ?",
+              body: "Profil, photos, vocal, messages envoyés et reçus, médias, favoris, position et compte anonyme sont effacés définitivement de nos serveurs. Irréversible.",
+              confirm: "Tout supprimer",
               danger: true,
             }).then(async (ok) => {
               if (!ok) return;
-              const self = deviceId();
-              await Promise.allSettled([
-                goDark({ data: self }),
-                saveProfile({
-                  self,
-                  pseudo: "Anonyme",
-                  age: null,
-                  bio: "",
-                  tags: [],
-                  photos: [],
-                  voice: "",
-                  voiceSec: 0,
-                }),
-              ]);
+              try {
+                await deleteMyData();
+              } catch (e) {
+                toast(e instanceof Error ? e.message : "Suppression impossible, réessaie");
+                return;
+              }
               reset();
+              await wipeLocalSession();
+              window.location.assign("/");
             })
           }
         >
           <Trash2 className="size-4" />
-          Supprimer mon profil
+          Supprimer toutes mes données
         </button>
+        <p className="mt-4 text-center text-xs text-muted">
+          <a className="underline" href="/confidentialite">Confidentialité</a> ·{" "}
+          <a className="underline" href="/cgu">Conditions d'utilisation</a>
+        </p>
       </section>
     </div>
   );

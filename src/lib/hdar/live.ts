@@ -475,3 +475,8 @@ export async function sendLocation(self: string, to: string, lat: number, lng: n
 export async function flagMyPhoto(self: string, reason: string) {
   await rpc("hdar_photo_flag", { p_self: selfId(self), p_reason: reason.slice(0, 80) });
 }
+
+/** Deletes everything about the caller on the server, including the anonymous auth user. */
+export async function deleteMyData() {
+  await rpc("hdar_delete_me", {});
+}

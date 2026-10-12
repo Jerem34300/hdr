@@ -87,3 +87,16 @@ export async function authUserId(): Promise<string | null> {
   const { data } = await supabase().auth.getSession();
   return data.session?.user.id ?? null;
 }
+
+/** After account deletion: forget the session and every local hdar key (the 18+ choice is kept). */
+export async function wipeLocalSession() {
+  try {
+    await supabase().auth.signOut({ scope: "local" });
+  } catch {
+    // session is already gone server-side
+  }
+  for (const k of Object.keys(localStorage)) {
+    if (k === ADULT_KEY) continue;
+    if (k.startsWith("hdar") || k.startsWith("sb-")) localStorage.removeItem(k);
+  }
+}
