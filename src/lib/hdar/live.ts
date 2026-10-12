@@ -9,10 +9,7 @@
  * replaced, so call sites read the same.
  */
 
-const SUPABASE_URL =
-  import.meta.env.VITE_HDAR_SUPABASE_URL || "https://hoomzhgqzwuystwburfa.supabase.co";
-const SUPABASE_KEY =
-  import.meta.env.VITE_HDAR_SUPABASE_KEY || "sb_publishable_BWmk7ZH_jG2Vp2muud3w_w_TllpzneU";
+import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
 
 export type LivePin = {
   id: string;
@@ -47,9 +44,10 @@ export type SpotRow = {
 export type SpotLine = { id: string; fromId: string; pseudo: string; body: string; at: string; mine: boolean };
 
 async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const token = await accessToken();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST",
-    headers: { apikey: SUPABASE_KEY, "content-type": "application/json" },
+    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify(args),
   });
   if (!res.ok) {
