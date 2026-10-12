@@ -4,7 +4,7 @@ import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLay
 import { useEffect, useRef, useState } from "react";
 import { Layers, LocateFixed } from "lucide-react";
 import { Safe } from "./safe";
-import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
+import { listBoosted, listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { usePhoto } from "@/lib/hdar/photos";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
@@ -46,6 +46,17 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const [size, setSize] = useState({ w: 390, h: 520 });
   const favIds = new Set(useFavorites().map((f) => f.id));
   const act = useActivity();
+  const [boosted, setBoosted] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let stop = false;
+    const run = () => void listBoosted().then((ids) => !stop && setBoosted(new Set(ids))).catch(() => undefined);
+    run();
+    const id = window.setInterval(run, 60_000);
+    return () => {
+      stop = true;
+      window.clearInterval(id);
+    };
+  }, []);
   const [placesOn, setPlacesOn] = useState(true);
   const [toiletsOn, setToiletsOn] = useState(true);
   useEffect(() => {
@@ -472,7 +483,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               className={
                 "absolute z-20 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 bg-surface " +
                 (favIds.has(pin.id) ? "border-amber-400 ring-2 ring-amber-400/50 " : "border-white ") +
-                (pin.hot ? "pin-hot" : "")
+                (boosted.has(pin.id) ? "partner-glow z-[21] " : pin.hot ? "pin-hot" : "")
               }
               style={{ left: c.x, top: c.y, width: face, height: face }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -534,7 +545,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             key={pl.id}
             type="button"
             aria-label={`${k.label} : ${pl.name}`}
-            className="absolute z-10 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow"
+            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.partner ? "partner-glow z-[15] size-10" : "z-10 size-8")}
             style={{ left: c.x, top: c.y, borderColor: k.color }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setPlaceId(pl.id)}

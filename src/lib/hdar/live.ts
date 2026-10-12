@@ -680,3 +680,70 @@ export function placeHide(msg: string) {
 export function listToilets(s: number, w: number, n: number, e: number) {
   return rpc<{ id: string; lat: number; lng: number }[]>("hdar_toilets", { p_s: s, p_w: w, p_n: n, p_e: e });
 }
+
+// Admin analytics + monetization (v23/v24) ----------------------------------
+export type OverviewDay = {
+  day: string; visitors: number; sessions: number; new_devices: number; new_profiles: number;
+  pm: number; area: number; place: number;
+};
+export type AdminOverview = {
+  profiles_total: number; profiles_photo: number; devices_total: number; active_now: number; visible_now: number;
+  dau: number; wau: number; mau: number; favorites_total: number; partners_active: number; boosts_active: number;
+  retention: { d1: number; d1_cohort: number; d7: number; d7_cohort: number };
+  days: OverviewDay[];
+};
+export type HeatCell = { lat: number; lng: number; presence: number; peak: number; hours: number };
+export type WeekCell = { dow: number; hour: number; sessions: number; messages: number; presence: number };
+export type TopPlace = {
+  id: string; name: string; kind: string; partner: boolean; lat: number; lng: number;
+  messages: number; views: number; visitors: number;
+};
+export type Influencer = {
+  user_id: string; pseudo: string; photo: string | null; banned: boolean; online: boolean;
+  pm: number; convs: number; area: number; place: number; views: number; favs: number; sessions: number; score: number;
+};
+export type BoostRow = {
+  id: string; user_id: string; pseudo: string; starts_at: string; ends_at: string;
+  price_cents: number; note: string | null; cancelled: boolean; active: boolean;
+};
+export type ListingRow = {
+  id: string; starts_at: string; ends_at: string; price_cents: number; contact: string | null; note: string | null; cancelled: boolean;
+};
+export type PartnerRow = {
+  id: string; name: string; kind: string; description: string | null; lat: number; lng: number;
+  partner_until: string | null; active: boolean; listings: ListingRow[];
+};
+
+const num = <T extends Record<string, unknown>>(rows: T[]) =>
+  rows.map((r) => {
+    const o: Record<string, unknown> = { ...r };
+    for (const k of Object.keys(o)) if (typeof o[k] === "string" && /^-?\d+(\.\d+)?$/.test(o[k] as string) && !["day", "user_id", "id", "pseudo", "name"].includes(k)) o[k] = Number(o[k]);
+    return o as T;
+  });
+
+export const analytics = {
+  overview: (key: string, days: number) => rpc<AdminOverview>("hdar_admin_overview", { p_key: key, p_days: days }),
+  heat: async (key: string, days: number) => num(await rpc<HeatCell[]>("hdar_admin_heat", { p_key: key, p_days: days })),
+  week: async (key: string, days: number) => num(await rpc<WeekCell[]>("hdar_admin_week", { p_key: key, p_days: days })),
+  places: async (key: string, days: number) => num(await rpc<TopPlace[]>("hdar_admin_top_places", { p_key: key, p_days: days })),
+  influencers: async (key: string, days: number) =>
+    num(await rpc<Influencer[]>("hdar_admin_influencers", { p_key: key, p_days: days })),
+  boosts: (key: string) => rpc<BoostRow[]>("hdar_admin_boosts", { p_key: key }),
+  boostCreate: (key: string, user: string, starts: string | null, ends: string, price: number, note: string) =>
+    rpc<string>("hdar_admin_boost_create", { p_key: key, p_user: user, p_starts: starts, p_ends: ends, p_price: price, p_note: note }),
+  boostCancel: (key: string, id: string) => rpc("hdar_admin_boost_cancel", { p_key: key, p_id: id }),
+  partners: (key: string) => rpc<PartnerRow[]>("hdar_admin_partners", { p_key: key }),
+  partnerCreate: (key: string, p: { kind: string; name: string; description: string; lat: number; lng: number; ends: string; price: number; contact: string; note: string }) =>
+    rpc<string>("hdar_admin_partner_create", {
+      p_key: key, p_kind: p.kind, p_name: p.name, p_description: p.description, p_lat: p.lat, p_lng: p.lng,
+      p_ends: p.ends, p_price: p.price, p_contact: p.contact, p_note: p.note,
+    }),
+  listingAdd: (key: string, place: string, starts: string | null, ends: string, price: number, contact: string, note: string) =>
+    rpc("hdar_admin_listing_add", { p_key: key, p_place: place, p_starts: starts, p_ends: ends, p_price: price, p_contact: contact, p_note: note }),
+  listingCancel: (key: string, id: string) => rpc("hdar_admin_listing_cancel", { p_key: key, p_id: id }),
+};
+
+export async function listBoosted(): Promise<string[]> {
+  const rows = await rpc<{ id: string }[]>("hdar_boosted", {});
+  return rows.map((r) => r.id);
+}

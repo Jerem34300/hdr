@@ -10,3 +10,12 @@ tables live in the private `hdar` schema.
 - `hdar_v4_hide_conversations.sql` — per-user conversation deletion
 - `hdar_v5_profile_album_voice.sql` — photo album (5) and voice intro on profiles
 - `hdar_v6_admin_moderation.sql` — admin dashboard, visits, report reasons, bans
+- `hdar_v23_monetization.sql` — boosts utilisateurs (`hdar.boosts`), annonces de lieux partenaires
+  (`hdar.partner_listings`, prolonge `places.partner_until`), `hdar_boosted()` pour le halo sur la carte,
+  RPC admin de gestion manuelle (pas de paiement en ligne).
+- `hdar_v24_analytics.sql` — statistiques persistantes après les purges : `activity_hourly` (présence par
+  carreau ~1 km et par heure, sans identifiant, cron `hdar-stats-snapshot` toutes les 10 min), `msg_hourly`,
+  `user_daily`, `place_daily`, `place_visitors` (triggers sur les messages, `hdar_hit`, `hdar_profile_get`,
+  `hdar_place_get`) ; RPC admin `hdar_admin_overview/heat/week/top_places/influencers`. Appliqué en
+  `hdar_v24_analytics` + correctifs `hdar_v24b_analytics_fix` (variable_conflict) et `hdar_v24c_revoke_triggers`
+  (déjà intégrés au fichier).

@@ -14,9 +14,11 @@ import {
   type AdminUser,
 } from "@/lib/hdar/live";
 import { Avatar } from "./avatar";
+import { Heat, Influencers, Monetization, Overview, TopPlaces, Week } from "./admin-analytics";
+import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places";
+type Tab = "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places";
 
 function readKey() {
   try {
@@ -129,9 +131,13 @@ function Login({ onKey }: { onKey: (k: string) => void }) {
 }
 
 function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => void }) {
-  const [tab, setTab] = useState<Tab>("stats");
+  const [tab, setTab] = useState<Tab>("overview");
   const [userId, setUserId] = useState<string | null>(null);
   const [openReports, setOpenReports] = useState(0);
+  const [boostFor, setBoostFor] = useState<Influencer | null>(null);
+  useEffect(() => {
+    admin.stats(adminKey).then((s) => setOpenReports(s.reports_open)).catch(() => undefined);
+  }, [adminKey]);
 
   if (userId) return <UserDetail adminKey={adminKey} id={userId} onBack={() => setUserId(null)} />;
 
@@ -153,7 +159,13 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         <nav className="mx-auto mt-3 flex max-w-5xl gap-1 overflow-x-auto">
           {(
             [
-              ["stats", "Tableau de bord"],
+              ["overview", "Vue d'ensemble"],
+              ["heat", "Carte de chaleur"],
+              ["week", "Horaires"],
+              ["top", "Top lieux"],
+              ["influencers", "Influenceurs"],
+              ["money", "Boosts & partenaires"],
+              ["stats", "Temps réel"],
               ["reports", `Signalements${openReports ? ` (${openReports})` : ""}`],
               ["area", "Chat du quartier"],
               ["photos", "Photos"],
@@ -177,6 +189,21 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         </nav>
       </header>
       <div className="mx-auto max-w-5xl px-4 py-5">
+        {tab === "overview" && <Overview adminKey={adminKey} />}
+        {tab === "heat" && <Heat adminKey={adminKey} />}
+        {tab === "week" && <Week adminKey={adminKey} />}
+        {tab === "top" && <TopPlaces adminKey={adminKey} />}
+        {tab === "influencers" && (
+          <Influencers
+            adminKey={adminKey}
+            onOpen={setUserId}
+            onBoost={(u) => {
+              setBoostFor(u);
+              setTab("money");
+            }}
+          />
+        )}
+        {tab === "money" && <Monetization key={boostFor?.user_id ?? ""} adminKey={adminKey} prefill={boostFor} onOpen={setUserId} />}
         {tab === "stats" && <Stats adminKey={adminKey} onReports={setOpenReports} />}
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
