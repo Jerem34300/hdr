@@ -1,7 +1,23 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deviceId } from "./device";
-import { hit, listConversations, saveProfile } from "./live";
+import { flagMyPhoto, hit, listConversations, saveProfile } from "./live";
+import { explicitReason } from "./nsfw";
+
+const CHECKED_KEY = "hdar-photo-checked";
+
+/** Automatic check of the main photo only, once per photo. */
+async function checkMainPhoto(photo: string | undefined) {
+  if (!photo) return;
+  const key = `${photo.length}:${photo.slice(-32)}`;
+  if (localStorage.getItem(CHECKED_KEY) === key) return;
+  const reason = await explicitReason(photo);
+  if (reason) {
+    await flagMyPhoto(deviceId(), reason);
+    toast("Ta photo de profil sera vérifiée avant d'être visible par les autres.");
+  }
+  localStorage.setItem(CHECKED_KEY, key);
+}
 import { playPop } from "./media";
 import { myPhotos, useHdar } from "./store";
 
@@ -26,7 +42,9 @@ export function useProfileSync() {
         photos: myPhotos(useHdar.getState().me),
         voice,
         voiceSec,
-      }).catch(() => undefined);
+      })
+        .then(() => checkMainPhoto(myPhotos(useHdar.getState().me)[0]))
+        .catch(() => undefined);
     }, 1200);
     return () => window.clearTimeout(id);
   }, [onboarded, pseudo, age, bio, tags, photosKey, voice, voiceSec]);

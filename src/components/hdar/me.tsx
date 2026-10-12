@@ -62,7 +62,7 @@ export function Me() {
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Photos</h2>
         <p className="mt-1 text-xs text-muted">
-          La première photo (celle du profil) est vérifiée avant d'être visible par les autres. Les suivantes forment ton album.
+          Photo facultative. La première (celle du profil) passe un contrôle automatique. Les suivantes forment ton album.
         </p>
         <p className="text-xs text-muted">
           Jusqu'à {MAX_PHOTOS}, facultatif. Touche une photo pour la mettre en premier.

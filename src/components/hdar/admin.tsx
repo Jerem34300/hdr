@@ -668,7 +668,7 @@ function Photos({ adminKey }: { adminKey: string }) {
   return (
     <div>
       <p className="mb-3 text-sm text-muted">
-        Photo principale uniquement. Tant qu'elle n'est pas validée, seul son auteur la voit. L'album n'est pas modéré.
+        Photos principales signalées automatiquement (contrôle NSFW ou 2 signalements). Tant qu'elles sont ici, seul leur auteur les voit. Refuser supprime la photo et bloque sa remise en ligne.
       </p>
       {error && <p className="text-signal">{error}</p>}
       {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucune photo en attente.</p>}

@@ -471,3 +471,7 @@ export function listFavorites(self: string) {
 export async function sendLocation(self: string, to: string, lat: number, lng: number, minutes = 60) {
   await rpc("hdar_send_location", { p_self: selfId(self), p_to: otherId(to), p_lat: lat, p_lng: lng, p_minutes: minutes });
 }
+
+export async function flagMyPhoto(self: string, reason: string) {
+  await rpc("hdar_photo_flag", { p_self: selfId(self), p_reason: reason.slice(0, 80) });
+}
