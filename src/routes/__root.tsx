@@ -10,12 +10,16 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "hdar." },
       { name: "theme-color", content: "#0B0B10" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "hdar." },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   component: () => (
@@ -29,6 +33,11 @@ export const Route = createRootRoute({
           <Outlet />
         </AuthProvider>
         <Scripts />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "if('serviceWorker' in navigator&&location.hostname!=='localhost')window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})",
+          }}
+        />
       </body>
     </html>
   ),
