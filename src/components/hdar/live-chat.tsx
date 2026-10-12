@@ -62,18 +62,41 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
 
   useEffect(() => {
     let stop = false;
+    let timer = 0;
+    let lastKey = "";
+    let lastChange = Date.now();
+    // Adaptive polling: 1 s while the conversation is lively, slower when quiet or hidden.
+    const delay = () => {
+      if (document.hidden) return 15000;
+      const quiet = Date.now() - lastChange;
+      return quiet < 60_000 ? 1000 : quiet < 300_000 ? 2500 : 5000;
+    };
     const load = () => {
+      window.clearTimeout(timer);
       void readThread({ data: { self: deviceId(), withId: userId } })
         .then((rows) => {
-          if (!stop) setMsgs(rows);
+          if (stop) return;
+          const key = `${rows.length}:${rows[rows.length - 1]?.id ?? ""}`;
+          if (key !== lastKey) {
+            lastKey = key;
+            lastChange = Date.now();
+          }
+          setMsgs(rows);
         })
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => {
+          if (!stop) timer = window.setTimeout(load, delay());
+        });
+    };
+    const onVisible = () => {
+      if (!document.hidden) load();
     };
     load();
-    const id = window.setInterval(load, 2500);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       stop = true;
-      window.clearInterval(id);
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
       window.clearInterval(recTimer.current);
       const mr = recRef.current;
       if (mr && mr.state !== "inactive") {

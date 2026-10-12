@@ -138,6 +138,10 @@ export function AdultGate({ children }: { children: ReactNode }) {
         <button type="submit" disabled={!ready} className="h-12 w-full rounded-full bg-signal text-night disabled:opacity-40">
           {busy ? "Connexion…" : "Entrer"}
         </button>
+        <p className="text-center text-xs text-muted">
+          En entrant, tu acceptes les <a className="underline" href="/cgu">conditions d'utilisation</a> et la{" "}
+          <a className="underline" href="/confidentialite">politique de confidentialité</a>.
+        </p>
       </form>
     </main>
   );

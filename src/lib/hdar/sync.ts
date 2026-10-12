@@ -80,11 +80,17 @@ export function useConversationsSync() {
         .catch(() => undefined);
     };
     load();
-    const id = window.setInterval(load, 8000);
+    // Faster inbox while the app is in front, slow in background.
+    let id = 0;
+    const tick = () => {
+      load();
+      id = window.setTimeout(tick, document.hidden ? 20000 : 4000);
+    };
+    id = window.setTimeout(tick, 4000);
     document.addEventListener("visibilitychange", load);
     return () => {
       stop = true;
-      window.clearInterval(id);
+      window.clearTimeout(id);
       document.removeEventListener("visibilitychange", load);
     };
   }, []);
