@@ -17,7 +17,11 @@ export const Route = createFileRoute("/fr/rencontre-gay-{$ville}")({
       meta: [
         { title },
         { name: "description", content: desc },
+        { name: "page-own-og", content: "1" },
         { property: "og:title", content: title },
+        { property: "og:site_name", content: "hdar." },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
         { property: "og:description", content: desc },
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
