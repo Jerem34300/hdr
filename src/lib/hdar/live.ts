@@ -449,3 +449,15 @@ export const admin = {
   hideArea: (key: string, id: string) => rpc("hdar_admin_hide_area", { p_key: key, p_id: id }),
   banned: (key: string) => rpc<AdminBanRow[]>("hdar_admin_banned", { p_key: key }),
 };
+
+// Favorites --------------------------------------------------------------
+
+export type FavoriteRow = { id: string; pseudo: string; live: boolean; photo: boolean };
+
+export function toggleFavorite(self: string, id: string) {
+  return rpc<boolean>("hdar_fav_toggle", { p_self: selfId(self), p_id: otherId(id) });
+}
+
+export function listFavorites(self: string) {
+  return rpc<FavoriteRow[]>("hdar_favorites", { p_self: selfId(self) });
+}

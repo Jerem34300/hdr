@@ -1,3 +1,4 @@
+import { useFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import { Eye, Mic, Plus, Square, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -55,6 +56,8 @@ export function Me() {
       <p className="mt-1 text-sm text-muted">
         C'est ce que les autres voient quand ils touchent ton pin.
       </p>
+
+      <Favorites />
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Photos</h2>
@@ -355,5 +358,35 @@ function VoiceIntro() {
       <Mic className="size-4" />
       Enregistrer
     </button>
+  );
+}
+
+function Favorites() {
+  const favs = useFavorites();
+  const openProfile = useHdar((s) => s.openProfile);
+  return (
+    <section className="mt-6">
+      <h2 className="font-display text-lg font-bold">Favoris</h2>
+      {favs.length === 0 ? (
+        <p className="mt-1 text-sm text-muted">Touche l'étoile sur un profil pour être prévenu quand il est sur la carte.</p>
+      ) : (
+        <ul className="mt-2 divide-y divide-line">
+          {favs.map((f) => (
+            <li key={f.id}>
+              <button
+                type="button"
+                className="flex h-12 w-full items-center justify-between text-left"
+                onClick={() => openProfile(f.id, f.pseudo)}
+              >
+                <span className="truncate">★ {f.pseudo}</span>
+                <span className={f.live ? "text-sm text-online" : "text-sm text-muted"}>
+                  {f.live ? "● Sur la carte" : "Hors carte"}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

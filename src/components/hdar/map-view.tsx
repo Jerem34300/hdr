@@ -1,3 +1,4 @@
+import { noticeLiveFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
@@ -88,6 +89,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       void listLive({ data: deviceId() })
         .then((rows) => {
           if (!stop) setLive(rows);
+          noticeLiveFavorites(rows);
         })
         .catch(() => undefined);
     };

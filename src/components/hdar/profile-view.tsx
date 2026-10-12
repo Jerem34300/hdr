@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, MessageCircle, Pencil, Video } from "lucide-react";
+import { ChevronLeft, MessageCircle, Pencil, Star, Video } from "lucide-react";
+import { toggleFav, useFavorites } from "@/lib/hdar/favorites";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
 import { DESIRES } from "@/lib/hdar/data";
@@ -27,6 +28,8 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
   const [extras, setExtras] = useState<ProfileExtras | null>(null);
   const setTab = useHdar((s) => s.setTab);
   const self = userId === deviceId();
+  const favs = useFavorites();
+  const fav = favs.some((f) => f.id === userId);
 
   useEffect(() => {
     let alive = true;
@@ -65,6 +68,17 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
         <p className="min-w-0 flex-1 truncate font-display font-bold">
           {self ? "Mon profil, vu par les autres" : "Profil"}
         </p>
+        {!self && (
+          <button
+            type="button"
+            className="flex size-11 items-center justify-center"
+            aria-label={fav ? "Retirer des favoris" : "Ajouter aux favoris"}
+            aria-pressed={fav}
+            onClick={() => void toggleFav(userId, profile?.pseudo || pseudo).catch((e: unknown) => toast(e instanceof Error ? e.message : "Impossible"))}
+          >
+            <Star className={fav ? "size-5 fill-current text-signal" : "size-5"} />
+          </button>
+        )}
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-6 pb-6">
         <div className="flex flex-col items-center text-center">
