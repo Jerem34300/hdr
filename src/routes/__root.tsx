@@ -10,6 +10,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "hdar." },
       { name: "theme-color", content: "#0B0B10" },
+      { name: "google-site-verification", content: "GUj-5VvdUijZY32Tv7JysJVtjGwGBwtXMrPYf2QGkm4" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "hdar." },
