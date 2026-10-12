@@ -193,6 +193,7 @@ type State = {
   locate: () => void;
   openTonight: () => void;
   openCreate: () => void;
+  openGate: () => void;
   openPerson: (id: string) => void;
   openShare: () => void;
   openCity: () => void;
@@ -328,9 +329,9 @@ export const useHdar = create<State>()(
         if (!get().me.onboarded) set({ sheet: "gate", intent: "tonight" });
         else set({ sheet: "tonight" });
       },
+      openGate: () => set({ sheet: "gate", intent: null }),
       openCreate: () => {
-        if (!get().me.onboarded) set({ sheet: "gate", intent: "create-spot" });
-        else set({ sheet: "create-spot" });
+        set({ sheet: "create-spot" });
       },
       openPerson: (id) => set({ sheet: { type: "person", id } }),
       openShare: () => set({ sheet: "share" }),
@@ -501,10 +502,6 @@ export const useHdar = create<State>()(
           ),
         }),
       joinSpot: (id) => {
-        if (!get().me.onboarded) {
-          set({ sheet: "gate", intent: { type: "join", id } });
-          return;
-        }
         const joined = get().joined.includes(id) ? get().joined : [...get().joined, id];
         set({ joined, view: { name: "spot", id }, sheet: null, tab: "spots" });
       },

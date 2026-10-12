@@ -1,8 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Image as ImageIcon, Mic, MoreVertical, Send, Square, Video } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Mic,
+  MoreVertical,
+  Send,
+  Square,
+  Video,
+} from "lucide-react";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
-import { blockLive, getMedia, getProfile, readThread, sendLive, sendLocation, sendMedia, type LiveMsg } from "@/lib/hdar/live";
+import {
+  blockLive,
+  getMedia,
+  getProfile,
+  readThread,
+  sendLive,
+  sendLocation,
+  sendMedia,
+  type LiveMsg,
+} from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
 import { askConfirm } from "@/lib/hdar/confirm";
@@ -22,6 +40,8 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
+  const onboarded = useHdar((s) => s.me.onboarded);
+  const openGate = useHdar((s) => s.openGate);
   const closeView = useHdar((s) => s.closeView);
   const openProfile = useHdar((s) => s.openProfile);
   const markSeen = useHdar((s) => s.markSeen);
@@ -37,8 +57,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   const recStart = useRef(0);
   const end = useRef<HTMLDivElement>(null);
 
-  const refresh = () =>
-    readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs);
+  const refresh = () => readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs);
 
   async function shareExactLocation() {
     const ok = await askConfirm({
@@ -155,11 +174,18 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
     };
     mr.onstop = () => {
       stream.getTracks().forEach((t) => t.stop());
-      const sec = Math.min(MAX_VOICE_SEC, Math.max(1, Math.round((Date.now() - recStart.current) / 1000)));
+      const sec = Math.min(
+        MAX_VOICE_SEC,
+        Math.max(1, Math.round((Date.now() - recStart.current) / 1000)),
+      );
       const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" });
       setBusy(true);
       void blobToDataUrl(blob)
-        .then((media) => sendMedia({ data: { self: deviceId(), to: userId, kind: "audio", media, duration: sec } }))
+        .then((media) =>
+          sendMedia({
+            data: { self: deviceId(), to: userId, kind: "audio", media, duration: sec },
+          }),
+        )
         .then(refresh)
         .catch((err) => toast(err instanceof Error ? err.message : "Vocal non envoyé"))
         .finally(() => setBusy(false));
@@ -186,7 +212,12 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="relative flex items-center gap-1 border-b border-line px-2 py-2">
-        <button type="button" className="flex size-11 shrink-0 items-center justify-center" aria-label="Retour" onClick={closeView}>
+        <button
+          type="button"
+          className="flex size-11 shrink-0 items-center justify-center"
+          aria-label="Retour"
+          onClick={closeView}
+        >
           <ChevronLeft />
         </button>
         <button
@@ -207,7 +238,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
           type="button"
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-signal text-night"
           aria-label="Appel vidéo"
-          onClick={() => void startCall(userId, pseudo)}
+          onClick={() => (onboarded ? void startCall(userId, pseudo) : openGate())}
         >
           <Video className="size-5" />
         </button>
@@ -222,7 +253,11 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         </button>
         {menu && (
           <div className="absolute top-full right-2 z-30 mt-1 w-56 overflow-hidden rounded-2xl border border-line bg-surface text-sm shadow-2xl">
-            <button type="button" className="block w-full px-4 py-3 text-left" onClick={() => openProfile(userId, pseudo)}>
+            <button
+              type="button"
+              className="block w-full px-4 py-3 text-left"
+              onClick={() => openProfile(userId, pseudo)}
+            >
               Voir le profil
             </button>
             <button
@@ -230,6 +265,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               className="block w-full border-t border-line px-4 py-3 text-left"
               onClick={() => {
                 setMenu(false);
+                if (!onboarded) return openGate();
                 void shareExactLocation();
               }}
             >
@@ -278,10 +314,17 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         )}
       </header>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4">
-        {msgs.length === 0 && <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>}
+        {msgs.length === 0 && (
+          <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>
+        )}
         {msgs.map((m) => (
           <div key={m.id} className={m.mine ? "flex justify-end" : "flex justify-start"}>
-            <div className={"max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (m.mine ? "bg-signal text-night" : "bg-surface")}>
+            <div
+              className={
+                "max-w-[80%] rounded-2xl px-3 py-2 text-sm " +
+                (m.mine ? "bg-signal text-night" : "bg-surface")
+              }
+            >
               {m.kind === "text" ? (
                 <p className="break-words whitespace-pre-wrap">{m.body}</p>
               ) : m.kind === "location" ? (
@@ -300,62 +343,84 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         </p>
       )}
       {busy && rec === null && <p className="px-4 pb-2 text-xs text-muted">Envoi…</p>}
-      <form
-        className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const body = text.trim();
-          if (!body) return;
-          setText("");
-          void sendLive({ data: { self: deviceId(), to: userId, body } })
-            .then(refresh)
-            // Keep the draft so a failed send (network, flood guard) isn't lost.
-            .catch((err) => {
-              setText((t) => t || body);
-              toast(err instanceof Error ? err.message : "Message non envoyé");
-            });
-        }}
-      >
-        <label
-          className={"flex size-11 shrink-0 items-center justify-center rounded-full border border-line " + (busy ? "opacity-40" : "")}
-          aria-label="Envoyer une photo"
+      {!onboarded ? (
+        <div className="dock border-t border-line px-4 pt-3 text-center">
+          <p className="text-sm text-muted">
+            Crée ton profil pour envoyer un message privé. La photo est facultative.
+          </p>
+          <button
+            type="button"
+            className="mt-2 h-11 w-full rounded-full bg-signal text-night"
+            onClick={openGate}
+          >
+            Créer mon profil
+          </button>
+        </div>
+      ) : (
+        <form
+          className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const body = text.trim();
+            if (!body) return;
+            setText("");
+            void sendLive({ data: { self: deviceId(), to: userId, body } })
+              .then(refresh)
+              // Keep the draft so a failed send (network, flood guard) isn't lost.
+              .catch((err) => {
+                setText((t) => t || body);
+                toast(err instanceof Error ? err.message : "Message non envoyé");
+              });
+          }}
         >
-          <ImageIcon className="size-5" />
+          <label
+            className={
+              "flex size-11 shrink-0 items-center justify-center rounded-full border border-line " +
+              (busy ? "opacity-40" : "")
+            }
+            aria-label="Envoyer une photo"
+          >
+            <ImageIcon className="size-5" />
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={busy || rec !== null}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void sendPhoto(file);
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={busy && rec === null}
+            className={
+              "flex size-11 shrink-0 items-center justify-center rounded-full border " +
+              (rec !== null ? "border-signal bg-signal text-night" : "border-line")
+            }
+            aria-label={rec !== null ? "Arrêter et envoyer le vocal" : "Enregistrer un vocal"}
+            onClick={() => (rec !== null ? stopRec() : void startRec())}
+          >
+            {rec !== null ? <Square className="size-4" /> : <Mic className="size-5" />}
+          </button>
           <input
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            disabled={busy || rec !== null}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) void sendPhoto(file);
-            }}
+            className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none"
+            value={text}
+            maxLength={500}
+            placeholder="Message"
+            onChange={(e) => setText(e.target.value)}
           />
-        </label>
-        <button
-          type="button"
-          disabled={busy && rec === null}
-          className={
-            "flex size-11 shrink-0 items-center justify-center rounded-full border " +
-            (rec !== null ? "border-signal bg-signal text-night" : "border-line")
-          }
-          aria-label={rec !== null ? "Arrêter et envoyer le vocal" : "Enregistrer un vocal"}
-          onClick={() => (rec !== null ? stopRec() : void startRec())}
-        >
-          {rec !== null ? <Square className="size-4" /> : <Mic className="size-5" />}
-        </button>
-        <input
-          className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none"
-          value={text}
-          maxLength={500}
-          placeholder="Message"
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button type="submit" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-signal text-night" aria-label="Envoyer">
-          <Send className="size-5" />
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-signal text-night"
+            aria-label="Envoyer"
+          >
+            <Send className="size-5" />
+          </button>
+        </form>
+      )}
     </div>
   );
 }
@@ -380,11 +445,22 @@ function LiveMedia({ msg }: { msg: LiveMsg }) {
   }, [msg.id]);
 
   if (failed) return <p>{msg.kind === "image" ? "Photo indisponible" : "Vocal indisponible"}</p>;
-  if (!src) return <p className="opacity-70">{msg.kind === "image" ? "Photo…" : `Vocal · ${msg.duration ?? 1}s…`}</p>;
-  if (msg.kind === "audio") return <audio controls preload="metadata" src={src} className="h-10 w-60 max-w-full" />;
+  if (!src)
+    return (
+      <p className="opacity-70">
+        {msg.kind === "image" ? "Photo…" : `Vocal · ${msg.duration ?? 1}s…`}
+      </p>
+    );
+  if (msg.kind === "audio")
+    return <audio controls preload="metadata" src={src} className="h-10 w-60 max-w-full" />;
   return (
     <>
-      <button type="button" className="block" onClick={() => setZoom(true)} aria-label="Agrandir la photo">
+      <button
+        type="button"
+        className="block"
+        onClick={() => setZoom(true)}
+        aria-label="Agrandir la photo"
+      >
         <img src={src} alt="Photo" className="max-h-64 rounded-xl" />
       </button>
       {zoom && (
@@ -406,7 +482,12 @@ function LocationBubble({ msg }: { msg: LiveMsg }) {
   if (!msg.body || !Number.isFinite(lat) || !Number.isFinite(lng)) {
     return <p className="opacity-70">📍 Position partagée (expirée)</p>;
   }
-  const until = msg.duration ? new Date(Date.parse(msg.at.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00")) + msg.duration * 60000) : null;
+  const until = msg.duration
+    ? new Date(
+        Date.parse(msg.at.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00")) +
+          msg.duration * 60000,
+      )
+    : null;
   return (
     <div className="space-y-1">
       <p className="font-bold">📍 {msg.mine ? "Tu as partagé ta position" : "Position exacte"}</p>
@@ -430,7 +511,8 @@ function LocationBubble({ msg }: { msg: LiveMsg }) {
       </div>
       {until && Number.isFinite(until.getTime()) && (
         <p className="text-xs opacity-70">
-          Visible jusqu'à {until.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+          Visible jusqu'à{" "}
+          {until.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
         </p>
       )}
     </div>
