@@ -4,6 +4,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { bindTap } from "./tap";
 import { Wordmark } from "./logo";
 import { MapView } from "./map-view";
+import { useActivity } from "@/lib/hdar/activity";
 
 export function Around() {
   const enterLine = useHdar((s) => s.enterLine);
@@ -12,6 +13,7 @@ export function Around() {
   const joinSpot = useHdar((s) => s.joinSpot);
   const { place, people, spots, zones } = useScene();
   const [area, setArea] = useState<string | null>(null);
+  const { area: areaUnread } = useActivity();
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -26,9 +28,15 @@ export function Around() {
           type="button"
           data-act="pocket"
           {...bindTap(openPocket)}
-          className="h-11 shrink-0 rounded-full bg-signal px-4 text-sm text-night"
+          aria-label={areaUnread ? `Chat du quartier, ${areaUnread} nouveaux messages` : "Chat du quartier"}
+          className="relative h-11 shrink-0 rounded-full bg-signal px-4 text-sm text-night"
         >
           Chat du quartier
+          {areaUnread > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-night bg-ink px-1 text-[11px] font-bold text-night">
+              {areaUnread > 9 ? "9+" : areaUnread}
+            </span>
+          )}
         </button>
       </header>
       <div className="relative min-h-0 flex-1">

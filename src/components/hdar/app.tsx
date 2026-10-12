@@ -1,3 +1,4 @@
+import { useActivity, useActivityPolling } from "@/lib/hdar/activity";
 import { useEffect, type ReactNode } from "react";
 import { MessageCircle, Radar, UserRound, MapPin } from "lucide-react";
 import { Toaster } from "sonner";
@@ -27,6 +28,8 @@ import { bindTap, installTouchTap } from "./tap";
 export function App() {
   const cover = useHdar((s) => s.cover);
   const tab = useHdar((s) => s.tab);
+  useActivityPolling();
+  const act = useActivity();
   const view = useHdar((s) => s.view);
   const setTab = useHdar((s) => s.setTab);
   const openTonight = useHdar((s) => s.openTonight);
@@ -112,7 +115,7 @@ export function App() {
               {tab === "me" && <Me />}
               <nav className="dock relative z-20 grid shrink-0 grid-cols-5 items-end border-t border-line bg-night px-1 pt-1">
                 <DockButton id="around" label="Carte" current={tab} icon={<Radar className="size-5" />} onClick={setTab} />
-                <DockButton id="spots" label="Lieux" current={tab} icon={<MapPin className="size-5" />} onClick={setTab} />
+                <DockButton id="spots" label="Lieux" current={tab} badge={act.unread.size + act.fresh.size > 0} icon={<MapPin className="size-5" />} onClick={setTab} />
                 <button type="button" data-act="tonight" {...bindTap(openTonight)} className="hit relative -mt-5 flex flex-col items-center pb-1">
                   <span className="relative flex size-14 items-center justify-center rounded-full bg-signal text-night">
                     {tonight ? (

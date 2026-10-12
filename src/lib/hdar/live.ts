@@ -641,3 +641,8 @@ export type AdminContactRow = {
 export function sendContact(subject: ContactSubject, body: string, reply: string) {
   return rpc("hdar_contact_send", { p_subject: subject, p_body: body, p_reply: reply });
 }
+
+export type ActivitySpot = { id: string; created: string; mine: boolean; joined: boolean; last: string | null; near: boolean };
+export function activity(lat: number | null, lng: number | null, areaSince: string | null) {
+  return rpc<{ area: number; spots: ActivitySpot[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
+}

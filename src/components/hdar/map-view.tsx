@@ -1,4 +1,5 @@
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
+import { useActivity } from "@/lib/hdar/activity";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed } from "lucide-react";
 import { listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
@@ -42,6 +43,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 520 });
   const favIds = new Set(useFavorites().map((f) => f.id));
+  const act = useActivity();
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
   // First launch (no saved position): hide the default city until the GPS answers.
   const [finding, setFinding] = useState(place.slug !== "ici");
@@ -494,17 +496,24 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             type="button"
             data-act="join"
             data-id={spot.id}
-            aria-label={`Lieu : ${spot.title}`}
+            aria-label={`Lieu : ${spot.title}${act.unread.has(spot.id) ? " (nouveaux messages)" : act.fresh.has(spot.id) ? " (nouveau)" : ""}`}
             className={
-              compact
+              (compact
                 ? "absolute z-20 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-spot bg-night/90 text-xs"
-                : "absolute z-20 h-8 max-w-36 -translate-x-1/2 -translate-y-1/2 truncate rounded-full border border-spot bg-night/90 px-3 text-xs text-ink"
+                : "absolute z-20 flex h-8 max-w-40 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-spot bg-night/90 px-3 text-xs text-ink") +
+              (act.fresh.has(spot.id) ? " spot-fresh" : "")
             }
             style={{ left: c.x, top: c.y }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => onSpot(spot.id)}
           >
-            {compact ? "📍" : spot.title}
+            {compact ? "📍" : <span className="truncate">{spot.title}</span>}
+            {act.fresh.has(spot.id) && !compact && (
+              <span className="ml-1.5 shrink-0 rounded-full bg-spot px-1.5 text-[10px] font-bold text-night">nouveau</span>
+            )}
+            {act.unread.has(spot.id) && (
+              <span className="absolute -top-1 -right-1 size-3 rounded-full border-2 border-night bg-signal" />
+            )}
           </button>
         );
       })}

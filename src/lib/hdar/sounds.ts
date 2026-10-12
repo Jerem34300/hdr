@@ -79,3 +79,31 @@ export function playFavoriteSound() {
   bell(ac, 1567.98, t + 0.18, 0.8, 0.15);
   bell(ac, 2093, t + 0.27, 0.7, 0.05);
 }
+
+/** Quieter, separately toggleable chimes for public activity (app open only, never pushed). */
+export type SoftKind = "area" | "spot" | "newspot";
+const SOFT_KEY = (k: SoftKind) => `hdar-sound-${k}`;
+export function softEnabled(k: SoftKind) {
+  return typeof localStorage === "undefined" || localStorage.getItem(SOFT_KEY(k)) !== "off";
+}
+export function setSoftEnabled(k: SoftKind, on: boolean) {
+  localStorage.setItem(SOFT_KEY(k), on ? "on" : "off");
+}
+export function playSoftSound(k: SoftKind) {
+  if (!softEnabled(k)) return;
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime + 0.02;
+  if (k === "area") {
+    // one low, round "pop"
+    bell(ac, 587.33, t, 0.35, 0.07);
+  } else if (k === "spot") {
+    // two soft falling notes
+    bell(ac, 880, t, 0.3, 0.06);
+    bell(ac, 659.25, t + 0.1, 0.4, 0.06);
+  } else {
+    // airy rising fifth
+    bell(ac, 523.25, t, 0.4, 0.06);
+    bell(ac, 783.99, t + 0.14, 0.6, 0.06);
+  }
+}

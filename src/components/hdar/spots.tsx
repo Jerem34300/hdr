@@ -7,12 +7,14 @@ import { remainingLabel } from "@/lib/hdar/rules";
 import { resolvePlace, useScene, type LiveSpot } from "@/lib/hdar/scene";
 import { useHdar, type SpotMsg } from "@/lib/hdar/store";
 import { bindTap } from "./tap";
+import { useActivity } from "@/lib/hdar/activity";
 
 export function Spots() {
   const { spots } = useScene();
   const joined = useHdar((s) => s.joined);
   const openCreate = useHdar((s) => s.openCreate);
   const joinSpot = useHdar((s) => s.joinSpot);
+  const act = useActivity();
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6">
@@ -35,7 +37,17 @@ export function Spots() {
               {...bindTap(() => joinSpot(spot.id))}
               className="min-w-0 flex-1 rounded-2xl border border-line bg-surface px-4 py-3 text-left"
             >
-              <span className="block truncate font-display text-lg font-bold">{spot.title}</span>
+              <span className="flex items-center gap-2">
+                <span className="truncate font-display text-lg font-bold">{spot.title}</span>
+                {act.fresh.has(spot.id) && (
+                  <span className="shrink-0 rounded-full bg-spot px-2 text-xs font-bold text-night">nouveau</span>
+                )}
+                {act.unread.has(spot.id) && (
+                  <span className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-signal">
+                    <span className="size-2.5 rounded-full bg-signal" /> nouveaux messages
+                  </span>
+                )}
+              </span>
               <span className="mt-1 block text-sm text-muted">
                 {spot.creator ? "Ton lieu · " : ""}
                 {spot.distanceLabel} ·{" "}
