@@ -29,7 +29,13 @@ export type LiveMsg = {
 };
 
 export type SignalKind = "offer" | "answer" | "hangup";
-export type SignalRow = { id: number; from_id: string; pseudo: string; kind: SignalKind; payload: string };
+export type SignalRow = {
+  id: number;
+  from_id: string;
+  pseudo: string;
+  kind: SignalKind;
+  payload: string;
+};
 
 export type SpotRow = {
   id: string;
@@ -41,13 +47,24 @@ export type SpotRow = {
   members: number;
 };
 
-export type SpotLine = { id: string; fromId: string; pseudo: string; body: string; at: string; mine: boolean };
+export type SpotLine = {
+  id: string;
+  fromId: string;
+  pseudo: string;
+  body: string;
+  at: string;
+  mine: boolean;
+};
 
 async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
   const token = await accessToken();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST",
-    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
+    headers: {
+      apikey: SUPABASE_KEY,
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
     body: JSON.stringify(args),
   });
   if (!res.ok) {
@@ -66,19 +83,27 @@ async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise
 
 /** Postgres `timestamptz::text` ("2026-10-10 17:50:31.88+00") to ms; Safari needs strict ISO. */
 export function pgTime(v: string): number {
-  const iso = v.trim().replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00");
+  const iso = v
+    .trim()
+    .replace(" ", "T")
+    .replace(/([+-]\d{2})$/, "$1:00");
   const ms = Date.parse(iso);
   return Number.isFinite(ms) ? ms : Date.now();
 }
 
 function selfId(value: string) {
-  const id = String(value || "").trim().slice(0, 80);
+  const id = String(value || "")
+    .trim()
+    .slice(0, 80);
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Identité invalide");
   return id.toLowerCase();
 }
 
 function otherId(value: string) {
-  return String(value || "").trim().slice(0, 80).toLowerCase();
+  return String(value || "")
+    .trim()
+    .slice(0, 80)
+    .toLowerCase();
 }
 
 // Presence ---------------------------------------------------------------
@@ -93,7 +118,10 @@ export async function pulse({
     p_self: selfId(data.self),
     p_lat: data.lat,
     p_lng: data.lng,
-    p_pseudo: String(data.pseudo || "Anonyme").trim().slice(0, 24) || "Anonyme",
+    p_pseudo:
+      String(data.pseudo || "Anonyme")
+        .trim()
+        .slice(0, 24) || "Anonyme",
     p_desires: String(data.desires || "").slice(0, 80),
     p_hours: Math.round(Math.min(12, Math.max(1, Number(data.hours) || 3))),
   });
@@ -104,10 +132,9 @@ export async function goDark({ data }: { data: string }) {
 }
 
 export async function listLive({ data }: { data: string }): Promise<LivePin[]> {
-  const rows = await rpc<{ id: string; pseudo: string; lat: number; lng: number; desires: string }[]>(
-    "hdar_list_live",
-    { p_self: selfId(data) },
-  );
+  const rows = await rpc<
+    { id: string; pseudo: string; lat: number; lng: number; desires: string }[]
+  >("hdar_list_live", { p_self: selfId(data) });
   return rows.map((r) => ({
     id: r.id,
     pseudo: r.pseudo,
@@ -119,12 +146,23 @@ export async function listLive({ data }: { data: string }): Promise<LivePin[]> {
 
 // Private chat -------------------------------------------------------------
 
-export async function readThread({ data }: { data: { self: string; withId: string } }): Promise<LiveMsg[]> {
+export async function readThread({
+  data,
+}: {
+  data: { self: string; withId: string };
+}): Promise<LiveMsg[]> {
   const self = selfId(data.self);
   const withId = otherId(data.withId);
   if (!withId || withId === self) return [];
   const rows = await rpc<
-    { id: string; from_id: string; body: string; at: string; kind: LiveMsg["kind"]; duration: number | null }[]
+    {
+      id: string;
+      from_id: string;
+      body: string;
+      at: string;
+      kind: LiveMsg["kind"];
+      duration: number | null;
+    }[]
   >("hdar_thread", { p_self: self, p_with: withId });
   return rows.map((r) => ({
     id: r.id,
@@ -137,7 +175,9 @@ export async function readThread({ data }: { data: { self: string; withId: strin
 }
 
 export async function sendLive({ data }: { data: { self: string; to: string; body: string } }) {
-  const body = String(data.body || "").trim().slice(0, 500);
+  const body = String(data.body || "")
+    .trim()
+    .slice(0, 500);
   if (!body) return;
   await rpc("hdar_send", { p_self: selfId(data.self), p_to: otherId(data.to), p_body: body });
 }
@@ -162,7 +202,9 @@ const mediaCache = new Map<string, Promise<string>>();
 export function getMedia(self: string, id: string): Promise<string> {
   let hit = mediaCache.get(id);
   if (!hit) {
-    hit = rpc<string | null>("hdar_get_media", { p_self: selfId(self), p_id: id }).then((v) => v ?? "");
+    hit = rpc<string | null>("hdar_get_media", { p_self: selfId(self), p_id: id }).then(
+      (v) => v ?? "",
+    );
     hit.catch(() => mediaCache.delete(id));
     mediaCache.set(id, hit);
   }
@@ -180,7 +222,12 @@ export async function reportLive({ data }: { data: { self: string; other: string
 // Video call signaling -----------------------------------------------------
 
 export async function sendSignal(self: string, to: string, kind: SignalKind, payload = "") {
-  await rpc("hdar_signal_send", { p_self: selfId(self), p_to: selfId(to), p_kind: kind, p_payload: payload });
+  await rpc("hdar_signal_send", {
+    p_self: selfId(self),
+    p_to: selfId(to),
+    p_kind: kind,
+    p_payload: payload,
+  });
 }
 
 export async function pollSignals(self: string, after: number): Promise<SignalRow[]> {
@@ -209,7 +256,15 @@ export async function createSpot(input: {
 
 export async function listSpots(self: string, lat: number, lng: number): Promise<SpotRow[]> {
   const rows = await rpc<
-    { id: string; title: string; lat: number; lng: number; closes_at: string; mine: boolean; members: number }[]
+    {
+      id: string;
+      title: string;
+      lat: number;
+      lng: number;
+      closes_at: string;
+      mine: boolean;
+      members: number;
+    }[]
   >("hdar_spot_list", { p_self: selfId(self), p_lat: lat, p_lng: lng });
   return rows.map((r) => ({
     id: r.id,
@@ -230,7 +285,14 @@ export async function spotMessages(self: string, id: string): Promise<SpotLine[]
   const rows = await rpc<
     { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean }[]
   >("hdar_spot_messages", { p_self: selfId(self), p_id: id });
-  return rows.map((r) => ({ id: r.id, fromId: r.from_id, pseudo: r.pseudo, body: r.body, at: r.at, mine: r.mine }));
+  return rows.map((r) => ({
+    id: r.id,
+    fromId: r.from_id,
+    pseudo: r.pseudo,
+    body: r.body,
+    at: r.at,
+    mine: r.mine,
+  }));
 }
 
 export async function sendSpotMessage(self: string, id: string, pseudo: string, body: string) {
@@ -282,10 +344,9 @@ export type ProfileExtras = { album: string[]; voice: string; voiceSec: number }
 
 /** Album and voice intro, loaded only when a profile page is opened. */
 export async function getProfileExtras(self: string, id: string): Promise<ProfileExtras> {
-  const rows = await rpc<{ album: string[] | null; voice: string | null; voice_sec: number | null }[]>(
-    "hdar_profile_extras",
-    { p_self: selfId(self), p_id: otherId(id) },
-  );
+  const rows = await rpc<
+    { album: string[] | null; voice: string | null; voice_sec: number | null }[]
+  >("hdar_profile_extras", { p_self: selfId(self), p_id: otherId(id) });
   const r = rows[0];
   return { album: r?.album ?? [], voice: r?.voice ?? "", voiceSec: r?.voice_sec ?? 0 };
 }
@@ -338,7 +399,16 @@ export type AreaLine = {
 
 export async function areaFeed(self: string, lat: number, lng: number): Promise<AreaLine[]> {
   const rows = await rpc<
-    { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean; lat: number; lng: number }[]
+    {
+      id: string;
+      from_id: string;
+      pseudo: string;
+      body: string;
+      at: string;
+      mine: boolean;
+      lat: number;
+      lng: number;
+    }[]
   >("hdar_area_feed", { p_self: selfId(self), p_lat: lat, p_lng: lng });
   return rows.map((r) => ({
     id: r.id,
@@ -352,8 +422,20 @@ export async function areaFeed(self: string, lat: number, lng: number): Promise<
   }));
 }
 
-export async function areaSend(self: string, lat: number, lng: number, pseudo: string, body: string) {
-  await rpc("hdar_area_send", { p_self: selfId(self), p_lat: lat, p_lng: lng, p_pseudo: pseudo, p_body: body });
+export async function areaSend(
+  self: string,
+  lat: number,
+  lng: number,
+  pseudo: string,
+  body: string,
+) {
+  await rpc("hdar_area_send", {
+    p_self: selfId(self),
+    p_lat: lat,
+    p_lng: lng,
+    p_pseudo: pseudo,
+    p_body: body,
+  });
 }
 
 export async function areaHide(self: string, id: string) {
@@ -373,7 +455,14 @@ export type Conversation = {
 
 export async function listConversations(self: string): Promise<Conversation[]> {
   const rows = await rpc<
-    { other_id: string; pseudo: string; last_kind: LiveMsg["kind"]; last_body: string; last_at: string; last_mine: boolean }[]
+    {
+      other_id: string;
+      pseudo: string;
+      last_kind: LiveMsg["kind"];
+      last_body: string;
+      last_at: string;
+      last_mine: boolean;
+    }[]
   >("hdar_conversations", { p_self: selfId(self) });
   return rows.map((r) => ({
     otherId: r.other_id,
@@ -399,7 +488,11 @@ export async function hit(self: string) {
 
 /** Reports someone with a reason; also blocks them both ways. */
 export async function reportWithReason(self: string, other: string, reason: string) {
-  await rpc("hdar_report_reason", { p_self: selfId(self), p_other: otherId(other), p_reason: reason.slice(0, 200) });
+  await rpc("hdar_report_reason", {
+    p_self: selfId(self),
+    p_other: otherId(other),
+    p_reason: reason.slice(0, 200),
+  });
 }
 
 // Admin (every call is checked against the admin key in the database) ----------
@@ -430,19 +523,33 @@ export type AdminUser = {
   } | null;
   device: { first_seen: string; last_seen: string; sessions: number } | null;
   banned: { reason: string; at: string } | null;
-  reports: { reporter: string; reporter_id: string; reason: string; at: string; handled: boolean }[];
+  reports: {
+    reporter: string;
+    reporter_id: string;
+    reason: string;
+    at: string;
+    handled: boolean;
+  }[];
   sent_to_reporters: { to: string; kind: string; body: string; media: string | null; at: string }[];
   area_messages: { id: string; body: string; at: string; removed: boolean }[];
   stats: { pm_sent: number; people_contacted: number; blocked_by: number };
 };
-export type AdminAreaRow = { id: string; from_id: string; pseudo: string; body: string; at: string; removed: boolean };
+export type AdminAreaRow = {
+  id: string;
+  from_id: string;
+  pseudo: string;
+  body: string;
+  at: string;
+  removed: boolean;
+};
 export type AdminBanRow = { user_id: string; pseudo: string; reason: string; at: string };
 
 export type AdminPhotoRow = { id: string; pseudo: string; photo: string; at: string };
 
 export const admin = {
   stats: (key: string) => rpc<AdminStats>("hdar_admin_stats", { p_key: key }),
-  reports: (key: string, all: boolean) => rpc<AdminReportRow[]>("hdar_admin_reports", { p_key: key, p_all: all }),
+  reports: (key: string, all: boolean) =>
+    rpc<AdminReportRow[]>("hdar_admin_reports", { p_key: key, p_all: all }),
   user: (key: string, id: string) => rpc<AdminUser>("hdar_admin_user", { p_key: key, p_id: id }),
   ban: (key: string, id: string, reason: string, ban: boolean) =>
     rpc("hdar_admin_ban", { p_key: key, p_id: id, p_reason: reason, p_ban: ban }),
@@ -453,6 +560,10 @@ export const admin = {
   photos: (key: string) => rpc<AdminPhotoRow[]>("hdar_admin_photos", { p_key: key }),
   reviewPhoto: (key: string, id: string, ok: boolean) =>
     rpc("hdar_admin_photo_review", { p_key: key, p_id: id, p_ok: ok }),
+  contacts: (key: string, all: boolean) =>
+    rpc<AdminContactRow[]>("hdar_admin_contacts", { p_key: key, p_all: all }),
+  handleContact: (key: string, id: number) =>
+    rpc("hdar_admin_contact_handle", { p_key: key, p_id: id }),
 };
 
 // Favorites --------------------------------------------------------------
@@ -468,8 +579,20 @@ export function listFavorites(self: string) {
 }
 
 /** Exact position, sent only to one person on explicit request. Expires after `minutes` (0 = never). */
-export async function sendLocation(self: string, to: string, lat: number, lng: number, minutes = 60) {
-  await rpc("hdar_send_location", { p_self: selfId(self), p_to: otherId(to), p_lat: lat, p_lng: lng, p_minutes: minutes });
+export async function sendLocation(
+  self: string,
+  to: string,
+  lat: number,
+  lng: number,
+  minutes = 60,
+) {
+  await rpc("hdar_send_location", {
+    p_self: selfId(self),
+    p_to: otherId(to),
+    p_lat: lat,
+    p_lng: lng,
+    p_minutes: minutes,
+  });
 }
 
 export async function flagMyPhoto(self: string, reason: string) {
@@ -484,7 +607,12 @@ export async function deleteMyData() {
 // Web Push -----------------------------------------------------------------
 
 export async function pushSubscribe(self: string, endpoint: string, p256dh: string, auth: string) {
-  await rpc("hdar_push_subscribe", { p_self: selfId(self), p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth });
+  await rpc("hdar_push_subscribe", {
+    p_self: selfId(self),
+    p_endpoint: endpoint,
+    p_p256dh: p256dh,
+    p_auth: auth,
+  });
 }
 
 export async function pushUnsubscribe(self: string, endpoint: string | null) {
@@ -493,6 +621,23 @@ export async function pushUnsubscribe(self: string, endpoint: string | null) {
 
 /** Marks the thread read by me; returns when the other person last read it (ms) or null. */
 export async function markRead(self: string, withId: string): Promise<number | null> {
-  const r = await rpc<string | null>("hdar_mark_read", { p_self: selfId(self), p_with: otherId(withId) });
+  const r = await rpc<string | null>("hdar_mark_read", {
+    p_self: selfId(self),
+    p_with: otherId(withId),
+  });
   return r ? pgTime(r) : null;
+}
+
+export type ContactSubject = "rgpd" | "signalement" | "autre";
+export type AdminContactRow = {
+  id: number;
+  user_id: string | null;
+  subject: ContactSubject;
+  body: string;
+  reply_to: string | null;
+  at: string;
+  handled: boolean;
+};
+export function sendContact(subject: ContactSubject, body: string, reply: string) {
+  return rpc("hdar_contact_send", { p_subject: subject, p_body: body, p_reply: reply });
 }

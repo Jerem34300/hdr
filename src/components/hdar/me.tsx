@@ -67,7 +67,8 @@ export function Me() {
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Photos</h2>
         <p className="mt-1 text-xs text-muted">
-          Photo facultative. La première (celle du profil) passe un contrôle automatique. Les suivantes forment ton album.
+          Photo facultative. La première (celle du profil) passe un contrôle automatique. Les
+          suivantes forment ton album.
         </p>
         <p className="text-xs text-muted">
           Jusqu'à {MAX_PHOTOS}, facultatif. Touche une photo pour la mettre en premier.
@@ -238,8 +239,17 @@ export function Me() {
           Supprimer toutes mes données
         </button>
         <p className="mt-4 text-center text-xs text-muted">
-          <a className="underline" href="/confidentialite">Confidentialité</a> ·{" "}
-          <a className="underline" href="/cgu">Conditions d'utilisation</a>
+          <a className="underline" href="/confidentialite">
+            Confidentialité
+          </a>{" "}
+          ·{" "}
+          <a className="underline" href="/cgu">
+            Conditions d'utilisation
+          </a>{" "}
+          ·{" "}
+          <a className="underline" href="/contact">
+            Contact
+          </a>
         </p>
       </section>
     </div>
@@ -374,7 +384,9 @@ function Favorites() {
     <section className="mt-6">
       <h2 className="font-display text-lg font-bold">Favoris</h2>
       {favs.length === 0 ? (
-        <p className="mt-1 text-sm text-muted">Touche l'étoile sur un profil pour être prévenu quand il est sur la carte.</p>
+        <p className="mt-1 text-sm text-muted">
+          Touche l'étoile sur un profil pour être prévenu quand il est sur la carte.
+        </p>
       ) : (
         <ul className="mt-2 divide-y divide-line">
           {favs.map((f) => (

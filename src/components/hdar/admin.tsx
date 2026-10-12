@@ -8,6 +8,7 @@ import {
   type AdminAreaRow,
   type AdminBanRow,
   type AdminPhotoRow,
+  type AdminContactRow,
   type AdminReportRow,
   type AdminStats,
   type AdminUser,
@@ -15,7 +16,7 @@ import {
 import { Avatar } from "./avatar";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "stats" | "photos" | "reports" | "area" | "bans";
+type Tab = "stats" | "photos" | "reports" | "area" | "bans" | "contacts";
 
 function readKey() {
   try {
@@ -156,6 +157,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["reports", `Signalements${openReports ? ` (${openReports})` : ""}`],
               ["area", "Chat du quartier"],
               ["photos", "Photos"],
+              ["contacts", "Messages"],
               ["bans", "Bannis"],
             ] as [Tab, string][]
           ).map(([id, label]) => (
@@ -178,6 +180,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
+        {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
         {tab === "bans" && <Bans adminKey={adminKey} onOpen={setUserId} />}
       </div>
     </main>
@@ -668,10 +671,14 @@ function Photos({ adminKey }: { adminKey: string }) {
   return (
     <div>
       <p className="mb-3 text-sm text-muted">
-        Photos principales signalées automatiquement (contrôle NSFW ou 2 signalements). Tant qu'elles sont ici, seul leur auteur les voit. Refuser supprime la photo et bloque sa remise en ligne.
+        Photos principales signalées automatiquement (contrôle NSFW ou 2 signalements). Tant
+        qu'elles sont ici, seul leur auteur les voit. Refuser supprime la photo et bloque sa remise
+        en ligne.
       </p>
       {error && <p className="text-signal">{error}</p>}
-      {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucune photo en attente.</p>}
+      {data && data.length === 0 && (
+        <p className="py-12 text-center text-muted">Aucune photo en attente.</p>
+      )}
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {data?.map((p) => (
           <li key={p.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
@@ -698,6 +705,76 @@ function Photos({ adminKey }: { adminKey: string }) {
                 </button>
               </div>
             </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const SUBJECTS: Record<string, string> = {
+  rgpd: "RGPD / suppression",
+  signalement: "Signalement",
+  autre: "Autre",
+};
+
+function Contacts({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) => void }) {
+  const [all, setAll] = useState(false);
+  const load = useCallback(() => admin.contacts(adminKey, all), [adminKey, all]);
+  const { data, error, reload } = useLoad<AdminContactRow[]>(load, 30000);
+  const [busy, setBusy] = useState(0);
+  const handle = (id: number) => {
+    setBusy(id);
+    admin
+      .handleContact(adminKey, id)
+      .then(reload)
+      .catch(() => undefined)
+      .finally(() => setBusy(0));
+  };
+  return (
+    <div>
+      <label className="mb-3 flex items-center gap-2 text-sm text-muted">
+        <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Afficher
+        aussi les messages traités
+      </label>
+      {error && <p className="text-signal">{error}</p>}
+      {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucun message.</p>}
+      <ul className="space-y-3">
+        {data?.map((c) => (
+          <li
+            key={c.id}
+            className={
+              "rounded-2xl border border-line bg-surface p-3 text-sm " +
+              (c.handled ? "opacity-50" : "")
+            }
+          >
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+              <span className="rounded-full bg-night px-2 py-0.5 font-bold text-ink">
+                {SUBJECTS[c.subject] ?? c.subject}
+              </span>
+              <span>{when(c.at)}</span>
+              {c.user_id && (
+                <button type="button" className="underline" onClick={() => onOpen(c.user_id!)}>
+                  voir l'utilisateur
+                </button>
+              )}
+            </div>
+            <p className="mt-2 whitespace-pre-wrap break-words">{c.body}</p>
+            {c.reply_to && (
+              <p className="mt-2 text-xs text-muted">
+                Répondre à : <span className="select-all text-ink">{c.reply_to}</span>
+              </p>
+            )}
+            {!c.handled && (
+              <button
+                type="button"
+                disabled={busy === c.id}
+                className="mt-3 h-9 rounded-full bg-online px-4 text-night disabled:opacity-40"
+                onClick={() => handle(c.id)}
+              >
+                Marquer comme traité
+              </button>
+            )}
           </li>
         ))}
       </ul>
