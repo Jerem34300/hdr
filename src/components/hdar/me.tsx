@@ -103,7 +103,7 @@ export function Me() {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10">
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-28">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Mon profil</h1>
         <button type="button" aria-label="Paramètres" title="Paramètres" onClick={() => setSettings(true)}
@@ -338,7 +338,7 @@ export function Me() {
       <Favorites />
       <ProtectProfileCard />
       {me.onboarded && (
-        <div className="sticky bottom-2 z-10 mt-6">
+        <div className="mt-8 mb-6">
           <button type="button" disabled={savingAll} onClick={() => void saveAll()}
             className="boost-cta h-14 w-full rounded-full font-display text-lg font-extrabold text-night shadow-[0_8px_30px_rgba(0,0,0,.5)] disabled:opacity-60">
             {savingAll ? "Enregistrement…" : savedAt ? "✓ Profil enregistré" : "Enregistrer mon profil"}
