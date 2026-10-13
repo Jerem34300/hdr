@@ -42,15 +42,24 @@ export function Me() {
   const [seeking, setSeeking] = useState<string[]>([]);
   useEffect(() => {
     void usePremium.getState().refresh();
-    if (me.onboarded) void getProfile(deviceId(), deviceId()).then((p) => { if (p) { setIam(p.iam); setSeeking(p.seeking); } }).catch(() => undefined);
+    if (me.onboarded) void getProfile(deviceId(), deviceId()).then((p) => { if (p) { setIam(p.iam); setSeeking(p.seeking); setSaved({ iam: p.iam, seeking: p.seeking }); } }).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [consent, setConsent] = useState(false);
   useEffect(() => { if (me.onboarded) void getSensitiveConsent().then(setConsent).catch(() => undefined); }, [me.onboarded]);
-  const saveIdentity = (a: string, b: string[]) => {
-    if (!consent && (a || b.length)) { toast("Coche d'abord la case de consentement"); return; }
-    setIam(a); setSeeking(b);
-    void setIdentity(a, b).catch((e: Error) => toast(e.message.includes("profil") ? "Crée d'abord ton profil" : e.message));
+  const [saved, setSaved] = useState({ iam: "", seeking: [] as string[] });
+  const dirty = iam !== saved.iam || [...seeking].sort().join() !== [...saved.seeking].sort().join();
+  const picked = !!iam || seeking.length > 0;
+  const saveIdentity = async () => {
+    if (!me.onboarded) { toast("Crée d'abord ton profil"); return; }
+    if (picked && !consent) { toast("Coche la case pour enregistrer ces infos"); return; }
+    try {
+      if (picked) await setSensitiveConsent(true);
+      await setIdentity(iam, seeking);
+      if (!picked && consent) { await setSensitiveConsent(false); setConsent(false); }
+      setSaved({ iam, seeking });
+      toast("Profil enregistré");
+    } catch (e) { toast((e as Error).message.includes("profil") ? "Crée d'abord ton profil" : (e as Error).message); }
   };
   if (settings) return <SettingsScreen onBack={() => setSettings(false)} />;
 
@@ -100,29 +109,31 @@ export function Me() {
       <BoostButton />
 
       <section className="mt-6">
-        <label className="mb-3 flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
-          <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => {
-            const v = e.target.checked;
-            if (!me.onboarded) { toast("Crée d'abord ton profil"); return; }
-            void setSensitiveConsent(v).then(() => { setConsent(v); if (!v) { setIam(""); setSeeking([]); } }).catch((err: Error) => toast(err.message));
-          }} />
-          <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; décocher efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
-        </label>
         <h2 className="font-display text-lg font-bold">Je suis</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {GENDERS.map((g) => (
-            <button key={g.id} type="button" disabled={!me.onboarded || !consent} onClick={() => saveIdentity(iam === g.id ? "" : g.id, seeking)}
+            <button key={g.id} type="button" onClick={() => setIam(iam === g.id ? "" : g.id)}
               className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (iam === g.id ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
           ))}
         </div>
         <h2 className="mt-4 font-display text-lg font-bold">Je cherche</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {GENDERS.map((g) => (
-            <button key={g.id} type="button" disabled={!me.onboarded || !consent} onClick={() => saveIdentity(iam, seeking.includes(g.id) ? seeking.filter((x) => x !== g.id) : [...seeking, g.id])}
+            <button key={g.id} type="button" onClick={() => setSeeking(seeking.includes(g.id) ? seeking.filter((x) => x !== g.id) : [...seeking, g.id])}
               className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (seeking.includes(g.id) ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
           ))}
         </div>
         <p className="mt-1 text-xs text-muted">Facultatif, affiché sur ta fiche (ex. « H · cherche H, X »).</p>
+        {picked && (
+          <label className="mt-3 flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
+            <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; tout désélectionner efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
+          </label>
+        )}
+        {dirty && (
+          <button type="button" disabled={picked && !consent} onClick={() => void saveIdentity()}
+            className="mt-3 h-12 w-full rounded-full bg-signal font-display font-bold text-night disabled:opacity-40">Enregistrer mon profil</button>
+        )}
       </section>
 
       <section className="mt-6">
