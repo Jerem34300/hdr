@@ -102,6 +102,13 @@ function Privacy() {
         </li>
       </ul>
 
+      <h2>Live Pro, cadeaux et messages des partenaires</h2>
+      <ul>
+        <li>Un partenaire ne voit que ce que voit tout membre : ton pseudo, ta fiche et ta zone générale (département). Aucune position précise ni distance ne lui est communiquée.</li>
+        <li>Pour un cadeau pro, nous conservons le lieu, le destinataire, le contenu, le code et la date d'expiration, afin d'afficher ton cadeau, limiter les envois et traiter les signalements (intérêt légitime). Les administrateurs peuvent les consulter pour la modération.</li>
+        <li>Tu peux refuser tous les messages et cadeaux des pros dans Paramètres (« Messages et cadeaux des pros »), ou bloquer un lieu à tout moment. Ces données sont effacées avec ton profil.</li>
+      </ul>
+
       <h2>Live vidéo</h2>
       <ul>
         <li>Réservé aux 18 ans et plus, comme toute l'appli.</li>

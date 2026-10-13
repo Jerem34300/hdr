@@ -1,3 +1,4 @@
+import { ChatProBadge } from "./pro-tools";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Flag, Image as ImageIcon, Mic, MoreHorizontal, Send, ShieldBan } from "lucide-react";
 import { toast } from "sonner";
@@ -91,6 +92,7 @@ export function Chat() {
         <div className="min-w-0 flex-1">
           <p className="truncate font-display font-bold">Privé · {person.pseudo}</p>
           <p className="text-xs text-muted">S'efface dans {remainingLabel(match.expiresAt, now)}</p>
+          <ChatProBadge other={personId} />
         </div>
         <button type="button" className="flex size-11 items-center justify-center" aria-label="Plus" onClick={() => setMenu((v) => !v)}>
           <MoreHorizontal />

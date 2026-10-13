@@ -10,6 +10,8 @@ import { useHdar } from "@/lib/hdar/store";
 import { usePhoto } from "@/lib/hdar/photos";
 import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
+import { proLiveNext } from "@/lib/hdar/live";
+import { PartnerBadge, ProGiftSheet, useMyPro } from "./pro-tools";
 
 /**
  * « Live » : vidéo au hasard, pair-à-pair (WebRTC). Le serveur choisit quelqu'un dans la région
@@ -31,8 +33,11 @@ function gathered(c: RTCPeerConnection) {
 }
 const label = (c: LiveCard) => [c.age ? `${c.age} ans` : null, c.iam || null, c.seeking ? `cherche ${c.seeking.split(",").join(", ")}` : null].filter(Boolean).join(" · ");
 
-export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: boolean; unblurred?: boolean; online?: number } }) {
+export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium?: boolean; unblurred?: boolean; online?: number }; pro?: string }) {
   const nav = useNavigate();
+  const myPros = useMyPro();
+  const proPlace = pro ? myPros.find((p) => p.id === pro) : undefined;
+  const [giftOpen, setGiftOpen] = useState(false);
   const premiumState = usePremium((s) => s.premium);
   const premium = demo?.premium ?? premiumState;
   const [phase, setPhase] = useState<Phase>(demo ? "live" : "intro");
@@ -142,7 +147,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     peerRef.current = null; setPeer(null); setPhase("searching");
     if (old && !back) setPrev(old);
     try {
-      const r = await rouletteNext(premium ? { ...filters, back: back ?? null } : {});
+      const r = pro ? await proLiveNext(pro) : await rouletteNext(premium ? { ...filters, back: back ?? null } : {});
       if (typeof r.online === "number") setOnline(r.online);
       if (r.back_gone) { toast("Il n'est plus disponible"); return void next(); }
       if (r.id) await matched(r as LiveCard);
@@ -160,7 +165,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: { echoCancellation: true, noiseSuppression: true } });
       localRef.current = s;
       pipe.current = createBlurPipe(s);
-      blurRef.current = true; setBlurred(true);
+      blurRef.current = !pro; setBlurred(!pro);
       showPreview();
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
     turnCache = await turnServers();
@@ -248,7 +253,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   };
   const me = useHdar((s) => s.me);
   const [gate, setGate] = useState<string | null>(null);
-  const missing = !me.pseudo ? "un pseudo" : !me.age ? "ton âge" : !me.photo ? "une photo" : null;
+  const missing = !me.pseudo ? "un pseudo" : pro ? null : !me.age ? "ton âge" : !me.photo ? "une photo" : null;
   if (phase === "intro" && !demo && (missing || gate)) {
     return (
       <div className="relative flex min-h-dvh flex-col items-center justify-center gap-4 bg-night px-6 text-center text-ink">
@@ -300,7 +305,9 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         {peer && <PeerPhoto id={peer.id} />}
         <div className="min-w-0 flex-1">
           {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ml-1 text-sm">👑+</span>}</p>}
-          {peer && <p className="text-xs text-white/80">{label(peer)}</p>}
+          {peer?.pro && <PartnerBadge name={peer.pro.name} />}
+          {pro && !peer && <PartnerBadge name={proPlace?.name ?? "Live Pro"} />}
+          {peer && !peer.pro && <p className="text-xs text-white/80">{label(peer)}</p>}
           {peer && <PeerRegion id={peer.id} demo={!!demo} />}
                     {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
         </div>
@@ -365,6 +372,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
             <span className="text-lg">❤️</span>
             <span className="absolute -top-1 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts === Infinity ? "∞" : hearts ?? "·"}</span>
           </Round>
+          {pro && <Round label="Cadeau pro" on={false} onClick={() => peer && proPlace && setGiftOpen(true)}><span className="text-lg">🎁</span></Round>}
           <Round label="Signaler" on={false} danger onClick={() => peer && setReporting(true)}><Flag className="size-5" /></Round>
         </div>
         <button type="button" onClick={() => !demo && void next()} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3 font-display font-bold text-night">
@@ -372,6 +380,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         </button>
       </div>
       <FloatingHearts burst={burst} />
+      {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
       {packsOpen && <HeartPacks onClose={() => setPacksOpen(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
       {reporting && (
         <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setReporting(false)}>

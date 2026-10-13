@@ -8,7 +8,7 @@ export const Route = createFileRoute("/live")({
     <AdultGate>
       <RouletteScreen demo={import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("demo") ? {
         peer: { id: "demo", pseudo: "Theo_31", age: 27, iam: "H", seeking: "H,X", note: "Chill, on papote ☕", premium: true, role: "answer" },
-        premium: location.search.includes("prem"), unblurred: location.search.includes("clear"), online: 38 } : undefined} />
+        premium: location.search.includes("prem"), unblurred: location.search.includes("clear"), online: 38 } : undefined} pro={typeof location !== "undefined" ? new URLSearchParams(location.search).get("pro") ?? undefined : undefined} />
     </AdultGate>
   ),
 });

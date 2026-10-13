@@ -20,6 +20,7 @@ import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
+import { openProChat, ProGiftSheet, useMyPro } from "./pro-tools";
 
 const label = (id: string) => DESIRES.find((d) => d.id === id)?.label ?? PLACES.find((d) => d.id === id)?.label ?? id;
 
@@ -30,6 +31,8 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "gone">("loading");
   const [extras, setExtras] = useState<ProfileExtras | null>(null);
+  const pros = useMyPro();
+  const [giftOpen, setGiftOpen] = useState(false);
   const setTab = useHdar((s) => s.setTab);
   const self = userId === deviceId();
   const favs = useFavorites();
@@ -222,8 +225,15 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
             <Video className="size-5" />
             Vidéo
           </button>
+          {pros.length > 0 && <>
+            <button type="button" disabled={state === "gone"} className="flex h-11 items-center justify-center gap-1 rounded-full border border-[#fbbf24]/60 text-sm font-bold text-[#fbbf24] disabled:opacity-40"
+              onClick={() => void openProChat(pros[0].id, userId).then((ok) => ok && openLive(userId, name))}>💬 Écrire en pro</button>
+            <button type="button" disabled={state === "gone"} className="flex h-11 items-center justify-center gap-1 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] text-sm font-bold text-night disabled:opacity-40"
+              onClick={() => setGiftOpen(true)}>🎁 Cadeau pro</button>
+          </>}
         </div>
       )}
+      {giftOpen && <ProGiftSheet places={pros} to={userId} pseudo={name} via="profile" onClose={() => setGiftOpen(false)} />}
     </div>
   );
 }

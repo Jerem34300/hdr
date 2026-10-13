@@ -97,6 +97,11 @@ function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
             </div>
             <button type="button" className="h-9 shrink-0 rounded-full border border-line px-3 text-xs" onClick={() => setEdit({ ...p })}>Modifier</button>
           </div>
+          {p.active && (
+            <a href={`/live?pro=${p.id}`} className="mt-3 flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] font-display font-extrabold text-night">
+              🎥 Lancer un Live Pro · toute la France
+            </a>
+          )}
           <p className="mt-3 text-sm font-bold">{p.active ? "Prolonger" : "Mettre en ligne"}</p>
           <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />
           {p.sub_status && payOk && (

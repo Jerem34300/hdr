@@ -934,7 +934,7 @@ export const placeSendMedia = (id: string, kind: string, path: string, duration:
 export const mediaReport = (scope: "area" | "place" | "spot", id: string) => rpc("hdar_media_report", { p_scope: scope, p_id: id });
 
 // Live roulette (v32) -------------------------------------------------------------
-export type LiveCard = { id: string; pseudo: string; age: number | null; iam: string | null; seeking: string | null; note: string | null; premium: boolean; role: "offer" | "answer" };
+export type LiveCard = { pro?: { place: string; name: string; kind: string } | null; id: string; pseudo: string; age: number | null; iam: string | null; seeking: string | null; note: string | null; premium: boolean; role: "offer" | "answer" };
 export type LiveState = Partial<LiveCard> & { waiting?: boolean; in_queue?: boolean; back_gone?: boolean; online?: number };
 export const rouletteNext = (o: { iam?: string[]; minAge?: number | null; maxAge?: number | null; back?: string | null } = {}) =>
   rpc<LiveState>("hdar_live_next", { p_iam: o.iam?.length ? o.iam : null, p_min_age: o.minAge ?? null, p_max_age: o.maxAge ?? null, p_back: o.back ?? null });
@@ -983,7 +983,7 @@ export type AdminUserRow = { id: string; pseudo: string; age: number | null; iam
 export type AdminUserExtra = { region: string | null; iam: string | null; seeking: string | null; created: string | null; bio: string | null; note: string | null; premium_until: string | null;
   hearts: { balance: number; received: number; bought: number } | null;
   activity: Record<string, number>; payments: { at: string; product: string; kind: string; cents: number; ref: string }[]; gifts: { at: string; detail: { kind: string; amount: number; msg: string | null } }[] };
-export const myNotices = () => rpc<{ id: number; title: string; body: string | null; at: string }[]>("hdar_my_notices", {});
+export const myNotices = () => rpc<{ id: number; title: string; body: string | null; at: string; gift?: ProGift | null }[]>("hdar_my_notices", {});
 
 /** Nouveautés hdar (opt-in, email lié requis). */
 export const newsStatus = () => rpc<{ on: boolean; at: string | null }>("hdar_news_status", {});
@@ -996,3 +996,19 @@ export async function adminNewsSend(subject: string, body: string, test?: string
   if (!res.ok || d.error) throw new Error(d.error || "Envoi impossible");
   return { sent: d.sent ?? 0 };
 }
+
+// Live Pro & cadeaux / messages des partenaires (v41)
+export type ProPlace = { id: string; name: string; left: number };
+export type ProGift = { id: number; place: string; title: string; description: string | null; code: string | null; expires: string };
+export const myPro = () => rpc<ProPlace[]>("hdar_my_pro", {});
+export const proLiveNext = (place: string) => rpc<LiveState>("hdar_live_next", { p_pro: place });
+export const proGiftSend = (o: { place: string; to: string; title: string; desc?: string; code?: string; days?: number; via?: "live" | "profile" }) =>
+  rpc<{ ok: boolean; left: number }>("hdar_pro_gift_send", { p_place: o.place, p_to: o.to, p_title: o.title, p_desc: o.desc || null, p_code: o.code || null, p_days: o.days ?? 7, p_via: o.via ?? "live" });
+export const myProGifts = () => rpc<ProGift[]>("hdar_my_pro_gifts", {});
+export const proGiftBlock = (gift: number, report = false, reason?: string) => rpc("hdar_pro_gift_block", { p_gift: gift, p_report: report, p_reason: reason ?? null });
+export const proGiftsPref = (off: boolean | null = null) => rpc<boolean>("hdar_pro_gifts_pref", { p_off: off });
+export const proChatOpen = (place: string, to: string) => rpc<{ ok: boolean }>("hdar_pro_chat_open", { p_place: place, p_to: to });
+export const proBadge = (other: string) => rpc<{ place: string; name: string } | null>("hdar_pro_badge", { p_other: other });
+export const proChatBlock = (other: string, report = false) => rpc("hdar_pro_chat_block", { p_other: other, p_report: report });
+export const adminProGifts = (key: string) => rpc<{ id: number; at: string; place: string; to: string | null; title: string; description: string | null; code: string | null; expires: string; via: string; reported: boolean; reason: string | null }[]>("hdar_admin_pro_gifts", { p_key: key });
+export const adminProThreads = (key: string) => rpc<{ at: string; place: string; to: string | null; reported: boolean }[]>("hdar_admin_pro_threads", { p_key: key });

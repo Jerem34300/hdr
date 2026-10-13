@@ -103,6 +103,16 @@ function Terms() {
         Les notes et commentaires doivent refléter une expérience réelle, rester respectueux et ne
         pas contenir de données personnelles de tiers. Ils peuvent être retirés par la modération.
       </p>
+      <h2>9 bis. Live Pro, cadeaux et messages des partenaires</h2>
+      <p>
+        Les lieux partenaires dont l'abonnement est actif peuvent faire un <strong>Live Pro</strong> sans
+        limite de distance, identifié par un badge « Partenaire » et le nom du lieu ; le partenaire peut
+        apparaître sans flou, les membres gardent leurs propres règles de flou. Ils peuvent envoyer des
+        <strong> cadeaux pro</strong> (offre, code promo, date d'expiration ; 20 par jour maximum) et ouvrir
+        des conversations privées (20 nouvelles par jour maximum). L'offre engage uniquement le partenaire,
+        pas hdar. Tu peux refuser ces messages et cadeaux dans Paramètres, bloquer ou signaler un partenaire.
+        Tout démarchage abusif entraîne la suspension du partenaire.
+      </p>
       <h2>10. Live vidéo</h2>
       <p>
         Le live met en relation au hasard des personnes majeures. Il n'est pas enregistré par

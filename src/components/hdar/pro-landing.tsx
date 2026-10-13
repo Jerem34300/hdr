@@ -151,6 +151,17 @@ export function ProLanding({ prices, onCreate }: { prices: PriceRow[]; onCreate:
         </div>
       </section>
 
+      {/* Live Pro */}
+      <section className="rounded-3xl border border-[#fbbf24]/50 bg-surface p-5">
+        <h2 className="font-display text-2xl font-extrabold">Inclus : Live Pro & cadeaux 🎁</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          <li>🎥 <b>Live Pro dans toute la France</b> : sans limite de distance, avec votre badge Partenaire et le nom du lieu.</li>
+          <li>🎁 <b>Cadeaux pro</b> : un verre offert, une entrée à -20 %… avec code promo à montrer sur place (20 / jour).</li>
+          <li>💬 <b>Messages privés</b> en tant que partenaire (20 nouvelles conversations / jour).</li>
+        </ul>
+        <p className="mt-2 text-xs text-muted">Les membres peuvent refuser messages et cadeaux des pros, bloquer ou signaler.</p>
+      </section>
+
       {/* étapes */}
       <section>
         <h2 className="font-display text-2xl font-extrabold">En ligne en 3 étapes</h2>

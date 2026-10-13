@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { myNotices } from "@/lib/hdar/live";
+import { myNotices, proGiftBlock, type ProGift } from "@/lib/hdar/live";
+import { toast } from "sonner";
+import { GiftCard } from "./pro-tools";
 import { usePremium } from "@/lib/hdar/premium";
 
 /** Affiche une fois les notifications in-app (« Cadeau de hdar 🎁 »). */
 export function GiftNotices() {
-  const [list, setList] = useState<{ id: number; title: string; body: string | null }[]>([]);
+  const [list, setList] = useState<{ id: number; title: string; body: string | null; gift?: ProGift | null }[]>([]);
   useEffect(() => {
     const t = setTimeout(() => void myNotices().then((r) => { if (r?.length) { setList(r); void usePremium.getState().refresh(); } }).catch(() => undefined), 2500);
     return () => clearTimeout(t);
@@ -16,8 +18,12 @@ export function GiftNotices() {
       <div className="boost-nudge w-full max-w-sm rounded-3xl border border-[#fbbf24]/60 bg-surface p-6 text-center shadow-[0_0_40px_#fbbf24]" onClick={(e) => e.stopPropagation()}>
         <p className="text-5xl">🎁</p>
         <p className="mt-2 font-display text-2xl font-extrabold">{n.title}</p>
-        {n.body && <p className="mt-2 text-sm text-muted">{n.body}</p>}
+        {n.gift ? <div className="mt-3"><GiftCard g={n.gift} /></div> : n.body && <p className="mt-2 text-sm text-muted">{n.body}</p>}
         <button type="button" onClick={() => setList(list.slice(1))} className="boost-cta mt-5 h-12 w-full rounded-full font-display font-extrabold text-night">Merci !</button>
+        {n.gift && <div className="mt-3 flex justify-center gap-4 text-xs text-muted">
+          <button type="button" className="underline" onClick={() => { void proGiftBlock(n.gift!.id).then(() => toast("Ce lieu ne pourra plus t'envoyer de cadeaux")).catch(() => undefined); setList(list.slice(1)); }}>Bloquer ce lieu</button>
+          <button type="button" className="text-signal underline" onClick={() => { void proGiftBlock(n.gift!.id, true).then(() => toast("Signalé, merci")).catch(() => undefined); setList(list.slice(1)); }}>Signaler</button>
+        </div>}
       </div>
     </div>
   );

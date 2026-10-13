@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+import { adminProGifts, adminProThreads } from "@/lib/hdar/live";
 import { AdultGate } from "./adult-gate";
 import { MediaView } from "./media-composer";
 import { authUserId, ensureSession } from "@/lib/hdar/session";
@@ -20,7 +22,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts";
 
 function readKey() {
   try {
@@ -164,6 +166,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["overview", "Vue d'ensemble"],
               ["users", "Utilisateurs"],
               ["emails", "Emails"],
+              ["progifts", "Cadeaux pro"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
@@ -222,6 +225,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
         {tab === "support" && <SupportTab adminKey={adminKey} />}
         {tab === "emails" && <EmailsTab adminKey={adminKey} />}
+        {tab === "progifts" && <ProGiftsTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
@@ -1006,5 +1010,29 @@ function EmailsTab({ adminKey }: { adminKey: string }) {
       {out && <p className="text-sm">{out}</p>}
       {!!info?.history.length && <ul className="text-xs text-muted">{info.history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("fr-FR")} · {h.subject} · {h.recipients} envoi(s)</li>)}</ul>}
     </section>
+  );
+}
+
+function ProGiftsTab({ adminKey }: { adminKey: string }) {
+  const [g, setG] = useState<Awaited<ReturnType<typeof adminProGifts>> | null>(null);
+  const [t, setT] = useState<Awaited<ReturnType<typeof adminProThreads>>>([]);
+  useEffect(() => { void adminProGifts(adminKey).then(setG).catch((e: Error) => toast(e.message)); void adminProThreads(adminKey).then(setT).catch(() => undefined); }, [adminKey]);
+  if (!g) return <p className="text-sm text-muted">Chargement…</p>;
+  return (
+    <div className="space-y-4">
+      <section>
+        <h3 className="font-display font-bold">Cadeaux pro ({g.length})</h3>
+        <div className="mt-2 space-y-2">{g.map((x) => (
+          <div key={x.id} className={"rounded-2xl border p-3 text-sm " + (x.reported ? "border-signal" : "border-line")}>
+            <p><b>{x.place}</b> → {x.to ?? "?"} · {x.via} · {new Date(x.at).toLocaleString("fr-FR")}</p>
+            <p>🎁 {x.title}{x.description ? ` — ${x.description}` : ""}{x.code ? ` · code ${x.code}` : ""} · jusqu'au {new Date(x.expires).toLocaleDateString("fr-FR")}</p>
+            {x.reported && <p className="text-xs text-signal">Signalé : {x.reason}</p>}
+          </div>))}</div>
+      </section>
+      <section>
+        <h3 className="font-display font-bold">Conversations pro ({t.length})</h3>
+        <div className="mt-2 space-y-1 text-sm">{t.map((x, i) => <p key={i} className={x.reported ? "text-signal" : ""}>{new Date(x.at).toLocaleString("fr-FR")} · <b>{x.place}</b> → {x.to ?? "?"}{x.reported ? " · signalé" : ""}</p>)}</div>
+      </section>
+    </div>
   );
 }
