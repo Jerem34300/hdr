@@ -1,4 +1,5 @@
 import { NotifySettings } from "./notify-settings";
+import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
 import { wipeLocalSession } from "@/lib/hdar/session";
 import { useFavorites } from "@/lib/hdar/favorites";
@@ -42,7 +43,8 @@ export function Me() {
     if (me.onboarded) void getProfile(deviceId(), deviceId()).then((p) => { if (p) { setIam(p.iam); setSeeking(p.seeking); } }).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [consent, setConsent] = useState(() => typeof localStorage !== "undefined" && localStorage.getItem("hdar.sensitiveConsent") === "1");
+  const [consent, setConsent] = useState(false);
+  useEffect(() => { if (me.onboarded) void getSensitiveConsent().then(setConsent).catch(() => undefined); }, [me.onboarded]);
   const saveIdentity = (a: string, b: string[]) => {
     if (!consent && (a || b.length)) { toast("Coche d'abord la case de consentement"); return; }
     setIam(a); setSeeking(b);
@@ -97,9 +99,9 @@ export function Me() {
       <section className="mt-6">
         <label className="mb-3 flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
           <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => {
-            const v = e.target.checked; setConsent(v);
-            try { localStorage.setItem("hdar.sensitiveConsent", v ? "1" : "0"); } catch { /* ignore */ }
-            if (!v && (iam || seeking.length)) { setIam(""); setSeeking([]); void setIdentity("", []).catch(() => undefined); }
+            const v = e.target.checked;
+            if (!me.onboarded) { toast("Crée d'abord ton profil"); return; }
+            void setSensitiveConsent(v).then(() => { setConsent(v); if (!v) { setIam(""); setSeeking([]); } }).catch((err: Error) => toast(err.message));
           }} />
           <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; décocher efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
         </label>

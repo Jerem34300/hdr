@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { checkoutWithWaiver } from "@/lib/hdar/consent";
+import { WaiverCheckbox } from "@/components/hdar/waiver";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Crown, Eye, Heart, Search, SlidersHorizontal, X } from "lucide-react";
@@ -157,7 +159,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
   const pay = (product: string) => {
     if (!payOk) return toast("Paiement bientôt disponible");
     setBusy(product);
-    startCheckout(product, null).catch((e: Error) => toast(e.message.includes("profil") ? "Crée ton profil sur la carte pour passer à hdar+." : e.message)).finally(() => setBusy(""));
+    checkoutWithWaiver(product, null).catch((e: Error) => toast(e.message.includes("profil") ? "Crée ton profil sur la carte pour passer à hdar+." : e.message)).finally(() => setBusy(""));
   };
   const goPricing = () => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" });
   const list: Admirer[] = (tab === "viewers" ? adm?.viewers : adm?.fans) ?? [];
@@ -255,6 +257,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
             <h2 className="text-center font-display text-2xl font-extrabold">Choisis ta formule</h2>
             <p className="mt-1 text-center text-xs text-muted">Sans engagement, résiliable à tout moment.</p>
             {payOk === false && <p className="mt-3 rounded-2xl border border-[#fbbf24] px-4 py-2 text-center text-xs text-[#fbbf24]">💳 Paiement bientôt disponible</p>}
+            <WaiverCheckbox className="mt-4" />
             <div className="mt-5 grid gap-3">
               {prices.map((p, i) => {
                 const f = i === prices.length - 1;

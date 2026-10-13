@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { checkoutWithWaiver } from "@/lib/hdar/consent";
+import { WaiverCheckbox } from "@/components/hdar/waiver";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
-import { myBoosts, mySpots, paymentsEnabled, pricing, startCheckout, type MyBoost, type MySpot, type PriceRow } from "@/lib/hdar/live";
+import { myBoosts, mySpots, paymentsEnabled, pricing, type MyBoost, type MySpot, type PriceRow } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { useHdar } from "@/lib/hdar/store";
 import { PinFace } from "./map-view";
@@ -120,7 +122,7 @@ export function BoostPage() {
   const pay = (product: string) => {
     if (!payOk) return toast("Paiement bientôt disponible");
     setBusy(product);
-    startCheckout(product, null).catch((e: Error) => toast(e.message.includes("profil") ? "Crée ton profil sur la carte pour pouvoir te booster." : e.message)).finally(() => setBusy(""));
+    checkoutWithWaiver(product, null).catch((e: Error) => toast(e.message.includes("profil") ? "Crée ton profil sur la carte pour pouvoir te booster." : e.message)).finally(() => setBusy(""));
   };
   const featured = (p: PriceRow) => /24/.test(p.label + p.product);
   const goPricing = () => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" });
@@ -184,6 +186,7 @@ export function BoostPage() {
           <h2 className="text-center font-display text-2xl font-extrabold">Choisis ta durée</h2>
           <p className="mt-1 text-center text-xs text-muted">Paiement unique, sans abonnement. Les durées s'additionnent.</p>
           {payOk === false && <p className="mt-3 rounded-2xl border border-[#fbbf24] px-4 py-2 text-center text-xs text-[#fbbf24]">💳 Paiement bientôt disponible</p>}
+          <WaiverCheckbox className="mt-4" />
           <div className="mt-5 grid gap-3">
             {prices.map((p) => {
               const f = featured(p);
@@ -291,7 +294,7 @@ function SpotBoost({ prices, payOk, now }: { prices: PriceRow[]; payOk: boolean 
     if (!payOk) return toast("Paiement bientôt disponible");
     if (!sel) return toast("Crée d'abord un lieu depuis l'onglet Lieux.");
     setBusy(product);
-    startCheckout(product, sel).catch((e: Error) => toast(e.message)).finally(() => setBusy(""));
+    checkoutWithWaiver(product, sel).catch((e: Error) => toast(e.message)).finally(() => setBusy(""));
   };
   return (
     <section id="lieux" className="mt-12 scroll-mt-6">
@@ -322,6 +325,7 @@ function SpotBoost({ prices, payOk, now }: { prices: PriceRow[]; payOk: boolean 
           {cur?.boosted_until && (
             <p className="mt-3 text-center text-sm font-bold" style={{ color: CORAL }}>✨ « {cur.title} » est boosté encore {fmtLeft(new Date(cur.boosted_until).getTime() - now)}</p>
           )}
+          <WaiverCheckbox className="mt-4" />
           <div className="mt-4 grid grid-cols-2 gap-3">
             {prices.map((p, i) => (
               <button key={p.product} type="button" disabled={!!busy} onClick={() => pay(p.product)}

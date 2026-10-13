@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { checkoutWithWaiver } from "@/lib/hdar/consent";
+import { WaiverCheckbox } from "@/components/hdar/waiver";
 import { toast } from "sonner";
 import {
-  myPlaces, openBillingPortal, partnerSave, partnerStats, paymentsEnabled, pricing, startCheckout,
+  myPlaces, openBillingPortal, partnerSave, partnerStats, paymentsEnabled, pricing,
   type MyPlace, type PartnerInput, type PartnerStats, type PlaceKind, type PriceRow,
 } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
@@ -45,6 +47,8 @@ export function ProSpace() {
 function PriceButtons({ prices, payOk, onPick }: { prices: PriceRow[]; payOk: boolean; onPick: (product: string) => Promise<void> }) {
   const [busy, setBusy] = useState("");
   return (
+    <>
+    <WaiverCheckbox className="mt-3" />
     <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
       {prices.map((p) => (
         <button
@@ -64,6 +68,7 @@ function PriceButtons({ prices, payOk, onPick }: { prices: PriceRow[]; payOk: bo
         </button>
       ))}
     </div>
+    </>
   );
 }
 
@@ -92,7 +97,7 @@ function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
             <button type="button" className="h-9 shrink-0 rounded-full border border-line px-3 text-xs" onClick={() => setEdit({ ...p })}>Modifier</button>
           </div>
           <p className="mt-3 text-sm font-bold">{p.active ? "Prolonger" : "Mettre en ligne"}</p>
-          <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => startCheckout(prod, p.id)} />
+          <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />
           {p.sub_status && payOk && (
             <button type="button" className="mt-2 text-xs text-muted underline" onClick={() => void openBillingPortal().catch((e: Error) => toast(e.message))}>
               Gérer / résilier mon abonnement

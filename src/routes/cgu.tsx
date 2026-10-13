@@ -72,15 +72,16 @@ function Terms() {
           payés via Stripe. Les prix TTC sont affichés avant paiement.
         </li>
         <li>
-          Ces services numériques sont <strong>exécutés immédiatement</strong>. En payant, tu
+          Ces services numériques sont <strong>exécutés immédiatement</strong>. En cochant la case avant le paiement, tu
           demandes cette exécution immédiate et <strong>renonces à ton droit de rétractation</strong>{" "}
           de 14 jours (article L221-28 du Code de la consommation).
         </li>
         <li>Un boost commencé n'est pas remboursable.</li>
         <li>
-          hdar+ et les fiches partenaires se renouvellent automatiquement et sont résiliables à
-          tout moment depuis le portail de gestion Stripe (lien dans l'appli) ; l'accès reste actif
-          jusqu'à la fin de la période payée. Les factures sont disponibles dans ce portail.
+          hdar+ et les fiches partenaires sont des abonnements à <strong>renouvellement
+          automatique</strong> (semaine, mois… selon l'offre choisie). Ils sont résiliables à tout
+          moment via « Gérer mon abonnement » sur /premium ou /pro (portail Stripe) ; l'accès reste
+          actif jusqu'à la fin de la période payée. Les factures y sont disponibles.
         </li>
       </ul>
       <h2>9. Lieux partenaires, notes et commentaires</h2>

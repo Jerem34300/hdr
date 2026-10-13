@@ -82,8 +82,11 @@ function Privacy() {
         <li>
           Les médias sont stockés chez notre hébergeur (Supabase, UE) et{" "}
           <strong>effacés automatiquement</strong> dès que plus personne ne peut voir leur message :
-          24 h pour le chat de quartier, 24 h après la fermeture d'un lieu, 30 jours en privé.
-          Vidéos limitées à 60 secondes.
+          24 h pour le chat de quartier et les chats de lieux, 24 h après la fermeture d'un lieu
+          créé par un utilisateur. En privé : dès que vous avez <strong>tous les deux supprimé la
+          conversation</strong>, et au plus tard après <strong>30 jours</strong> (les messages
+          privés sont effacés à 30 jours). Le fichier disparaît dans l'heure qui suit. Vidéos
+          limitées à 60 secondes.
         </li>
         <li>
           Chaque média peut être signalé (🚩). Après <strong>3 signalements</strong>, il est masqué
@@ -141,6 +144,10 @@ function Privacy() {
           favori. Les visites sont gardées <strong>30 jours</strong>.
         </li>
         <li>
+          Ton consentement aux données sensibles est enregistré avec sa date, pour pouvoir le
+          prouver ; il est effacé si tu le retires ou supprimes tes données.
+        </li>
+        <li>
           Les abonnés peuvent chercher un profil par pseudo. La recherche ne montre jamais de
           position, ni les profils bloqués, cachés ou supprimés.
         </li>
@@ -168,8 +175,10 @@ function Privacy() {
         <li>Signaux d'appel et de live vidéo : 1 h maximum. Le live n'est jamais enregistré.</li>
         <li>Chat de quartier et ses médias : 24 h. Lieux et leurs messages : 24 h après fermeture.</li>
         <li>
-          Messages privés et leurs médias : <strong>30 jours</strong>.
+          Messages privés et leurs médias : <strong>30 jours</strong> maximum, plus tôt si vous
+          supprimez tous les deux la conversation.
         </li>
+        <li>Compteur de visites du site : 90 jours.</li>
         <li>Visites de profil (hdar+) : 30 jours.</li>
         <li>Statistiques agrégées anonymes : 400 jours.</li>
         <li>Profil, favoris, notes : jusqu'à suppression de tes données.</li>
@@ -185,9 +194,14 @@ function Privacy() {
         <li><strong>Stripe</strong> : paiements.</li>
         <li><strong>Cloudflare</strong> : contrôle anti-robot Turnstile à l'entrée.</li>
         <li>
-          <strong>Fonds de carte</strong> (tuiles cartographiques, données © OpenStreetMap) : ton
-          navigateur les télécharge, ce qui transmet ton adresse IP au serveur de tuiles.
+          <strong>Esri (ArcGIS Online)</strong> : fonds de carte. Les tuiles passent par notre
+          serveur, ton adresse IP n'est donc pas transmise à Esri.
         </li>
+        <li>
+          <strong>Photon (Komoot)</strong> : nom de rue ou de quartier à partir de coordonnées,
+          appelé depuis ton navigateur (reçoit ton IP et la position concernée).
+        </li>
+        <li>Données des lieux permanents : © OpenStreetMap contributors (ODbL).</li>
       </ul>
       <p>Aucune donnée n'est vendue. Aucune publicité.</p>
 
