@@ -2,7 +2,7 @@ import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { codeRedeem, myRef, refClaim, surprise } from "@/lib/hdar/live";
+import { codeRedeem, myRef, refClaim, shareReward, surprise } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 
 const REF_KEY = "hdar-ref";
@@ -43,6 +43,15 @@ export async function storyImage(code: string): Promise<Blob> {
   return new Promise((r) => c.toBlob((b) => r(b!), "image/png"));
 }
 
+const revealBus = typeof EventTarget !== "undefined" ? new EventTarget() : null;
+/** Après un partage réussi : petit cadeau immédiat (serveur : 1 fois / 7 jours). */
+async function thankShare() {
+  try {
+    const r = await shareReward();
+    if (r) { void usePremium.getState().refresh(); revealBus?.dispatchEvent(new CustomEvent("reveal", { detail: r.label })); }
+  } catch { /* */ }
+}
+
 export async function shareInvite() {
   try {
     const { code } = await myRef();
@@ -50,16 +59,17 @@ export async function shareInvite() {
     const text = "Viens sur hdar. : 3 jours de hdar+ offerts pour toi et moi 🎁";
     let files: File[] = [];
     try { files = [new File([await storyImage(code)], `hdar-${code}.png`, { type: "image/png" })]; } catch { /* */ }
-    if (files.length && navigator.canShare?.({ files })) return void (await navigator.share({ files, text: `${text} ${url}` }).catch(() => undefined));
-    if (navigator.share) return void (await navigator.share({ title: "hdar.", text, url }).catch(() => undefined));
-    await navigator.clipboard.writeText(`${text} ${url}`); toast("Lien copié 📋");
+    const ok = (p: Promise<void>) => p.then(() => true, () => false);
+    if (files.length && navigator.canShare?.({ files })) { if (await ok(navigator.share({ files, text: `${text} ${url}` }))) void thankShare(); return; }
+    if (navigator.share) { if (await ok(navigator.share({ title: "hdar.", text, url }))) void thankShare(); return; }
+    await navigator.clipboard.writeText(`${text} ${url}`); toast("Lien copié 📋"); void thankShare();
   } catch (e) { toast(e instanceof Error ? e.message : "Crée d'abord ton profil"); }
 }
 
 export async function downloadStory() {
   try {
     const { code } = await myRef();
-    const a = document.createElement("a"); a.href = URL.createObjectURL(await storyImage(code)); a.download = `hdar-${code}.png`; a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(await storyImage(code)); a.download = `hdar-${code}.png`; a.click(); void thankShare();
   } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
 }
 
@@ -72,7 +82,7 @@ export function InviteCard() {
       <button type="button" onClick={() => void shareInvite()} className="flex w-full items-center gap-3 text-left">
         <span className="text-3xl">🎁</span>
         <span className="min-w-0 flex-1"><b className="block font-display">Invite un ami</b>
-          <span className="text-xs text-muted">Gagnez 3 jours de hdar+ tous les deux{n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}</span></span>
+          <span className="text-xs text-muted">Partage = un petit cadeau tout de suite, +3 jours hdar+ quand ton ami s'inscrit{n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}</span></span>
         <span className="text-sm font-bold text-[#A1E3C3]">Partager ›</span>
       </button>
       <p className="mt-2 text-xs text-muted">Ton code : <b className="font-mono text-ink">{n.code}</b> · <button type="button" className="underline" onClick={() => void downloadStory()}>Image pour ta story</button></p>
@@ -114,6 +124,12 @@ export function GiftPopup({ title, body, onClose, nudge }: { title: string; body
 /** Parrainage à l'arrivée + surprise aléatoire décidée par le serveur (max 1 / 10 jours). */
 export function SurprisePopup() {
   const [s, setS] = useState<{ label: string } | null>(null);
+  const [thanks, setThanks] = useState<string | null>(null);
+  useEffect(() => {
+    const on = (e: Event) => setThanks((e as CustomEvent<string>).detail);
+    revealBus?.addEventListener("reveal", on);
+    return () => revealBus?.removeEventListener("reveal", on);
+  }, []);
   useEffect(() => {
     captureRef();
     const t = setTimeout(() => {
@@ -125,6 +141,7 @@ export function SurprisePopup() {
   }, []);
   const demo = import.meta.env.DEV && typeof location !== "undefined" ? new URLSearchParams(location.search).get("reveal") : null;
   if (demo) return <GiftPopup title="Cadeau de hdar 🎁" body={demo === "premium" ? "Tu reçois 7 jours de hdar+." : demo === "boost" ? "Tu reçois un boost de 24 h." : "Tu reçois 50 cœurs."} nudge={demo === "premium"} onClose={() => undefined} />;
+  if (thanks) return <GiftPopup title="Merci pour le partage 🎁" body={`Tu reçois ${thanks}.`} onClose={() => setThanks(null)} />;
   if (!s) return null;
   return <GiftPopup title="Surprise 🎉" body={`hdar t'offre ${s.label}. Profite-en !`} nudge onClose={() => setS(null)} />;
 }

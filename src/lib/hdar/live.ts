@@ -1023,3 +1023,4 @@ export const surprise = () => rpc<{ kind: string; amount: number; label: string 
 export const adminCodes = (key: string) => rpc<GiftCode[]>("hdar_admin_codes", { p_key: key });
 export const adminCodeCreate = (key: string, o: { kind: string; amount: number; maxUses: number; days: number; code?: string; note?: string }) =>
   rpc<{ code: string }>("hdar_admin_code_create", { p_key: key, p_kind: o.kind, p_amount: o.amount, p_max_uses: o.maxUses, p_days: o.days, p_code: o.code || null, p_note: o.note || null });
+export const shareReward = () => rpc<{ kind: string; amount: number; label: string } | null>("hdar_share_reward", {});

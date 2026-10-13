@@ -119,7 +119,7 @@ function Terms() {
         par profil, dans la limite de leurs utilisations et de leur date d'expiration ; ils n'ont aucune
         valeur monétaire et ne sont ni échangeables ni remboursables. <strong>Parrainage</strong> : quand une
         personne crée son profil avec ton lien et que sa photo est validée, vous recevez chacun 3 jours de
-        hdar+ (10 récompenses maximum par mois pour le parrain ; l'auto-parrainage est exclu). hdar peut
+        hdar+ (10 récompenses maximum par mois pour le parrain ; l'auto-parrainage est exclu). Partager ton lien d'invitation peut aussi te faire gagner tout de suite un petit cadeau (boost de 3 h ou 1 jour de hdar+), au plus une fois tous les 7 jours. hdar peut
         offrir de temps en temps une <strong>surprise</strong> (boost ou quelques jours de hdar+), au plus
         une fois tous les 10 jours, sans aucune obligation. Tout abus (faux comptes, revente de codes) entraîne
         l'annulation des avantages et un bannissement.
