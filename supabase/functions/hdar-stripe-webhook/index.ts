@@ -31,8 +31,28 @@ const apply = (ref: string, m: Meta, amount: number, currency: string, sub: stri
     p_amount: amount, p_currency: currency, p_subscription: sub, p_customer: customer,
   });
 
+// Secrets: env first, else Supabase Vault via service_role-only RPC hdar_stripe_secret (cached).
+const _sec: Record<string, string | null> = {};
+async function getSecret(env: string, name: string): Promise<string | null> {
+  const e = Deno.env.get(env);
+  if (e) return e;
+  if (_sec[name]) return _sec[name];
+  try {
+    const k = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/hdar_stripe_secret`, {
+      method: "POST",
+      headers: { apikey: k, authorization: `Bearer ${k}`, "content-type": "application/json" },
+      body: JSON.stringify({ p_name: name }),
+    });
+    const v = r.ok ? await r.json() : null;
+    const ok = typeof v === "string" && v.length > 20 ? v : null;
+    if (ok) _sec[name] = ok;
+    return ok;
+  } catch { return null; }
+}
+
 Deno.serve(async (req) => {
-  const secret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const secret = await getSecret("STRIPE_WEBHOOK_SECRET", "stripe_webhook_secret");
   if (!secret) return new Response("not configured", { status: 503 });
   const payload = await req.text();
   if (!(await verify(payload, req.headers.get("stripe-signature") ?? "", secret))) return new Response("bad signature", { status: 400 });

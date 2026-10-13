@@ -34,9 +34,29 @@ async function stripe(path: string, params: Record<string, string>, key: string)
   return b;
 }
 
+// Secrets: env first, else Supabase Vault via service_role-only RPC hdar_stripe_secret (cached).
+const _sec: Record<string, string | null> = {};
+async function secret(env: string, name: string): Promise<string | null> {
+  const e = Deno.env.get(env);
+  if (e) return e;
+  if (_sec[name]) return _sec[name];
+  try {
+    const k = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/hdar_stripe_secret`, {
+      method: "POST",
+      headers: { apikey: k, authorization: `Bearer ${k}`, "content-type": "application/json" },
+      body: JSON.stringify({ p_name: name }),
+    });
+    const v = r.ok ? await r.json() : null;
+    const ok = typeof v === "string" && v.length > 20 ? v : null;
+    if (ok) _sec[name] = ok;
+    return ok;
+  } catch { return null; }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = await secret("STRIPE_SECRET_KEY", "stripe_secret_key");
   if (req.method === "GET") return json({ enabled: !!key });
   if (!key) return json({ error: "not_configured", message: "Paiement bientôt disponible" }, 503);
   const auth = req.headers.get("authorization") ?? "";
