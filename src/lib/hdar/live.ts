@@ -1052,6 +1052,9 @@ export const adminPartners = (key: string, days = 30) => rpc<AdminPartner[]>("hd
 export type Revenue = { gross: number; refunds: number; fees: number; net: number; count: number; fees_estimated: boolean;
   series: { t: string; cents: number }[]; sources: { kind: string; product: string; label: string; cents: number; n: number }[];
   partners: { name: string; cents: number; n: number }[]; spenders: { pseudo: string; cents: number; n: number }[] };
+export const liveEvent = (outcome: "video" | "failed" | "abandon" | "timeout", ms: number, ice: string) => rpc("hdar_live_event", { p_outcome: outcome, p_ms: Math.round(ms), p_ice: ice }).catch(() => undefined);
+export type LiveEventsSummary = { days: { day: string; video: number; failed: number; abandon: number; median_ms: number | null; relay: number }[]; last: { at: string; outcome: string; ms: number; ice: string }[] };
+export const adminLiveEvents = (key: string) => rpc<LiveEventsSummary>("hdar_admin_live_events", { p_key: key });
 export const adminRevenue = (key: string, period: string) => rpc<Revenue>("hdar_admin_revenue", { p_key: key, p_period: period });
 export type AmbStats = { signups: number; validated: number; codes_created: number; codes_redeemed: number; places: number; places_claimed: number; places_active: number; revenue_users: number; revenue_partners: number; commission: number; paid: number; bonuses?: number; signup_bonus?: number };
 export type AmbMe = { needs_terms?: boolean; user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; paid_total: number; connect: "none" | "pending" | "ready"; paused: boolean; contract?: { version: string; at: string; name: string } | null; code: string; codes_per_week: number; codes_left: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number;

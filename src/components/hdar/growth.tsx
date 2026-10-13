@@ -158,7 +158,7 @@ export function RedeemCode() {
   };
   return (
     <div className="mt-4">
-      {!open ? <button type="button" onClick={() => setOpen(true)} className="text-sm text-muted underline">🎟️ J'ai un code</button> : (
+      {!open ? <button type="button" onClick={() => setOpen(true)} className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-surface font-display font-bold text-ink active:scale-[.98]">🎟️ J'ai un code</button> : (
         <div className="flex gap-2">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="CODE" maxLength={24} className="min-w-0 flex-1 rounded-full bg-surface px-4 py-2 font-mono tracking-widest" />
           <button type="button" disabled={!code.trim()} onClick={() => void go()} className="rounded-full bg-[#FA6F6C] px-4 font-bold text-night disabled:opacity-50">Valider</button>

@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShareLiveButton } from "./live-share";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, liveEvent, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
 import { useHdar } from "@/lib/hdar/store";
@@ -139,7 +139,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     c.onconnectionstatechange = () => {
       if (c !== pc.current) return;
       if (c.connectionState === "connected") { clearWatch(); setPhase("live"); }
-      if (c.connectionState === "failed") { toast("Connexion impossible, on passe au suivant"); void next(); }
+      if (c.connectionState === "failed") { report("failed"); toast("Connexion impossible, on passe au suivant"); void next(); }
     };
     pc.current = c;
     return c;
@@ -154,17 +154,32 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     await gathered(c);
     if (pc.current === c && peerRef.current?.id === card.id) await rouletteSignal(card.id, "live-offer", JSON.stringify(c.localDescription)).catch(() => undefined);
   };
+  const tele = useRef<{ t0: number; done: boolean } | null>(null);
+  const report = (outcome: "video" | "failed" | "abandon" | "timeout") => {
+    const t = tele.current; if (!t || t.done || demo) return; t.done = true;
+    const ms = Date.now() - t.t0; const c = pc.current;
+    if (outcome !== "video" || !c) return void liveEvent(outcome, ms, "unknown");
+    void c.getStats().then((st) => {
+      let ice = "unknown"; let pairId = "";
+      st.forEach((r) => { if (r.type === "transport" && r.selectedCandidatePairId) pairId = r.selectedCandidatePairId; });
+      st.forEach((r) => { if (r.type === "candidate-pair" && (r.id === pairId || (!pairId && r.nominated && r.state === "succeeded"))) { const l = st.get(r.localCandidateId), rm = st.get(r.remoteCandidateId); ice = l?.candidateType === "relay" || rm?.candidateType === "relay" ? "relay" : "direct"; } });
+      void liveEvent("video", ms, ice);
+    }).catch(() => void liveEvent("video", ms, "unknown"));
+  };
   const matched = async (card: LiveCard) => {
+    if (tele.current && !tele.current.done && Date.now() - tele.current.t0 > 3000) report("abandon");
+    tele.current = { t0: Date.now(), done: false };
     peerRef.current = card; pendingIce.current = []; setPeer(card); setAsked(false); setAskSent(false); setPhase("connecting");
     clearWatch();
     const stuck = () => peerRef.current?.id === card.id && pc.current?.connectionState !== "connected";
     // Pas de connexion après 10 s : on renvoie l'offre (redémarrage ICE) ; après 30 s on passe au suivant.
     watchdog.current.push(setTimeout(() => { if (stuck() && card.role === "offer") void sendOffer(card, true).catch(() => undefined); }, 8000));
-    watchdog.current.push(setTimeout(() => { if (stuck()) { toast("Connexion impossible avec cette personne (réseau), on passe au suivant"); void next(); } }, 30000));
+    watchdog.current.push(setTimeout(() => { if (stuck()) { toast("Connexion impossible avec cette personne (réseau), on passe au suivant"); report("timeout"); void next(); } }, 30000));
     if (card.role === "offer") await sendOffer(card);
   };
 
   async function next(back?: string) {
+    if (tele.current && !tele.current.done && Date.now() - tele.current.t0 > 3000) report("abandon");
     lastNext.current = Date.now();
     clearWatch();
     closePc();
@@ -202,6 +217,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   }
 
   function stop(leave = true) {
+    if (tele.current && !tele.current.done && peerRef.current && Date.now() - tele.current.t0 > 3000) report("abandon");
     running.current = false; (window as unknown as { __hdarLive?: boolean }).__hdarLive = false; setTimeout(() => (window as unknown as { __hdarIdle?: () => void }).__hdarIdle?.(), 1500);
     closePc();
     localRef.current?.getTracks().forEach((t) => t.stop());
@@ -327,7 +343,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       onTouchStart={(e) => (touchY.current = e.touches[0].clientY)}
       onTouchEnd={(e) => { const y0 = touchY.current; touchY.current = null; if (y0 != null && y0 - e.changedTouches[0].clientY > 70 && !demo) void next(); }}
       onWheel={(e) => { if (e.deltaY > 60 && !demo && phase !== "searching") void next(); }}>
-      <video ref={themVid} autoPlay playsInline onPlaying={(e) => { if (e.currentTarget.videoWidth > 0) setGotVideo(true); }} onResize={(e) => { if (e.currentTarget.videoWidth > 0) setGotVideo(true); }} className="absolute inset-0 size-full object-cover" />
+      <video ref={themVid} autoPlay playsInline onPlaying={(e) => { if (e.currentTarget.videoWidth > 0) { setGotVideo(true); report("video"); } }} onResize={(e) => { if (e.currentTarget.videoWidth > 0) { setGotVideo(true); report("video"); } }} className="absolute inset-0 size-full object-cover" />
       {needTap && <button type="button" onClick={() => { const v = themVid.current; if (v) { v.muted = false; void v.play().catch(() => undefined); } setNeedTap(false); }} className="absolute top-40 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-bold text-night shadow-lg">🔊 Touche pour activer le son</button>}
       {demo && <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,#3b2a3a,#0b0b10)]" style={{ filter: theyBlur ? "blur(28px)" : "none" }}><div className="absolute top-[22%] left-1/2 size-48 -translate-x-1/2 rounded-full bg-[#c9a58c]/70" /><div className="absolute top-[52%] left-1/2 h-80 w-80 -translate-x-1/2 rounded-t-full bg-[#2b3a55]" /></div>}
       {phase !== "live" && !demo && (

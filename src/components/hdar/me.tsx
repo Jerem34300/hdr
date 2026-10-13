@@ -135,6 +135,7 @@ export function Me() {
       <BoostButton />
       <PremiumCard />
       <InviteCard />
+      <RedeemCode />
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Je suis</h2>

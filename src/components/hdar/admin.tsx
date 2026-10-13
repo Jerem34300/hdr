@@ -1,6 +1,7 @@
 import { AmbassadorsTab } from "./admin-ambassadors";
 import { RevenueTab } from "./admin-revenue";
 import { adminPartners, type AdminPartner } from "@/lib/hdar/live";
+import { adminLiveEvents, type LiveEventsSummary } from "@/lib/hdar/live";
 import { ProDashboard } from "./pro-dashboard";
 import { adminCodes, adminCodeCreate, adminNewsSend, type GiftCode } from "@/lib/hdar/live";
 import { mail as mailHtml, type Tpl } from "@/lib/hdar/mail-template";
@@ -28,7 +29,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live";
 
 function readKey() {
   try {
@@ -176,6 +177,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["codes", "Codes cadeaux"],
               ["partners", "Partenaires"],
               ["revenus", "Revenus"],
+              ["live", "Live (qualité)"],
               ["ambassadeurs", "Ambassadeurs"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
@@ -239,6 +241,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "codes" && <CodesTab adminKey={adminKey} />}
         {tab === "partners" && <PartnersTab adminKey={adminKey} />}
         {tab === "revenus" && <RevenueTab adminKey={adminKey} />}
+        {tab === "live" && <LiveQualityTab adminKey={adminKey} />}
         {tab === "ambassadeurs" && <AmbassadorsTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
@@ -1125,6 +1128,23 @@ function PartnersTab({ adminKey }: { adminKey: string }) {
             <span className="text-xs text-muted">{r.active ? `✅ actif jusqu'au ${new Date(r.until!).toLocaleDateString("fr-FR")}` : "⏸️ inactif"}{r.sub ? ` · abo ${r.sub}` : ""}{r.pro_boost_until && new Date(r.pro_boost_until) > new Date() ? " · ⭐ boosté" : ""}</span></span>
           <span className="text-right text-xs"><b className="block text-sm">{eur(r.revenue)}</b>{r.views} vues · {r.boosts} boost(s)</span>
         </button>))}
+    </div>
+  );
+}
+
+function LiveQualityTab({ adminKey }: { adminKey: string }) {
+  const [d, setD] = useState<LiveEventsSummary | null>(null);
+  useEffect(() => { void adminLiveEvents(adminKey).then(setD).catch((e) => toast(e instanceof Error ? e.message : "Erreur")); }, [adminKey]);
+  if (!d) return <p className="text-sm text-muted">Chargement…</p>;
+  const sec = (ms: number | null) => (ms == null ? "—" : `${(ms / 1000).toFixed(1)} s`);
+  const L: Record<string, string> = { video: "✅ vidéo", failed: "❌ échec", timeout: "⏱️ délai dépassé", abandon: "↩️ abandon" };
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted">Chaque mise en relation Live envoie un événement anonyme : vidéo reçue (avec délai), échec, ou abandon avant l'image.</p>
+      <table className="w-full text-sm"><thead><tr className="text-left text-muted"><th>Jour</th><th>Vidéo</th><th>Échecs</th><th>Abandons</th><th>Délai médian</th><th>Via relais</th></tr></thead>
+        <tbody>{d.days.length === 0 ? <tr><td colSpan={6} className="py-2 text-muted">Aucun Live mesuré pour l'instant.</td></tr> : d.days.map((x) => { const tot = x.video + x.failed + x.abandon; return <tr key={x.day} className="border-t border-white/10"><td>{x.day}</td><td>{x.video}{tot ? ` (${Math.round((x.video / tot) * 100)} %)` : ""}</td><td>{x.failed}</td><td>{x.abandon}</td><td>{sec(x.median_ms)}</td><td>{x.relay}</td></tr>; })}</tbody></table>
+      <h3 className="font-display font-bold">30 derniers</h3>
+      <ul className="space-y-1 text-sm">{d.last.map((e, i) => <li key={i} className="flex justify-between border-b border-white/5 py-1"><span>{new Date(e.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}</span><span>{L[e.outcome] ?? e.outcome}</span><span>{sec(e.ms)}</span><span className="text-muted">{e.ice === "relay" ? "relais" : e.ice === "direct" ? "direct" : "?"}</span></li>)}</ul>
     </div>
   );
 }
