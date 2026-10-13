@@ -8,11 +8,11 @@ import { toast } from "sonner";
 import { askConfirm } from "@/lib/hdar/confirm";
 import { DESIRES, type Desire } from "@/lib/hdar/data";
 import { deviceId } from "@/lib/hdar/device";
-import { goDark, saveProfile } from "@/lib/hdar/live";
+import { goDark, saveProfile, setProfileNote } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
 import { myPhotos, useHdar } from "@/lib/hdar/store";
 import { DESIRE_ICON } from "./icons";
-import { Sparkles } from "lucide-react";
+import { ChevronLeft, Settings, Sparkles } from "lucide-react";
 import { fmtLeft, useActiveBoost, useNow } from "./boost";
 
 const MAX_PHOTOS = 5;
@@ -27,6 +27,9 @@ export function Me() {
   const [pseudo, setPseudo] = useState(me.pseudo);
   const [age, setAge] = useState(me.age ? String(me.age) : "");
   const [bio, setBio] = useState(me.bio);
+  const [note, setNote] = useState(me.note ?? "");
+  const [settings, setSettings] = useState(false);
+  if (settings) return <SettingsScreen onBack={() => setSettings(false)} />;
 
   async function addPhotos(files: FileList) {
     const room = MAX_PHOTOS - photos.length;
@@ -48,24 +51,28 @@ export function Me() {
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Mon profil</h1>
-        <button
-          type="button"
-          className="flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-night disabled:opacity-40"
-          disabled={!me.onboarded}
-          onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
-        >
-          <Eye className="size-4" />
-          Voir mon profil
+        <button type="button" aria-label="Paramètres" title="Paramètres" onClick={() => setSettings(true)}
+          className="flex size-11 items-center justify-center rounded-full border border-line bg-surface text-ink">
+          <Settings className="size-5" />
         </button>
       </div>
+
+      <div className="mt-4 flex items-center gap-4 rounded-3xl border border-line bg-surface p-4">
+        <span className="size-20 shrink-0 overflow-hidden rounded-full border-2 border-white bg-night">
+          {photos[0] ? <img src={photos[0]} alt="" className="size-full object-cover" /> : (
+            <span className="flex size-full items-center justify-center font-display text-2xl font-bold">{(me.pseudo || "?").slice(0, 1).toUpperCase()}</span>
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-xl font-extrabold">{me.pseudo || "Sans pseudo"}{me.age ? <span className="font-normal text-muted"> · {me.age} ans</span> : null}</p>
+          <p className={"mt-0.5 text-sm break-words " + (me.note ? "italic" : "text-muted")}>{me.note ? `💬 « ${me.note} »` : "Ajoute ta phrase du moment ci-dessous"}</p>
+          <button type="button" disabled={!me.onboarded} onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
+            className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-bold text-night disabled:opacity-40">
+            <Eye className="size-3.5" /> Voir comme les autres
+          </button>
+        </div>
+      </div>
       <BoostButton />
-      <p className="mt-1 text-sm text-muted">
-        C'est ce que les autres voient quand ils touchent ton pin.
-      </p>
-
-      <Favorites />
-
-      <NotifySettings />
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Photos</h2>
@@ -172,6 +179,23 @@ export function Me() {
           </label>
         </div>
         <label className="block text-xs text-muted">
+          Ta phrase du moment
+          <input
+            className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
+            maxLength={60}
+            value={note}
+            placeholder="Ex. Nouveau dans le quartier, partant pour un verre"
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={() => {
+              const clean = note.trim().slice(0, 60);
+              if (clean === (me.note ?? "")) return;
+              patchMe({ note: clean });
+              void setProfileNote(clean).catch(() => toast("Phrase non enregistrée, réessaie"));
+            }}
+          />
+          <span className="mt-1 block">Affichée en haut de ton profil, visible par tous · {note.length}/60</span>
+        </label>
+        <label className="block text-xs text-muted">
           À propos
           <textarea
             className="mt-1 h-24 w-full rounded-2xl border border-line bg-night px-4 py-3 text-base text-ink outline-none focus-visible:border-signal"
@@ -214,51 +238,7 @@ export function Me() {
         </div>
       </section>
 
-      <section className="mt-10 border-t border-line pt-6">
-        <button
-          type="button"
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-signal/60 text-sm text-signal"
-          onClick={() =>
-            void askConfirm({
-              title: "Supprimer toutes mes données ?",
-              body: "Profil, photos, vocal, messages envoyés et reçus, médias, favoris, position et compte anonyme sont effacés définitivement de nos serveurs. Irréversible.",
-              confirm: "Tout supprimer",
-              danger: true,
-            }).then(async (ok) => {
-              if (!ok) return;
-              try {
-                await deleteMyData();
-              } catch (e) {
-                toast(e instanceof Error ? e.message : "Suppression impossible, réessaie");
-                return;
-              }
-              reset();
-              await wipeLocalSession();
-              window.location.assign("/");
-            })
-          }
-        >
-          <Trash2 className="size-4" />
-          Supprimer toutes mes données
-        </button>
-        <p className="mt-4 text-center text-xs text-muted">
-          <a className="underline" href="/confidentialite">
-            Confidentialité
-          </a>{" "}
-          ·{" "}
-          <a className="underline" href="/cgu">
-            Conditions d'utilisation
-          </a>{" "}
-          ·{" "}
-          <a className="underline" href="/contact">
-            Contact
-          </a>
-          <br />
-          <a className="mt-2 inline-block text-[11px] opacity-70 hover:underline" href="/pro">
-            Espace pro · lieux partenaires
-          </a>
-        </p>
-      </section>
+      <Favorites />
     </div>
   );
 }
@@ -427,5 +407,66 @@ function BoostButton() {
       <Sparkles className="sparkle size-5" />
       {b ? <span className="tabular-nums">Boost actif · {fmtLeft(new Date(b.ends_at).getTime() - now)}</span> : "Booster mon profil"}
     </a>
+  );
+}
+
+/** Paramètres : notifications, sons, confidentialité, compte. Ouvert par la roue ⚙️ du profil. */
+function SettingsScreen({ onBack }: { onBack: () => void }) {
+  const reset = useHdar((s) => s.reset);
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10">
+      <div className="flex items-center gap-2">
+        <button type="button" aria-label="Retour au profil" onClick={onBack} className="-ml-2 flex size-11 items-center justify-center">
+          <ChevronLeft className="size-6" />
+        </button>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight">Paramètres</h1>
+      </div>
+      <NotifySettings />
+      <section className="mt-8 border-t border-line pt-6">
+        <button
+          type="button"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-signal/60 text-sm text-signal"
+          onClick={() =>
+            void askConfirm({
+              title: "Supprimer toutes mes données ?",
+              body: "Profil, photos, vocal, messages envoyés et reçus, médias, favoris, position et compte anonyme sont effacés définitivement de nos serveurs. Irréversible.",
+              confirm: "Tout supprimer",
+              danger: true,
+            }).then(async (ok) => {
+              if (!ok) return;
+              try {
+                await deleteMyData();
+              } catch (e) {
+                toast(e instanceof Error ? e.message : "Suppression impossible, réessaie");
+                return;
+              }
+              reset();
+              await wipeLocalSession();
+              window.location.assign("/");
+            })
+          }
+        >
+          <Trash2 className="size-4" />
+          Supprimer toutes mes données
+        </button>
+        <p className="mt-4 text-center text-xs text-muted">
+          <a className="underline" href="/confidentialite">
+            Confidentialité
+          </a>{" "}
+          ·{" "}
+          <a className="underline" href="/cgu">
+            Conditions d'utilisation
+          </a>{" "}
+          ·{" "}
+          <a className="underline" href="/contact">
+            Contact
+          </a>
+          <br />
+          <a className="mt-2 inline-block text-[11px] opacity-70 hover:underline" href="/pro">
+            Espace pro · lieux partenaires
+          </a>
+        </p>
+      </section>
+    </div>
   );
 }

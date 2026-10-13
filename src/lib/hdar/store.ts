@@ -41,6 +41,8 @@ export type Me = {
   onboarded: boolean;
   email: string;
   tonight: MeTonight | null;
+  /** Ton mot : phrase courte affichée sur ton profil. */
+  note?: string;
 };
 
 export type ChatMsg = {

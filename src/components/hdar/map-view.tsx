@@ -181,6 +181,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           pseudo: st.me.pseudo || "Anonyme",
           desires: tonight.desires.join(","),
           hours: 3,
+          note: tonight.note,
         },
       }).catch(() => undefined);
     }

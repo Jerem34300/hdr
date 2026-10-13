@@ -113,7 +113,7 @@ function otherId(value: string) {
 export async function pulse({
   data,
 }: {
-  data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number };
+  data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number; note?: string };
 }) {
   if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
   await rpc("hdar_pulse", {
@@ -126,8 +126,12 @@ export async function pulse({
         .slice(0, 24) || "Anonyme",
     p_desires: String(data.desires || "").slice(0, 80),
     p_hours: Math.round(Math.min(12, Math.max(1, Number(data.hours) || 3))),
+    p_note: String(data.note || "").trim().slice(0, 60),
   });
 }
+
+/** Le « mot » : phrase courte du profil (60 car.), visible par tous sur ta fiche. */
+export const setProfileNote = (note: string) => rpc("hdar_note_set", { p_note: note.trim().slice(0, 60) });
 
 export async function goDark({ data }: { data: string }) {
   await rpc("hdar_go_dark", { p_self: selfId(data) });
@@ -320,6 +324,8 @@ export type PublicProfile = {
   online: boolean;
   lat: number | null;
   lng: number | null;
+  /** Phrase du moment (60 car.). */
+  note: string;
 };
 
 export async function saveProfile(input: {
@@ -370,6 +376,7 @@ export async function getProfile(self: string, id: string): Promise<PublicProfil
       online: boolean;
       lat: number | null;
       lng: number | null;
+      note?: string | null;
     }[]
   >("hdar_profile_get", { p_self: selfId(self), p_id: otherId(id) });
   const r = rows[0];
@@ -385,6 +392,7 @@ export async function getProfile(self: string, id: string): Promise<PublicProfil
     online: r.online,
     lat: r.lat,
     lng: r.lng,
+    note: r.note ?? "",
   };
 }
 

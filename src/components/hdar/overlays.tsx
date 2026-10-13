@@ -1,3 +1,4 @@
+import { setProfileNote } from "@/lib/hdar/live";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
@@ -145,11 +146,12 @@ function Tonight() {
   const now = useHdar((s) => s.now);
   const setTonight = useHdar((s) => s.setTonight);
   const clearTonight = useHdar((s) => s.clearTonight);
+  const patchMe = useHdar((s) => s.patchMe);
   const active = me.tonight && !isExpired(me.tonight.expiresAt, now) ? me.tonight : null;
   const [len, setLen] = useState<TonightLen>(active?.len ?? "3h");
   const [place, setPlace] = useState<PlaceKind>(active?.place ?? "dehors");
   const [tags, setTags] = useState<Desire[]>(active?.desires ?? me.tags.slice(0, 3));
-  const [note, setNote] = useState(active?.note ?? "");
+  const [note, setNote] = useState(active?.note || me.note || "");
 
   return (
     <form
@@ -159,6 +161,10 @@ function Tonight() {
         if (tags.length === 0) {
           toast("Choisis au moins une envie");
           return;
+        }
+        if (note.trim() !== (me.note ?? "")) {
+          patchMe({ note: note.trim().slice(0, 60) });
+          void setProfileNote(note).catch(() => undefined);
         }
         setTonight({ desires: tags, place, note, len });
       }}
@@ -208,15 +214,15 @@ function Tonight() {
         ))}
       </div>
       <label className="block text-sm">
-        Un mot
+        Ta phrase du moment <span className="text-xs text-muted">(facultatif)</span>
         <input
           className="mt-1 h-12 w-full rounded-2xl border border-line bg-night px-4 outline-none focus-visible:border-signal"
           maxLength={60}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Pas plus de 60 caractères"
+          placeholder="Ex. Nouveau dans le quartier, partant pour un verre"
         />
-        <span className="mt-1 block text-xs text-muted">{note.length}/60</span>
+        <span className="mt-1 block text-xs text-muted">Une phrase courte affichée sur ton profil, modifiable dans Profil · {note.length}/60</span>
       </label>
       <Button type="submit" size="lg" className="w-full">
         Me rendre dispo

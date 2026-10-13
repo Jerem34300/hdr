@@ -112,6 +112,9 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
         {state === "gone" && (
           <p className="mt-8 text-center text-sm text-muted">Profil indisponible.</p>
         )}
+        {profile?.note && (
+          <p className="mt-5 rounded-2xl border border-line bg-night px-4 py-3 text-sm italic break-words">💬 « {profile.note} »</p>
+        )}
         {profile && profile.desires.length > 0 && profile.online && (
           <section className="mt-6">
             <h2 className="text-xs tracking-wide text-muted uppercase">Ce soir</h2>
