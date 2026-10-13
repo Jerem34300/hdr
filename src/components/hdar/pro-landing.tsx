@@ -151,15 +151,25 @@ export function ProLanding({ prices, onCreate }: { prices: PriceRow[]; onCreate:
         </div>
       </section>
 
-      {/* Live Pro */}
+      {/* Avantages partenaires */}
       <section className="rounded-3xl border border-[#fbbf24]/50 bg-surface p-5">
-        <h2 className="font-display text-2xl font-extrabold">Inclus : Live Pro & cadeaux 🎁</h2>
-        <ul className="mt-3 space-y-2 text-sm">
-          <li>🎥 <b>Live Pro dans toute la France</b> : sans limite de distance, avec votre badge Partenaire et le nom du lieu.</li>
-          <li>🎁 <b>Cadeaux pro</b> : un verre offert, une entrée à -20 %… avec code promo à montrer sur place (20 / jour).</li>
-          <li>💬 <b>Messages privés</b> en tant que partenaire (20 nouvelles conversations / jour).</li>
-        </ul>
-        <p className="mt-2 text-xs text-muted">Les membres peuvent refuser messages et cadeaux des pros, bloquer ou signaler.</p>
+        <h2 className="font-display text-2xl font-extrabold">Tout ce qui est inclus</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            ["📍", "Ton lieu sur la carte", "Fiche avec photos, site, horaires, notes et chat du lieu, mise en avant avec son halo."],
+            ["🏷️", "Badge Partenaire", "Le nom de ton lieu et le badge Partenaire s'affichent partout où tu apparais."],
+            ["🎥", "Live Pro · toute la France", "Fais des lives vidéo sans limite de distance : tu croises des membres partout, pas seulement autour de toi."],
+            ["🎁", "Cadeaux pro", "Offre un verre, une entrée à -20 %… avec code promo et date d'expiration, à montrer sur place. 20 par jour."],
+            ["💬", "Écrire en pro", "Ouvre des conversations privées en tant que partenaire. 20 nouvelles conversations par jour."],
+            ["📊", "Stats en direct", "Vues, clics, messages et provenance de tes visiteurs, jour par jour."],
+          ].map(([i, t, d]) => (
+            <div key={t} className="flex gap-3 rounded-2xl bg-night p-4">
+              <span className="text-3xl">{i}</span>
+              <div><h3 className="font-display font-bold">{t}</h3><p className="text-sm text-muted">{d}</p></div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted">Pour protéger les membres : ils peuvent refuser messages et cadeaux des pros, bloquer ou signaler. Aucune position précise n'est jamais partagée.</p>
       </section>
 
       {/* étapes */}
