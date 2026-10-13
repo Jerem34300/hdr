@@ -4,6 +4,7 @@ import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLay
 import { useEffect, useRef, useState } from "react";
 import { Layers, LocateFixed } from "lucide-react";
 import { Safe } from "./safe";
+import { BoostNudge } from "./boost-nudge";
 import { listBoosted, listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { usePhoto } from "@/lib/hdar/photos";
@@ -294,7 +295,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const spotClusters: { key: string; x: number; y: number; lat: number; lng: number; items: LiveSpot[] }[] = [];
   for (const spot of spots.filter((sp) => sp.creator || sp.live)) {
     const pt = project(spot.lat, spot.lng);
-    const near = spotClusterPx
+    const glowing = (spot.boostedUntil ?? 0) > Date.now();
+    const near = spotClusterPx && !glowing
       ? spotClusters.find((c) => Math.hypot(c.x - pt.x, c.y - pt.y) < spotClusterPx)
       : undefined;
     if (near) {
@@ -579,7 +581,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           );
         }
         const spot = c.items[0];
-        const compact = zoom < 13;
+        const glow = (spot.boostedUntil ?? 0) > Date.now();
+        const compact = zoom < 13 && !glow;
         return (
           <button
             key={spot.id}
@@ -591,13 +594,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               (compact
                 ? "absolute z-20 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-spot bg-night/90 text-xs"
                 : "absolute z-20 flex h-8 max-w-40 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-spot bg-night/90 px-3 text-xs text-ink") +
-              (act.fresh.has(spot.id) ? " spot-fresh" : "")
+              (act.fresh.has(spot.id) ? " spot-fresh" : "") +
+              (glow ? " partner-glow !z-[22] border-2 font-bold" : "")
             }
             style={{ left: c.x, top: c.y }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => onSpot(spot.id)}
           >
-            {compact ? "📍" : <span className="truncate">{spot.title}</span>}
+            {compact ? "📍" : <span className="truncate">{glow ? "✨ " : ""}{spot.title}</span>}
             {act.fresh.has(spot.id) && !compact && (
               <span className="ml-1.5 shrink-0 rounded-full bg-spot px-1.5 text-[10px] font-bold text-night">nouveau</span>
             )}
@@ -688,6 +692,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           −
         </button>
       </div>
+      {!pending && <BoostNudge />}
       {pending && (
         <div className="absolute inset-x-3 bottom-24 z-30 flex items-center gap-2 rounded-full bg-spot px-4 py-2 text-sm text-night">
           <span className="min-w-0 flex-1 truncate">Tape la carte pour poser « {pending.title} »</span>

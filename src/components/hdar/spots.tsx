@@ -35,9 +35,10 @@ export function Spots() {
               data-act="join"
               data-id={spot.id}
               {...bindTap(() => joinSpot(spot.id))}
-              className="min-w-0 flex-1 rounded-2xl border border-line bg-surface px-4 py-3 text-left"
+              className={"min-w-0 flex-1 rounded-2xl border px-4 py-3 text-left " + ((spot.boostedUntil ?? 0) > Date.now() ? "partner-glow border-[#f472b6] bg-surface" : "border-line bg-surface")}
             >
               <span className="flex items-center gap-2">
+                {(spot.boostedUntil ?? 0) > Date.now() && <span className="shrink-0 rounded-full bg-[#f472b6] px-2 text-xs font-bold text-night">✨ à la une</span>}
                 <span className="truncate font-display text-lg font-bold">{spot.title}</span>
                 {act.fresh.has(spot.id) && (
                   <span className="shrink-0 rounded-full bg-spot px-2 text-xs font-bold text-night">nouveau</span>
@@ -55,6 +56,9 @@ export function Spots() {
                 {remainingLabel(spot.closesAt, Date.now())}
               </span>
             </button>
+            {spot.creator && spot.live && (
+              <a href={`/boost?spot=${spot.id}#lieux`} aria-label="Booster ce lieu" className="boost-cta flex w-12 shrink-0 items-center justify-center rounded-2xl text-lg">✨</a>
+            )}
             {spot.creator && <DeleteSpotButton spot={spot} />}
           </li>
         ))}
@@ -114,6 +118,11 @@ export function SpotRoom() {
           <button type="button" className="px-2 text-xs text-muted" onClick={() => report(spot.id)}>
             Signaler
           </button>
+        )}
+        {spot.creator && spot.live && (
+          <a href={`/boost?spot=${spot.id}#lieux`} className="boost-cta mr-1 flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-extrabold text-night">
+            ✨ {(spot.boostedUntil ?? 0) > Date.now() ? "Boosté" : "Booster ce lieu"}
+          </a>
         )}
         {spot.creator && <DeleteSpotButton spot={spot} />}
       </header>

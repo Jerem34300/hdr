@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
-import { myBoosts, paymentsEnabled, pricing, startCheckout, type MyBoost, type PriceRow } from "@/lib/hdar/live";
+import { myBoosts, mySpots, paymentsEnabled, pricing, startCheckout, type MyBoost, type MySpot, type PriceRow } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
 import { useHdar } from "@/lib/hdar/store";
 import { PinFace } from "./map-view";
@@ -98,6 +98,7 @@ const FAQ = [
 
 export function BoostPage() {
   const [prices, setPrices] = useState<PriceRow[]>([]);
+  const [spotPrices, setSpotPrices] = useState<PriceRow[]>([]);
   const [payOk, setPayOk] = useState<boolean | null>(null);
   const [rows, setRows] = useState<MyBoost[] | null>(null);
   const [err, setErr] = useState("");
@@ -105,11 +106,12 @@ export function BoostPage() {
   const [on, setOn] = useState(true);
   const now = useNow();
   useEffect(() => {
-    void pricing().then((p) => setPrices(p.filter((x) => x.kind === "boost"))).catch(() => undefined);
+    void pricing().then((p) => { setPrices(p.filter((x) => x.kind === "boost")); setSpotPrices(p.filter((x) => x.kind === "place_boost")); }).catch(() => undefined);
     void paymentsEnabled().then(setPayOk);
     void myBoosts().then(setRows).catch((e: Error) => setErr(e.message));
     const q = new URLSearchParams(location.search);
     if (q.get("paid")) toast("Paiement reçu, merci ! Ton boost s'active dans quelques secondes ✨");
+    if (q.get("spot")) setTimeout(() => document.getElementById("lieux")?.scrollIntoView({ behavior: "smooth" }), 600);
     if (q.get("cancel")) toast("Paiement annulé.");
     const t = setInterval(() => setOn((v) => !v), 2200);
     return () => clearInterval(t);
@@ -207,6 +209,8 @@ export function BoostPage() {
           <p className="mt-3 text-center text-[11px] text-muted">🔒 Paiement sécurisé par Stripe · Carte, Apple Pay, Google Pay</p>
         </section>
 
+        <SpotBoost prices={spotPrices} payOk={payOk} now={now} />
+
         {rows && rows.length > 0 && (
           <section className="mt-12">
             <h2 className="font-display text-xl font-extrabold">Mes boosts</h2>
@@ -264,5 +268,64 @@ function ActiveCard({ b, now }: { b: MyBoost; now: number }) {
       </div>
       <a href="#tarifs" className="mt-3 inline-block text-xs underline">Prolonger mon boost</a>
     </div>
+  );
+}
+
+/** Boost d'un lieu privé (spot créé par l'utilisateur) : halo sur la carte, en tête de la liste Lieux, reste ouvert. */
+function SpotBoost({ prices, payOk, now }: { prices: PriceRow[]; payOk: boolean | null; now: number }) {
+  const [spots, setSpots] = useState<MySpot[] | null>(null);
+  const [sel, setSel] = useState<string>(() => new URLSearchParams(location.search).get("spot") ?? "");
+  const [busy, setBusy] = useState("");
+  useEffect(() => void mySpots().then((r) => { setSpots(r); setSel((v) => (r.some((x) => x.id === v) ? v : r[0]?.id ?? "")); }).catch(() => setSpots([])), []);
+  if (!prices.length) return null;
+  const cur = spots?.find((x) => x.id === sel);
+  const pay = (product: string) => {
+    if (!payOk) return toast("Paiement bientôt disponible");
+    if (!sel) return toast("Crée d'abord un lieu depuis l'onglet Lieux.");
+    setBusy(product);
+    startCheckout(product, sel).catch((e: Error) => toast(e.message)).finally(() => setBusy(""));
+  };
+  return (
+    <section id="lieux" className="mt-12 scroll-mt-6">
+      <p className="text-center text-xs font-bold tracking-[0.25em] uppercase" style={{ color: MINT }}>Nouveau · Boost de lieu</p>
+      <h2 className="mt-1 text-center font-display text-2xl font-extrabold">Mets ton lieu <span className="boost-text">à la une</span></h2>
+      <p className="mx-auto mt-1 max-w-sm text-center text-xs text-muted">Ton lieu brille sur la carte, passe en tête de la liste Lieux et reste ouvert pendant tout le boost.</p>
+      <div className="relative mt-5 h-40 overflow-hidden rounded-3xl border border-line bg-night">
+        <Tiles />
+        <div className="absolute inset-0 bg-night/35" />
+        <span className="absolute flex h-8 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-spot bg-night/90 px-3 text-xs text-ink opacity-70" style={{ left: "24%", top: "28%" }}>Plage du soir</span>
+        <span className="absolute flex h-8 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-spot bg-night/90 px-3 text-xs text-ink opacity-70" style={{ left: "76%", top: "76%" }}>Apéro chez moi</span>
+        <span className="partner-glow absolute z-10 flex h-9 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border-2 border-spot bg-night/90 px-4 text-sm font-bold text-ink" style={{ left: "52%", top: "52%" }}>✨ {cur?.title ?? "Ton lieu"}</span>
+        <span className="absolute left-2 top-2 rounded-full px-3 py-1 text-[11px] font-bold text-night" style={{ background: `linear-gradient(90deg, ${CORAL}, #f472b6, #fbbf24)` }}>✨ Lieu boosté</span>
+      </div>
+      {spots && spots.length === 0 ? (
+        <p className="mt-4 rounded-2xl border border-line bg-surface/70 p-4 text-center text-sm text-muted">
+          Tu n'as pas de lieu ouvert. <a href="/" className="underline">Crée un lieu</a> depuis l'onglet Lieux, puis reviens le booster.
+        </p>
+      ) : (
+        <>
+          {spots && spots.length > 1 && (
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {spots.map((x) => (
+                <button key={x.id} type="button" onClick={() => setSel(x.id)} className={"h-9 rounded-full border px-3 text-sm " + (sel === x.id ? "border-spot bg-spot text-night" : "border-line")}>{x.title}</button>
+              ))}
+            </div>
+          )}
+          {cur?.boosted_until && (
+            <p className="mt-3 text-center text-sm font-bold" style={{ color: CORAL }}>✨ « {cur.title} » est boosté encore {fmtLeft(new Date(cur.boosted_until).getTime() - now)}</p>
+          )}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {prices.map((p, i) => (
+              <button key={p.product} type="button" disabled={!!busy} onClick={() => pay(p.product)}
+                className={"rounded-3xl border p-4 text-left transition active:scale-[.98] disabled:opacity-60 " + (i === prices.length - 1 ? "boost-card border-transparent" : "border-line bg-surface/70")}>
+                <b className="block font-display">{p.label}</b>
+                <span className="relative z-10 font-display text-2xl font-extrabold" style={{ color: i === prices.length - 1 ? "#fff" : CORAL }}>{euros(p.price_cents)}</span>
+                <span className={"block text-[11px] " + (i === prices.length - 1 ? "text-white/85" : "text-muted")}>{busy === p.product ? "Redirection…" : cur ? `pour « ${cur.title} »` : "Paiement unique"}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
   );
 }

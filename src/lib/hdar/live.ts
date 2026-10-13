@@ -45,6 +45,8 @@ export type SpotRow = {
   closesAt: number;
   mine: boolean;
   members: number;
+  /** Fin du boost payant (ms), si actif. */
+  boostedUntil?: number;
 };
 
 export type SpotLine = {
@@ -264,6 +266,7 @@ export async function listSpots(self: string, lat: number, lng: number): Promise
       closes_at: string;
       mine: boolean;
       members: number;
+      boosted_until?: string | null;
     }[]
   >("hdar_spot_list", { p_self: selfId(self), p_lat: lat, p_lng: lng });
   return rows.map((r) => ({
@@ -274,6 +277,7 @@ export async function listSpots(self: string, lat: number, lng: number): Promise
     closesAt: pgTime(r.closes_at),
     mine: r.mine,
     members: Number(r.members) || 1,
+    boostedUntil: r.boosted_until ? pgTime(r.boosted_until) : undefined,
   }));
 }
 
@@ -763,7 +767,7 @@ export const placeCommentReport = (id: string, reason: string) => rpc("hdar_plac
 export const placeClick = (id: string) => rpc("hdar_place_click", { p_id: id });
 export const placeSeen = (id: string, lat: number | null, lng: number | null) => rpc("hdar_place_seen", { p_id: id, p_lat: lat, p_lng: lng });
 
-export type PriceRow = { product: string; kind: "listing" | "boost"; label: string; price_cents: number };
+export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost"; label: string; price_cents: number };
 export const pricing = () => rpc<PriceRow[]>("hdar_pricing", {});
 
 export type MyPlace = {
@@ -788,6 +792,8 @@ export type PartnerStats = {
 };
 export const partnerStats = (id: string, days: number) => rpc<PartnerStats>("hdar_partner_stats", { p_id: id, p_days: days });
 export type MyBoost = { id: string; starts_at: string; ends_at: string; active: boolean; cancelled: boolean; views: number; messages: number };
+export type MySpot = { id: string; title: string; closes_at: string; boosted_until: string | null };
+export const mySpots = () => rpc<MySpot[]>("hdar_my_spots", {});
 export const myBoosts = () => rpc<MyBoost[]>("hdar_my_boosts", {});
 
 async function checkoutCall(method: "GET" | "POST", body?: unknown) {

@@ -95,6 +95,8 @@ export type LiveSpot = {
   messages?: CustomSpot["messages"];
   /** Shared through the database: messages and deletion go to the server. */
   live?: boolean;
+  /** Boost payant actif : brille sur la carte et passe en tête de liste. */
+  boostedUntil?: number;
 };
 
 export function projectSpots(
@@ -147,12 +149,13 @@ export function projectSpots(
       dist,
       distanceLabel: bucketDistance(Math.max(100, dist)),
       live: true,
+      boostedUntil: s.boostedUntil,
     };
   });
   // Only real places: ones shared through the database, plus older ones kept on this device.
   return [...live, ...mine]
     .filter((s) => !hidden.includes(s.id) && !isExpired(s.closesAt, now))
-    .sort((a, b) => a.dist - b.dist);
+    .sort((a, b) => Number((b.boostedUntil ?? 0) > now) - Number((a.boostedUntil ?? 0) > now) || a.dist - b.dist);
 }
 
 export function zoneStats(zones: Zone[], people: LivePerson[]) {

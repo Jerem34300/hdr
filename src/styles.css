@@ -227,3 +227,9 @@
   .boost-cta, .boost-card, .sparkle { animation: none !important; }
   .boost-cta::after, .boost-card::after { animation: none !important; display: none; }
 }
+
+/* Pop-up boost sur la carte */
+@keyframes boost-nudge-in { 0% { opacity: 0; transform: translateY(-24px) scale(.9); } 60% { opacity: 1; transform: translateY(4px) scale(1.02); } 100% { transform: none; } }
+@keyframes boost-nudge-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.boost-nudge { animation: boost-nudge-in .7s cubic-bezier(.2,.9,.25,1.2) both, boost-nudge-float 3.2s ease-in-out .8s infinite; }
+@media (prefers-reduced-motion: reduce) { .boost-nudge { animation: hdar-fade .3s ease-out both; } }

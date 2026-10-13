@@ -75,25 +75,28 @@ Deno.serve(async (req) => {
     }
     const p = await rpc("hdar_checkout_prepare", { p_product: body.product, p_place: body.place_id ?? null }, auth);
     const meta: Record<string, string> = { user_id: p.user_id, product: p.product, place_id: p.place_id ?? "" };
+    const isBoost = p.kind === "boost" || p.kind === "place_boost";
     const recurring = p.kind === "listing" && p.interval;
     const params: Record<string, string> = {
       mode: recurring ? "subscription" : "payment",
-      success_url: `${SITE}${p.kind === "boost" ? "/boost" : "/pro"}?paid=1`,
-      cancel_url: `${SITE}${p.kind === "boost" ? "/boost" : "/pro"}?cancel=1`,
+      success_url: `${SITE}${isBoost ? "/boost" : "/pro"}?paid=1`,
+      cancel_url: `${SITE}${isBoost ? "/boost" : "/pro"}?cancel=1`,
       client_reference_id: p.user_id,
       locale: "fr",
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": "eur",
       "line_items[0][price_data][unit_amount]": String(p.price_cents),
       "line_items[0][price_data][product_data][name]":
-        p.kind === "boost" ? `Boost hdar · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
+        p.kind === "boost" ? `Boost hdar · ${p.label}` : p.kind === "place_boost" ? `Boost du lieu « ${p.place_name ?? ""} » · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
       "line_items[0][price_data][product_data][description]":
-        p.kind === "boost"
+        p.kind === "place_boost"
+          ? "Ton lieu brille sur la carte hdar, passe en tête de la liste Lieux et reste ouvert pendant tout le boost."
+          : p.kind === "boost"
           ? "Ton profil brille plus fort sur la carte hdar et remonte en tête autour de toi."
           : "Ta fiche mise en avant sur la carte hdar : halo, photos, lien vers ton site et stats de visites.",
       "line_items[0][price_data][product_data][images][0]": `${SITE}/boost-cover.jpg`,
       "custom_text[submit][message]":
-        p.kind === "boost" ? "Ton boost s'active dès le paiement ✨" : "Ta fiche apparaît sur la carte dès le paiement ✨",
+        isBoost ? "Ton boost s'active dès le paiement ✨" : "Ta fiche apparaît sur la carte dès le paiement ✨",
       // Habillage de la page Checkout (l'API refuse de modifier le branding du compte lui-même).
       "branding_settings[display_name]": "hdar",
       "branding_settings[background_color]": "#0B0B10",
