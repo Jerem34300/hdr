@@ -61,6 +61,27 @@ export function Me() {
       toast("Profil enregistré");
     } catch (e) { toast((e as Error).message.includes("profil") ? "Crée d'abord ton profil" : (e as Error).message); }
   };
+  const [savingAll, setSavingAll] = useState(false);
+  const [savedAt, setSavedAt] = useState(0);
+  useEffect(() => { if (!savedAt) return; const t = setTimeout(() => setSavedAt(0), 2500); return () => clearTimeout(t); }, [savedAt]);
+  const saveAll = async () => {
+    const ps = pseudo.trim().slice(0, 24); const n = Number(age);
+    if (ps.length < 2) return toast("Pseudo : 2 lettres minimum");
+    if (!(n >= 18 && n <= 99)) return toast("Âge entre 18 et 99 ans");
+    if ((iam || seeking.length) && !consent && dirty) return toast("Coche la case pour enregistrer Je suis / Je cherche");
+    setSavingAll(true);
+    try {
+      const cleanNote = note.trim().slice(0, 60);
+      patchMe({ pseudo: ps, age: n, bio: bio.slice(0, 300), note: cleanNote });
+      const m = useHdar.getState().me;
+      await saveProfile({ self: deviceId(), pseudo: ps, age: n, bio: m.bio, tags: m.tags, photos: myPhotos(m), voice: m.voice ?? "", voiceSec: m.voiceSec });
+      await setProfileNote(cleanNote);
+      if (dirty) await saveIdentity();
+      setSavedAt(Date.now());
+      toast("Profil enregistré ✓");
+    } catch (e) { toast(`Échec de l'enregistrement : ${(e as Error).message}`); }
+    finally { setSavingAll(false); }
+  };
   if (settings) return <SettingsScreen onBack={() => setSettings(false)} />;
 
   async function addPhotos(files: FileList) {
@@ -312,6 +333,14 @@ export function Me() {
 
       <Favorites />
       <ProtectProfileCard />
+      {me.onboarded && (
+        <div className="sticky bottom-2 z-10 mt-6">
+          <button type="button" disabled={savingAll} onClick={() => void saveAll()}
+            className="boost-cta h-14 w-full rounded-full font-display text-lg font-extrabold text-night shadow-[0_8px_30px_rgba(0,0,0,.5)] disabled:opacity-60">
+            {savingAll ? "Enregistrement…" : savedAt ? "✓ Profil enregistré" : "Enregistrer mon profil"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
