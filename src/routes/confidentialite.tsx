@@ -109,6 +109,14 @@ function Privacy() {
         <li>Tu peux refuser tous les messages et cadeaux des pros dans Paramètres (« Messages et cadeaux des pros »), ou bloquer un lieu à tout moment. Ces données sont effacées avec ton profil.</li>
       </ul>
 
+      <h2>Codes cadeaux, parrainage et surprises</h2>
+      <ul>
+        <li>Quand tu utilises un code, nous enregistrons le code et la date (une seule utilisation par profil).</li>
+        <li>Parrainage : nous enregistrons le lien entre ton profil et celui de ton parrain, et la date de la récompense, pour éviter les abus (intérêt légitime). Aucun des deux ne voit les données de l'autre au-delà de ce que montre l'appli.</li>
+        <li>Les emails contenant des codes ne partent qu'aux personnes ayant coché « Recevoir les nouveautés hdar », avec lien de désinscription.</li>
+        <li>Les surprises sont tirées au hasard côté serveur ; nous gardons la date pour respecter le délai de 10 jours. Tout est effacé avec ton profil.</li>
+      </ul>
+
       <h2>Live vidéo</h2>
       <ul>
         <li>Réservé aux 18 ans et plus, comme toute l'appli.</li>

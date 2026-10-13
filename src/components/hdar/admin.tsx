@@ -1,3 +1,5 @@
+import { adminCodes, adminCodeCreate, adminNewsSend, type GiftCode } from "@/lib/hdar/live";
+import { mail as mailHtml, type Tpl } from "@/lib/hdar/mail-template";
 import { toast } from "sonner";
 import { adminProGifts, adminProThreads } from "@/lib/hdar/live";
 import { AdultGate } from "./adult-gate";
@@ -22,7 +24,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes";
 
 function readKey() {
   try {
@@ -167,6 +169,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["users", "Utilisateurs"],
               ["emails", "Emails"],
               ["progifts", "Cadeaux pro"],
+              ["codes", "Codes cadeaux"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
@@ -226,6 +229,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "support" && <SupportTab adminKey={adminKey} />}
         {tab === "emails" && <EmailsTab adminKey={adminKey} />}
         {tab === "progifts" && <ProGiftsTab adminKey={adminKey} />}
+        {tab === "codes" && <CodesTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
@@ -987,6 +991,9 @@ function EmailsTab({ adminKey }: { adminKey: string }) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [test, setTest] = useState("");
+  const [tpl, setTpl] = useState<Tpl>("news");
+  const [title, setTitle] = useState("");
+  const [code, setCode] = useState("");
   const [out, setOut] = useState("");
   const [busy, setBusy] = useState(false);
   const load = useCallback(() => void import("@/lib/hdar/live").then((m) => m.adminNewsInfo(adminKey)).then(setInfo).catch((e: Error) => setOut(e.message)), [adminKey]);
@@ -994,12 +1001,18 @@ function EmailsTab({ adminKey }: { adminKey: string }) {
   const send = async (t?: string) => {
     if (!t && !window.confirm(`Envoyer à ${info?.optin ?? 0} abonné(s) ?`)) return;
     setBusy(true); setOut("");
-    try { const m = await import("@/lib/hdar/live"); const r = await m.adminNewsSend(subject, body, t); setOut(`✅ Envoyé à ${r.sent}`); if (!t) load(); }
+    try { const m = await import("@/lib/hdar/live"); const r = await m.adminNewsSend(subject, body, t, { template: tpl, title, code: code || undefined }); setOut(`✅ Envoyé à ${r.sent}`); if (!t) load(); }
     catch (e) { setOut(`❌ ${(e as Error).message}`); } finally { setBusy(false); }
   };
   return (
     <section className="max-w-xl space-y-3">
       <p className="text-sm text-muted">Expéditeur : <b>hdar &lt;contact@hdar.chat&gt;</b> · {info?.optin ?? "…"} abonné(s) (email lié + « Recevoir les nouveautés »). Un lien « Se désinscrire » est ajouté à chaque email.</p>
+      <div className="flex gap-2">{([["news", "✨ Nouveautés"], ["gift", "🎁 Cadeau / code"], ["invite", "💌 Invite tes amis"]] as const).map(([k, l]) => (
+        <button key={k} type="button" onClick={() => setTpl(k)} className={"flex-1 rounded-full py-2 text-xs font-bold " + (tpl === k ? "bg-[#FA6F6C] text-night" : "border border-line")}>{l}</button>))}</div>
+      <div className="flex gap-2">
+        <input className="h-11 flex-1 rounded-xl border border-line bg-night px-3" placeholder="Titre du bandeau (optionnel)" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input className="h-11 w-36 rounded-xl border border-line bg-night px-3 font-mono" placeholder="CODE (opt.)" maxLength={24} value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+      </div>
       <input className="h-11 w-full rounded-xl border border-line bg-night px-3" placeholder="Sujet" maxLength={200} value={subject} onChange={(e) => setSubject(e.target.value)} />
       <textarea className="h-48 w-full rounded-xl border border-line bg-night p-3" placeholder="Message (texte simple, les retours à la ligne sont gardés)" value={body} onChange={(e) => setBody(e.target.value)} />
       <div className="flex flex-wrap gap-2">
@@ -1008,6 +1021,8 @@ function EmailsTab({ adminKey }: { adminKey: string }) {
         <button type="button" disabled={busy || !subject || !body || !info?.optin} onClick={() => void send()} className="h-10 rounded-full bg-[#3EE08F] px-4 text-sm font-bold text-night disabled:opacity-40">Envoyer à tous</button>
       </div>
       {out && <p className="text-sm">{out}</p>}
+      <p className="text-xs text-muted">Aperçu</p>
+      <iframe title="Aperçu email" className="h-[640px] w-full rounded-2xl border border-line bg-[#0b0b10]" srcDoc={mailHtml(body || "Ton message ici…", "#", tpl, { code, title })} />
       {!!info?.history.length && <ul className="text-xs text-muted">{info.history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("fr-FR")} · {h.subject} · {h.recipients} envoi(s)</li>)}</ul>}
     </section>
   );
@@ -1033,6 +1048,45 @@ function ProGiftsTab({ adminKey }: { adminKey: string }) {
         <h3 className="font-display font-bold">Conversations pro ({t.length})</h3>
         <div className="mt-2 space-y-1 text-sm">{t.map((x, i) => <p key={i} className={x.reported ? "text-signal" : ""}>{new Date(x.at).toLocaleString("fr-FR")} · <b>{x.place}</b> → {x.to ?? "?"}{x.reported ? " · signalé" : ""}</p>)}</div>
       </section>
+    </div>
+  );
+}
+
+function CodesTab({ adminKey }: { adminKey: string }) {
+  const [rows, setRows] = useState<GiftCode[] | null>(null);
+  const [f, setF] = useState({ kind: "premium", amount: 7, maxUses: 100, days: 30, code: "", note: "" });
+  const load = useCallback(() => void adminCodes(adminKey).then(setRows).catch((e: Error) => toast(e.message)), [adminKey]);
+  useEffect(load, [load]);
+  const create = async () => { try { const r = await adminCodeCreate(adminKey, f); toast(`Code ${r.code} créé`); setF({ ...f, code: "" }); load(); } catch (e) { toast((e as Error).message); } };
+  const mail = async (c: GiftCode) => {
+    const what = c.kind === "premium" ? `${c.amount} jours de hdar+` : c.kind === "boost" ? `un boost de ${c.amount} h` : `${c.amount} cœurs`;
+    if (!window.confirm(`Envoyer le code ${c.code} (${what}) à tous les abonnés aux nouveautés ?`)) return;
+    try { const r = await adminNewsSend(`🎁 ${what} offerts sur hdar`, `On a un petit cadeau pour toi : ${what}.\nEntre ce code dans Profil → Paramètres → « J'ai un code ».`, undefined, { template: "gift", code: c.code, title: `${what} offerts` }); toast(`Envoyé à ${r.sent}`); }
+    catch (e) { toast((e as Error).message); }
+  };
+  const inp = "h-10 rounded-xl border border-line bg-night px-3 text-sm";
+  return (
+    <div className="space-y-4">
+      <section className="space-y-2 rounded-2xl border border-line p-4">
+        <h3 className="font-display font-bold">Créer un code cadeau</h3>
+        <div className="flex flex-wrap gap-2">
+          <select className={inp} value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}><option value="premium">hdar+ (jours)</option><option value="boost">Boost (heures)</option><option value="hearts">Cœurs</option></select>
+          <label className="text-xs">Quantité <input type="number" className={inp + " w-20"} value={f.amount} onChange={(e) => setF({ ...f, amount: Number(e.target.value) })} /></label>
+          <label className="text-xs">Utilisations max <input type="number" className={inp + " w-24"} value={f.maxUses} onChange={(e) => setF({ ...f, maxUses: Number(e.target.value) })} /></label>
+          <label className="text-xs">Expire dans (j, 0 = jamais) <input type="number" className={inp + " w-20"} value={f.days} onChange={(e) => setF({ ...f, days: Number(e.target.value) })} /></label>
+          <input className={inp + " font-mono"} placeholder="CODE (auto si vide)" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} />
+          <input className={inp + " flex-1"} placeholder="Note interne" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
+        </div>
+        <button type="button" onClick={() => void create()} className="h-10 rounded-full bg-[#3EE08F] px-5 text-sm font-bold text-night">Créer</button>
+        <p className="text-xs text-muted">Une seule utilisation par profil. L'envoi par email ne part qu'aux abonnés « nouveautés » (RGPD).</p>
+      </section>
+      {rows?.map((c) => (
+        <div key={c.code} className="flex items-center gap-3 rounded-2xl border border-line p-3 text-sm">
+          <b className="font-mono">{c.code}</b>
+          <span className="flex-1 text-muted">{c.kind === "premium" ? `${c.amount} j hdar+` : c.kind === "boost" ? `boost ${c.amount} h` : `${c.amount} cœurs`} · {c.uses}/{c.max_uses}{c.expires_at ? ` · jusqu'au ${new Date(c.expires_at).toLocaleDateString("fr-FR")}` : ""}{c.note ? ` · ${c.note}` : ""}</span>
+          <button type="button" onClick={() => void navigator.clipboard.writeText(c.code)} className="text-xs underline">Copier</button>
+          <button type="button" onClick={() => void mail(c)} className="rounded-full border border-line px-3 py-1 text-xs">✉️ Envoyer</button>
+        </div>))}
     </div>
   );
 }

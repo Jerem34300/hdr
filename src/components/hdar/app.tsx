@@ -1,3 +1,4 @@
+import { SurprisePopup } from "./growth";
 import { useActivity, useActivityPolling } from "@/lib/hdar/activity";
 import { GiftNotices } from "./gift-notices";
 import { useEffect, type ReactNode } from "react";
@@ -73,6 +74,7 @@ export function App() {
       <Toaster theme="dark" position="top-center" />
       <CallLayer />
       <GiftNotices />
+      <SurprisePopup />
       <ConfirmSheet />
       <ReportSheet />
       <PushPrompt />

@@ -1,3 +1,4 @@
+import { SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
 import {
@@ -42,6 +43,10 @@ function loadTurnstile(): Promise<Turnstile | null> {
  * device lost its session.
  */
 export function AdultGate({ children }: { children: ReactNode }) {
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("reveal=")) return <SurprisePopup />;
+  return <AdultGateInner>{children}</AdultGateInner>;
+}
+function AdultGateInner({ children }: { children: ReactNode }) {
   const [state, setState] = useState<"loading" | "ask" | "ok">("loading");
   const [adult, setAdult] = useState(false);
   const [checked, setChecked] = useState(false);

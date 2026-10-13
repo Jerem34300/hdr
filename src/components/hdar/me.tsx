@@ -1,3 +1,4 @@
+import { InviteCard, RedeemCode } from "./growth";
 import { ProSettings } from "./pro-tools";
 import { NotifySettings } from "./notify-settings";
 import { ProtectProfileCard } from "./recover";
@@ -532,6 +533,8 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         </span>
         <span className="text-sm font-bold text-[#fbbf24]">Voir ›</span>
       </Link>
+      <InviteCard />
+      <RedeemCode />
       <NotifySettings />
       <ProSettings />
       <p className="mt-6 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>

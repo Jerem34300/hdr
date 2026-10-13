@@ -989,9 +989,10 @@ export const myNotices = () => rpc<{ id: number; title: string; body: string | n
 export const newsStatus = () => rpc<{ on: boolean; at: string | null }>("hdar_news_status", {});
 export const newsSet = (on: boolean) => rpc<{ on: boolean; at: string | null }>("hdar_news_set", { p_on: on });
 export const adminNewsInfo = (key: string) => rpc<{ optin: number; history: { at: string; subject: string; recipients: number }[] }>("hdar_admin_news_count", { p_key: key });
-export async function adminNewsSend(subject: string, body: string, test?: string): Promise<{ sent: number }> {
+export type MailTemplate = "news" | "gift" | "invite";
+export async function adminNewsSend(subject: string, body: string, test?: string, extra: { template?: MailTemplate; code?: string; title?: string } = {}): Promise<{ sent: number }> {
   const token = await accessToken();
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-mail`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ subject, body, test }) });
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-mail`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ subject, body, test, ...extra }) });
   const d = (await res.json()) as { sent?: number; error?: string };
   if (!res.ok || d.error) throw new Error(d.error || "Envoi impossible");
   return { sent: d.sent ?? 0 };
@@ -1012,3 +1013,13 @@ export const proBadge = (other: string) => rpc<{ place: string; name: string } |
 export const proChatBlock = (other: string, report = false) => rpc("hdar_pro_chat_block", { p_other: other, p_report: report });
 export const adminProGifts = (key: string) => rpc<{ id: number; at: string; place: string; to: string | null; title: string; description: string | null; code: string | null; expires: string; via: string; reported: boolean; reason: string | null }[]>("hdar_admin_pro_gifts", { p_key: key });
 export const adminProThreads = (key: string) => rpc<{ at: string; place: string; to: string | null; reported: boolean }[]>("hdar_admin_pro_threads", { p_key: key });
+
+// Codes cadeaux, parrainage, surprises (v42)
+export type GiftCode = { code: string; kind: "premium" | "boost" | "hearts"; amount: number; max_uses: number; uses: number; expires_at: string | null; note: string | null; created_at: string };
+export const codeRedeem = (code: string) => rpc<{ title: string; body: string }>("hdar_code_redeem", { p_code: code });
+export const myRef = () => rpc<{ code: string; invited: number; rewarded: number }>("hdar_my_ref", {});
+export const refClaim = (code: string) => rpc<{ ok: boolean; reason?: string }>("hdar_ref_claim", { p_code: code });
+export const surprise = () => rpc<{ kind: string; amount: number; label: string } | null>("hdar_surprise", {});
+export const adminCodes = (key: string) => rpc<GiftCode[]>("hdar_admin_codes", { p_key: key });
+export const adminCodeCreate = (key: string, o: { kind: string; amount: number; maxUses: number; days: number; code?: string; note?: string }) =>
+  rpc<{ code: string }>("hdar_admin_code_create", { p_key: key, p_kind: o.kind, p_amount: o.amount, p_max_uses: o.maxUses, p_days: o.days, p_code: o.code || null, p_note: o.note || null });

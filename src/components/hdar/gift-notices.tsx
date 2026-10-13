@@ -1,3 +1,4 @@
+import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
 import { myNotices, proGiftBlock, type ProGift } from "@/lib/hdar/live";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ export function GiftNotices() {
   }, []);
   const n = list[0];
   if (!n) return null;
+  if (!n.gift && n.title.includes("Cadeau de hdar")) return <GiftReveal key={n.id} title={n.title} body={n.body ?? ""} onClose={() => setList(list.slice(1))} />;
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-6" onClick={() => setList(list.slice(1))}>
       <div className="boost-nudge w-full max-w-sm rounded-3xl border border-[#fbbf24]/60 bg-surface p-6 text-center shadow-[0_0_40px_#fbbf24]" onClick={(e) => e.stopPropagation()}>

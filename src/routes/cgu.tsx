@@ -113,6 +113,17 @@ function Terms() {
         pas hdar. Tu peux refuser ces messages et cadeaux dans Paramètres, bloquer ou signaler un partenaire.
         Tout démarchage abusif entraîne la suspension du partenaire.
       </p>
+      <h2>9 ter. Codes cadeaux, parrainage et surprises</h2>
+      <p>
+        Les <strong>codes cadeaux</strong> hdar (jours de hdar+, boost ou cœurs) s'utilisent une seule fois
+        par profil, dans la limite de leurs utilisations et de leur date d'expiration ; ils n'ont aucune
+        valeur monétaire et ne sont ni échangeables ni remboursables. <strong>Parrainage</strong> : quand une
+        personne crée son profil avec ton lien et que sa photo est validée, vous recevez chacun 3 jours de
+        hdar+ (10 récompenses maximum par mois pour le parrain ; l'auto-parrainage est exclu). hdar peut
+        offrir de temps en temps une <strong>surprise</strong> (boost ou quelques jours de hdar+), au plus
+        une fois tous les 10 jours, sans aucune obligation. Tout abus (faux comptes, revente de codes) entraîne
+        l'annulation des avantages et un bannissement.
+      </p>
       <h2>10. Live vidéo</h2>
       <p>
         Le live met en relation au hasard des personnes majeures. Il n'est pas enregistré par

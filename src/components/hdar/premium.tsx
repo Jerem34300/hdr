@@ -38,6 +38,7 @@ const PERKS = [
   ["🔤", "Recherche par pseudo", "Retrouve quelqu'un que tu as croisé, sans jamais voir sa position exacte."],
   ["📸", "20 photos d'album", "Au lieu de 5. Toujours privé, jamais de grille publique."],
   ["👑", "Badge hdar+", "Un petit badge discret sur ton pin et ta fiche."],
+  ["🎁", "Invite un ami", "3 jours de hdar+ offerts pour toi et ton ami dès que son profil est validé (Paramètres → Invite un ami)."],
   ["🎥", "Live : revenir en arrière", "Tu as zappé trop vite ? Reviens sur la personne d'avant si elle est encore dans le Live."],
   ["🎚️", "Filtres du Live", "H/F/X et tranche d'âge : choisis qui tu croises en vidéo."],
   ["⚡", "Matching prioritaire", "Tu tombes d'abord sur ceux qui cherchent ce que tu es, et que tu cherches."],

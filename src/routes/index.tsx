@@ -6,8 +6,19 @@ import { SEO_CITIES, SITE_URL } from "@/lib/hdar/seo";
 import { ensureClock, useHdar } from "@/lib/hdar/store";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
+      ...((match?.search as { r?: string } | undefined)?.r
+        ? [
+            { property: "og:title", content: "Viens sur hdar. : 3 jours hdar+ offerts 🎁" },
+            { property: "og:description", content: "La carte gay en direct, 100 % anonyme. Ton ami t'invite : 3 jours de hdar+ offerts pour vous deux." },
+            { property: "og:image", content: `${SITE_URL}/og-invite.png` },
+            { property: "og:image:width", content: "1200" },
+            { property: "og:image:height", content: "630" },
+            { name: "twitter:card", content: "summary_large_image" },
+            { name: "twitter:image", content: `${SITE_URL}/og-invite.png` },
+          ]
+        : []),
       { title: "hdar. — Rencontre gay autour de toi, en direct" },
       {
         name: "description",
