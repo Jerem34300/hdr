@@ -20,7 +20,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users";
 
 function readKey() {
   try {
@@ -162,6 +162,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
           {(
             [
               ["overview", "Vue d'ensemble"],
+              ["users", "Utilisateurs"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
@@ -219,6 +220,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
         {tab === "support" && <SupportTab adminKey={adminKey} />}
+        {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
         {tab === "places" && <ProposedPlaces adminKey={adminKey} onOpen={setUserId} />}
@@ -553,6 +555,7 @@ function UserDetail({
                 Banni le {when(u.banned.at)} · {u.banned.reason || "sans motif"}
               </p>
             )}
+            <UserExtra adminKey={adminKey} id={id} />
             <div className="flex gap-2 overflow-x-auto">
               {(u.profile?.album ?? []).map((src, i) => (
                 <img key={i} src={src} alt="" className="h-40 shrink-0 rounded-2xl object-cover" />
@@ -885,6 +888,89 @@ function SupportTab({ adminKey }: { adminKey: string }) {
         Rattacher
       </button>
       {msg && <p className="text-sm">{msg}</p>}
+    </section>
+  );
+}
+
+const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const ACT: Record<string, string> = { sessions_30d: "Sessions (30 j)", days_active_30d: "Jours actifs (30 j)", private_msgs: "Messages privés envoyés", area_msgs: "Messages quartier", place_msgs: "Messages lieux", spots_created: "Lieux créés", live_matches: "Rencontres Live", hearts_sent: "Cœurs envoyés" };
+
+/** Liste de tous les profils (recherche + pagination). Aucune position précise, aucun contenu de message. */
+function UsersTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) => void }) {
+  const [q, setQ] = useState("");
+  const [off, setOff] = useState(0);
+  const [data, setData] = useState<{ total: number; rows: import("@/lib/hdar/live").AdminUserRow[] } | null>(null);
+  const [err, setErr] = useState("");
+  useEffect(() => { const t = setTimeout(() => admin.users(adminKey, q.trim(), off).then(setData).catch((e: Error) => setErr(e.message)), 250); return () => clearTimeout(t); }, [adminKey, q, off]);
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-2">
+        <input className="h-11 flex-1 rounded-xl border border-line bg-night px-3" placeholder="Rechercher un pseudo ou un ID…" value={q} onChange={(e) => { setQ(e.target.value); setOff(0); }} />
+        <span className="text-sm text-muted">{data?.total ?? "…"} profils</span>
+      </div>
+      {err && <p className="text-signal">{err}</p>}
+      <div className="overflow-x-auto rounded-2xl border border-line">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-surface text-muted"><tr>{["Pseudo", "Âge", "Genre", "Inscrit", "Actif", "Région", "hdar+", "Boosts", "❤️ solde/reçus", "Dépensé", "Signal.", "Statut"].map((h) => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
+          <tbody>
+            {(data?.rows ?? []).map((r) => (
+              <tr key={r.id} className="cursor-pointer border-t border-line hover:bg-surface" onClick={() => onOpen(r.id)}>
+                <td className="flex items-center gap-2 px-2 py-2 font-bold"><span className="size-7 shrink-0 overflow-hidden rounded-full border border-line"><Avatar src="" name={r.pseudo} className="size-full" /></span>{r.pseudo}{!r.has_photo ? "" : r.photo_status === "approved" ? " 📷" : " ⏳"}</td>
+                <td className="px-2">{r.age ?? "—"}</td><td className="px-2">{r.iam ?? "—"}</td>
+                <td className="px-2">{r.created ? new Date(r.created).toLocaleDateString("fr-FR") : "—"}</td>
+                <td className="px-2">{r.last ? new Date(r.last).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
+                <td className="px-2">{r.region ?? "—"}</td><td className="px-2">{r.premium ? "👑" : ""}</td><td className="px-2">{r.boosts || ""}</td>
+                <td className="px-2">{r.hearts ? `${r.hearts.balance} / ${r.hearts.received}` : "—"}</td><td className="px-2">{r.spent ? eur(r.spent) : "—"}</td>
+                <td className="px-2">{r.reports || ""}</td><td className="px-2">{r.banned ? "🚫 banni" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex justify-between">
+        <button type="button" disabled={off === 0} onClick={() => setOff(Math.max(0, off - 50))} className="rounded-full border border-line px-4 py-2 text-sm disabled:opacity-40">← Précédents</button>
+        <button type="button" disabled={!data || off + 50 >= data.total} onClick={() => setOff(off + 50)} className="rounded-full border border-line px-4 py-2 text-sm disabled:opacity-40">Suivants →</button>
+      </div>
+    </section>
+  );
+}
+
+/** Détail étendu : activité (compteurs seulement), achats, cadeaux. */
+function UserExtra({ adminKey, id }: { adminKey: string; id: string }) {
+  const [x, setX] = useState<import("@/lib/hdar/live").AdminUserExtra | null>(null);
+  const [kind, setKind] = useState<"premium" | "boost" | "hearts">("premium");
+  const [amount, setAmount] = useState(30);
+  const [msg, setMsg] = useState("");
+  const [out, setOut] = useState("");
+  const load = useCallback(() => void admin.userExtra(adminKey, id).then(setX).catch((e: Error) => setOut(e.message)), [adminKey, id]);
+  useEffect(load, [load]);
+  if (!x) return null;
+  return (
+    <section className="mb-5 space-y-4 rounded-2xl border border-line bg-surface p-4 text-sm">
+      <p>{x.iam ?? "—"} · cherche {x.seeking ?? "—"} · 📍 {x.region ?? "région inconnue"} · inscrit le {x.created ? new Date(x.created).toLocaleDateString("fr-FR") : "—"}</p>
+      {x.note && <p className="italic">💬 « {x.note} »</p>}
+      {x.bio && <p className="text-muted">{x.bio}</p>}
+      <p>👑 hdar+ : {x.premium_until ? `jusqu'au ${new Date(x.premium_until).toLocaleDateString("fr-FR")}` : "non"} · ❤️ solde {x.hearts?.balance ?? 0}, reçus {x.hearts?.received ?? 0}, achetés {x.hearts?.bought ?? 0}</p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{Object.entries(x.activity).map(([k, v]) => <div key={k} className="rounded-xl bg-night p-2"><b className="block text-lg">{v}</b><span className="text-xs text-muted">{ACT[k] ?? k}</span></div>)}</div>
+      <div>
+        <h3 className="font-bold">Achats</h3>
+        {x.payments.length ? <ul className="mt-1 space-y-1">{x.payments.map((p) => <li key={p.ref} className="flex justify-between gap-2 text-xs"><span>{new Date(p.at).toLocaleString("fr-FR")} · {p.product}</span><b>{eur(p.cents)}</b></li>)}</ul> : <p className="text-xs text-muted">Aucun achat</p>}
+      </div>
+      <div className="space-y-2 rounded-xl border border-[#fbbf24]/50 p-3">
+        <h3 className="font-bold">Offrir un cadeau 🎁</h3>
+        <div className="flex flex-wrap gap-2">
+          <select className="h-10 rounded-xl border border-line bg-night px-2" value={kind} onChange={(e) => { const k = e.target.value as typeof kind; setKind(k); setAmount(k === "premium" ? 30 : k === "boost" ? 24 : 50); }}>
+            <option value="premium">hdar+ (jours)</option><option value="boost">Boost</option><option value="hearts">Cœurs</option>
+          </select>
+          {kind === "boost" ? (
+            <select className="h-10 rounded-xl border border-line bg-night px-2" value={amount} onChange={(e) => setAmount(Number(e.target.value))}><option value={1}>1 h</option><option value={24}>24 h</option><option value={168}>7 jours</option></select>
+          ) : <input type="number" min={1} className="h-10 w-24 rounded-xl border border-line bg-night px-2" value={amount} onChange={(e) => setAmount(Number(e.target.value))} />}
+        </div>
+        <input className="h-10 w-full rounded-xl border border-line bg-night px-3" placeholder="Message (facultatif), affiché à l'utilisateur" value={msg} maxLength={300} onChange={(e) => setMsg(e.target.value)} />
+        <button type="button" className="h-10 rounded-full bg-[#fbbf24] px-4 font-bold text-night" onClick={() => { if (!window.confirm("Offrir ce cadeau ?")) return; admin.gift(adminKey, id, kind, amount, msg).then((r) => { setOut(`✅ Offert : ${r.label}`); setMsg(""); load(); }).catch((e: Error) => setOut(`❌ ${e.message}`)); }}>Offrir</button>
+        {out && <p className="text-xs">{out}</p>}
+        {x.gifts.length > 0 && <ul className="text-xs text-muted">{x.gifts.map((g, i) => <li key={i}>{new Date(g.at).toLocaleString("fr-FR")} · {g.detail.kind} {g.detail.amount}{g.detail.msg ? ` · « ${g.detail.msg} »` : ""}</li>)}</ul>}
+      </div>
     </section>
   );
 }

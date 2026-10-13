@@ -164,6 +164,17 @@ function Privacy() {
         </li>
       </ul>
 
+      <h2>Modération et support</h2>
+      <ul>
+        <li>
+          Les administrateurs de hdar peuvent consulter, pour la modération et le support, les
+          informations de ton compte : profil et photos, région générale (jamais ta position
+          précise), statistiques d'activité (nombre de sessions, de messages envoyés, de lieux
+          créés — <strong>jamais le contenu de tes messages privés</strong>), achats et signalements.
+          Les cadeaux offerts et les rattachements de profil sont journalisés.
+        </li>
+      </ul>
+
       <h2>Cœurs du Live</h2>
       <ul>
         <li>

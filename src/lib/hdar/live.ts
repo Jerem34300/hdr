@@ -569,6 +569,9 @@ export type AdminBanRow = { user_id: string; pseudo: string; reason: string; at:
 export type AdminPhotoRow = { id: string; pseudo: string; photo: string; at: string };
 
 export const admin = {
+  users: (key: string, q: string | null, offset: number) => rpc<{ total: number; rows: AdminUserRow[] }>("hdar_admin_users", { p_key: key, p_q: q || null, p_offset: offset, p_limit: 50 }),
+  userExtra: (key: string, id: string) => rpc<AdminUserExtra>("hdar_admin_user_extra", { p_key: key, p_id: id }),
+  gift: (key: string, id: string, kind: "premium" | "boost" | "hearts", amount: number, msg: string) => rpc<{ ok: boolean; label: string }>("hdar_admin_gift", { p_key: key, p_id: id, p_kind: kind, p_amount: amount, p_msg: msg || null }),
   reattach: (key: string, pseudo: string, target: string) => rpc<{ ok: boolean; profile: string }>("hdar_admin_reattach", { p_key: key, p_pseudo: pseudo, p_target: target }),
   stats: (key: string) => rpc<AdminStats>("hdar_admin_stats", { p_key: key }),
   reports: (key: string, all: boolean) =>
@@ -975,3 +978,9 @@ export function regionOf(id: string): Promise<string | null> {
 export const myHearts = () => rpc<{ balance: number; received: number }>("hdar_my_hearts", {});
 export const heartsReceived = (id: string) => rpc<number>("hdar_hearts_received", { p_id: id });
 export const heartSend = () => rpc<{ balance: number }>("hdar_heart_send", {});
+
+export type AdminUserRow = { id: string; pseudo: string; age: number | null; iam: string | null; has_photo: boolean; photo_status: string | null; created: string | null; last: string | null; region: string | null; premium: boolean; boosts: number; hearts: { balance: number; received: number } | null; spent: number; reports: number; banned: boolean };
+export type AdminUserExtra = { region: string | null; iam: string | null; seeking: string | null; created: string | null; bio: string | null; note: string | null; premium_until: string | null;
+  hearts: { balance: number; received: number; bought: number } | null;
+  activity: Record<string, number>; payments: { at: string; product: string; kind: string; cents: number; ref: string }[]; gifts: { at: string; detail: { kind: string; amount: number; msg: string | null } }[] };
+export const myNotices = () => rpc<{ id: number; title: string; body: string | null; at: string }[]>("hdar_my_notices", {});

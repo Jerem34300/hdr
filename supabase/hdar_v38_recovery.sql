@@ -39,6 +39,10 @@ begin
   delete from hdar.identities where user_id = p_old;
   insert into hdar.identities (auth_user_id, user_id) values (p_auth, p_old);
   update hdar.profiles set auth_user_id = p_auth where user_id = p_old;
+  -- Un profil d'admin garde ses droits (et donc hdar+ gratuit) sur sa nouvelle session.
+  if old_auth is not null and exists (select 1 from hdar.admins where auth_user_id = old_auth) then
+    insert into hdar.admins (auth_user_id, note) values (p_auth, 'transfert de profil') on conflict do nothing;
+  end if;
   if old_auth is not null and old_auth <> p_auth then
     delete from auth.refresh_tokens where user_id::text = old_auth::text;
     delete from auth.sessions where user_id = old_auth;

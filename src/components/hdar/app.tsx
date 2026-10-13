@@ -1,4 +1,5 @@
 import { useActivity, useActivityPolling } from "@/lib/hdar/activity";
+import { GiftNotices } from "./gift-notices";
 import { useEffect, type ReactNode } from "react";
 import { MessageCircle, Radar, UserRound, MapPin } from "lucide-react";
 import { Toaster } from "sonner";
@@ -71,6 +72,7 @@ export function App() {
     <>
       <Toaster theme="dark" position="top-center" />
       <CallLayer />
+      <GiftNotices />
       <ConfirmSheet />
       <ReportSheet />
       <PushPrompt />
