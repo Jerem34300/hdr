@@ -31,6 +31,13 @@ export function Spots() {
       <button type="button" data-act="create" {...bindTap(openCreate)} className="mt-4 h-12 w-full rounded-full bg-spot text-night">
         Créer un lieu
       </button>
+      <a href="/pro" className="mt-3 block overflow-hidden rounded-3xl bg-gradient-to-r from-[#fbbf24] via-[#FA6F6C] to-[#f472b6] p-[2px] shadow-[0_0_24px_rgba(251,191,36,.3)]">
+        <div className="rounded-[22px] bg-[#0b0b10]/90 p-4">
+          <p className="font-display text-lg font-extrabold">🏷️ Vous êtes un établissement ?</p>
+          <p className="text-sm font-bold text-[#fbbf24]">Devenez partenaire hdar ›</p>
+          <p className="mt-1 text-xs text-white/75">🎥 Live Pro dans toute la France · 🎁 Cadeaux pro · ⭐ Boost Pro · 📍 votre lieu sur la carte</p>
+        </div>
+      </a>
       {featured.length > 0 && (
         <section className="mt-4">
           <p className="text-xs font-bold tracking-[0.2em] text-[#fbbf24] uppercase">⭐ À la une</p>
@@ -41,6 +48,7 @@ export function Spots() {
             </button></li>))}</ul>
         </section>
       )}
+      {spots.length === 0 && <p className="mt-6 text-center text-sm text-muted">Aucun lieu ouvert autour de toi pour l'instant. Crée le premier ! 📍</p>}
       <ul className="mt-4 space-y-2">
         {spots.map((spot) => (
           <li key={spot.id} className="flex items-stretch gap-2">
