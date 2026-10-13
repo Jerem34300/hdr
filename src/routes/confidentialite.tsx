@@ -111,6 +111,12 @@ function Privacy() {
           connexion transitent par nos serveurs, puis sont effacés.
         </li>
         <li>
+          Le floutage est appliqué <strong>sur ton téléphone, avant l'envoi</strong> : tant que tu es
+          flouté, seule une image floutée part vers l'autre personne, jamais l'image nette. C'est toi
+          seul qui choisis de te montrer. Nous conservons la date à laquelle tu as accepté les règles
+          du live.
+        </li>
+        <li>
           En connexion directe, ton <strong>adresse IP</strong> peut être visible techniquement par
           la personne en face. Aucune distance ni position n'est affichée.
         </li>

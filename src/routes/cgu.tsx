@@ -92,7 +92,11 @@ function Terms() {
       <h2>10. Live vidéo</h2>
       <p>
         Le live met en relation au hasard des personnes majeures. Il n'est pas enregistré par
-        hdar. La vidéo passant d'appareil à appareil, ton adresse IP peut être visible par ton
+        hdar. Ta vidéo est floutée <strong>sur ton propre téléphone, avant l'envoi</strong> : ton image
+        nette n'est jamais envoyée tant que tu ne choisis pas de te montrer, et personne ne peut te
+        déflouter à ta place. Sont interdits : la présence de mineurs, l'exhibition non désirée,
+        l'enregistrement ou la capture de l'autre personne. L'entrée dans le live suppose
+        l'acceptation de ces règles, dont la date est conservée. La vidéo passant d'appareil à appareil, ton adresse IP peut être visible par ton
         interlocuteur. Les règles ci-dessus s'appliquent ; tout abus entraîne un bannissement.
       </p>
       <h2>11. Mentions légales et contact</h2>

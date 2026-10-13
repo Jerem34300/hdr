@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { LIVE_TERMS_VERSION, liveAccept, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { usePhoto } from "@/lib/hdar/photos";
 import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
@@ -35,14 +36,14 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const [peer, setPeer] = useState<LiveCard | null>(demo?.peer ?? null);
   const [prev, setPrev] = useState<LiveCard | null>(null);
   const [online, setOnline] = useState(demo?.online ?? 0);
-  const [seeThem, setSeeThem] = useState(!!demo?.unblurred);
-  const showMe = true;
+  const [blurred, setBlurred] = useState(!demo?.unblurred);
+  const blurRef = useRef(true);
+  const pipe = useRef<BlurPipe | null>(null);
   const [mic, setMic] = useState(true);
-  const [theyShow, setTheyShow] = useState(!!demo?.unblurred);
+  const [theyBlur, setTheyBlur] = useState(!demo?.unblurred);
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const dc = useRef<RTCDataChannel | null>(null);
-  const showRef = useRef(true);
-  const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
+    const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
   const [filterOpen, setFilterOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const localRef = useRef<MediaStream | null>(null);
@@ -54,16 +55,32 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const running = useRef(false);
   const touchY = useRef<number | null>(null);
 
-  const closePc = () => { dc.current = null; setTheyShow(false); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
+  const closePc = () => { dc.current = null; setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
+
+  const outgoing = () => (blurRef.current ? pipe.current?.track : localRef.current?.getVideoTracks()[0]) ?? null;
+  const showPreview = () => { const v = outgoing(); if (meVid.current && v) { meVid.current.srcObject = new MediaStream([v]); void meVid.current.play().catch(() => undefined); } };
+  const setBlur = async (b: boolean) => {
+    blurRef.current = b; setBlurred(b);
+    const v = outgoing();
+    const sender = pc.current?.getSenders().find((x) => x.track?.kind === "video");
+    if (sender && v) await sender.replaceTrack(v).catch(() => undefined);
+    showPreview();
+    if (dc.current?.readyState === "open") dc.current.send(JSON.stringify({ blur: b }));
+  };
 
   const makePc = () => {
     closePc();
     const c = new RTCPeerConnection({ iceServers: ice() });
-    localRef.current?.getTracks().forEach((t) => c.addTrack(t, localRef.current!));
+    const raw = localRef.current;
+    if (raw) {
+      const v = outgoing();
+      const st = new MediaStream([...raw.getAudioTracks(), ...(v ? [v] : [])]);
+      st.getTracks().forEach((t) => c.addTrack(t, st));
+    }
     const wire = (ch: RTCDataChannel) => {
       dc.current = ch;
-      ch.onopen = () => ch.send(JSON.stringify({ cam: showRef.current }));
-      ch.onmessage = (ev) => { try { setTheyShow(!!JSON.parse(String(ev.data)).cam); } catch { /* */ } };
+      ch.onopen = () => ch.send(JSON.stringify({ blur: blurRef.current }));
+      ch.onmessage = (ev) => { try { setTheyBlur(JSON.parse(String(ev.data)).blur !== false); } catch { /* */ } };
     };
     c.ondatachannel = (e) => wire(e.channel);
     if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
@@ -78,7 +95,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   };
 
   const matched = async (card: LiveCard) => {
-    peerRef.current = card; setPeer(card); setSeeThem(false); setPhase("connecting");
+    peerRef.current = card; setPeer(card); setPhase("connecting");
     if (card.role === "offer") {
       const c = makePc();
       await c.setLocalDescription(await c.createOffer());
@@ -101,6 +118,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
       const m = e instanceof Error ? e.message : "";
       toast(m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
       if (m.includes("live_photo")) stop();
+      if (m.includes("live_terms")) { localStorage.removeItem(`hdar-live-terms-v${LIVE_TERMS_VERSION}`); stop(); }
     }
   }
 
@@ -108,8 +126,10 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     if (!navigator.mediaDevices?.getUserMedia || typeof RTCPeerConnection === "undefined") return toast("Ton navigateur ne gère pas la vidéo");
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: { echoCancellation: true, noiseSuppression: true } });
-            localRef.current = s;
-      if (meVid.current) { meVid.current.srcObject = s; void meVid.current.play().catch(() => undefined); }
+      localRef.current = s;
+      pipe.current = createBlurPipe(s);
+      blurRef.current = true; setBlurred(true);
+      showPreview();
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
     turnCache = await turnServers();
     running.current = true;
@@ -123,6 +143,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     closePc();
     localRef.current?.getTracks().forEach((t) => t.stop());
     localRef.current = null;
+    pipe.current?.stop(); pipe.current = null;
     void rouletteLeave(false).catch(() => undefined);
     void nav({ to: "/" });
   }
@@ -155,11 +176,6 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   }
 
   useEffect(() => () => { if (running.current) { running.current = false; closePc(); localRef.current?.getTracks().forEach((t) => t.stop()); void rouletteLeave(false).catch(() => undefined); } }, []);
-  useEffect(() => {
-    showRef.current = showMe;
-    localRef.current?.getVideoTracks().forEach((t) => (t.enabled = showMe));
-    if (dc.current?.readyState === "open") dc.current.send(JSON.stringify({ cam: showMe }));
-  }, [showMe]);
   const flip = async () => {
     const nextF = facing === "user" ? "environment" : "user";
     try {
@@ -167,12 +183,14 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: nextF }, audio: false }));
       const track = fresh.getVideoTracks()[0];
       if (!track || !localRef.current) return;
-      track.enabled = showRef.current;
-      const sender = pc.current?.getSenders().find((x) => x.track?.kind === "video");
-      if (sender) await sender.replaceTrack(track);
       localRef.current.getVideoTracks().forEach((t) => { t.stop(); localRef.current!.removeTrack(t); });
       localRef.current.addTrack(track);
-      if (meVid.current) meVid.current.srcObject = localRef.current;
+      pipe.current?.setSource(localRef.current);
+      if (!blurRef.current) {
+        const sender = pc.current?.getSenders().find((x) => x.track?.kind === "video");
+        if (sender) await sender.replaceTrack(track);
+      }
+      showPreview();
       setFacing(nextF);
     } catch { toast("Impossible de changer de caméra"); }
   };
@@ -188,6 +206,12 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     void next();
   };
 
+  const termsKey = `hdar-live-terms-v${LIVE_TERMS_VERSION}`;
+  const [okTerms, setOkTerms] = useState(false);
+  const enter = async () => {
+    try { await liveAccept(); localStorage.setItem(termsKey, new Date().toISOString()); } catch (e) { return toast(e instanceof Error ? e.message : "Réessaie"); }
+    void start();
+  };
   if (phase === "intro") {
     return (
       <div className="relative flex min-h-dvh flex-col items-center justify-center gap-5 overflow-hidden bg-night px-6 text-center text-ink">
@@ -196,13 +220,15 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         <span className="relative flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] shadow-[0_0_40px_#FA6F6C]"><Video className="size-9 text-night" /></span>
         <h1 className="relative font-display text-3xl font-bold">Live</h1>
         <p className="relative max-w-xs text-sm text-ink/80">Des mecs au hasard, en vidéo. Glisse vers le haut pour passer au suivant.</p>
-        <ul className="relative max-w-xs space-y-1.5 text-left text-sm text-ink/80">
-          <li>🛡️ Jamais quelqu'un de ton quartier : personne à moins de 2 km.</li>
-          <li>📍 Aucune position ni distance n'est montrée.</li>
-          <li>🙈 Tout le monde arrive flouté : chacun choisit de déflouter l'autre.</li>
-          <li>🚩 Un geste pour signaler : la personne est bloquée tout de suite.</li>
-        </ul>
-        <button type="button" onClick={() => void start()} className="relative w-full max-w-xs rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3.5 font-display font-bold text-night shadow-[0_0_30px_#FA6F6C]">Entrer dans le Live</button>
+        <div className="relative max-w-xs space-y-2 rounded-2xl bg-white/5 p-4 text-left text-sm text-ink/90">
+          <p>Ta caméra est envoyée en direct à la personne en face, <b>floutée sur ton téléphone avant l'envoi</b>. Ton image nette n'est jamais envoyée tant que tu n'appuies pas sur « te montrer ».</p>
+          <p>Personne ne peut te déflouter à ta place. Rien n'est enregistré par hdar. Jamais personne à moins de 2 km, aucune distance affichée.</p>
+          <p className="font-semibold text-[#FA6F6C]">Interdit : mineurs, exhibition non désirée, enregistrer ou capturer l'autre.</p>
+        </div>
+        {!(typeof localStorage !== "undefined" && localStorage.getItem(termsKey)) && (
+          <label className="relative flex max-w-xs items-center gap-2 text-sm"><input type="checkbox" checked={okTerms} onChange={(e) => setOkTerms(e.target.checked)} className="size-5 accent-[#FA6F6C]" /> J'ai compris</label>
+        )}
+        <button type="button" disabled={!okTerms && !(typeof localStorage !== "undefined" && localStorage.getItem(termsKey))} onClick={() => void enter()} className="relative w-full max-w-xs rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3.5 font-display font-bold text-night shadow-[0_0_30px_#FA6F6C] disabled:opacity-40">Entrer dans le Live</button>
         <button type="button" onClick={() => void nav({ to: "/" })} className="relative text-sm text-ink/60">Retour à la carte</button>
       </div>
     );
@@ -213,8 +239,8 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
       onTouchStart={(e) => (touchY.current = e.touches[0].clientY)}
       onTouchEnd={(e) => { const y0 = touchY.current; touchY.current = null; if (y0 != null && y0 - e.changedTouches[0].clientY > 70 && !demo) void next(); }}
       onWheel={(e) => { if (e.deltaY > 60 && !demo && phase !== "searching") void next(); }}>
-      <video ref={themVid} autoPlay playsInline className="absolute inset-0 size-full object-cover transition-[filter] duration-300" style={{ filter: seeThem ? "none" : "blur(28px)" }} />
-      {demo && <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,#3b2a3a,#0b0b10)]" style={{ filter: seeThem ? "none" : "blur(28px)" }}><div className="absolute top-[22%] left-1/2 size-48 -translate-x-1/2 rounded-full bg-[#c9a58c]/70" /><div className="absolute top-[52%] left-1/2 h-80 w-80 -translate-x-1/2 rounded-t-full bg-[#2b3a55]" /></div>}
+      <video ref={themVid} autoPlay playsInline className="absolute inset-0 size-full object-cover" />
+      {demo && <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,#3b2a3a,#0b0b10)]" style={{ filter: theyBlur ? "blur(28px)" : "none" }}><div className="absolute top-[22%] left-1/2 size-48 -translate-x-1/2 rounded-full bg-[#c9a58c]/70" /><div className="absolute top-[52%] left-1/2 h-80 w-80 -translate-x-1/2 rounded-t-full bg-[#2b3a55]" /></div>}
       {phase !== "live" && !demo && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-night/70">
           <span className="size-14 animate-ping rounded-full bg-[#FA6F6C]/60" />
@@ -234,18 +260,19 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           <button type="button" aria-label="Quitter" onClick={stop} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
       </div>
-      {peer && !seeThem && (
-        <button type="button" onClick={() => setSeeThem(true)} className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2 rounded-3xl bg-white/15 px-6 py-4 text-center backdrop-blur">
-          <span className="flex items-center gap-2 text-base font-bold"><Eye className="size-5" /> Il est flouté</span>
-          <span className="text-xs text-white/80">appuie pour voir</span>
-        </button>
+      {peer && theyBlur && (
+        <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-black/50 px-4 py-2 text-sm font-semibold backdrop-blur"><EyeOff className="size-4" /> Flouté — c'est lui qui choisit de se montrer</span>
       )}
       <div className="absolute right-3 bottom-40 h-40 w-28 overflow-hidden rounded-2xl border border-white/20 bg-night">
-        <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover"  />
+        <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover" />
+        <span className={`absolute top-1 left-1 rounded-full px-1.5 text-[9px] font-bold ${blurred ? "bg-black/60" : "bg-[#A1E3C3] text-night"}`}>{blurred ? "Flouté" : "Visible"}</span>
         {<button type="button" aria-label="Retourner la caméra" onClick={() => void flip()} className="absolute right-1 bottom-1 flex size-8 items-center justify-center rounded-full bg-black/60"><SwitchCamera className="size-4" /></button>}
-        <span className="absolute top-1 left-1 rounded-full bg-black/60 px-1.5 text-[9px]">Toi · flouté pour lui</span>
+        
       </div>
       <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <button type="button" onClick={() => void setBlur(!blurred)} className={`w-full rounded-full py-2.5 font-display font-bold backdrop-blur ${blurred ? "border-2 border-white/80 bg-white/10" : "bg-[#A1E3C3] text-night"}`}>
+          {blurred ? <span className="inline-flex items-center gap-2"><Eye className="size-4" /> Tu es flouté — appuie pour te montrer</span> : <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Tu es visible — appuie pour te flouter</span>}
+        </button>
         <div className="flex items-center justify-center gap-2.5">
           <Round label="Retourner la caméra" on={false} onClick={() => void flip()}><SwitchCamera className="size-5" /></Round>
           <Round label={mic ? "Couper le micro" : "Activer le micro"} on={mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>

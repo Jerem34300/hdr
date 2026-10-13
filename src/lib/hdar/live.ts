@@ -950,3 +950,5 @@ export async function turnServers(): Promise<RTCIceServer[]> {
     return d.iceServers ?? [];
   } catch { return []; }
 }
+export const LIVE_TERMS_VERSION = 1;
+export const liveAccept = () => rpc("hdar_live_accept", { p_version: LIVE_TERMS_VERSION });
