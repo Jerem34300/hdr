@@ -8,6 +8,9 @@ export type BlurPipe = { track: MediaStreamTrack; setSource: (s: MediaStream) =>
 export function createBlurPipe(src: MediaStream, fps = 24): BlurPipe {
   const video = document.createElement("video");
   video.muted = true; video.playsInline = true; video.autoplay = true;
+  video.setAttribute("playsinline", ""); video.setAttribute("muted", "");
+  Object.assign(video.style, { position: "fixed", width: "2px", height: "2px", opacity: "0", pointerEvents: "none", left: "0", top: "0" });
+  document.body.appendChild(video);
   const tiny = document.createElement("canvas"); tiny.width = 32; tiny.height = 24;
   const out = document.createElement("canvas"); out.width = 480; out.height = 360;
   const tctx = tiny.getContext("2d")!; const octx = out.getContext("2d")!;
@@ -30,5 +33,5 @@ export function createBlurPipe(src: MediaStream, fps = 24): BlurPipe {
     }
   }, 1000 / fps);
   const track = out.captureStream(fps).getVideoTracks()[0];
-  return { track, setSource, stop: () => { window.clearInterval(timer); track.stop(); video.srcObject = null; } };
+  return { track, setSource, stop: () => { window.clearInterval(timer); track.stop(); video.srcObject = null; video.remove(); } };
 }

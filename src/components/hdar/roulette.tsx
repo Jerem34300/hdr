@@ -57,8 +57,14 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
 
   const closePc = () => { dc.current = null; setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
+  useEffect(() => { if (phase !== "intro") showPreview(); });
+  const [corner, setCorner] = useState<"tl" | "tr" | "bl" | "br">("br");
+  const [big, setBig] = useState(false);
+  const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
+  const dragStart = useRef<{ x: number; y: number; ox: number; oy: number; moved: boolean } | null>(null);
+  const prevBox = useRef<HTMLDivElement>(null);
   const outgoing = () => (blurRef.current ? pipe.current?.track : localRef.current?.getVideoTracks()[0]) ?? null;
-  const showPreview = () => { const v = outgoing(); if (meVid.current && v) { meVid.current.srcObject = new MediaStream([v]); void meVid.current.play().catch(() => undefined); } };
+  const showPreview = () => { const v = localRef.current?.getVideoTracks()[0]; if (meVid.current && v && (meVid.current.srcObject as MediaStream | null)?.getVideoTracks()[0] !== v) { meVid.current.srcObject = new MediaStream([v]); void meVid.current.play().catch(() => undefined); } };
   const setBlur = async (b: boolean) => {
     blurRef.current = b; setBlurred(b);
     const v = outgoing();
@@ -267,16 +273,28 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           {blurred && <span className="text-xs font-normal text-white/85">👆 Appuie au milieu pour te montrer</span>}
         </span>
       )}
-      <div className="absolute right-3 bottom-40 h-40 w-28 overflow-hidden rounded-2xl border border-white/20 bg-night">
-        <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover" />
+      <div ref={prevBox}
+        className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 left-3" : corner === "tr" ? "top-28 right-3" : corner === "bl" ? "bottom-44 left-3" : "bottom-44 right-3"}`}
+        style={drag ? { left: drag.x, top: drag.y } : undefined}
+        onPointerDown={(e) => { const r = prevBox.current!.getBoundingClientRect(); dragStart.current = { x: e.clientX, y: e.clientY, ox: r.left, oy: r.top, moved: false }; (e.target as Element).setPointerCapture?.(e.pointerId); e.stopPropagation(); }}
+        onPointerMove={(e) => { const d = dragStart.current; if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.moved && Math.hypot(dx, dy) < 8) return; d.moved = true; setDrag({ x: d.ox + dx, y: d.oy + dy }); }}
+        onPointerUp={(e) => {
+          const d = dragStart.current; dragStart.current = null; e.stopPropagation();
+          if (!d?.moved) { setBig((b) => !b); return; }
+          const r = prevBox.current!.getBoundingClientRect();
+          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          setCorner(`${cy < window.innerHeight / 2 ? "t" : "b"}${cx < window.innerWidth / 2 ? "l" : "r"}` as "tl");
+          setDrag(null);
+        }}
+        onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <video ref={meVid} autoPlay playsInline muted className="pointer-events-none size-full -scale-x-100 object-cover" style={{ filter: blurred ? "blur(4px)" : "none" }} />
         <span className={`absolute top-1 left-1 rounded-full px-1.5 text-[9px] font-bold ${blurred ? "bg-black/60" : "bg-[#A1E3C3] text-night"}`}>{blurred ? "Flouté" : "Visible"}</span>
-        {<button type="button" aria-label="Retourner la caméra" onClick={() => void flip()} className="absolute right-1 bottom-1 flex size-8 items-center justify-center rounded-full bg-black/60"><SwitchCamera className="size-4" /></button>}
         
       </div>
       <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <button type="button" onClick={() => void setBlur(!blurred)} className={`w-full rounded-full py-2.5 font-display font-bold backdrop-blur ${blurred ? "border-2 border-white/80 bg-white/10" : "bg-[#A1E3C3] text-night"}`}>
-          {blurred ? <span className="inline-flex items-center gap-2"><Eye className="size-4" /> Tu es flouté — appuie pour te montrer</span> : <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Tu es visible — appuie pour te flouter</span>}
-        </button>
+        <div className="flex justify-center"><button type="button" onClick={() => void setBlur(!blurred)} className={`rounded-full px-4 py-1.5 text-sm font-bold backdrop-blur ${blurred ? "border border-white/70 bg-white/10" : "bg-[#A1E3C3] text-night"}`}>
+          {blurred ? <span className="inline-flex items-center gap-1.5"><Eye className="size-4" /> Tu es flouté · te montrer</span> : <span className="inline-flex items-center gap-1.5"><EyeOff className="size-4" /> Tu es visible · te flouter</span>}
+        </button></div>
         <div className="flex items-center justify-center gap-2.5">
           <Round label="Retourner la caméra" on={false} onClick={() => void flip()}><SwitchCamera className="size-5" /></Round>
           <Round label={mic ? "Couper le micro" : "Activer le micro"} on={mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>
