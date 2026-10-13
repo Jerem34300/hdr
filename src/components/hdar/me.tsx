@@ -12,6 +12,8 @@ import { goDark, saveProfile } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
 import { myPhotos, useHdar } from "@/lib/hdar/store";
 import { DESIRE_ICON } from "./icons";
+import { Sparkles } from "lucide-react";
+import { fmtLeft, useActiveBoost, useNow } from "./boost";
 
 const MAX_PHOTOS = 5;
 const MAX_VOICE_SEC = 10;
@@ -56,6 +58,7 @@ export function Me() {
           Voir mon profil
         </button>
       </div>
+      <BoostButton />
       <p className="mt-1 text-sm text-muted">
         C'est ce que les autres voient quand ils touchent ton pin.
       </p>
@@ -238,9 +241,6 @@ export function Me() {
           <Trash2 className="size-4" />
           Supprimer toutes mes données
         </button>
-        <a href="/pro#boost" className="mt-4 flex h-12 items-center justify-center gap-2 rounded-full border border-[#f472b6] text-sm font-bold text-[#f472b6]">
-          ✨ Booster mon profil · Espace pro (lieux partenaires)
-        </a>
         <p className="mt-4 text-center text-xs text-muted">
           <a className="underline" href="/confidentialite">
             Confidentialité
@@ -252,6 +252,10 @@ export function Me() {
           ·{" "}
           <a className="underline" href="/contact">
             Contact
+          </a>
+          <br />
+          <a className="mt-2 inline-block text-[11px] opacity-70 hover:underline" href="/pro">
+            Espace pro · lieux partenaires
           </a>
         </p>
       </section>
@@ -409,5 +413,19 @@ function Favorites() {
         </ul>
       )}
     </section>
+  );
+}
+
+function BoostButton() {
+  const b = useActiveBoost();
+  const now = useNow(b ? 1000 : 60000);
+  return (
+    <a
+      href="/boost"
+      className="boost-cta mt-4 mb-3 flex h-14 items-center justify-center gap-2 rounded-full font-display text-base font-extrabold text-night"
+    >
+      <Sparkles className="sparkle size-5" />
+      {b ? <span className="tabular-nums">Boost actif · {fmtLeft(new Date(b.ends_at).getTime() - now)}</span> : "Booster mon profil"}
+    </a>
   );
 }

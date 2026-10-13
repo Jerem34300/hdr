@@ -78,8 +78,8 @@ Deno.serve(async (req) => {
     const recurring = p.kind === "listing" && p.interval;
     const params: Record<string, string> = {
       mode: recurring ? "subscription" : "payment",
-      success_url: `${SITE}/pro?paid=1${p.kind === "boost" ? "#boost" : ""}`,
-      cancel_url: `${SITE}/pro?cancel=1${p.kind === "boost" ? "#boost" : ""}`,
+      success_url: `${SITE}${p.kind === "boost" ? "/boost" : "/pro"}?paid=1`,
+      cancel_url: `${SITE}${p.kind === "boost" ? "/boost" : "/pro"}?cancel=1`,
       client_reference_id: p.user_id,
       locale: "fr",
       "line_items[0][quantity]": "1",

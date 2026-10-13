@@ -700,7 +700,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   );
 }
 
-function PinFace({ id, pseudo }: { id: string; pseudo: string }) {
+export function PinFace({ id, pseudo }: { id: string; pseudo: string }) {
   const photo = usePhoto(id);
   if (photo) return <img src={photo} alt="" draggable={false} className="pointer-events-none size-full object-cover" />;
   return (

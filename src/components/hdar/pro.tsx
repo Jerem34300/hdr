@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  myBoosts, myPlaces, openBillingPortal, partnerSave, partnerStats, paymentsEnabled, pricing, startCheckout,
-  type MyBoost, type MyPlace, type PartnerInput, type PartnerStats, type PlaceKind, type PriceRow,
+  myPlaces, openBillingPortal, partnerSave, partnerStats, paymentsEnabled, pricing, startCheckout,
+  type MyPlace, type PartnerInput, type PartnerStats, type PlaceKind, type PriceRow,
 } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
 import { PLACE_KINDS } from "./places-layer";
@@ -14,10 +14,10 @@ const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currenc
 const day = (v: string | null) => (v ? new Date(v).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—");
 
 export function ProSpace() {
-  const [tab, setTab] = useState<"place" | "boost">(typeof location !== "undefined" && location.hash === "#boost" ? "boost" : "place");
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [payOk, setPayOk] = useState<boolean | null>(null);
   useEffect(() => {
+    if (location.hash === "#boost") { location.replace("/boost" + location.search); return; }
     void pricing().then(setPrices).catch(() => undefined);
     void paymentsEnabled().then(setPayOk);
     const q = new URLSearchParams(location.search);
@@ -29,20 +29,14 @@ export function ProSpace() {
       <div className="mx-auto max-w-2xl">
         <a href="/" className="text-sm text-muted underline">← Retour à la carte</a>
         <h1 className="mt-3 font-display text-3xl font-extrabold">hdar<span className="text-signal">.</span> pro</h1>
-        <p className="mt-1 text-sm text-muted">Fais briller ton lieu ou ton profil sur la carte.</p>
-        <div className="mt-4 flex gap-2">
-          {([["place", "📍 Mon lieu partenaire"], ["boost", "✨ Booster mon profil"]] as const).map(([k, l]) => (
-            <button key={k} type="button" onClick={() => setTab(k)} className={"h-10 rounded-full border px-4 text-sm " + (tab === k ? "border-signal bg-signal font-bold text-night" : "border-line")}>
-              {l}
-            </button>
-          ))}
-        </div>
+        <p className="mt-1 text-sm text-muted">Fais briller ton établissement sur la carte.</p>
         {payOk === false && (
           <p className="mt-4 rounded-2xl border border-[#fbbf24] px-4 py-3 text-sm text-[#fbbf24]">
             💳 Paiement bientôt disponible. Tu peux déjà préparer ta fiche, elle s'activera dès le paiement.
           </p>
         )}
-        {tab === "place" ? <Places prices={prices.filter((p) => p.kind === "listing")} payOk={!!payOk} /> : <Boost prices={prices.filter((p) => p.kind === "boost")} payOk={!!payOk} />}
+        <Places prices={prices.filter((p) => p.kind === "listing")} payOk={!!payOk} />
+        <p className="mt-8 text-center text-xs text-muted">Envie de faire briller ton profil ? <a className="underline" href="/boost">Booster mon profil ✨</a></p>
       </div>
     </main>
   );
@@ -260,33 +254,3 @@ function Stats({ id }: { id: string }) {
   );
 }
 
-// ---------------------------------------------------------------- boost
-function Boost({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
-  const [rows, setRows] = useState<MyBoost[] | null>(null);
-  const [err, setErr] = useState("");
-  useEffect(() => void myBoosts().then(setRows).catch((e: Error) => setErr(e.message)), []);
-  const active = rows?.find((b) => b.active);
-  return (
-    <div className="mt-5">
-      <p className="text-sm">
-        Ton profil brille sur la carte avec un halo coloré et attire plus de regards. Le boost s'affiche quand tu es visible sur la carte. Les durées s'additionnent.
-      </p>
-      {active && <p className="mt-3 rounded-2xl border border-[#f472b6] px-4 py-3 text-sm text-[#f472b6]">✨ Boost actif jusqu'au {day(active.ends_at)}</p>}
-      <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => startCheckout(prod, null)} />
-      {err && <p className="mt-3 text-xs text-muted">{err.includes("profil") ? "Crée ton profil sur la carte pour pouvoir te booster." : err}</p>}
-      {rows && rows.length > 0 && (
-        <section className="mt-5">
-          <h2 className="font-display text-lg font-bold">Mes boosts</h2>
-          <ul className="mt-2 space-y-2 text-sm">
-            {rows.map((b) => (
-              <li key={b.id} className="rounded-2xl border border-line bg-surface p-3">
-                <p className="text-xs text-muted">{day(b.starts_at)} → {day(b.ends_at)} {b.active && <b className="text-[#f472b6]">· en cours</b>}</p>
-                <p className="mt-1">👀 {b.views} vues de profil · 💬 {b.messages} messages reçus</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
-  );
-}
