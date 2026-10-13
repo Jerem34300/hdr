@@ -12,7 +12,128 @@
   force = true
 
 [[redirects]]
-  from = "/fr/rencontre-gay-:ville"
-  to = "/fr/sortir-rencontrer-:ville"
+  from = "/fr/rencontre-gay-paris"
+  to = "/fr/sortir-rencontrer-paris"
   status = 301
   force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-lyon"
+  to = "/fr/sortir-rencontrer-lyon"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-marseille"
+  to = "/fr/sortir-rencontrer-marseille"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-toulouse"
+  to = "/fr/sortir-rencontrer-toulouse"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-montpellier"
+  to = "/fr/sortir-rencontrer-montpellier"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-agde"
+  to = "/fr/sortir-rencontrer-agde"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-cap-d-agde"
+  to = "/fr/sortir-rencontrer-cap-d-agde"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-beziers"
+  to = "/fr/sortir-rencontrer-beziers"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-nimes"
+  to = "/fr/sortir-rencontrer-nimes"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-sete"
+  to = "/fr/sortir-rencontrer-sete"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-perpignan"
+  to = "/fr/sortir-rencontrer-perpignan"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-bordeaux"
+  to = "/fr/sortir-rencontrer-bordeaux"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-nantes"
+  to = "/fr/sortir-rencontrer-nantes"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-lille"
+  to = "/fr/sortir-rencontrer-lille"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-nice"
+  to = "/fr/sortir-rencontrer-nice"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-strasbourg"
+  to = "/fr/sortir-rencontrer-strasbourg"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-rennes"
+  to = "/fr/sortir-rencontrer-rennes"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-grenoble"
+  to = "/fr/sortir-rencontrer-grenoble"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-avignon"
+  to = "/fr/sortir-rencontrer-avignon"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-toulon"
+  to = "/fr/sortir-rencontrer-toulon"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-angers"
+  to = "/fr/sortir-rencontrer-angers"
+  status = 301
+  force = true
+
