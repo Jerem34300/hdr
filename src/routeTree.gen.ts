@@ -16,6 +16,7 @@ import { Route as CguRouteImport } from './routes/cgu'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -57,6 +58,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PremiumRoute = PremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProRoute = ProRouteImport.update({
   id: '/pro',
   path: '/pro',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/login'
+    | '/premium'
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/login'
+    | '/premium'
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/login'
+    | '/premium'
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
+  PremiumRoute: typeof PremiumRoute
   ProRoute: typeof ProRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/premium': {
+      id: '/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof PremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro': {
       id: '/pro'
       path: '/pro'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
+  PremiumRoute: PremiumRoute,
   ProRoute: ProRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

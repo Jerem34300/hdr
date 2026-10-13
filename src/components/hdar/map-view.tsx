@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { Layers, LocateFixed } from "lucide-react";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
-import { listBoosted, listLive, pulse, goDark, type LivePin } from "@/lib/hdar/live";
+import { listBoosted, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
+import { usePremium } from "@/lib/hdar/premium";
+import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
 import { usePhoto } from "@/lib/hdar/photos";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
@@ -107,12 +109,21 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const gesture = useRef<{ zoom: number; dist: number; lat: number; lng: number; x: number; y: number } | null>(null);
   const anim = useRef(0);
   const [live, setLive] = useState<LivePin[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const mapFilters = usePremium((s) => (s.premium ? s.filters : null));
+  const filterKey = JSON.stringify(mapFilters);
   const visible = useHdar((s) => !!(s.me.tonight && s.me.tonight.expiresAt > s.now));
 
   useEffect(() => {
     let stop = false;
     const load = () => {
-      void listLive({ data: deviceId() })
+      const f = usePremium.getState();
+      void liveMap(f.premium ? f.filters : { minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false })
+        .catch((e: Error) => {
+          // Premium expiré : le serveur refuse les filtres, on repasse sans filtre.
+          if (/premium_required/.test(e.message)) { usePremium.setState({ premium: false }); return liveMap({ minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false }); }
+          throw e;
+        })
         .then((rows) => {
           if (!stop) setLive(rows);
           noticeLiveFavorites(rows);
@@ -125,7 +136,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       stop = true;
       window.clearInterval(id);
     };
-  }, []);
+  }, [filterKey]);
+  useEffect(() => void usePremium.getState().refresh(), []);
 
   useEffect(() => {
     if (!visible) void goDark({ data: deviceId() }).catch(() => undefined);
@@ -179,7 +191,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           lat,
           lng,
           pseudo: st.me.pseudo || "Anonyme",
-          desires: tonight.desires.join(","),
+          desires: [...tonight.desires, tonight.place].filter(Boolean).join(","),
           hours: 3,
           note: tonight.note,
         },
@@ -267,6 +279,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     id: p.id,
     pseudo: p.pseudo,
     hot: p.hot,
+    premium: !!p.premium,
     at: { lat: p.lat, lng: p.lng },
   }));
 
@@ -493,6 +506,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}
             >
               <PinFace id={pin.id} pseudo={pin.pseudo} />
+              {pin.premium && <PremiumBadge className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 scale-75 !px-1" />}
             </button>
           );
         }
@@ -669,6 +683,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </div>
         )}
       </div>
+      <div className="absolute top-[7.25rem] left-3 z-30">
+        <FilterButton onClick={() => setFiltersOpen(true)} />
+      </div>
+      {filtersOpen && <FilterSheet onClose={() => setFiltersOpen(false)} />}
       {places.length > 0 && (
         <p className="pointer-events-none absolute bottom-1 left-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
       )}

@@ -17,6 +17,7 @@ export type LivePin = {
   lat: number;
   lng: number;
   hot: boolean;
+  premium?: boolean;
 };
 
 export type LiveMsg = {
@@ -326,6 +327,9 @@ export type PublicProfile = {
   lng: number | null;
   /** Phrase du moment (60 car.). */
   note: string;
+  premium: boolean;
+  iam: string;
+  seeking: string[];
 };
 
 export async function saveProfile(input: {
@@ -344,7 +348,7 @@ export async function saveProfile(input: {
     p_age: input.age,
     p_bio: input.bio,
     p_tags: input.tags.join(","),
-    p_photos: input.photos.filter((p) => p.startsWith("data:image/")).slice(0, 5),
+    p_photos: input.photos.filter((p) => p.startsWith("data:image/")).slice(0, 20),
     p_voice: input.voice.startsWith("data:audio/") ? input.voice : "",
     p_voice_sec: input.voiceSec,
   });
@@ -377,6 +381,9 @@ export async function getProfile(self: string, id: string): Promise<PublicProfil
       lat: number | null;
       lng: number | null;
       note?: string | null;
+      premium?: boolean | null;
+      iam?: string | null;
+      seeking?: string | null;
     }[]
   >("hdar_profile_get", { p_self: selfId(self), p_id: otherId(id) });
   const r = rows[0];
@@ -393,6 +400,9 @@ export async function getProfile(self: string, id: string): Promise<PublicProfil
     lat: r.lat,
     lng: r.lng,
     note: r.note ?? "",
+    premium: !!r.premium,
+    iam: r.iam ?? "",
+    seeking: split(r.seeking),
   };
 }
 
@@ -775,7 +785,7 @@ export const placeCommentReport = (id: string, reason: string) => rpc("hdar_plac
 export const placeClick = (id: string) => rpc("hdar_place_click", { p_id: id });
 export const placeSeen = (id: string, lat: number | null, lng: number | null) => rpc("hdar_place_seen", { p_id: id, p_lat: lat, p_lng: lng });
 
-export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost"; label: string; price_cents: number };
+export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost" | "premium"; label: string; price_cents: number };
 export const pricing = () => rpc<PriceRow[]>("hdar_pricing", {});
 
 export type MyPlace = {
@@ -827,8 +837,8 @@ export async function startCheckout(product: string, placeId: string | null) {
   const b = await checkoutCall("POST", { product, place_id: placeId });
   if (b.url) window.location.assign(b.url);
 }
-export async function openBillingPortal() {
-  const b = await checkoutCall("POST", { action: "portal" });
+export async function openBillingPortal(back?: "premium" | "boost") {
+  const b = await checkoutCall("POST", { action: "portal", back });
   if (b.url) window.location.assign(b.url);
 }
 
@@ -862,3 +872,38 @@ export const business = {
   pricingSet: (key: string, product: string, label: string, price: number, active: boolean) =>
     rpc("hdar_admin_pricing_set", { p_key: key, p_product: product, p_label: label, p_price: price, p_active: active }),
 };
+
+// Premium hdar+ (v29) ------------------------------------------------------------
+export type MyPremium = { premium: boolean; until: string | null; status: string | null; photo_limit: number };
+export const myPremium = () => rpc<MyPremium>("hdar_my_premium", {});
+export type MapFilters = { minAge: number | null; maxAge: number | null; desires: string[]; places: string[]; iam: string[]; online: boolean; photo: boolean };
+export const NO_FILTERS: MapFilters = { minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false };
+export const filtersOn = (f: MapFilters) =>
+  f.minAge != null || f.maxAge != null || f.desires.length > 0 || f.places.length > 0 || f.iam.length > 0 || f.online || f.photo;
+export async function liveMap(f: MapFilters): Promise<(LivePin & { premium: boolean })[]> {
+  const on = filtersOn(f);
+  const rows = await rpc<{ id: string; pseudo: string; lat: number; lng: number; desires: string; premium: boolean }[]>("hdar_live_map", {
+    p_min_age: on ? f.minAge : null, p_max_age: on ? f.maxAge : null,
+    p_desires: on && f.desires.length ? f.desires : null, p_places: on && f.places.length ? f.places : null,
+    p_online: on && f.online, p_photo: on && f.photo, p_iam: on && f.iam.length ? f.iam : null,
+  });
+  return rows.map((r) => ({ id: r.id, pseudo: r.pseudo, lat: Number(r.lat), lng: Number(r.lng), hot: (r.desires ?? "").split(",").includes("plan"), premium: !!r.premium }));
+}
+export type Admirer = { id: string; pseudo: string; at: string; live: boolean; photo: boolean };
+export type Admirers = { premium: boolean; views: number; favs: number; viewers?: Admirer[]; fans?: Admirer[] };
+export const admirers = () => rpc<Admirers>("hdar_admirers", {});
+export type SearchHit = { id: string; pseudo: string; live: boolean; photo: boolean; premium: boolean };
+export const searchPseudo = (q: string) => rpc<SearchHit[]>("hdar_search_pseudo", { p_q: q });
+export const setIdentity = (iam: string, seeking: string[]) => rpc("hdar_identity_set", { p_iam: iam || null, p_seeking: seeking });
+export const GENDERS = [
+  { id: "h", short: "H", label: "Homme" },
+  { id: "f", short: "F", label: "Femme" },
+  { id: "x", short: "X", label: "X / non-binaire" },
+] as const;
+/** « H · cherche H, X » */
+export function identityLine(iam: string, seeking: string[]) {
+  const sh = (id: string) => GENDERS.find((g) => g.id === id)?.short ?? "";
+  const a = sh(iam);
+  const b = seeking.map(sh).filter(Boolean).join(", ");
+  return [a, b && `cherche ${b}`].filter(Boolean).join(" · ");
+}

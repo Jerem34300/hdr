@@ -3,7 +3,9 @@ import { ChevronLeft, MessageCircle, Pencil, Star, Video } from "lucide-react";
 import { toggleFav, useFavorites } from "@/lib/hdar/favorites";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
-import { DESIRES } from "@/lib/hdar/data";
+import { DESIRES, PLACES } from "@/lib/hdar/data";
+import { identityLine } from "@/lib/hdar/live";
+import { PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
 import {
   blockLive,
@@ -17,7 +19,7 @@ import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 
-const label = (id: string) => DESIRES.find((d) => d.id === id)?.label ?? id;
+const label = (id: string) => DESIRES.find((d) => d.id === id)?.label ?? PLACES.find((d) => d.id === id)?.label ?? id;
 
 export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string }) {
   const closeView = useHdar((s) => s.closeView);
@@ -90,7 +92,11 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
           <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight">
             {name}
             {profile?.age ? <span className="font-normal text-muted">, {profile.age}</span> : null}
+            {profile?.premium && <PremiumBadge className="ml-2 align-middle" />}
           </h1>
+          {profile && identityLine(profile.iam, profile.seeking) && (
+            <p className="mt-1 text-sm font-bold text-ink/90">{identityLine(profile.iam, profile.seeking)}</p>
+          )}
           <p className="mt-1 text-sm">
             {profile?.online ? (
               <span className="text-online">● En ligne</span>

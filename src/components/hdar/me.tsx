@@ -14,8 +14,12 @@ import { myPhotos, useHdar } from "@/lib/hdar/store";
 import { DESIRE_ICON } from "./icons";
 import { ChevronLeft, Settings, Sparkles } from "lucide-react";
 import { fmtLeft, useActiveBoost, useNow } from "./boost";
+import { GENDERS, getProfile, identityLine, setIdentity } from "@/lib/hdar/live";
+import { usePremium } from "@/lib/hdar/premium";
+import { Link } from "@tanstack/react-router";
+import { Crown } from "lucide-react";
+import { PremiumBadge } from "./premium";
 
-const MAX_PHOTOS = 5;
 const MAX_VOICE_SEC = 10;
 
 export function Me() {
@@ -29,6 +33,19 @@ export function Me() {
   const [bio, setBio] = useState(me.bio);
   const [note, setNote] = useState(me.note ?? "");
   const [settings, setSettings] = useState(false);
+  const MAX_PHOTOS = usePremium((s) => s.photoLimit);
+  const isPrem = usePremium((s) => s.premium);
+  const [iam, setIam] = useState("");
+  const [seeking, setSeeking] = useState<string[]>([]);
+  useEffect(() => {
+    void usePremium.getState().refresh();
+    if (me.onboarded) void getProfile(deviceId(), deviceId()).then((p) => { if (p) { setIam(p.iam); setSeeking(p.seeking); } }).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const saveIdentity = (a: string, b: string[]) => {
+    setIam(a); setSeeking(b);
+    void setIdentity(a, b).catch((e: Error) => toast(e.message.includes("profil") ? "Crée d'abord ton profil" : e.message));
+  };
   if (settings) return <SettingsScreen onBack={() => setSettings(false)} />;
 
   async function addPhotos(files: FileList) {
@@ -64,7 +81,8 @@ export function Me() {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-xl font-extrabold">{me.pseudo || "Sans pseudo"}{me.age ? <span className="font-normal text-muted"> · {me.age} ans</span> : null}</p>
+          <p className="truncate font-display text-xl font-extrabold">{me.pseudo || "Sans pseudo"}{me.age ? <span className="font-normal text-muted"> · {me.age} ans</span> : null}{isPrem && <PremiumBadge className="ml-1.5 align-middle" />}</p>
+          {identityLine(iam, seeking) && <p className="text-xs font-bold text-ink/80">{identityLine(iam, seeking)}</p>}
           <p className={"mt-0.5 text-sm break-words " + (me.note ? "italic" : "text-muted")}>{me.note ? `💬 « ${me.note} »` : "Ajoute ta phrase du moment ci-dessous"}</p>
           <button type="button" disabled={!me.onboarded} onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
             className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-bold text-night disabled:opacity-40">
@@ -75,6 +93,24 @@ export function Me() {
       <BoostButton />
 
       <section className="mt-6">
+        <h2 className="font-display text-lg font-bold">Je suis</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {GENDERS.map((g) => (
+            <button key={g.id} type="button" disabled={!me.onboarded} onClick={() => saveIdentity(iam === g.id ? "" : g.id, seeking)}
+              className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (iam === g.id ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
+          ))}
+        </div>
+        <h2 className="mt-4 font-display text-lg font-bold">Je cherche</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {GENDERS.map((g) => (
+            <button key={g.id} type="button" disabled={!me.onboarded} onClick={() => saveIdentity(iam, seeking.includes(g.id) ? seeking.filter((x) => x !== g.id) : [...seeking, g.id])}
+              className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (seeking.includes(g.id) ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-muted">Facultatif, affiché sur ta fiche (ex. « H · cherche H, X »).</p>
+      </section>
+
+      <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Photos</h2>
         <p className="mt-1 text-xs text-muted">
           Photo facultative. La première (celle du profil) passe un contrôle automatique. Les
@@ -82,6 +118,7 @@ export function Me() {
         </p>
         <p className="text-xs text-muted">
           Jusqu'à {MAX_PHOTOS}, facultatif. Touche une photo pour la mettre en premier.
+          {!isPrem && <> <Link to="/premium" className="underline">20 avec hdar+</Link></>}
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {photos.map((src, i) => (
@@ -421,6 +458,14 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         </button>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Paramètres</h1>
       </div>
+      <Link to="/premium" className="mt-5 flex items-center gap-3 rounded-3xl border border-[#fbbf24]/50 bg-surface p-4">
+        <span className="premium-ring flex size-11 shrink-0 items-center justify-center rounded-full"><Crown className="size-5 text-[#fbbf24]" /></span>
+        <span className="min-w-0 flex-1">
+          <b className="block font-display">hdar<span className="premium-text">+</span></b>
+          <span className="text-xs text-muted">Filtres, qui t'a vu, recherche par pseudo, 20 photos</span>
+        </span>
+        <span className="text-sm font-bold text-[#fbbf24]">Voir ›</span>
+      </Link>
       <NotifySettings />
       <section className="mt-8 border-t border-line pt-6">
         <button

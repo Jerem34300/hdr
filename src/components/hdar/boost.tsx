@@ -30,7 +30,7 @@ export function useActiveBoost() {
   return b;
 }
 
-function Bokeh() {
+export function Bokeh() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       <span className="absolute -top-16 -left-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: CORAL }} />
@@ -248,7 +248,15 @@ export function BoostPage() {
             </button>
           </div>
         )}
-        <p className="mt-10 text-center text-xs text-muted">
+        <a href="/premium" className="mt-10 flex items-center gap-3 rounded-3xl border border-[#fbbf24]/40 bg-surface/70 p-4 backdrop-blur">
+          <span className="text-2xl">👑</span>
+          <span className="min-w-0 flex-1">
+            <b className="block font-display">Envie d'aller plus loin ? hdar<span className="premium-text">+</span></b>
+            <span className="text-xs text-muted">Filtres de la carte, qui t'a vu, recherche par pseudo, 20 photos.</span>
+          </span>
+          <span className="text-sm font-bold text-[#fbbf24]">›</span>
+        </a>
+        <p className="mt-6 text-center text-xs text-muted">
           Tu as un établissement ? <a className="underline" href="/pro">Espace pro · lieux partenaires</a>
         </p>
       </div>
