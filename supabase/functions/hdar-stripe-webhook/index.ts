@@ -1,6 +1,6 @@
 // hdar-stripe-webhook — reçoit les événements Stripe, vérifie la signature (STRIPE_WEBHOOK_SECRET),
 // puis active / prolonge l'annonce ou le boost via hdar_payment_apply (service_role, idempotent).
-// Événements : checkout.session.completed, invoice.paid (renouvellements), customer.subscription.updated/deleted.
+// Événements : checkout.session.completed, invoice.paid (renouvellements), customer.subscription.updated/deleted, charge.refunded.
 const enc = new TextEncoder();
 
 async function verify(payload: string, header: string, secret: string) {
@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
     if (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") {
       if (o.payment_status === "paid" || o.payment_status === "no_payment_required") {
         await apply(o.id, o.metadata ?? {}, o.amount_total ?? 0, o.currency ?? "eur", o.subscription ?? null, o.customer ?? null);
+        if (o.payment_intent) await rpc("hdar_payment_meta", { p_ref: o.id, p_pi: typeof o.payment_intent === "string" ? o.payment_intent : o.payment_intent.id });
       }
     } else if (ev.type === "invoice.paid") {
       if (o.billing_reason === "subscription_cycle") {
@@ -71,6 +72,10 @@ Deno.serve(async (req) => {
         const sub = det.subscription ?? o.subscription ?? null;
         await apply(o.id, meta, o.amount_paid ?? 0, o.currency ?? "eur", typeof sub === "string" ? sub : sub?.id ?? null, o.customer ?? null);
       }
+    } else if (ev.type === "charge.refunded") {
+      const pi = typeof o.payment_intent === "string" ? o.payment_intent : o.payment_intent?.id ?? null;
+      const inv = typeof o.invoice === "string" ? o.invoice : o.invoice?.id ?? null;
+      await rpc("hdar_payment_refund", { p_pi: pi, p_ref: inv, p_refunded: o.amount_refunded ?? 0 });
     } else if (ev.type === "customer.subscription.deleted") {
       await rpc("hdar_subscription_status", { p_subscription: o.id, p_status: "cancelled" });
     } else if (ev.type === "customer.subscription.updated") {

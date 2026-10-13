@@ -1,3 +1,4 @@
+import { RevenueTab } from "./admin-revenue";
 import { ProDashboard, demoDash } from "./pro-dashboard";
 import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
@@ -161,6 +162,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
+  if (location.search.includes("revenus")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-2xl"><RevenueTab adminKey="" preview={{ gross: 0, refunds: 0, fees: 0, net: 0, count: 0, fees_estimated: true, series: [], sources: [], partners: [], spenders: [] }} /></div></main>;
   if (location.search.includes("dash")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-2xl"><ProDashboard id="demo" name="Le Néon (démo)" onBack={() => undefined} demo={demoDash()} /></div></main>;
   if (location.search.includes("gift")) return <div className="h-dvh bg-[#1a1a24]"><div className="absolute right-3 bottom-6"><MapGiftButton demoOpen /></div></div>;
   if (location.search.includes("premium")) return <PremiumPage demo={{ admirers: { views: 42, favs: 7, viewers: [], fans: [] } as never, hits: [], premium: true }} />;

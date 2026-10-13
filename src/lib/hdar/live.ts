@@ -1042,3 +1042,7 @@ export const proReviewReport = (comment: string, reason?: string) => rpc("hdar_p
 export const proGiftUse = (place: string, code: string) => rpc<{ title: string; description: string | null }>("hdar_pro_gift_use", { p_place: place, p_code: code });
 export type AdminPartner = { id: string; name: string; kind: string; active: boolean; until: string | null; sub: string | null; pro_boost_until: string | null; revenue: number; boosts: number; views: number; live: number; gifts: number };
 export const adminPartners = (key: string, days = 30) => rpc<AdminPartner[]>("hdar_admin_partners", { p_key: key, p_days: days });
+export type Revenue = { gross: number; refunds: number; fees: number; net: number; count: number; fees_estimated: boolean;
+  series: { t: string; cents: number }[]; sources: { kind: string; product: string; label: string; cents: number; n: number }[];
+  partners: { name: string; cents: number; n: number }[]; spenders: { pseudo: string; cents: number; n: number }[] };
+export const adminRevenue = (key: string, period: string) => rpc<Revenue>("hdar_admin_revenue", { p_key: key, p_period: period });
