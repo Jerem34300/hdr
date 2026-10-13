@@ -6,6 +6,7 @@ import { Layers, LocateFixed, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
+import { useActiveBoost } from "./boost";
 import { liveIds } from "@/lib/hdar/live";
 import { useMapFocus } from "@/lib/hdar/map-focus";
 import { listBoosted, liveCount, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
@@ -62,6 +63,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   }, []);
   const act = useActivity();
   const [boosted, setBoosted] = useState<Set<string>>(new Set());
+  const myBoost = useActiveBoost();
+  const meBoosted = !!myBoost && new Date(myBoost.ends_at).getTime() > Date.now();
   useEffect(() => {
     let stop = false;
     const run = () => void listBoosted().then((ids) => !stop && setBoosted(new Set(ids))).catch(() => undefined);
@@ -121,7 +124,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const gesture = useRef<{ zoom: number; dist: number; lat: number; lng: number; x: number; y: number } | null>(null);
   const anim = useRef(0);
   const [live, setLive] = useState<LivePin[]>([]);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(() => { try { const v = sessionStorage.getItem("hdar-open-filters"); sessionStorage.removeItem("hdar-open-filters"); return !!v; } catch { return false; } });
   const mapFilters = usePremium((s) => (s.premium ? s.filters : null));
   const filterKey = JSON.stringify(mapFilters);
   const visible = useHdar((s) => !!(s.me.tonight && s.me.tonight.expiresAt > s.now));
@@ -510,7 +513,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-night">
           <span className="relative block size-12 rounded-full">
             <span className="ping-ring rounded-full" />
-            <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-signal" />
+            {meBoosted ? (
+          <>
+            <span className="partner-glow absolute top-1/2 left-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#fbbf24] bg-gradient-to-br from-[#FA6F6C] to-[#f472b6]" />
+            <span className="absolute top-1/2 left-1/2 mt-7 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-night shadow">🚀 Boosté</span>
+          </>
+        ) : (
+          <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-signal" />
+        )}
           </span>
           <p className="text-sm text-muted">Localisation…</p>
         </div>
@@ -546,13 +556,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 (hl === pin.id ? "border-[#A1E3C3] ring-4 ring-[#A1E3C3]/60 z-[23] " : favIds.has(pin.id) ? "border-amber-400 ring-2 ring-amber-400/50 " : "border-white ") +
                 (boosted.has(pin.id) ? "partner-glow z-[21] " : pin.hot ? "pin-hot" : "")
               }
-              style={{ left: c.x, top: c.y, width: face, height: face }}
+              style={{ left: c.x, top: c.y, width: boosted.has(pin.id) ? face * 1.25 : face, height: boosted.has(pin.id) ? face * 1.25 : face, borderColor: boosted.has(pin.id) ? "#fbbf24" : undefined }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}
             >
               <PinFace id={pin.id} pseudo={pin.pseudo} />
               {pin.premium && <PremiumBadge className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 scale-75 !px-1" />}
             </button>
+            {boosted.has(pin.id) && <span className="pointer-events-none absolute z-[22] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-1.5 text-[9px] font-extrabold text-night shadow" style={{ left: c.x, top: c.y + face / 2 - 2 }}>🚀</span>}
             </span>
           );
         }
@@ -750,6 +761,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         <span className="pointer-events-none absolute top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-3xl">⌖</span>
       )}
       <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
+        <button type="button" aria-label="Invite un ami 🎁" onClick={() => useHdar.getState().setTab("me")} className="gift-wiggle relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#3EE08F] to-[#FA6F6C] text-xl shadow-[0_0_16px_#3EE08F]">🎁</button>
         <Link to="/live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
           <Video className="size-5" />
           <LiveBadge />

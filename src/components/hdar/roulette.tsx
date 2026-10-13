@@ -66,7 +66,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const dc = useRef<RTCDataChannel | null>(null);
     const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(() => typeof location !== "undefined" && new URLSearchParams(location.search).has("filters"));
   const [reporting, setReporting] = useState(false);
   const localRef = useRef<MediaStream | null>(null);
   const meVid = useRef<HTMLVideoElement>(null);
@@ -399,7 +399,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
               <input type="number" min={18} max={99} placeholder="18" value={filters.minAge ?? ""} onChange={(e) => setFilters({ ...filters, minAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /> à
               <input type="number" min={18} max={99} placeholder="99" value={filters.maxAge ?? ""} onChange={(e) => setFilters({ ...filters, maxAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /></div>
             <p className="text-xs text-ink/60">Avec hdar+, tu tombes aussi en priorité sur ceux qui cherchent ce que tu es.</p>
-            <button type="button" onClick={() => { setFilterOpen(false); void next(); }} className="w-full rounded-full bg-[#FA6F6C] py-3 font-bold text-night">Appliquer</button>
+            <button type="button" onClick={() => { setFilterOpen(false); if (running.current) void next(); }} className="w-full rounded-full bg-[#FA6F6C] py-3 font-bold text-night">Appliquer</button>
           </div>
         </div>
       )}

@@ -174,6 +174,8 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
   const list: Admirer[] = (tab === "viewers" ? adm?.viewers : adm?.fans) ?? [];
   const cancelling = store.status === "cancelling" || store.status === "cancelled" || store.status === "canceled";
 
+  if (premium) return <PremiumSpace demo={!!demo} adm={adm} hits={hits} q={q} setQ={setQ} go={go} />;
+
   return (
     <main className="relative h-dvh overflow-y-auto bg-[#0B0B10] text-ink">
       <Bokeh />
@@ -323,6 +325,72 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
           </div>
         </section>
         <ShinyCta href="/boost" sub="Envie de briller tout de suite ? Dès 1,99 €">Booster mon profil</ShinyCta>
+      </div>
+    </main>
+  );
+}
+
+/** Espace des membres hdar+ : statut + accès direct aux fonctions, sans argumentaire de vente. */
+function PremiumSpace({ demo, adm, hits, q, setQ, go }: { demo: boolean; adm: Admirers | null; hits: SearchHit[] | null; q: string; setQ: (v: string) => void; go: (id: string, ps: string) => void }) {
+  const store = usePremium();
+  const nav = useNavigate();
+  const [tab, setTab] = useState<"viewers" | "fans" | null>(null);
+  const until = store.until ? new Date(store.until) : null;
+  const lifetime = demo || !until || until.getFullYear() > 2090;
+  const stripe = store.status === "active" || store.status === "cancelling";
+  const cancelling = store.status === "cancelling" || store.status === "cancelled" || store.status === "canceled";
+  const day = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const status = lifetime ? "hdar+ à vie ✨" : stripe && !cancelling ? `Abonnement actif · renouvellement le ${day(until!)}` : `Actif jusqu'au ${day(until!)}`;
+  const toMap = (filters = false) => { if (filters) sessionStorage.setItem("hdar-open-filters", "1"); useHdar.getState().setTab("around"); void nav({ to: "/" }); };
+  const toMe = () => { useHdar.getState().setTab("me"); void nav({ to: "/" }); };
+  const list: Admirer[] = (tab === "viewers" ? adm?.viewers : tab === "fans" ? adm?.fans : []) ?? [];
+  const F: [string, string, string, string, () => void][] = [
+    ["🗺️", "Filtres de la carte", "Âge, envies, H/F/X, en ligne, avec photo", "Filtrer", () => toMap(true)],
+    ["👀", "Qui t'a vu", `${adm?.views ?? "–"} vues sur 30 jours`, "Voir", () => setTab(tab === "viewers" ? null : "viewers")],
+    ["⭐", "Qui t'a mis en favori", `${adm?.favs ?? "–"} personnes`, "Voir", () => setTab(tab === "fans" ? null : "fans")],
+    ["🔎", "Recherche par pseudo", "Retrouve quelqu'un en un instant", "Chercher", () => document.getElementById("pseudo-search")?.focus()],
+    ["📸", "20 photos d'album", "Au lieu de 5", "Mon album", toMe],
+    ["↩️", "Live : retour arrière", "Reviens sur la personne d'avant", "Ouvrir", () => void nav({ to: "/live" })],
+    ["🎚️", "Live : filtres", "H/F/X et tranche d'âge", "Filtrer", () => { location.href = "/live?filters=1"; }],
+    ["⚡", "Live : matching prioritaire", "Ceux qui te cherchent d'abord", "Live", () => void nav({ to: "/live" })],
+    ["👁️", "Demande à se voir", "Propose de se montrer dans le Live", "Live", () => void nav({ to: "/live" })],
+  ];
+  return (
+    <main className="relative h-dvh overflow-y-auto bg-[#0B0B10] text-ink">
+      <Bokeh />
+      <div className="relative mx-auto max-w-xl px-5 pt-6 pb-16">
+        <div className="flex items-center justify-between"><a href="/" className="text-sm text-muted">← Carte</a><Wordmark /></div>
+        <section className="premium-card relative mt-6 overflow-hidden rounded-3xl p-6 text-center">
+          <span aria-hidden className="pointer-events-none absolute -top-16 left-1/2 size-56 -translate-x-1/2 rounded-full opacity-60 blur-3xl" style={{ background: GOLD }} />
+          <span className="premium-ring relative mx-auto flex size-20 items-center justify-center rounded-full"><Crown className="size-9" style={{ color: GOLD }} /></span>
+          <p className="relative mt-3 text-xs font-bold tracking-[0.25em] text-white/85 uppercase">Ton espace</p>
+          <h1 className="relative font-display text-4xl font-extrabold">hdar<span className="premium-text">+</span></h1>
+          <p className="relative mt-2 inline-block rounded-full bg-night/50 px-4 py-1.5 text-sm font-bold">{status}</p>
+        </section>
+        <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {F.map(([i, t, d, cta, fn]) => (
+            <div key={t} className="flex items-center gap-3 rounded-3xl border border-[#fbbf24]/30 bg-surface/80 p-4">
+              <span className="text-2xl">{i}</span>
+              <span className="min-w-0 flex-1"><b className="block text-sm">{t}</b><span className="text-xs text-muted">{d}</span></span>
+              <button type="button" onClick={fn} className="shrink-0 rounded-full bg-[#fbbf24] px-3 py-1.5 text-xs font-extrabold text-night">{cta}</button>
+            </div>
+          ))}
+        </section>
+        {tab && (
+          <ul className="mt-3 space-y-2">
+            {list.length ? list.map((p) => <PersonRow key={p.id} p={p} sub={ago(p.at)} go={go} />) : <p className="py-4 text-center text-sm text-muted">Personne pour l'instant. Montre-toi sur la carte !</p>}
+          </ul>
+        )}
+        <label className="mt-6 flex h-12 items-center gap-2 rounded-full border border-line bg-surface px-4">
+          <Search className="size-4 text-muted" />
+          <input id="pseudo-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Chercher un pseudo…" className="min-w-0 flex-1 bg-transparent text-sm outline-none" maxLength={24} />
+        </label>
+        {hits && <ul className="mt-3 space-y-2">{hits.length ? hits.map((h) => <PersonRow key={h.id} p={h} go={go} />) : <p className="py-3 text-center text-sm text-muted">Aucun profil récent avec ce pseudo.</p>}</ul>}
+        {stripe && !lifetime && (
+          <button type="button" onClick={() => openBillingPortal("premium").catch((e: Error) => toast(e.message))} className="mt-10 h-12 w-full rounded-full border border-line text-sm font-bold">
+            Gérer mon abonnement
+          </button>
+        )}
       </div>
     </main>
   );

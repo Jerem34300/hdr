@@ -1,4 +1,4 @@
-import { InviteCard, RedeemCode } from "./growth";
+import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { ProSettings } from "./pro-tools";
 import { NotifySettings } from "./notify-settings";
 import { ProtectProfileCard } from "./recover";
@@ -130,6 +130,8 @@ export function Me() {
         </div>
       </div>
       <BoostButton />
+      <PremiumCard />
+      <InviteCard />
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Je suis</h2>

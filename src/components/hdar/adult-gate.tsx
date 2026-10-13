@@ -1,5 +1,6 @@
+import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
-import { SurprisePopup } from "./growth";
+import { InviteCard, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
 import {
@@ -46,6 +47,7 @@ function loadTurnstile(): Promise<Turnstile | null> {
 export function AdultGate({ children }: { children: ReactNode }) {
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("reveal=")) return <SurprisePopup />;
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("prolanding")) return <div className="min-h-dvh bg-night px-4 text-ink"><ProLanding prices={[]} onCreate={() => undefined} /></div>;
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("devpreview")) return <DevPreview />;
   return <AdultGateInner>{children}</AdultGateInner>;
 }
 function AdultGateInner({ children }: { children: ReactNode }) {
@@ -154,4 +156,23 @@ function AdultGateInner({ children }: { children: ReactNode }) {
       </form>
     </main>
   );
+}
+
+/** Aperçus de dev uniquement (captures d'écran). */
+function DevPreview() {
+  if (location.search.includes("premium")) return <PremiumPage demo={{ admirers: { views: 42, favs: 7, viewers: [], fans: [] } as never, hits: [], premium: true }} />;
+  const pin = location.search.includes("pin");
+  if (pin) return (
+    <div className="relative h-dvh overflow-hidden bg-[#1a1a24]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.05) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.05) 2px, transparent 2px)", backgroundSize: "60px 60px" }}>
+      <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: "50%", top: "45%" }}>
+        <span className="radar-sweep block size-48" />
+        <span className="partner-glow absolute top-1/2 left-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#fbbf24] bg-gradient-to-br from-[#FA6F6C] to-[#f472b6]" />
+        <span className="absolute top-1/2 left-1/2 mt-7 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-night shadow">🚀 Boosté</span>
+      </div>
+      <span className="partner-glow absolute flex size-[50px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[#fbbf24] bg-surface text-xl" style={{ left: "25%", top: "25%" }}>🙂</span>
+      <span className="absolute -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-1.5 text-[9px] font-extrabold text-night" style={{ left: "25%", top: "calc(25% + 22px)" }}>🚀</span>
+      <span className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-surface" style={{ left: "75%", top: "65%" }}>😎</span>
+    </div>
+  );
+  return <div className="min-h-dvh bg-night px-4 pt-6 text-ink"><a href="/boost" className="boost-cta mt-4 mb-3 flex h-14 items-center justify-center rounded-full font-display font-extrabold text-night">✨ Boost actif · 2 h 58</a><PremiumCard /><InviteCard demo="E610477" /></div>;
 }
