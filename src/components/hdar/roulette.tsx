@@ -47,13 +47,13 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const [burst, setBurst] = useState(demo && typeof location !== "undefined" && location.search.includes("heart") ? 1 : 0);
   const [hearts, setHearts] = useState<number | null>(demo ? 12 : null);
   const [packsOpen, setPacksOpen] = useState(!!demo && typeof location !== "undefined" && location.search.includes("packs"));
-  useEffect(() => { if (!demo) void myHearts().then((h) => setHearts(h.balance)).catch(() => undefined); }, [demo]);
+  useEffect(() => { if (!demo) void myHearts().then((h) => setHearts(h.unlimited ? Infinity : h.balance)).catch(() => undefined); }, [demo]);
   const sendHeart = async () => {
     if (!peerRef.current && !demo) return;
     if (!hearts) return setPacksOpen(true);
     setBurst(Date.now());
     if (demo) return setHearts(hearts - 1);
-    try { const r = await heartSend(); setHearts(r.balance); }
+    try { const r = await heartSend(); setHearts(r.unlimited ? Infinity : r.balance); }
     catch (e) { const m = e instanceof Error ? e.message : ""; if (m.includes("no_hearts")) { setHearts(0); setPacksOpen(true); } else toast(m || "Impossible"); }
   };
   const [askSent, setAskSent] = useState(false);
@@ -363,7 +363,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           </Round>
           <Round label="Envoyer un cœur" on={false} onClick={() => void sendHeart()}>
             <span className="text-lg">❤️</span>
-            <span className="absolute -top-1 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts ?? "·"}</span>
+            <span className="absolute -top-1 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts === Infinity ? "∞" : hearts ?? "·"}</span>
           </Round>
           <Round label="Signaler" on={false} danger onClick={() => peer && setReporting(true)}><Flag className="size-5" /></Round>
         </div>

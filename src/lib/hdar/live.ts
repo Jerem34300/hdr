@@ -975,9 +975,9 @@ export function regionOf(id: string): Promise<string | null> {
 }
 
 // Cœurs du Live (v37)
-export const myHearts = () => rpc<{ balance: number; received: number }>("hdar_my_hearts", {});
+export const myHearts = () => rpc<{ balance: number; received: number; unlimited?: boolean }>("hdar_my_hearts", {});
 export const heartsReceived = (id: string) => rpc<number>("hdar_hearts_received", { p_id: id });
-export const heartSend = () => rpc<{ balance: number }>("hdar_heart_send", {});
+export const heartSend = () => rpc<{ balance: number; unlimited?: boolean }>("hdar_heart_send", {});
 
 export type AdminUserRow = { id: string; pseudo: string; age: number | null; iam: string | null; has_photo: boolean; photo_status: string | null; created: string | null; last: string | null; region: string | null; premium: boolean; boosts: number; hearts: { balance: number; received: number } | null; spent: number; reports: number; banned: boolean };
 export type AdminUserExtra = { region: string | null; iam: string | null; seeking: string | null; created: string | null; bio: string | null; note: string | null; premium_until: string | null;

@@ -140,7 +140,7 @@ begin
   if o is null then raise exception 'Personne en face'; end if;
   perform hdar.rate_check(s, 'heart', 30, interval '1 minute');
   if exists (select 1 from hdar.hearts_log where from_id = s and at > now() - interval '2 seconds') then raise exception 'Doucement 🙂'; end if;
-  if adm then b := 9999;
+  if adm then b := null;
   else
     update hdar.hearts_wallet set balance = balance - 1, updated_at = now() where user_id = s and balance > 0 returning balance into b;
     if b is null then raise exception 'no_hearts: plus de cœurs'; end if;
@@ -149,11 +149,11 @@ begin
     on conflict (user_id) do update set received = w.received + 1, updated_at = now();
   insert into hdar.hearts_log (from_id, to_id) values (s, o);
   insert into hdar.rtc_signals (to_id, from_id, kind, payload) values (o, s, 'live-heart', '');
-  return jsonb_build_object('balance', b);
+  return jsonb_build_object('balance', b, 'unlimited', adm);
 end $$;
 
 create or replace function public.hdar_my_hearts() returns jsonb
 language sql stable security definer set search_path to '' as $$
-  select jsonb_build_object('balance', case when hdar.is_admin_user(hdar.self_id()) then 9999 else coalesce(w.balance, 0) end, 'received', coalesce(w.received, 0))
+  select jsonb_build_object('balance', case when hdar.is_admin_user(hdar.self_id()) then null else coalesce(w.balance, 0) end, 'unlimited', hdar.is_admin_user(hdar.self_id()), 'received', coalesce(w.received, 0))
   from (select 1) x left join hdar.hearts_wallet w on w.user_id = hdar.self_id();
 $$;
