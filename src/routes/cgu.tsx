@@ -85,6 +85,13 @@ function Terms() {
         </li>
         <li>Un boost commencé n'est pas remboursable.</li>
         <li>
+          Les <strong>cœurs du Live</strong> sont achetés en packs (paiement unique) et servent
+          uniquement à être envoyés dans le Live. Ils n'ont <strong>aucune valeur monétaire</strong>,
+          ne sont ni remboursables, ni transférables, ni échangeables contre de l'argent, et ne
+          rapportent rien à la personne qui les reçoit. La renonciation au droit de rétractation
+          s'applique aussi à ces achats.
+        </li>
+        <li>
           hdar+ et les fiches partenaires sont des abonnements à <strong>renouvellement
           automatique</strong> (semaine, mois… selon l'offre choisie). Ils sont résiliables à tout
           moment via « Gérer mon abonnement » sur /premium ou /pro (portail Stripe) ; l'accès reste

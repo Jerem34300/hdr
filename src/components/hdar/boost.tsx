@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
 import { WaiverCheckbox } from "@/components/hdar/waiver";
 import { toast } from "sonner";
@@ -259,6 +260,7 @@ export function BoostPage() {
           </span>
           <span className="text-sm font-bold text-[#fbbf24]">›</span>
         </a>
+        <ShinyCta href="/live" sub="Rencontre en vidéo, flouté par défaut">Entrer dans le Live 🎥</ShinyCta>
         <p className="mt-6 text-center text-xs text-muted">
           Tu as un établissement ? <a className="underline" href="/pro">Espace pro · lieux partenaires</a>
         </p>

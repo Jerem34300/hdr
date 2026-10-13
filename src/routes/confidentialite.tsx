@@ -148,6 +148,15 @@ function Privacy() {
         </li>
       </ul>
 
+      <h2>Cœurs du Live</h2>
+      <ul>
+        <li>
+          Nous gardons ton solde de cœurs, le nombre de cœurs reçus (affiché sur ton profil) et un
+          journal des envois (qui, à qui, quand) pour la lutte contre les abus et la comptabilité des
+          achats. L'achat passe par Stripe, comme les autres paiements.
+        </li>
+      </ul>
+
       <h2>hdar+ : visites, favoris, recherche</h2>
       <ul>
         <li>

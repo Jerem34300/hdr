@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
 import { WaiverCheckbox } from "@/components/hdar/waiver";
 import { toast } from "sonner";
@@ -38,7 +39,7 @@ export function ProSpace() {
           </p>
         )}
         <Places prices={prices.filter((p) => p.kind === "listing")} payOk={!!payOk} />
-        <p className="mt-8 text-center text-xs text-muted">Envie de faire briller ton profil ? <a className="underline" href="/boost">Booster mon profil ✨</a></p>
+        <ShinyCta href="/boost" sub="Ton profil à toi, en tête de la carte">Booster mon profil</ShinyCta>
       </div>
     </main>
   );

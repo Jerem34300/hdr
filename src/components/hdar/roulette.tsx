@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { FloatingHearts, HeartPacks } from "./hearts";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
 import { useHdar } from "@/lib/hdar/store";
@@ -43,6 +44,18 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const pipe = useRef<BlurPipe | null>(null);
   const [mic, setMic] = useState(true);
   const [asked, setAsked] = useState(false);
+  const [burst, setBurst] = useState(demo && typeof location !== "undefined" && location.search.includes("heart") ? 1 : 0);
+  const [hearts, setHearts] = useState<number | null>(demo ? 12 : null);
+  const [packsOpen, setPacksOpen] = useState(!!demo && typeof location !== "undefined" && location.search.includes("packs"));
+  useEffect(() => { if (!demo) void myHearts().then((h) => setHearts(h.balance)).catch(() => undefined); }, [demo]);
+  const sendHeart = async () => {
+    if (!peerRef.current && !demo) return;
+    if (!hearts) return setPacksOpen(true);
+    setBurst(Date.now());
+    if (demo) return setHearts(hearts - 1);
+    try { const r = await heartSend(); setHearts(r.balance); }
+    catch (e) { const m = e instanceof Error ? e.message : ""; if (m.includes("no_hearts")) { setHearts(0); setPacksOpen(true); } else toast(m || "Impossible"); }
+  };
   const [askSent, setAskSent] = useState(false);
   const [theyBlur, setTheyBlur] = useState(!demo?.unblurred);
   const [facing, setFacing] = useState<"user" | "environment">("user");
@@ -179,6 +192,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           const k = r.kind as string;
           if (!k.startsWith("live-") || r.from_id !== peerRef.current?.id) continue;
           if (k === "live-bye") { void next(); break; }
+          if (k === "live-heart") { setBurst(Date.now()); toast("Tu as reçu un ❤️"); continue; }
           if (k === "live-ask") { if (blurRef.current) { setAsked(true); navigator.vibrate?.(120); } continue; }
           if (k === "live-offer") {
             const c = makePc();
@@ -347,12 +361,18 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           <Round label="Filtres Live (hdar+)" on={!!(filters.iam.length || filters.minAge || filters.maxAge)} onClick={() => (premium ? setFilterOpen(true) : void nav({ to: "/premium" }))}>
             <SlidersHorizontal className="size-5" />{!premium && <Crown className="absolute -top-1 -right-1 size-4 text-[#fbbf24]" />}
           </Round>
+          <Round label="Envoyer un cœur" on={false} onClick={() => void sendHeart()}>
+            <span className="text-lg">❤️</span>
+            <span className="absolute -top-1 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts ?? "·"}</span>
+          </Round>
           <Round label="Signaler" on={false} danger onClick={() => peer && setReporting(true)}><Flag className="size-5" /></Round>
         </div>
         <button type="button" onClick={() => !demo && void next()} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3 font-display font-bold text-night">
           <ChevronUp className="size-5" /> Suivant <span className="text-xs font-normal opacity-70">· ou glisse vers le haut</span>
         </button>
       </div>
+      <FloatingHearts burst={burst} />
+      {packsOpen && <HeartPacks onClose={() => setPacksOpen(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
       {reporting && (
         <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setReporting(false)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>

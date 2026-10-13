@@ -785,7 +785,7 @@ export const placeCommentReport = (id: string, reason: string) => rpc("hdar_plac
 export const placeClick = (id: string) => rpc("hdar_place_click", { p_id: id });
 export const placeSeen = (id: string, lat: number | null, lng: number | null) => rpc("hdar_place_seen", { p_id: id, p_lat: lat, p_lng: lng });
 
-export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost" | "premium"; label: string; price_cents: number };
+export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost" | "premium" | "hearts"; label: string; price_cents: number };
 export const pricing = () => rpc<PriceRow[]>("hdar_pricing", {});
 
 export type MyPlace = {
@@ -856,7 +856,7 @@ export type Growth = {
   retention: { w1: number; w1_cohort: number; m1: number; m1_cohort: number };
   trend_zones: { lat: number; lng: number; now: number; prev: number | null }[];
   trend_places: { id: string; name: string; kind: string; lat: number; lng: number; now: number; prev: number | null }[];
-  revenue: { total: number; count: number; payers: number; listings: number; boosts: number; mau: number };
+  revenue: { total: number; count: number; payers: number; listings: number; boosts: number; premium?: number; hearts?: number; mau: number };
   revenue_zones: { lat: number; lng: number; cents: number; payers: number }[];
   payments: { at: string; kind: string; product: string; cents: number; user_id: string; place: string | null }[];
 };
@@ -969,3 +969,8 @@ export function regionOf(id: string): Promise<string | null> {
   }
   return regionCache.get(id)!;
 }
+
+// Cœurs du Live (v37)
+export const myHearts = () => rpc<{ balance: number; received: number }>("hdar_my_hearts", {});
+export const heartsReceived = (id: string) => rpc<number>("hdar_hearts_received", { p_id: id });
+export const heartSend = () => rpc<{ balance: number }>("hdar_heart_send", {});

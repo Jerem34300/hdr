@@ -62,6 +62,8 @@ export function GrowthTab({ adminKey }: { adminKey: string }) {
               <Kpi label="Total" value={euros(g.revenue.total)} accent />
               <Kpi label="Lieux partenaires" value={euros(g.revenue.listings)} />
               <Kpi label="Boosts" value={euros(g.revenue.boosts)} />
+              <Kpi label="hdar+" value={euros(g.revenue.premium ?? 0)} />
+              <Kpi label="Cœurs du Live" value={euros(g.revenue.hearts ?? 0)} />
               <Kpi label="Paiements" value={fmt(g.revenue.count)} hint={`${g.revenue.payers} payeurs`} />
               <Kpi label="Revenu / payeur" value={g.revenue.payers ? euros(Math.round(g.revenue.total / g.revenue.payers)) : "—"} />
               <Kpi label="Revenu / utilisateur actif (30 j)" value={g.revenue.mau ? euros(Math.round(g.revenue.total / g.revenue.mau)) : "—"} />
@@ -82,7 +84,7 @@ export function GrowthTab({ adminKey }: { adminKey: string }) {
               <ul className="mt-3 space-y-1 text-xs">
                 {g.payments.map((p, i) => (
                   <li key={i} className="flex justify-between gap-2 border-b border-line py-1">
-                    <span>{new Date(p.at).toLocaleString("fr-FR")} · {p.kind === "boost" ? "Boost" : p.kind === "place_boost" ? "Boost de lieu" : p.kind === "premium" ? "hdar+" : `Lieu ${p.place ?? ""}`} · {p.product}</span>
+                    <span>{new Date(p.at).toLocaleString("fr-FR")} · {p.kind === "boost" ? "Boost" : p.kind === "place_boost" ? "Boost de lieu" : p.kind === "premium" ? "hdar+" : p.kind === "hearts" ? "Cœurs" : `Lieu ${p.place ?? ""}`} · {p.product}</span>
                     <b>{euros(p.cents)}</b>
                   </li>
                 ))}
@@ -237,7 +239,7 @@ function PriceEditor({ p, onSave }: { p: PricingRow; onSave: (label: string, cen
   const cents = Math.round(Number(price.replace(",", ".")) * 100);
   return (
     <li className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-surface p-3 text-sm">
-      <span className="w-32 text-xs text-muted">{p.kind === "boost" ? "✨ Boost" : p.kind === "place_boost" ? "🌟 Boost de lieu" : p.kind === "premium" ? "👑 hdar+" : "📍 Lieu partenaire"}<br />{p.product}</span>
+      <span className="w-32 text-xs text-muted">{p.kind === "boost" ? "✨ Boost" : p.kind === "place_boost" ? "🌟 Boost de lieu" : p.kind === "premium" ? "👑 hdar+" : p.kind === "hearts" ? "❤️ Cœurs" : "📍 Lieu partenaire"}<br />{p.product}</span>
       <input className="h-10 w-32 rounded-xl border border-line bg-night px-3" value={label} onChange={(e) => setLabel(e.target.value)} />
       <input className="h-10 w-24 rounded-xl border border-line bg-night px-3 text-right" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
       <span>€{p.kind === "listing" || p.kind === "premium" ? " / période (renouvelé)" : ""}</span>

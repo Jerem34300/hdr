@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HeartsCount } from "./hearts";
 import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
 import { ChevronLeft, MessageCircle, Pencil, Star, Video } from "lucide-react";
 import { toggleFav, useFavorites } from "@/lib/hdar/favorites";
@@ -109,6 +110,7 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
             {distance && <span className="text-muted"> · {distance}</span>}
             {region && <span className="text-muted"> · 📍 {region}</span>}
           </p>
+          <div className="mt-1"><HeartsCount id={userId} /></div>
           {onMap && !self && (
             <button type="button" onClick={() => showOnMap(userId)} className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold">🗺️ Voir sur la carte</button>
           )}

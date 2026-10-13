@@ -1,4 +1,5 @@
 import { NotifySettings } from "./notify-settings";
+import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
 import { wipeLocalSession } from "@/lib/hdar/session";
@@ -86,6 +87,7 @@ export function Me() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-xl font-extrabold">{me.pseudo || "Sans pseudo"}{me.age ? <span className="font-normal text-muted"> · {me.age} ans</span> : null}{isPrem && <PremiumBadge className="ml-1.5 align-middle" />}</p>
+          <HeartsCount id={deviceId()} className="mt-0.5" />
           {identityLine(iam, seeking) && <p className="text-xs font-bold text-ink/80">{identityLine(iam, seeking)}</p>}
           <p className={"mt-0.5 text-sm break-words " + (me.note ? "italic" : "text-muted")}>{me.note ? `💬 « ${me.note} »` : "Ajoute ta phrase du moment ci-dessous"}</p>
           <button type="button" disabled={!me.onboarded} onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}

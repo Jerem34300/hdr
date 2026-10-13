@@ -77,8 +77,9 @@ Deno.serve(async (req) => {
     const meta: Record<string, string> = { user_id: p.user_id, product: p.product, place_id: p.place_id ?? "" };
     const isBoost = p.kind === "boost" || p.kind === "place_boost";
     const isPrem = p.kind === "premium";
+    const isHearts = p.kind === "hearts";
     const recurring = (p.kind === "listing" || isPrem) && p.interval;
-    const back = isPrem ? "/premium" : isBoost ? "/boost" : "/pro";
+    const back = isHearts ? "/live" : isPrem ? "/premium" : isBoost ? "/boost" : "/pro";
     const params: Record<string, string> = {
       mode: recurring ? "subscription" : "payment",
       success_url: `${SITE}${back}?paid=1`,
@@ -89,9 +90,11 @@ Deno.serve(async (req) => {
       "line_items[0][price_data][currency]": "eur",
       "line_items[0][price_data][unit_amount]": String(p.price_cents),
       "line_items[0][price_data][product_data][name]":
-        isPrem ? `hdar+ · ${p.label}` : p.kind === "boost" ? `Boost hdar · ${p.label}` : p.kind === "place_boost" ? `Boost du lieu « ${p.place_name ?? ""} » · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
+        isHearts ? `Cœurs du Live · ${p.label}` : isPrem ? `hdar+ · ${p.label}` : p.kind === "boost" ? `Boost hdar · ${p.label}` : p.kind === "place_boost" ? `Boost du lieu « ${p.place_name ?? ""} » · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
       "line_items[0][price_data][product_data][description]":
-        isPrem
+        isHearts
+          ? "Des cœurs à envoyer dans le Live hdar. Sans valeur monétaire, non remboursables."
+          : isPrem
           ? "20 photos d'album, filtres de la carte, qui t'a vu et mis en favori, recherche par pseudo, badge hdar+. Résiliable à tout moment."
           : p.kind === "place_boost"
           ? "Ton lieu brille sur la carte hdar, passe en tête de la liste Lieux et reste ouvert pendant tout le boost."
@@ -100,7 +103,7 @@ Deno.serve(async (req) => {
           : "Ta fiche mise en avant sur la carte hdar : halo, photos, lien vers ton site et stats de visites.",
       "line_items[0][price_data][product_data][images][0]": `${SITE}/boost-cover.jpg`,
       "custom_text[submit][message]":
-        isPrem ? "hdar+ s'active dès le paiement ✨" : isBoost ? "Ton boost s'active dès le paiement ✨" : "Ta fiche apparaît sur la carte dès le paiement ✨",
+        isHearts ? "Tes cœurs arrivent dès le paiement ❤️" : isPrem ? "hdar+ s'active dès le paiement ✨" : isBoost ? "Ton boost s'active dès le paiement ✨" : "Ta fiche apparaît sur la carte dès le paiement ✨",
       // Habillage de la page Checkout (l'API refuse de modifier le branding du compte lui-même).
       "branding_settings[display_name]": "hdar",
       "branding_settings[background_color]": "#0B0B10",

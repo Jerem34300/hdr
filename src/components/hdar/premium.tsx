@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
 import { WaiverCheckbox } from "@/components/hdar/waiver";
 import { useNavigate } from "@tanstack/react-router";
@@ -49,6 +50,7 @@ const FAQ = [
   ["La recherche montre où sont les gens ?", "Non. Tu vois le pseudo et s'il est en ligne, jamais sa position. Les profils bloqués, bannis ou inactifs depuis 7 jours n'apparaissent pas."],
   ["Demande à se voir, ça défloute l'autre ?", "Jamais. L'autre reçoit une invitation « Il aimerait te voir 👀 » et choisit « Me montrer » ou « Non merci ». Une seule demande par rencontre."],
   ["Le Live est réservé à hdar+ ?", "Non, le Live est gratuit pour tous les profils avec photo validée. hdar+ ajoute le retour en arrière, les filtres, le matching prioritaire et la demande à se voir."],
+  ["Et les cœurs du Live ?", "Les cœurs s'achètent en packs (sans abonnement) et s'envoient dans le Live. Ils n'ont aucune valeur monétaire, ne sont ni remboursables ni échangeables contre de l'argent."],
   ["Et si je me cache ?", "Tu restes invisible : hdar+ ne change rien à ta visibilité."],
 ] as const;
 
@@ -319,9 +321,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
             ))}
           </div>
         </section>
-        <p className="mt-10 text-center text-xs text-muted">
-          Envie de briller tout de suite ? <a className="underline" href="/boost" style={{ color: MINT }}>Booster mon profil</a>
-        </p>
+        <ShinyCta href="/boost" sub="Envie de briller tout de suite ? Dès 1,99 €">Booster mon profil</ShinyCta>
       </div>
     </main>
   );
