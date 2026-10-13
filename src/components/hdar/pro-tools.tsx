@@ -97,3 +97,33 @@ export function GiftCard({ g }: { g: ProGift }) {
     </div>
   );
 }
+
+let ownsCache: Promise<number> | null = null;
+/** Grande carte « Mon espace pro » pour les propriétaires d'un lieu partenaire. */
+export function ProSpaceCard({ demo }: { demo?: boolean }) {
+  const [n, setN] = useState(demo ? 1 : 0);
+  const [admin, setAdmin] = useState(false);
+  useEffect(() => {
+    if (demo) return;
+    ownsCache ??= import("@/lib/hdar/live").then((m) => m.myPlaces()).then((r) => r.length).catch(() => { ownsCache = null; return 0; });
+    void ownsCache.then(setN);
+    void import("@/lib/hdar/live").then((m) => m.myHearts()).then((h) => setAdmin(!!h.unlimited)).catch(() => undefined);
+  }, [demo]);
+  if (!n && admin) return (
+    <a href="/pro?demo=1" className="mt-3 flex items-center gap-3 rounded-3xl border border-dashed border-[#fbbf24]/70 bg-surface p-4">
+      <span className="text-2xl">👀</span>
+      <span className="min-w-0 flex-1"><b className="block text-sm">Voir comme un pro (démo)</b><span className="text-xs text-muted">Admin : espace pro + tableau de bord avec données d'exemple</span></span>
+      <span className="text-sm font-bold text-[#fbbf24]">Ouvrir ›</span>
+    </a>
+  );
+  if (!n) return null;
+  return (
+    <a href="/pro" className="mt-3 block rounded-3xl bg-gradient-to-r from-[#fbbf24] via-[#FA6F6C] to-[#3EE08F] p-[2px] shadow-[0_0_24px_rgba(251,191,36,.3)]">
+      <span className="flex items-center gap-3 rounded-[22px] bg-[#0b0b10]/90 p-4">
+        <span className="text-3xl">🏷️</span>
+        <span className="min-w-0 flex-1"><b className="block font-display text-lg">Mon espace pro</b><span className="text-xs text-white/75">Tableau de bord, avis, Live Pro, cadeaux, Boost Pro</span></span>
+        <span className="text-sm font-bold text-[#fbbf24]">Ouvrir ›</span>
+      </span>
+    </a>
+  );
+}

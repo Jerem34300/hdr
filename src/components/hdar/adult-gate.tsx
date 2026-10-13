@@ -1,3 +1,4 @@
+import { ProDashboard, demoDash } from "./pro-dashboard";
 import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
 import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
@@ -160,6 +161,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
+  if (location.search.includes("dash")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-2xl"><ProDashboard id="demo" name="Le Néon (démo)" onBack={() => undefined} demo={demoDash()} /></div></main>;
   if (location.search.includes("gift")) return <div className="h-dvh bg-[#1a1a24]"><div className="absolute right-3 bottom-6"><MapGiftButton demoOpen /></div></div>;
   if (location.search.includes("premium")) return <PremiumPage demo={{ admirers: { views: 42, favs: 7, viewers: [], fans: [] } as never, hits: [], premium: true }} />;
   const pin = location.search.includes("pin");

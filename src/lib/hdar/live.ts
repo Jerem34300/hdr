@@ -775,7 +775,7 @@ export async function listBoosted(): Promise<string[]> {
 }
 
 // Avis, espace partenaire, boosts payants, paiements (v25) ---------------------
-export type PlaceComment = { id: string; body: string; at: string; pseudo: string; mine: boolean; stars: number | null };
+export type PlaceComment = { id: string; body: string; at: string; pseudo: string; mine: boolean; stars: number | null; reply?: string | null };
 export type PlaceInfo = {
   website: string | null; contact: string | null; photos: string[]; owner: boolean;
   ratings_on: boolean; comments_on: boolean; comments_public: boolean;
@@ -1024,3 +1024,21 @@ export const adminCodes = (key: string) => rpc<GiftCode[]>("hdar_admin_codes", {
 export const adminCodeCreate = (key: string, o: { kind: string; amount: number; maxUses: number; days: number; code?: string; note?: string }) =>
   rpc<{ code: string }>("hdar_admin_code_create", { p_key: key, p_kind: o.kind, p_amount: o.amount, p_max_uses: o.maxUses, p_days: o.days, p_code: o.code || null, p_note: o.note || null });
 export const shareReward = () => rpc<{ kind: string; amount: number; label: string } | null>("hdar_share_reward", {});
+
+// Tableau de bord pro (v45)
+export type ProDash = {
+  views: number; clicks: number; messages: number; visitors: number; favorites: number;
+  live_views: number; live_minutes: number; live_avg_sec: number;
+  gifts_sent: number; gifts_opened: number; gifts_used: number; threads: number;
+  avg: number | null; ratings: number;
+  days: { day: string; views: number; clicks: number; live: number }[];
+  heat: { dow: number; hour: number; n: number }[];
+  boosts: { from: string; to: string; label: string }[]; boost_in: number; boost_out: number;
+  reviews: { id: string; body: string; at: string; reply: string | null; reply_at: string | null; stars: number | null }[];
+};
+export const proDashboard = (id: string, days: number) => rpc<ProDash>("hdar_pro_dashboard", { p_id: id, p_days: days });
+export const proReviewReply = (comment: string, text: string) => rpc("hdar_pro_review_reply", { p_comment: comment, p_text: text });
+export const proReviewReport = (comment: string, reason?: string) => rpc("hdar_pro_review_report", { p_comment: comment, p_reason: reason ?? null });
+export const proGiftUse = (place: string, code: string) => rpc<{ title: string; description: string | null }>("hdar_pro_gift_use", { p_place: place, p_code: code });
+export type AdminPartner = { id: string; name: string; kind: string; active: boolean; until: string | null; sub: string | null; pro_boost_until: string | null; revenue: number; boosts: number; views: number; live: number; gifts: number };
+export const adminPartners = (key: string, days = 30) => rpc<AdminPartner[]>("hdar_admin_partners", { p_key: key, p_days: days });

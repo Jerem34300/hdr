@@ -397,6 +397,7 @@ function PlaceExtras({ id }: { id: string }) {
                   <b className="text-ink">{c.mine ? "Toi" : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString("fr-FR")}
                 </p>
                 <p className="mt-1 break-words">{c.body}</p>
+                {c.reply && <p className="mt-1.5 rounded-xl border-l-2 border-[#fbbf24] bg-night px-3 py-1.5 text-xs"><b className="text-[#fbbf24]">Réponse du lieu :</b> {c.reply}</p>}
                 <div className="mt-1 text-right text-xs text-muted">
                   {c.mine ? (
                     <button type="button" className="underline" onClick={() => void placeCommentDelete(c.id).then(load)}>Supprimer</button>

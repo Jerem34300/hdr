@@ -1,3 +1,5 @@
+import { adminPartners, type AdminPartner } from "@/lib/hdar/live";
+import { ProDashboard } from "./pro-dashboard";
 import { adminCodes, adminCodeCreate, adminNewsSend, type GiftCode } from "@/lib/hdar/live";
 import { mail as mailHtml, type Tpl } from "@/lib/hdar/mail-template";
 import { toast } from "sonner";
@@ -24,7 +26,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners";
 
 function readKey() {
   try {
@@ -170,6 +172,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["emails", "Emails"],
               ["progifts", "Cadeaux pro"],
               ["codes", "Codes cadeaux"],
+              ["partners", "Partenaires"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
@@ -230,6 +233,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "emails" && <EmailsTab adminKey={adminKey} />}
         {tab === "progifts" && <ProGiftsTab adminKey={adminKey} />}
         {tab === "codes" && <CodesTab adminKey={adminKey} />}
+        {tab === "partners" && <PartnersTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
@@ -1087,6 +1091,34 @@ function CodesTab({ adminKey }: { adminKey: string }) {
           <button type="button" onClick={() => void navigator.clipboard.writeText(c.code)} className="text-xs underline">Copier</button>
           <button type="button" onClick={() => void mail(c)} className="rounded-full border border-line px-3 py-1 text-xs">✉️ Envoyer</button>
         </div>))}
+    </div>
+  );
+}
+
+function PartnersTab({ adminKey }: { adminKey: string }) {
+  const [rows, setRows] = useState<AdminPartner[] | null>(null);
+  const [sort, setSort] = useState<"revenue" | "views">("revenue");
+  const [open, setOpen] = useState<AdminPartner | null>(null);
+  useEffect(() => void adminPartners(adminKey).then(setRows).catch((e: Error) => toast(e.message)), [adminKey]);
+  if (open) return <ProDashboard id={open.id} name={open.name} onBack={() => setOpen(null)} readOnly />;
+  if (!rows) return <p className="text-sm text-muted">Chargement…</p>;
+  const list = [...rows].sort((a, b) => b[sort] - a[sort]);
+  const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+  const tot = rows.reduce((t, r) => ({ revenue: t.revenue + r.revenue, views: t.views + r.views, live: t.live + r.live, gifts: t.gifts + r.gifts, boosts: t.boosts + r.boosts, active: t.active + (r.active ? 1 : 0) }), { revenue: 0, views: 0, live: 0, gifts: 0, boosts: 0, active: 0 });
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2 text-center text-xs sm:grid-cols-6">
+        {([["Partenaires actifs", `${tot.active}/${rows.length}`], ["CA total", eur(tot.revenue)], ["Vues (30 j)", tot.views], ["Spectateurs Live Pro", tot.live], ["Cadeaux pro", tot.gifts], ["Boosts Pro", tot.boosts]] as const).map(([l, v]) => (
+          <div key={l} className="rounded-2xl border border-line p-2"><b className="block text-lg">{v}</b><span className="text-muted">{l}</span></div>))}
+      </div>
+      <div className="flex gap-2 text-xs">Trier : {(["revenue", "views"] as const).map((k) => <button key={k} type="button" onClick={() => setSort(k)} className={"rounded-full px-3 py-1 " + (sort === k ? "bg-[#3EE08F] font-bold text-night" : "border border-line")}>{k === "revenue" ? "CA" : "Vues"}</button>)}</div>
+      {list.length === 0 && <p className="text-sm text-muted">Aucun partenaire pour l'instant.</p>}
+      {list.map((r) => (
+        <button key={r.id} type="button" onClick={() => setOpen(r)} className="flex w-full items-center gap-3 rounded-2xl border border-line p-3 text-left text-sm">
+          <span className="min-w-0 flex-1"><b className="block truncate">{r.name}</b>
+            <span className="text-xs text-muted">{r.active ? `✅ actif jusqu'au ${new Date(r.until!).toLocaleDateString("fr-FR")}` : "⏸️ inactif"}{r.sub ? ` · abo ${r.sub}` : ""}{r.pro_boost_until && new Date(r.pro_boost_until) > new Date() ? " · ⭐ boosté" : ""}</span></span>
+          <span className="text-right text-xs"><b className="block text-sm">{eur(r.revenue)}</b>{r.views} vues · {r.boosts} boost(s)</span>
+        </button>))}
     </div>
   );
 }

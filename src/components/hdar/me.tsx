@@ -1,5 +1,5 @@
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
-import { ProSettings } from "./pro-tools";
+import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { NotifySettings } from "./notify-settings";
 import { ProtectProfileCard } from "./recover";
 import { HeartsCount } from "./hearts";
@@ -129,6 +129,7 @@ export function Me() {
           </button>
         </div>
       </div>
+      <ProSpaceCard />
       <BoostButton />
       <PremiumCard />
       <InviteCard />
@@ -527,6 +528,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         </button>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Paramètres</h1>
       </div>
+      <ProSpaceCard />
       <Link to="/premium" className="mt-5 flex items-center gap-3 rounded-3xl border border-[#fbbf24]/50 bg-surface p-4">
         <span className="premium-ring flex size-11 shrink-0 items-center justify-center rounded-full"><Crown className="size-5 text-[#fbbf24]" /></span>
         <span className="min-w-0 flex-1">

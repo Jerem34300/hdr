@@ -176,7 +176,7 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
       <section>
         <h2 className="font-display text-2xl font-extrabold">En ligne en 3 étapes</h2>
         <ol className="mt-4 space-y-3">
-          {[["Créez votre fiche", "Nom, description, photos, site, position. Choisissez vos réglages d'avis."], ["Choisissez votre durée", "1 semaine, 1 mois ou 3 mois, paiement sécurisé par Stripe."], ["Brillez sur la carte", "Votre lieu apparaît aussitôt avec son halo. Suivez vos stats en direct."]].map(([t, d], i) => (
+          {[["Créez votre fiche", "Nom, description, photos, site, position. Choisissez vos réglages d'avis."], ["Choisissez l'abonnement", "1 semaine, 1 mois ou 3 mois, paiement sécurisé par Stripe. Votre lieu brille aussitôt sur la carte."], ["Votre espace pro", "Tableau de bord (stats, avis), Live Pro, cadeaux pro, Boost Pro : tout au même endroit."]].map(([t, d], i) => (
             <li key={t} className="flex gap-4 rounded-3xl border border-line bg-surface p-4">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full font-display text-lg font-extrabold text-night" style={{ background: i === 1 ? MINT : CORAL }}>{i + 1}</span>
               <div><h3 className="font-display font-bold">{t}</h3><p className="text-sm text-muted">{d}</p></div>

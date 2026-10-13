@@ -1,3 +1,4 @@
+import { ProDashboard, demoDash } from "./pro-dashboard";
 import { useCallback, useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
@@ -38,7 +39,9 @@ export function ProSpace() {
             💳 Paiement bientôt disponible. Vous pouvez déjà préparer votre fiche, elle s'activera dès le paiement.
           </p>
         )}
-        <Places prices={prices.filter((p) => p.kind === "listing")} boostPrices={prices.filter((p) => p.kind === "pro_boost")} payOk={!!payOk} />
+        {typeof location !== "undefined" && new URLSearchParams(location.search).has("demo") ? (
+          <ProDashboard id="demo" name="Le Néon (démo)" onBack={() => location.assign("/pro")} demo={demoDash()} />
+        ) : <Places prices={prices.filter((p) => p.kind === "listing")} boostPrices={prices.filter((p) => p.kind === "pro_boost")} payOk={!!payOk} />}
         <ShinyCta href="/boost" sub="Votre profil perso, en tête de la carte">Booster mon profil</ShinyCta>
       </div>
     </main>
@@ -77,9 +80,11 @@ function PriceButtons({ prices, payOk, onPick }: { prices: PriceRow[]; payOk: bo
 function Places({ prices, boostPrices, payOk }: { prices: PriceRow[]; boostPrices: PriceRow[]; payOk: boolean }) {
   const [rows, setRows] = useState<MyPlace[] | null>(null);
   const [edit, setEdit] = useState<PartnerInput | null>(null);
+  const [dash, setDash] = useState<{ id: string; name: string } | null>(null);
   const load = useCallback(() => void myPlaces().then(setRows).catch((e: Error) => toast(e.message)), []);
   useEffect(load, [load]);
   const blank = (): PartnerInput => ({ id: null, kind: "bar", name: "", description: "", lat: NaN, lng: NaN, website: "", contact: "", photos: [], ratings_on: true, comments_on: true, comments_public: true });
+  if (dash) return <ProDashboard id={dash.id} name={dash.name} onBack={() => setDash(null)} />;
   if (edit) return <PlaceForm init={edit} onDone={() => { setEdit(null); load(); }} />;
   if (!rows || rows.length === 0) return <ProLanding prices={prices} boostPrices={boostPrices} onCreate={() => { setEdit(blank()); scrollTo(0, 0); document.querySelector("main")?.scrollTo(0, 0); }} />;
   return (
@@ -116,7 +121,10 @@ function Places({ prices, boostPrices, payOk }: { prices: PriceRow[]; boostPrice
               Gérer / résilier mon abonnement
             </button>
           )}
-          <Stats id={p.id} />
+          <button type="button" onClick={() => { setDash({ id: p.id, name: p.name }); scrollTo(0, 0); document.querySelector("main")?.scrollTo(0, 0); }}
+            className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#3EE08F] font-display text-lg font-extrabold text-night shadow-[0_0_24px_rgba(250,111,108,.35)]">
+            📊 Mon tableau de bord
+          </button>
         </section>
       ))}
       <button
