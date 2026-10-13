@@ -270,6 +270,15 @@ export function Me() {
           />
         </label>
       </section>
+      {!me.onboarded && (
+        <button type="button" onClick={() => {
+          const n = Number(age); const ps = pseudo.trim().slice(0, 24);
+          if (ps.length < 2) return toast("Choisis un pseudo (2 lettres min.)");
+          if (!(n >= 18 && n <= 99)) return toast("Âge entre 18 et 99 ans");
+          useHdar.getState().completeGate({ pseudo: ps, age: n, adult: true, tags: me.tags, photo: me.photo });
+          toast("Profil créé 🎉");
+        }} className="boost-cta mt-4 h-12 w-full rounded-full font-display font-extrabold text-night">Enregistrer mon profil</button>
+      )}
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Envies</h2>

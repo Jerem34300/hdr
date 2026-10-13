@@ -80,8 +80,8 @@ function Gate() {
       }}
     >
       <Close />
-      <h2 className="font-display text-2xl font-extrabold tracking-tight">Avant d'écrire</h2>
-      <p className="text-sm text-muted">Quinze secondes. Tu peux regarder sans ça. Pas de photo obligatoire.</p>
+      <h2 className="font-display text-2xl font-extrabold tracking-tight">Inscris-toi</h2>
+      <p className="text-sm text-muted">Quinze secondes pour créer ton profil. Pas de photo obligatoire.</p>
       <label className="block text-sm">
         Pseudo
         <input
@@ -136,7 +136,7 @@ function Gate() {
       </label>
       {error && <p className="text-sm text-signal">{error}</p>}
       <Button type="submit" size="lg" className="w-full" disabled={!ready}>
-        C'est bon
+        Créer mon profil
       </Button>
     </form>
   );
