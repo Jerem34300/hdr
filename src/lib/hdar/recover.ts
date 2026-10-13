@@ -51,3 +51,29 @@ function frErr(m: string) {
   if (/already been registered|already registered|exists/i.test(m)) return "Cet email est déjà lié à un autre profil.";
   return m;
 }
+
+/**
+ * Filet de sécurité : si la copie locale du profil est vide (stockage du navigateur effacé, PWA vs navigateur…)
+ * alors que le compte connecté a un profil sur le serveur, on la recharge depuis le serveur.
+ */
+export async function resyncProfileFromServer(): Promise<boolean> {
+  try {
+    const { accessToken } = await import("./session");
+    const token = await accessToken();
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_my_profile_full`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: "{}" });
+    if (!r.ok) return false;
+    const p = (await r.json()) as Payload | null;
+    if (!p?.id || !p.has_profile || !p.pseudo) return false;
+    const me = useHdar.getState().me;
+    const idChanged = localStorage.getItem("hdar-device") !== p.id;
+    if (me.onboarded && me.pseudo && !idChanged) return false;
+    localStorage.setItem("hdar-device", p.id);
+    localStorage.setItem("hdar-owner", p.id);
+    const photos = (p.photos ?? []).filter(Boolean);
+    useHdar.getState().patchMe({
+      pseudo: p.pseudo, age: p.age, adult: true, bio: p.bio ?? "", tags: (p.tags ? p.tags.split(",").filter(Boolean) : []) as never,
+      photo: photos[0] ?? "", photos, voice: p.voice ?? undefined, voiceSec: p.voice_sec ?? 0, note: p.note ?? "", onboarded: true,
+    });
+    return idChanged;
+  } catch { return false; }
+}

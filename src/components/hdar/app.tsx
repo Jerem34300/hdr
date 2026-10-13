@@ -1,3 +1,4 @@
+import { resyncProfileFromServer } from "@/lib/hdar/recover";
 import { SurprisePopup } from "./growth";
 import { useActivity, useActivityPolling } from "@/lib/hdar/activity";
 import { GiftNotices } from "./gift-notices";
@@ -56,6 +57,8 @@ export function App() {
       window.removeEventListener("error", onError);
     };
   }, []);
+
+  useEffect(() => { void resyncProfileFromServer().then((reload) => { if (reload) window.location.reload(); }); }, []);
 
   if (banned) {
     return (
