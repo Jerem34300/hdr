@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
+import { adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
 
 const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const PERIODS = [["month", "Ce mois"], ["last", "Mois dernier"], ["30d", "30 j"], ["all", "Tout"]] as const;
@@ -78,8 +78,13 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
       </div>
       <p className="text-xs text-muted">Validé = photo approuvée et profil encore actif 7 jours après l'inscription. CA net = après remboursements et frais Stripe estimés.</p>
       <div className="rounded-xl bg-night p-3 text-xs">
-        <p className="mb-1 font-bold">Infos de paiement (admin uniquement)</p>
-        {r.payout_info ? <p>{r.payout_info.name} · IBAN {r.payout_info.iban} · SIRET {r.payout_info.siret}</p> : <p className="text-muted">Non renseignées</p>}
+        <p className="mb-1 font-bold">Versements Stripe Connect</p>
+        <p>{!r.stripe_account ? "⚪ Compte Stripe non créé" : r.payouts_enabled ? `✅ Compte prêt (${r.stripe_account})` : `🟡 Inscription Stripe incomplète (${r.stripe_account})`}{r.paused ? " · ⏸️ en pause" : ""}{r.hold_next ? " · prochain versement suspendu" : ""}</p>
+        <p className="mt-1 text-muted">Virement automatique le 1er du mois si dû ≥ seuil. Identité, IBAN et SIRET : chez Stripe uniquement.</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button type="button" className="rounded-full border border-line px-3 py-1" onClick={() => ro(adminAmbFlags(adminKey, r.user_id, !r.paused, null), r.paused ? "Versements réactivés" : "Versements en pause")}>{r.paused ? "▶︎ Reprendre les versements" : "⏸️ Mettre en pause"}</button>
+          <button type="button" className="rounded-full border border-line px-3 py-1" onClick={() => ro(adminAmbFlags(adminKey, r.user_id, null, !r.hold_next), r.hold_next ? "Versement rétabli" : "Prochain versement suspendu")}>{r.hold_next ? "Rétablir le prochain versement" : "Suspendre le prochain versement"}</button>
+        </div>
       </div>
       <div>
         <p className="mb-1 font-bold">Règles</p>
@@ -99,9 +104,9 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
         <p className="mb-1 font-bold">Versements · total {eur(r.paid_total)} · dû {eur(r.due_total)}</p>
         <div className="flex gap-2"><input value={pay} onChange={(e) => setPay(e.target.value)} type="number" step="0.01" className="w-28 rounded-lg border border-line bg-night px-2 py-1" />
           <button type="button" disabled={r.due_total < r.min_payout_cents} className="rounded-full bg-[#fbbf24] px-4 py-1.5 font-bold text-night disabled:opacity-40"
-            onClick={() => ro(adminAmbPayout(adminKey, r.user_id, Math.round(Number(pay) * 100), null, new Date().toISOString().slice(0, 10), "Versement sur facture"), "Versement enregistré")}>Marquer payé</button></div>
+            title="Versement fait hors Stripe" onClick={() => ro(adminAmbPayout(adminKey, r.user_id, Math.round(Number(pay) * 100), null, new Date().toISOString().slice(0, 10), "Versement sur facture"), "Versement enregistré")}>Marquer payé (manuel)</button></div>
         {r.due_total < r.min_payout_cents && <p className="mt-1 text-xs text-muted">Seuil de versement : {eur(r.min_payout_cents)}.</p>}
-        {r.payouts.map((p, i) => <p key={i} className="text-xs text-muted">{new Date(p.at).toLocaleDateString("fr-FR")} · {eur(p.amount)} · {p.note}</p>)}
+        {r.payouts.map((p, i) => <p key={i} className="text-xs text-muted">{new Date(p.at).toLocaleDateString("fr-FR")} · {eur(p.amount)} · {p.status === "failed" ? "❌" : p.status === "held" ? "⏸️" : "✅"} {p.note}{p.error ? ` (${p.error})` : ""}</p>)}
       </div>
     </div>
   );
@@ -111,8 +116,8 @@ export function demoAdminAmbs(): AdminAmb[] {
   const st = { signups: 23, validated: 17, codes_created: 9, codes_redeemed: 7, places: 2, places_claimed: 2, places_active: 1, revenue_users: 4590, revenue_partners: 7900, commission: 3743, paid: 0, bonuses: 0 };
   const base = { user_pct: 20, user_months: 6, bonus_cents: 2000, bonus_at: 50, min_payout_cents: 2000, codes_per_week: 10, max_days: 3, max_boost_h: 24, max_hearts: 20, per_signup_cents: 50, partner_pct: 25, partner_months: 3, note: null, promos: [] };
   return [
-    { ...base, user_id: "1", pseudo: "Lucas (exemple)", code: "LUCAS7", active: true, terms_at: "x", stats: st, paid_total: 5000, due_total: 2310, payout_info: { name: "Lucas Martin", iban: "FR76 •••• 1234", siret: "123 456 789 00012" },
-      payouts: [{ amount: 5000, from: null, to: "2026-09-30", note: "Versement sur facture", at: "2026-10-02" }], promos: [{ id: "p", name: "Le Néon", promo: "1er mois -50 %", status: "pending" }] },
-    { ...base, user_id: "2", pseudo: "Nico (exemple)", code: "NICO42", active: true, terms_at: null, stats: { ...st, signups: 4, validated: 2, commission: 100, revenue_users: 0, revenue_partners: 0, places: 0, places_active: 0 }, paid_total: 0, due_total: 100, payout_info: null, payouts: [] },
+    { ...base, user_id: "1", pseudo: "Lucas (exemple)", code: "LUCAS7", active: true, terms_at: "x", stats: st, paid_total: 5000, due_total: 2310, stripe_account: "acct_1Exemple", payouts_enabled: true, paused: false, hold_next: false,
+      payouts: [{ amount: 5000, from: null, to: "2026-09-30", note: "Virement Stripe automatique", at: "2026-10-01", status: "paid" }], promos: [{ id: "p", name: "Le Néon", promo: "1er mois -50 %", status: "pending" }] },
+    { ...base, user_id: "2", pseudo: "Nico (exemple)", code: "NICO42", active: true, terms_at: null, stats: { ...st, signups: 4, validated: 2, commission: 100, revenue_users: 0, revenue_partners: 0, places: 0, places_active: 0 }, paid_total: 0, due_total: 100, stripe_account: null, payouts_enabled: false, paused: false, hold_next: false, payouts: [] },
   ];
 }

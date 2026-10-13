@@ -72,6 +72,8 @@ Deno.serve(async (req) => {
         const sub = det.subscription ?? o.subscription ?? null;
         await apply(o.id, meta, o.amount_paid ?? 0, o.currency ?? "eur", typeof sub === "string" ? sub : sub?.id ?? null, o.customer ?? null);
       }
+    } else if (ev.type === "account.updated") {
+      await rpc("hdar_amb_account_status", { p_account: o.id, p_enabled: !!(o.payouts_enabled && o.capabilities?.transfers === "active") });
     } else if (ev.type === "charge.refunded") {
       const pi = typeof o.payment_intent === "string" ? o.payment_intent : o.payment_intent?.id ?? null;
       const inv = typeof o.invoice === "string" ? o.invoice : o.invoice?.id ?? null;

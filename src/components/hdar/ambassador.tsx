@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
-import { ambAccept, ambAttach, ambCodeCreate, ambInviteInfo, ambMe, ambPlaceCreate, type AmbMe } from "@/lib/hdar/live";
+import { ambAccept, ambAttach, ambConnect, ambCodeCreate, ambInviteInfo, ambMe, ambPlaceCreate, type AmbMe } from "@/lib/hdar/live";
 
 const SITE = "https://hdar.chat";
 const AMB_KEY = "hdar-amb";
@@ -50,6 +50,7 @@ export function AmbassadorSpace({ demo }: { demo?: AmbMe }) {
   const [shown, setShown] = useState<string | null>(null);
   const load = () => { if (!demo) void ambMe().then(setMe).catch(() => setMe(null)); };
   useEffect(load, [demo]);
+  useEffect(() => { const c = new URLSearchParams(location.search).get("connect"); if (c === "done") toast("Merci ! Stripe vérifie tes infos, les versements s'activeront automatiquement."); }, []);
   if (me === undefined) return <p className="p-6 text-center text-muted">Chargement…</p>;
   const invite = typeof location !== "undefined" ? new URLSearchParams(location.search).get("i") : null;
   if (me === null && invite) return <Onboard token={invite} onDone={load} />;
@@ -90,7 +91,8 @@ export function AmbassadorSpace({ demo }: { demo?: AmbMe }) {
             <div key={l} className="rounded-2xl bg-night p-2"><b className="block text-lg">{v}</b><span className="text-[11px] text-muted">{l}</span></div>))}
         </div>
         <div className="mt-3 rounded-2xl bg-night p-3 text-sm"><div className="flex justify-between"><span>Gagné depuis le début</span><b>{eur(me.total.commission)}</b></div><div className="flex justify-between"><span>Déjà versé</span><b>{eur(me.paid_total)}</b></div><div className="flex justify-between text-[#3EE08F]"><span>À recevoir</span><b>{eur(Math.max(0, me.total.commission - me.paid_total))}</b></div>
-          <p className="mt-1 text-xs text-muted">Versement dès {eur(me.min_payout_cents)} dus, sur facture (auto-entrepreneur).{!me.has_payout_info && " ⚠️ Infos de paiement manquantes."}</p></div>
+          <p className="mt-1 text-xs text-muted">Virement automatique le 1er du mois dès {eur(me.min_payout_cents)} dus, via Stripe. Seuls les paiements réellement encaissés comptent ; un remboursement annule la commission liée.{me.paused && " ⏸️ Versements en pause (contacte hdar)."}</p>
+          <ConnectButton state={me.connect} demo={!!demo} /></div>
         <p className="mt-3 text-xs text-muted">Tes règles : {eur(me.per_signup_cents)} par inscrit validé (photo approuvée et toujours actif 7 jours après) · {me.user_pct} % du net dépensé par tes inscrits pendant {me.user_months} mois · {me.partner_pct} % de l'abonnement net des partenaires signés pendant {me.partner_months} mois · bonus {eur(me.bonus_cents)} à {me.bonus_at} validés dans le mois. Tu ne vois que des compteurs, jamais l'identité des membres.</p>
       </section>
       {me.places.length > 0 && <section className="mt-4 rounded-3xl border border-line bg-surface p-4">
@@ -180,10 +182,17 @@ function PlaceDraft({ demo, onBack }: { demo: boolean; onBack: () => void }) {
 
 export function demoAmb(): AmbMe {
   const s = { signups: 23, validated: 17, codes_created: 9, codes_redeemed: 7, places: 2, places_claimed: 2, places_active: 1, revenue_users: 4590, revenue_partners: 7900, commission: 1840, paid: 0, bonuses: 0 };
-  return { user_pct: 20, user_months: 6, bonus_cents: 2000, bonus_at: 50, min_payout_cents: 2000, paid_total: 5000, has_payout_info: true, code: "LUCAS7", codes_per_week: 10, codes_left: 6, max_days: 3, max_boost_h: 24, max_hearts: 20, per_signup_cents: 50, partner_pct: 25, partner_months: 3,
+  return { user_pct: 20, user_months: 6, bonus_cents: 2000, bonus_at: 50, min_payout_cents: 2000, paid_total: 5000, code: "LUCAS7", codes_per_week: 10, codes_left: 6, max_days: 3, max_boost_h: 24, max_hearts: 20, per_signup_cents: 50, partner_pct: 25, partner_months: 3,
     month: s, total: { ...s, signups: 61, validated: 44, commission: 11380 },
     codes: [{ code: "A7K2Q9XZ", kind: "premium", amount: 3, used: false, expires_at: "" }, { code: "A1B4C8DE", kind: "boost", amount: 24, used: true, expires_at: "" }],
-    places: [{ id: "1", name: "Le Néon", kind: "bar", claimed: true, active: true, token: null, promo: "1er mois -50 %", promo_status: "approved" }, { id: "2", name: "Club Velvet", kind: "club", claimed: false, active: false, token: "x", promo: null, promo_status: null }] };
+    connect: "ready", paused: false, places: [{ id: "1", name: "Le Néon", kind: "bar", claimed: true, active: true, token: null, promo: "1er mois -50 %", promo_status: "approved" }, { id: "2", name: "Club Velvet", kind: "club", claimed: false, active: false, token: "x", promo: null, promo_status: null }] };
+}
+
+function ConnectButton({ state, demo }: { state: AmbMe["connect"]; demo: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const go = (a: "onboard" | "dashboard") => { if (demo) return void toast("Aperçu"); setBusy(true); void ambConnect(a).then((u) => { location.href = u; }).catch((e: Error) => { toast(e.message); setBusy(false); }); };
+  if (state === "ready") return <button type="button" disabled={busy} onClick={() => go("dashboard")} className="mt-2 h-10 w-full rounded-full border border-[#3EE08F] text-sm text-[#3EE08F]">✅ Compte de versement Stripe actif · voir mes virements</button>;
+  return <button type="button" disabled={busy} onClick={() => go("onboard")} className="mt-2 h-10 w-full rounded-full bg-[#635bff] text-sm font-bold text-white">{state === "pending" ? "Terminer mon inscription Stripe" : "Configurer mes versements (Stripe)"}</button>;
 }
 
 const CHARTE = [
@@ -191,29 +200,33 @@ const CHARTE = [
   "Pas de spam : ni messages en masse, ni affichage sauvage, ni publicité trompeuse.",
   "Pas de faux comptes ni d'inscriptions forcées : toute fraude annule les commissions et met fin au programme.",
   "Je ne demande jamais d'identité, de photo ou de données personnelles aux personnes inscrites.",
-  "Pour être payé, je dois avoir un statut d'auto-entrepreneur (SIRET) : les commissions sont versées sur facture déclarée.",
-  "hdar peut modifier les règles de commission ou retirer le rôle à tout moment.",
+  "Pour être payé, je dois avoir un statut d'auto-entrepreneur (SIRET) et déclarer ces revenus : les commissions sont versées par virement Stripe.",
+  "Les commissions ne portent que sur des paiements réellement encaissés ; un abonnement résilié ne rapporte plus rien, un remboursement annule la commission liée.",
+  "hdar peut modifier les règles de commission, mettre en pause les versements ou retirer le rôle à tout moment.",
 ];
 function Onboard({ token, onDone }: { token: string; onDone: () => void }) {
   const [info, setInfo] = useState<{ valid: boolean; photo_ok: boolean } | null>(null);
-  const [f, setF] = useState({ name: "", iban: "", siret: "" });
   const [ok, setOk] = useState(false);
   const [busy, setBusy] = useState(false);
   useEffect(() => void ambInviteInfo(token).then(setInfo).catch(() => setInfo({ valid: false, photo_ok: false })), [token]);
   if (!info) return <p className="p-6 text-center text-muted">Chargement…</p>;
-  const submit = () => { setBusy(true); void ambAccept(token, f.name, f.iban, f.siret).then(() => { toast("Bienvenue dans l'équipe 🎯"); history.replaceState(null, "", "/ambassadeur"); onDone(); }).catch((e: Error) => toast(e.message)).finally(() => setBusy(false)); };
+  const submit = () => {
+    setBusy(true);
+    void ambAccept(token).then(async () => {
+      toast("Bienvenue dans l'équipe 🎯");
+      history.replaceState(null, "", "/ambassadeur");
+      try { location.href = await ambConnect("onboard"); } catch (e) { toast((e as Error).message); onDone(); }
+    }).catch((e: Error) => toast(e.message)).finally(() => setBusy(false));
+  };
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted">Tu as été invité à devenir ambassadeur hdar. Lis la charte, puis renseigne tes infos de paiement (visibles uniquement par l'admin).</p>
+      <p className="text-sm text-muted">Tu as été invité à devenir ambassadeur hdar. Lis la charte, puis configure tes versements avec Stripe (identité, IBAN et SIRET sont saisis chez Stripe, hdar ne les stocke pas).</p>
       {!info.photo_ok && <p className="rounded-2xl border border-[#fbbf24] px-4 py-3 text-sm text-[#fbbf24]">📸 Il faut d'abord un profil avec une photo validée. <a href="/" className="underline">Compléter mon profil</a></p>}
       {token && !info.valid && <p className="rounded-2xl border border-signal px-4 py-3 text-sm text-signal">Ce lien d'invitation est expiré ou déjà utilisé.</p>}
       <section className="rounded-3xl border border-line bg-surface p-4"><p className="font-bold">Charte ambassadeur</p>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{CHARTE.map((c) => <li key={c}>{c}</li>)}</ul></section>
-      <input className={field} placeholder="Nom et prénom (pour les factures)" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-      <input className={field} placeholder="IBAN" value={f.iban} onChange={(e) => setF({ ...f, iban: e.target.value })} />
-      <input className={field} placeholder="SIRET (14 chiffres)" inputMode="numeric" value={f.siret} onChange={(e) => setF({ ...f, siret: e.target.value })} />
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /> J'accepte la charte et le programme ambassadeur des CGU.</label>
-      <button type="button" disabled={!ok || busy || !info.photo_ok} onClick={submit} className="boost-cta h-12 w-full rounded-full font-display font-extrabold text-night disabled:opacity-50">Devenir ambassadeur</button>
+      <button type="button" disabled={!ok || busy || !info.photo_ok} onClick={submit} className="boost-cta h-12 w-full rounded-full font-display font-extrabold text-night disabled:opacity-50">Accepter et configurer mes versements</button>
     </div>
   );
 }
