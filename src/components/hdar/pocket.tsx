@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, LocateFixed, Send } from "lucide-react";
 import { toast } from "sonner";
 import { deviceId } from "@/lib/hdar/device";
-import { areaFeed, areaHide, areaSend, pgTime, type AreaLine } from "@/lib/hdar/live";
+import { areaFeed, areaHide, areaSend, areaSendMedia, pgTime, type AreaLine } from "@/lib/hdar/live";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
+import { RoomAttach, RoomMedia } from "./media-composer";
 
 function ago(at: string) {
   const min = Math.max(0, Math.round((Date.now() - pgTime(at)) / 60000));
@@ -140,7 +141,7 @@ export function PocketChat() {
                   (m.mine ? "bg-signal text-night" : "bg-surface")
                 }
               >
-                {m.body}
+                {m.body ? m.body : <RoomMedia scope="area" id={m.id} mine={m.mine} />}
               </p>
               {m.mine && (
                 <button
@@ -188,6 +189,9 @@ export function PocketChat() {
             });
         }}
       >
+        <RoomAttach
+          send={(k, path, d) => areaSendMedia(center.lat, center.lng, pseudo || "Anonyme", k, path, d).then(refresh)}
+        />
         <input
           className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none focus-visible:border-signal"
           value={text}

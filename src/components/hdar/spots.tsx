@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deviceId } from "@/lib/hdar/device";
-import { hideSpotMessage, listSpots, sendSpotMessage, spotMessages, type SpotLine } from "@/lib/hdar/live";
+import { hideSpotMessage, listSpots, sendSpotMessage, spotSendMedia, spotMessages, type SpotLine } from "@/lib/hdar/live";
 import { remainingLabel } from "@/lib/hdar/rules";
 import { resolvePlace, useScene, type LiveSpot } from "@/lib/hdar/scene";
 import { useHdar, type SpotMsg } from "@/lib/hdar/store";
+import { RoomAttach, RoomMedia } from "./media-composer";
 import { bindTap } from "./tap";
 import { useActivity } from "@/lib/hdar/activity";
 
@@ -146,7 +147,7 @@ export function SpotRoom() {
         ))}
       </ul>
       <form
-        className="dock flex gap-2 border-t border-line px-3 pt-2"
+        className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
         onSubmit={(e) => {
           e.preventDefault();
           sendSpot(spot.id, text);
@@ -260,7 +261,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
                 (msg.mine ? "bg-spot text-night" : "bg-surface")
               }
             >
-              {msg.body}
+              {msg.body ? msg.body : <RoomMedia scope="spot" id={msg.id} mine={msg.mine} />}
             </p>
             {(spot.creator || msg.mine) && (
               <button
@@ -282,7 +283,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
         <div ref={end} />
       </ul>
       <form
-        className="dock flex gap-2 border-t border-line px-3 pt-2"
+        className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
         onSubmit={(e) => {
           e.preventDefault();
           const body = text.trim();
@@ -296,6 +297,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
             });
         }}
       >
+        <RoomAttach send={(k, path, d) => spotSendMedia(spot.id, pseudo || "Anonyme", k, path, d).then(refresh)} />
         <input
           className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none focus-visible:border-spot"
           value={text}

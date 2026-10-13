@@ -25,7 +25,7 @@ export type LiveMsg = {
   mine: boolean;
   body: string;
   at: string;
-  kind: "text" | "image" | "audio" | "location";
+  kind: "text" | "image" | "audio" | "location" | "video";
   duration: number | null;
 };
 
@@ -192,7 +192,7 @@ export async function sendLive({ data }: { data: { self: string; to: string; bod
 export async function sendMedia({
   data,
 }: {
-  data: { self: string; to: string; kind: "image" | "audio"; media: string; duration?: number };
+  data: { self: string; to: string; kind: "image" | "audio" | "video"; media: string; duration?: number | null };
 }) {
   await rpc("hdar_send_media", {
     p_self: selfId(data.self),
@@ -907,3 +907,24 @@ export function identityLine(iam: string, seeking: string[]) {
   const b = seeking.map(sh).filter(Boolean).join(", ");
   return [a, b && `cherche ${b}`].filter(Boolean).join(" · ");
 }
+// Media in public rooms (v30) ---------------------------------------------------
+
+export type RoomMediaRow = { id: string; kind: "image" | "video" | "audio"; media: string; duration: number | null };
+const roomMediaCache = new Map<string, Promise<RoomMediaRow | null>>();
+export function roomMedia(scope: "area" | "place" | "spot", id: string): Promise<RoomMediaRow | null> {
+  const key = `${scope}:${id}`;
+  let hit = roomMediaCache.get(key);
+  if (!hit) {
+    hit = rpc<RoomMediaRow[]>("hdar_room_media", { p_scope: scope, p_ids: [id] }).then((r) => r[0] ?? null);
+    hit.catch(() => roomMediaCache.delete(key));
+    roomMediaCache.set(key, hit);
+  }
+  return hit;
+}
+export const areaSendMedia = (lat: number, lng: number, pseudo: string, kind: string, path: string, duration: number | null) =>
+  rpc("hdar_area_send_media", { p_lat: lat, p_lng: lng, p_pseudo: pseudo, p_kind: kind, p_path: path, p_duration: duration });
+export const spotSendMedia = (id: string, pseudo: string, kind: string, path: string, duration: number | null) =>
+  rpc("hdar_spot_send_media", { p_id: id, p_pseudo: pseudo, p_kind: kind, p_path: path, p_duration: duration });
+export const placeSendMedia = (id: string, kind: string, path: string, duration: number | null, lat: number, lng: number) =>
+  rpc("hdar_place_send_media", { p_id: id, p_kind: kind, p_path: path, p_duration: duration, p_lat: lat, p_lng: lng });
+export const mediaReport = (scope: "area" | "place" | "spot", id: string) => rpc("hdar_media_report", { p_scope: scope, p_id: id });

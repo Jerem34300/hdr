@@ -1,10 +1,8 @@
 import { useFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import {
-  Camera,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon,
   Mic,
   MoreVertical,
   Send,
@@ -32,6 +30,8 @@ import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 import { CameraSheet } from "./camera";
+import { AttachButton, MediaView } from "./media-composer";
+import { uploadChatMedia } from "@/lib/hdar/chat-media";
 
 const MAX_VOICE_SEC = 60;
 
@@ -154,6 +154,19 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
     end.current?.scrollIntoView({ block: "end" });
     markSeen(userId);
   }, [lastId, markSeen, userId]);
+
+  async function sendVideo(file: File) {
+    setBusy(true);
+    try {
+      const { path, duration } = await uploadChatMedia(file, "video");
+      await sendMedia({ data: { self: deviceId(), to: userId, kind: "video", media: `sb:${path}`, duration } });
+      await refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Vidéo non envoyée");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function sendPhoto(file: File) {
     setBusy(true);
@@ -395,35 +408,11 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               });
           }}
         >
-          <button
-            type="button"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line disabled:opacity-40"
-            aria-label="Prendre une photo"
+          <AttachButton
             disabled={busy || rec !== null}
-            onClick={() => setCamera(true)}
-          >
-            <Camera className="size-5" />
-          </button>
-          <label
-            className={
-              "flex size-11 shrink-0 items-center justify-center rounded-full border border-line " +
-              (busy ? "opacity-40" : "")
-            }
-            aria-label="Envoyer une photo"
-          >
-            <ImageIcon className="size-5" />
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              disabled={busy || rec !== null}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (file) void sendPhoto(file);
-              }}
-            />
-          </label>
+            onCamera={() => setCamera(true)}
+            onPick={(f, kind) => void (kind === "video" ? sendVideo(f) : sendPhoto(f))}
+          />
           <button
             type="button"
             disabled={busy && rec === null}
@@ -475,11 +464,12 @@ function LiveMedia({ msg }: { msg: LiveMsg }) {
     };
   }, [msg.id]);
 
-  if (failed) return <p>{msg.kind === "image" ? "Photo indisponible" : "Vocal indisponible"}</p>;
+  if (src.startsWith("sb:")) return <MediaView kind={msg.kind} path={src.slice(3)} duration={msg.duration} />;
+  if (failed) return <p>{msg.kind === "image" ? "Photo indisponible" : msg.kind === "video" ? "Vidéo indisponible" : "Vocal indisponible"}</p>;
   if (!src)
     return (
       <p className="opacity-70">
-        {msg.kind === "image" ? "Photo…" : `Vocal · ${msg.duration ?? 1}s…`}
+        {msg.kind === "image" ? "Photo…" : msg.kind === "video" ? "Vidéo…" : `Vocal · ${msg.duration ?? 1}s…`}
       </p>
     );
   if (msg.kind === "audio")

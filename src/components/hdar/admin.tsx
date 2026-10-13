@@ -1,4 +1,5 @@
 import { AdultGate } from "./adult-gate";
+import { MediaView } from "./media-composer";
 import { authUserId, ensureSession } from "@/lib/hdar/session";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, LogOut, RefreshCw } from "lucide-react";
@@ -618,9 +619,11 @@ function UserDetail({
                     à {m.to} · {when(m.at)}
                   </p>
                   {m.kind === "text" && <p className="mt-1 break-words">{m.body}</p>}
-                  {m.kind === "image" && m.media && (
+                  {m.media?.startsWith("sb:") ? (
+                    <div className="mt-1"><MediaView kind={m.kind} path={m.media.slice(3)} /></div>
+                  ) : m.kind === "image" && m.media ? (
                     <img src={m.media} alt="" className="mt-1 max-h-60 rounded-xl" />
-                  )}
+                  ) : null}
                   {m.kind === "audio" && <p className="mt-1 text-muted">🎤 Vocal</p>}
                 </li>
               ))}

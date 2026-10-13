@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, placeHide, placeMessages, placeSend, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, placeHide, placeMessages, placeSend, placeSendMedia, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
+import { RoomAttach, RoomMedia } from "./media-composer";
 import { useHdar } from "@/lib/hdar/store";
 
 export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color: string }> = {
@@ -249,12 +250,12 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
     <div className="mt-4">
       <h3 className="font-display font-bold">Chat du lieu</h3>
       <p className="text-xs text-muted">Lisible par tous · messages effacés après 24 h · écrire : à moins de 2 km.</p>
-      <div className="mt-2 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
+      <div className="mt-2 max-h-80 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
         {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">Aucun message pour l'instant.</p>}
         {lines.map((l) => (
           <p key={l.id} className={l.mine ? "text-right" : ""}>
             <span className="text-xs font-bold text-muted">{l.mine ? "Toi" : l.pseudo}</span>{" "}
-            <span className="break-words">{l.body}</span>
+            {l.body ? <span className="break-words">{l.body}</span> : <span className="mt-1 block"><RoomMedia scope="place" id={l.id} mine={l.mine} /></span>}
             {l.mine && (
               <button
                 type="button"
@@ -271,12 +272,19 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
       </div>
       {canPost ? (
         <form
-          className="mt-2 flex gap-2"
+          className="mt-2 flex items-center gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             send();
           }}
         >
+          <RoomAttach
+            send={(k, path, d) =>
+              here
+                ? placeSendMedia(place.id, k, path, d, here.lat, here.lng).then(() => placeMessages(place.id)).then(setLines)
+                : Promise.reject(new Error("Active ta position"))
+            }
+          />
           <input
             className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 text-sm outline-none focus:border-signal"
             placeholder="Écrire aux gens du coin…"
@@ -412,7 +420,7 @@ function PlaceExtras({ id }: { id: string }) {
           {!info.owner &&
             (onboarded ? (
               <form
-                className="mt-2 flex gap-2"
+                className="mt-2 flex items-center gap-2"
                 onSubmit={(e) => {
                   e.preventDefault();
                   send();
