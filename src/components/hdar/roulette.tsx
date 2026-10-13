@@ -65,6 +65,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   };
   const [askSent, setAskSent] = useState(false);
   const [gotVideo, setGotVideo] = useState(!!demo);
+  const [needTap, setNeedTap] = useState(false);
   const [theyBlur, setTheyBlur] = useState(!demo?.unblurred);
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const dc = useRef<RTCDataChannel | null>(null);
@@ -134,7 +135,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       if (!bt) bt = setTimeout(() => { bt = null; const to = peerRef.current?.id; const b = batch; batch = []; if (to && c === pc.current && b.length) void rouletteSignal(to, "live-ice", JSON.stringify(b)).catch(() => undefined); }, 250);
     };
     if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
-    c.ontrack = (e) => { setGotVideo(true); if (themVid.current) { themVid.current.srcObject = e.streams[0] ?? new MediaStream([e.track]); void themVid.current.play().catch(() => undefined); } };
+    c.ontrack = (e) => { const v = themVid.current; if (!v) return; v.srcObject = e.streams[0] ?? new MediaStream([e.track]); v.muted = false; void v.play().catch(() => { v.muted = true; setNeedTap(true); void v.play().catch(() => undefined); }); };
     c.onconnectionstatechange = () => {
       if (c !== pc.current) return;
       if (c.connectionState === "connected") { clearWatch(); setPhase("live"); }
@@ -326,7 +327,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       onTouchStart={(e) => (touchY.current = e.touches[0].clientY)}
       onTouchEnd={(e) => { const y0 = touchY.current; touchY.current = null; if (y0 != null && y0 - e.changedTouches[0].clientY > 70 && !demo) void next(); }}
       onWheel={(e) => { if (e.deltaY > 60 && !demo && phase !== "searching") void next(); }}>
-      <video ref={themVid} autoPlay playsInline className="absolute inset-0 size-full object-cover" />
+      <video ref={themVid} autoPlay playsInline onPlaying={(e) => { if (e.currentTarget.videoWidth > 0) setGotVideo(true); }} onResize={(e) => { if (e.currentTarget.videoWidth > 0) setGotVideo(true); }} className="absolute inset-0 size-full object-cover" />
+      {needTap && <button type="button" onClick={() => { const v = themVid.current; if (v) { v.muted = false; void v.play().catch(() => undefined); } setNeedTap(false); }} className="absolute top-40 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-bold text-night shadow-lg">🔊 Touche pour activer le son</button>}
       {demo && <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,#3b2a3a,#0b0b10)]" style={{ filter: theyBlur ? "blur(28px)" : "none" }}><div className="absolute top-[22%] left-1/2 size-48 -translate-x-1/2 rounded-full bg-[#c9a58c]/70" /><div className="absolute top-[52%] left-1/2 h-80 w-80 -translate-x-1/2 rounded-t-full bg-[#2b3a55]" /></div>}
       {phase !== "live" && !demo && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-night/70">
