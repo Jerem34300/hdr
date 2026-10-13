@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { LIVE_TERMS_VERSION, liveAccept, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { usePhoto } from "@/lib/hdar/photos";
 import { usePremium } from "@/lib/hdar/premium";
@@ -40,6 +40,8 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const blurRef = useRef(true);
   const pipe = useRef<BlurPipe | null>(null);
   const [mic, setMic] = useState(true);
+  const [asked, setAsked] = useState(false);
+  const [askSent, setAskSent] = useState(false);
   const [theyBlur, setTheyBlur] = useState(!demo?.unblurred);
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const dc = useRef<RTCDataChannel | null>(null);
@@ -72,6 +74,15 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     if (sender && v) await sender.replaceTrack(v).catch(() => undefined);
     showPreview();
     if (dc.current?.readyState === "open") dc.current.send(JSON.stringify({ blur: b }));
+    if (!b) setAsked(false);
+  };
+  const askSentRef = useRef(false);
+  useEffect(() => { askSentRef.current = askSent; }, [askSent]);
+  const ask = async () => {
+    if (!premium) return void nav({ to: "/premium" });
+    if (askSent) return toast("Demande déjà envoyée");
+    if (demo) return setAskSent(true);
+    try { await liveAsk(); setAskSent(true); toast("Demande envoyée 👀"); } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
   };
 
   const makePc = () => {
@@ -86,7 +97,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     const wire = (ch: RTCDataChannel) => {
       dc.current = ch;
       ch.onopen = () => ch.send(JSON.stringify({ blur: blurRef.current }));
-      ch.onmessage = (ev) => { try { const b = JSON.parse(String(ev.data)).blur !== false; setTheyBlur((was) => { if (was && !b) toast("Il se montre 👀"); return b; }); } catch { /* */ } };
+      ch.onmessage = (ev) => { try { const b = JSON.parse(String(ev.data)).blur !== false; setTheyBlur((was) => { if (was && !b) toast(askSentRef.current ? "Il a accepté, il se montre 👀" : "Il se montre 👀"); return b; }); } catch { /* */ } };
     };
     c.ondatachannel = (e) => wire(e.channel);
     if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
@@ -101,7 +112,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   };
 
   const matched = async (card: LiveCard) => {
-    peerRef.current = card; setPeer(card); setPhase("connecting");
+    peerRef.current = card; setPeer(card); setAsked(false); setAskSent(false); setPhase("connecting");
     if (card.role === "offer") {
       const c = makePc();
       await c.setLocalDescription(await c.createOffer());
@@ -166,6 +177,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           const k = r.kind as string;
           if (!k.startsWith("live-") || r.from_id !== peerRef.current?.id) continue;
           if (k === "live-bye") { void next(); break; }
+          if (k === "live-ask") { if (blurRef.current) { setAsked(true); navigator.vibrate?.(120); } continue; }
           if (k === "live-offer") {
             const c = makePc();
             await c.setRemoteDescription(JSON.parse(r.payload));
@@ -267,6 +279,20 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         </div>
       </div>
       {peer && <button type="button" aria-label={blurred ? "Me montrer" : "Me flouter"} onClick={() => void setBlur(!blurred)} className="absolute inset-x-0 top-28 bottom-48" />}
+      {peer && theyBlur && (
+        <button type="button" onClick={() => void ask()} disabled={askSent} className="absolute top-[60%] left-1/2 z-[5] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold text-night shadow-[0_0_20px_#fbbf24] disabled:opacity-60">
+          {askSent ? "Demande envoyée 👀" : <>Demande à se voir 👀{!premium && <Crown className="ml-1 inline size-4" />}</>}
+        </button>
+      )}
+      {asked && (
+        <div className="absolute inset-x-6 top-1/3 z-20 animate-[pulse_1.6s_ease-in-out_infinite] rounded-3xl border border-[#fbbf24]/60 bg-night/90 p-4 text-center shadow-[0_0_40px_#fbbf24] backdrop-blur">
+          <p className="font-display text-lg font-bold">{peer?.pseudo} aimerait te voir 👀</p>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={() => setAsked(false)} className="flex-1 rounded-full bg-white/10 py-2 text-sm">Non merci</button>
+            <button type="button" onClick={() => { setAsked(false); void setBlur(false); }} className="flex-1 rounded-full bg-[#A1E3C3] py-2 text-sm font-bold text-night">Me montrer</button>
+          </div>
+        </div>
+      )}
       {peer && (theyBlur || blurred) && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
           {theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Il est flouté</span>}

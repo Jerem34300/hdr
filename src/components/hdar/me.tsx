@@ -474,7 +474,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         <span className="premium-ring flex size-11 shrink-0 items-center justify-center rounded-full"><Crown className="size-5 text-[#fbbf24]" /></span>
         <span className="min-w-0 flex-1">
           <b className="block font-display">hdar<span className="premium-text">+</span></b>
-          <span className="text-xs text-muted">Filtres, qui t'a vu, recherche par pseudo, 20 photos</span>
+          <span className="text-xs text-muted">Filtres, qui t'a vu, recherche, 20 photos, Live+</span>
         </span>
         <span className="text-sm font-bold text-[#fbbf24]">Voir ›</span>
       </Link>

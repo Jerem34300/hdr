@@ -255,7 +255,7 @@ export function BoostPage() {
           <span className="text-2xl">👑</span>
           <span className="min-w-0 flex-1">
             <b className="block font-display">Envie d'aller plus loin ? hdar<span className="premium-text">+</span></b>
-            <span className="text-xs text-muted">Filtres de la carte, qui t'a vu, recherche par pseudo, 20 photos.</span>
+            <span className="text-xs text-muted">Filtres carte et Live, qui t'a vu, recherche par pseudo, 20 photos, demande à se voir en Live.</span>
           </span>
           <span className="text-sm font-bold text-[#fbbf24]">›</span>
         </a>

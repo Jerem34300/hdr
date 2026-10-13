@@ -72,6 +72,13 @@ function Terms() {
           payés via Stripe. Les prix TTC sont affichés avant paiement.
         </li>
         <li>
+          hdar+ comprend : filtres de la carte (âge, H/F/X, envies, lieu, en ligne, avec photo), qui
+          t'a vu et qui t'a mis en favori, recherche par pseudo, 20 photos d'album, badge, et dans le
+          Live : retour à la personne précédente, filtres H/F/X et âge, matching prioritaire et
+          « Demande à se voir » (une invitation par rencontre ; seule la personne concernée peut
+          choisir de se montrer).
+        </li>
+        <li>
           Ces services numériques sont <strong>exécutés immédiatement</strong>. En cochant la case avant le paiement, tu
           demandes cette exécution immédiate et <strong>renonces à ton droit de rétractation</strong>{" "}
           de 14 jours (article L221-28 du Code de la consommation).

@@ -31,18 +31,24 @@ export function PremiumBadge({ className = "" }: { className?: string }) {
 }
 
 const PERKS = [
-  ["🔎", "Filtres de la carte", "Âge, envies, lieu, Je suis, en ligne maintenant, avec photo : ne vois que ceux qui te correspondent."],
+  ["🔎", "Filtres de la carte", "Âge, H/F/X, envies, lieu, en ligne maintenant, avec photo : ne vois que ceux qui te correspondent."],
   ["👀", "Qui t'a vu", "La liste de ceux qui ont ouvert ton profil ces 30 derniers jours."],
   ["⭐", "Qui t'a mis en favori", "Découvre qui t'a ajouté à ses favoris."],
   ["🔤", "Recherche par pseudo", "Retrouve quelqu'un que tu as croisé, sans jamais voir sa position exacte."],
   ["📸", "20 photos d'album", "Au lieu de 5. Toujours privé, jamais de grille publique."],
   ["👑", "Badge hdar+", "Un petit badge discret sur ton pin et ta fiche."],
+  ["🎥", "Live : revenir en arrière", "Tu as zappé trop vite ? Reviens sur la personne d'avant si elle est encore dans le Live."],
+  ["🎚️", "Live : filtres", "H/F/X et tranche d'âge : choisis qui tu croises en vidéo."],
+  ["⚡", "Live : matching prioritaire", "Tu tombes d'abord sur ceux qui cherchent ce que tu es, et que tu cherches."],
+  ["👀", "Live : Demande à se voir", "Il est flouté ? Envoie-lui une demande. Lui seul décide de se montrer."],
 ] as const;
 
 const FAQ = [
   ["C'est un abonnement ?", "Oui, renouvelé automatiquement chaque semaine ou chaque mois. Tu résilies en deux clics depuis cette page, et tu gardes hdar+ jusqu'à la fin de la période payée."],
   ["Mon anonymat ?", "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Stripe gère le paiement, hdar ne voit jamais ta carte."],
   ["La recherche montre où sont les gens ?", "Non. Tu vois le pseudo et s'il est en ligne, jamais sa position. Les profils bloqués, bannis ou inactifs depuis 7 jours n'apparaissent pas."],
+  ["Demande à se voir, ça défloute l'autre ?", "Jamais. L'autre reçoit une invitation « Il aimerait te voir 👀 » et choisit « Me montrer » ou « Non merci ». Une seule demande par rencontre."],
+  ["Le Live est réservé à hdar+ ?", "Non, le Live est gratuit pour tous les profils avec photo validée. hdar+ ajoute le retour en arrière, les filtres, le matching prioritaire et la demande à se voir."],
   ["Et si je me cache ?", "Tu restes invisible : hdar+ ne change rien à ta visibilité."],
 ] as const;
 
@@ -178,7 +184,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
         <section className="mt-8 text-center">
           <p className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>Abonnement</p>
           <h1 className="mt-2 font-display text-5xl font-extrabold leading-tight">hdar<span className="premium-text">+</span></h1>
-          <p className="mx-auto mt-3 max-w-sm text-sm text-muted">Filtre la carte, découvre qui t'a vu et qui t'a mis en favori, retrouve un pseudo. Toujours anonyme.</p>
+          <p className="mx-auto mt-3 max-w-sm text-sm text-muted">Filtre la carte et le Live, découvre qui t'a vu et qui t'a mis en favori, retrouve un pseudo. Toujours anonyme.</p>
           <div className="relative mx-auto mt-6 flex size-36 items-center justify-center">
             <span className="absolute inset-0 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(${GOLD}, transparent 70%)` }} />
             <span className="premium-ring relative flex size-24 items-center justify-center rounded-full"><Crown className="size-10" style={{ color: GOLD }} /></span>
@@ -198,6 +204,27 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
               <Crown className="size-5" /> Passer à hdar+
             </button>
           )}
+        </section>
+
+        {/* Live */}
+        <section className="mt-12">
+          <h2 className="text-center font-display text-2xl font-extrabold">Le Live, en mieux</h2>
+          <p className="mt-1 text-center text-xs text-muted">Vidéo au hasard, floutée par défaut. Avec hdar+, tu prends la main.</p>
+          <div className="relative mx-auto mt-4 h-80 max-w-xs overflow-hidden rounded-[2rem] border border-line bg-[radial-gradient(circle_at_50%_40%,#3b2a3a,#0b0b10)]">
+            <div className="absolute inset-0 blur-[14px]"><div className="absolute top-[18%] left-1/2 size-28 -translate-x-1/2 rounded-full bg-[#c9a58c]/70" /><div className="absolute top-[52%] left-1/2 h-56 w-56 -translate-x-1/2 rounded-t-full bg-[#2b3a55]" /></div>
+            <span className="absolute top-3 left-3 rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[10px] font-bold">● LIVE</span>
+            <span className="absolute top-3 right-3 rounded-full bg-black/50 px-2 py-0.5 text-[10px]">Flouté</span>
+            <span className="absolute top-[46%] left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold whitespace-nowrap text-night shadow-[0_0_20px_#fbbf24]">Demande à se voir 👀</span>
+            <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
+              {["↩︎", "🎚️", "⚡"].map((x) => <span key={x} className="flex size-10 items-center justify-center rounded-full bg-white/15 backdrop-blur">{x}</span>)}
+            </div>
+          </div>
+          <ul className="mx-auto mt-4 grid max-w-sm grid-cols-2 gap-2 text-xs">
+            <li className="rounded-2xl bg-surface/70 p-3"><b className="block">↩︎ Retour arrière</b>la personne d'avant</li>
+            <li className="rounded-2xl bg-surface/70 p-3"><b className="block">🎚️ Filtres</b>H/F/X et âge</li>
+            <li className="rounded-2xl bg-surface/70 p-3"><b className="block">⚡ Prioritaire</b>ceux qui te cherchent</li>
+            <li className="rounded-2xl bg-surface/70 p-3"><b className="block">👀 Se voir</b>il choisit de se montrer</li>
+          </ul>
         </section>
 
         {/* Qui m'a vu / favoris */}

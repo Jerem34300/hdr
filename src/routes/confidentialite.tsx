@@ -150,6 +150,12 @@ function Privacy() {
           favori. Les visites sont gardées <strong>30 jours</strong>.
         </li>
         <li>
+          Live hdar+ : le retour arrière, les filtres et le matching prioritaire utilisent ton âge, H/F/X
+          et « Je cherche », jamais ta position. Une « Demande à se voir » n'envoie qu'une invitation :
+          rien n'est déflouté sans l'action de la personne concernée. L'heure de la dernière demande est
+          gardée le temps de la rencontre pour limiter à une demande.
+        </li>
+        <li>
           Ton consentement aux données sensibles est enregistré avec sa date, pour pouvoir le
           prouver ; il est effacé si tu le retires ou supprimes tes données.
         </li>
