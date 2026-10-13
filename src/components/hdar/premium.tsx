@@ -38,9 +38,9 @@ const PERKS = [
   ["📸", "20 photos d'album", "Au lieu de 5. Toujours privé, jamais de grille publique."],
   ["👑", "Badge hdar+", "Un petit badge discret sur ton pin et ta fiche."],
   ["🎥", "Live : revenir en arrière", "Tu as zappé trop vite ? Reviens sur la personne d'avant si elle est encore dans le Live."],
-  ["🎚️", "Live : filtres", "H/F/X et tranche d'âge : choisis qui tu croises en vidéo."],
-  ["⚡", "Live : matching prioritaire", "Tu tombes d'abord sur ceux qui cherchent ce que tu es, et que tu cherches."],
-  ["👀", "Live : Demande à se voir", "Il est flouté ? Envoie-lui une demande. Lui seul décide de se montrer."],
+  ["🎚️", "Filtres du Live", "H/F/X et tranche d'âge : choisis qui tu croises en vidéo."],
+  ["⚡", "Matching prioritaire", "Tu tombes d'abord sur ceux qui cherchent ce que tu es, et que tu cherches."],
+  ["👀", "Demande à se voir", "Il est flouté ? Envoie-lui une demande. Lui seul décide de se montrer."],
 ] as const;
 
 const FAQ = [
