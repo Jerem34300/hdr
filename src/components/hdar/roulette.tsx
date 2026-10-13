@@ -132,6 +132,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     return c;
   };
 
+  const lastNext = useRef(0);
   const watchdog = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clearWatch = () => { watchdog.current.forEach(clearTimeout); watchdog.current = []; };
   const sendOffer = async (card: LiveCard, restart = false) => {
@@ -151,6 +152,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   };
 
   async function next(back?: string) {
+    lastNext.current = Date.now();
     clearWatch();
     closePc();
     const old = peerRef.current;
@@ -201,7 +203,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       try {
         const st = await roulettePoll();
         if (typeof st.online === "number") setOnline(st.online);
-        if (st.id && st.id !== peerRef.current?.id && st.role === "answer") await matched(st as LiveCard);
+        if (st.id && st.id !== peerRef.current?.id) await matched(st as LiveCard); // offre ou réponse : jamais de match à sens unique
+        else if (!st.id && peerRef.current) { if (st.peer_gone) toast("La personne est partie, on cherche quelqu'un d'autre"); void next(); }
+        else if (!st.id && !peerRef.current && Date.now() - lastNext.current > 8000) void next(); // deux personnes en attente finissent par se croiser
         const rows = await roulettePollSignals(after.current);
         for (const r of rows) {
           after.current = Math.max(after.current, Number(r.id));

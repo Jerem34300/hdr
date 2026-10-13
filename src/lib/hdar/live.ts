@@ -938,7 +938,7 @@ export const mediaReport = (scope: "area" | "place" | "spot", id: string) => rpc
 
 // Live roulette (v32) -------------------------------------------------------------
 export type LiveCard = { pro?: { place: string; name: string; kind: string } | null; id: string; pseudo: string; age: number | null; iam: string | null; seeking: string | null; note: string | null; premium: boolean; role: "offer" | "answer" };
-export type LiveState = Partial<LiveCard> & { waiting?: boolean; in_queue?: boolean; back_gone?: boolean; online?: number };
+export type LiveState = Partial<LiveCard> & { waiting?: boolean; in_queue?: boolean; back_gone?: boolean; peer_gone?: boolean; online?: number };
 export const rouletteNext = (o: { iam?: string[]; minAge?: number | null; maxAge?: number | null; back?: string | null } = {}) =>
   rpc<LiveState>("hdar_live_next", { p_iam: o.iam?.length ? o.iam : null, p_min_age: o.minAge ?? null, p_max_age: o.maxAge ?? null, p_back: o.back ?? null });
 export const roulettePoll = () => rpc<LiveState>("hdar_live_poll", {});
