@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { RecoverLink } from "./recover";
 import {
   TURNSTILE_SITE_KEY,
   adultConfirmed,
@@ -138,6 +139,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
         <button type="submit" disabled={!ready} className="h-12 w-full rounded-full bg-signal text-night disabled:opacity-40">
           {busy ? "Connexion…" : "Entrer"}
         </button>
+        <RecoverLink captchaToken={token || undefined} onUsed={() => { setToken(""); if (widget.current) window.turnstile?.reset(widget.current); }} />
         <p className="text-center text-xs text-muted">
           En entrant, tu acceptes les <a className="underline" href="/cgu">conditions d'utilisation</a> et la{" "}
           <a className="underline" href="/confidentialite">politique de confidentialité</a>.

@@ -20,7 +20,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support";
 
 function readKey() {
   try {
@@ -174,6 +174,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["stats", "Temps réel"],
               ["reports", `Signalements${openReports ? ` (${openReports})` : ""}`],
               ["area", "Chat du quartier"],
+              ["support", "Support · rattacher"],
               ["photos", "Photos"],
               ["contacts", "Messages"],
               ["places", "Lieux proposés"],
@@ -217,6 +218,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "stats" && <Stats adminKey={adminKey} onReports={setOpenReports} />}
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
+        {tab === "support" && <SupportTab adminKey={adminKey} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
         {tab === "places" && <ProposedPlaces adminKey={adminKey} onOpen={setUserId} />}
@@ -864,5 +866,25 @@ function ProposedPlaces({ adminKey, onOpen }: { adminKey: string; onOpen: (id: s
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Support : rattache un profil (par pseudo) à la nouvelle session d'un utilisateur (ID support affiché dans ses Paramètres). Journalisé. */
+function SupportTab({ adminKey }: { adminKey: string }) {
+  const [pseudo, setPseudo] = useState("");
+  const [target, setTarget] = useState("");
+  const [msg, setMsg] = useState("");
+  return (
+    <section className="max-w-md space-y-3">
+      <h2 className="font-display text-xl font-bold">Rattacher un profil perdu</h2>
+      <p className="text-sm text-muted">Pseudo du profil d'origine + ID support de la nouvelle session (Paramètres → bas de page). L'ancienne session perd l'accès. Chaque action est journalisée.</p>
+      <input className="h-11 w-full rounded-xl border border-line bg-night px-3" placeholder="Pseudo d'origine" value={pseudo} onChange={(e) => setPseudo(e.target.value)} />
+      <input className="h-11 w-full rounded-xl border border-line bg-night px-3" placeholder="ID support (8 caractères)" value={target} onChange={(e) => setTarget(e.target.value)} />
+      <button type="button" disabled={!pseudo.trim() || target.trim().length < 8} className="h-11 rounded-full bg-signal px-5 font-bold text-night disabled:opacity-40"
+        onClick={() => { if (!window.confirm(`Rattacher « ${pseudo} » à la session ${target} ?`)) return; admin.reattach(adminKey, pseudo, target).then((r) => setMsg(`✅ Profil ${r.profile.slice(0, 8)} rattaché.`)).catch((e: Error) => setMsg(`❌ ${e.message}`)); }}>
+        Rattacher
+      </button>
+      {msg && <p className="text-sm">{msg}</p>}
+    </section>
   );
 }

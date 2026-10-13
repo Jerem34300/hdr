@@ -148,6 +148,22 @@ function Privacy() {
         </li>
       </ul>
 
+      <h2>Email facultatif (retrouver ton profil)</h2>
+      <ul>
+        <li>
+          Tu peux lier un email à ton profil (« Protège ton profil ») pour le retrouver si tu
+          effaces ton téléphone. C'est facultatif. L'email sert uniquement à t'envoyer un code à
+          6 chiffres de connexion ; il n'est <strong>jamais affiché</strong> aux autres ni utilisé
+          pour de la publicité. Il est géré par notre prestataire d'authentification (Supabase, UE)
+          et supprimé avec ton compte.
+        </li>
+        <li>
+          Si tu contactes le support, nous pouvons rattacher manuellement ton ancien profil à ta
+          nouvelle session (à partir de ton pseudo et de ton « ID support »). Chaque rattachement est
+          journalisé.
+        </li>
+      </ul>
+
       <h2>Cœurs du Live</h2>
       <ul>
         <li>

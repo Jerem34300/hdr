@@ -569,6 +569,7 @@ export type AdminBanRow = { user_id: string; pseudo: string; reason: string; at:
 export type AdminPhotoRow = { id: string; pseudo: string; photo: string; at: string };
 
 export const admin = {
+  reattach: (key: string, pseudo: string, target: string) => rpc<{ ok: boolean; profile: string }>("hdar_admin_reattach", { p_key: key, p_pseudo: pseudo, p_target: target }),
   stats: (key: string) => rpc<AdminStats>("hdar_admin_stats", { p_key: key }),
   reports: (key: string, all: boolean) =>
     rpc<AdminReportRow[]>("hdar_admin_reports", { p_key: key, p_all: all }),

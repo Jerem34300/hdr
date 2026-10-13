@@ -1,4 +1,5 @@
 import { NotifySettings } from "./notify-settings";
+import { ProtectProfileCard } from "./recover";
 import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
@@ -290,6 +291,7 @@ export function Me() {
       </section>
 
       <Favorites />
+      <ProtectProfileCard />
     </div>
   );
 }
@@ -481,6 +483,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         <span className="text-sm font-bold text-[#fbbf24]">Voir ›</span>
       </Link>
       <NotifySettings />
+      <p className="mt-6 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>
       <section className="mt-8 border-t border-line pt-6">
         <button
           type="button"

@@ -54,6 +54,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const convoIds = new Set(useHdar((s) => s.liveConvos).map((c) => c.otherId));
   const inLive = useMapFocus((s) => s.liveIds);
   const focus = useMapFocus((s) => s.focus);
+  const fly = useMapFocus((s) => s.fly);
   const [hl, setHl] = useState<string | null>(null);
   useEffect(() => {
     const t = () => { if (document.visibilityState === "visible") void liveIds().then((ids) => useMapFocus.setState({ liveIds: new Set(ids ?? []) })).catch(() => undefined); };
@@ -298,6 +299,16 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus]);
+
+  useEffect(() => {
+    if (!fly || Date.now() - fly.at > 5000) return;
+    follow.current = !!fly.mine;
+    const to = fly.mine ? you : fly;
+    setView((v) => ({ ...v, lat: to.lat, lng: to.lng }));
+    animateTo(fly.zoom);
+    useMapFocus.setState({ fly: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fly]);
 
   const pins = live.map((p) => ({
     id: p.id,
