@@ -1,6 +1,6 @@
 import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
-import { InviteCard, PremiumCard, SurprisePopup } from "./growth";
+import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
 import {
@@ -160,6 +160,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
+  if (location.search.includes("gift")) return <div className="h-dvh bg-[#1a1a24]"><div className="absolute right-3 bottom-6"><MapGiftButton demoOpen /></div></div>;
   if (location.search.includes("premium")) return <PremiumPage demo={{ admirers: { views: 42, favs: 7, viewers: [], fans: [] } as never, hits: [], premium: true }} />;
   const pin = location.search.includes("pin");
   if (pin) return (

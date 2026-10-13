@@ -107,7 +107,7 @@ export async function downloadStory() {
   } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
 }
 
-export function InviteCard({ demo }: { demo?: string }) {
+export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () => void }) {
   const [n, setN] = useState<{ code: string; invited: number; rewarded: number } | null>(demo ? { code: demo, invited: 0, rewarded: 0 } : null);
   useEffect(() => { if (!demo) void myRef().then(setN).catch(() => undefined); }, [demo]);
   if (!n) return null;
@@ -125,8 +125,8 @@ export function InviteCard({ demo }: { demo?: string }) {
           <button type="button" onClick={() => void copy()} className="rounded-full bg-white/10 px-3 py-2 text-xs font-bold">📋 Copier</button>
         </div>
         <div className="relative mt-3 flex gap-2">
-          <button type="button" onClick={() => void shareInvite()} className="boost-cta h-11 flex-1 rounded-full font-display font-extrabold text-night">Partager</button>
-          <button type="button" onClick={() => void downloadStory()} className="h-11 rounded-full border border-white/30 px-4 text-sm">📸 Story</button>
+          <button type="button" onClick={() => { void shareInvite(); onAction?.(); }} className="boost-cta h-11 flex-1 rounded-full font-display font-extrabold text-night">Partager</button>
+          <button type="button" onClick={() => { void downloadStory(); onAction?.(); }} className="h-11 rounded-full border border-white/30 px-4 text-sm">📸 Story</button>
         </div>
       </div>
     </div>
@@ -200,4 +200,26 @@ export function SurprisePopup() {
   if (thanks) return <GiftPopup title="Merci pour le partage 🎁" body={`Tu reçois ${thanks}.`} onClose={() => setThanks(null)} />;
   if (!s) return null;
   return <GiftPopup title="Surprise 🎉" body={`hdar t'offre ${s.label}. Profite-en !`} nudge onClose={() => setS(null)} />;
+}
+
+const GIFT_HIDE = "hdar-gift-hide-until";
+/** Bouton 🎁 de la carte : ouvre la carte cadeau en feuille, puis se cache 3 jours. */
+export function MapGiftButton({ demoOpen }: { demoOpen?: boolean }) {
+  const [hidden, setHidden] = useState(() => { try { return Number(localStorage.getItem(GIFT_HIDE) || 0) > Date.now(); } catch { return false; } });
+  const [open, setOpen] = useState(!!demoOpen);
+  const hide = () => { try { localStorage.setItem(GIFT_HIDE, String(Date.now() + 3 * 86400000)); } catch { /* */ } setOpen(false); setHidden(true); };
+  if (hidden && !open) return null;
+  return (
+    <>
+      <button type="button" aria-label="Invite un ami 🎁" onClick={() => setOpen(true)} className="gift-wiggle relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#3EE08F] to-[#FA6F6C] text-xl shadow-[0_0_16px_#3EE08F]">🎁</button>
+      {open && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 p-3 pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={hide}>
+          <div className="relative w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <button type="button" aria-label="Fermer" onClick={hide} className="absolute -top-3 right-2 z-10 flex size-9 items-center justify-center rounded-full bg-night text-lg shadow">✕</button>
+            <InviteCard demo={demoOpen ? "E610477" : undefined} onAction={hide} />
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

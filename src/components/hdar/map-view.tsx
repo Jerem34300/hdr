@@ -1,3 +1,4 @@
+import { MapGiftButton } from "./growth";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useToilets } from "./places-layer";
@@ -761,7 +762,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         <span className="pointer-events-none absolute top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-3xl">⌖</span>
       )}
       <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
-        <button type="button" aria-label="Invite un ami 🎁" onClick={() => useHdar.getState().setTab("me")} className="gift-wiggle relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#3EE08F] to-[#FA6F6C] text-xl shadow-[0_0_16px_#3EE08F]">🎁</button>
+        <MapGiftButton />
         <Link to="/live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
           <Video className="size-5" />
           <LiveBadge />
