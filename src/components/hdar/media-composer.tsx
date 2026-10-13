@@ -173,8 +173,8 @@ export function MediaView({ kind, path, duration }: { kind: string; path: string
     };
   }, [path]);
   const label = kind === "video" ? "Vidéo" : kind === "audio" ? "Vocal" : "Photo";
-  if (failed) return <p className="opacity-70">{label} indisponible</p>;
-  if (!src) return <p className="opacity-70">{label}{duration ? ` · ${duration}s` : ""}…</p>;
+  if (failed) return <span className="block opacity-70">{label} indisponible</span>;
+  if (!src) return <span className="block opacity-70">{label}{duration ? ` · ${duration}s` : ""}…</span>;
   if (kind === "audio") return <audio controls preload="metadata" src={src} className="h-10 w-60 max-w-full" />;
   if (kind === "video")
     return <video controls playsInline preload="metadata" src={src} className="max-h-72 max-w-full rounded-xl bg-black" />;
