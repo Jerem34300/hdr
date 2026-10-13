@@ -56,10 +56,14 @@ export function Spots() {
                 {remainingLabel(spot.closesAt, Date.now())}
               </span>
             </button>
-            {spot.creator && spot.live && (
-              <a href={`/boost?spot=${spot.id}#lieux`} aria-label="Booster ce lieu" className="boost-cta flex w-12 shrink-0 items-center justify-center rounded-2xl text-lg">✨</a>
+            {spot.creator && (
+              <span className="flex shrink-0 flex-col items-center justify-center gap-1.5">
+                {spot.live && (
+                  <a href={`/boost?spot=${spot.id}#lieux`} aria-label="Booster ce lieu" title="Booster ce lieu" className="boost-cta flex size-9 items-center justify-center rounded-full text-sm">✨</a>
+                )}
+                <DeleteSpotButton spot={spot} compact />
+              </span>
             )}
-            {spot.creator && <DeleteSpotButton spot={spot} />}
           </li>
         ))}
       </ul>
@@ -164,7 +168,7 @@ export function SpotRoom() {
   );
 }
 
-function DeleteSpotButton({ spot }: { spot: LiveSpot }) {
+function DeleteSpotButton({ spot, compact = false }: { spot: LiveSpot; compact?: boolean }) {
   const deleteSpot = useHdar((s) => s.deleteSpot);
   const [confirm, setConfirm] = useState(false);
   const timer = useRef(0);
@@ -174,7 +178,7 @@ function DeleteSpotButton({ spot }: { spot: LiveSpot }) {
       type="button"
       aria-label={confirm ? `Confirmer la suppression de ${spot.title}` : `Supprimer ${spot.title}`}
       className={
-        "flex shrink-0 items-center justify-center gap-1 rounded-2xl border px-3 text-xs " +
+        (compact ? "flex size-9 shrink-0 items-center justify-center rounded-full border " : "flex shrink-0 items-center justify-center gap-1 rounded-2xl border px-3 text-xs ") +
         (confirm ? "border-signal bg-signal text-night" : "border-line text-muted")
       }
       onClick={() => {
@@ -188,8 +192,8 @@ function DeleteSpotButton({ spot }: { spot: LiveSpot }) {
         timer.current = window.setTimeout(() => setConfirm(false), 4000);
       }}
     >
-      <Trash2 className="size-4" />
-      {confirm ? "Confirmer" : "Supprimer"}
+      {compact && confirm ? <span className="text-[10px] font-bold">OK ?</span> : <Trash2 className="size-4" />}
+      {!compact && (confirm ? "Confirmer" : "Supprimer")}
     </button>
   );
 }
