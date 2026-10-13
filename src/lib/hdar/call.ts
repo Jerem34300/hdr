@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { deviceId } from "./device";
-import { pollSignals, sendSignal, type SignalRow } from "./live";
+import { pollSignals, sendSignal, turnCached, turnServers, type SignalRow } from "./live";
 
 /**
  * One-to-one video calls over WebRTC. Signaling (offer / answer / hangup) goes
@@ -48,7 +48,7 @@ function iceServers(): RTCIceServer[] {
       credential: import.meta.env.VITE_TURN_PASS as string | undefined,
     });
   }
-  return servers;
+  return [...servers, ...turnCached()];
 }
 
 let pc: RTCPeerConnection | null = null;
@@ -129,7 +129,7 @@ export async function startCall(peerId: string, peerPseudo: string) {
     return;
   }
   useCall.setState({ phase: "calling", peerId, peerPseudo });
-  const local = await openCamera();
+  const local = await openCamera(); await turnServers();
   if (!local || useCall.getState().phase !== "calling") {
     local?.getTracks().forEach((t) => t.stop());
     reset();
@@ -160,7 +160,7 @@ export async function acceptCall() {
   const { phase, peerId } = useCall.getState();
   if (phase !== "ringing" || !pendingOffer) return;
   useCall.setState({ phase: "connecting" });
-  const local = await openCamera();
+  const local = await openCamera(); await turnServers();
   if (!local || useCall.getState().phase !== "connecting") {
     local?.getTracks().forEach((t) => t.stop());
     if (!local) hangUp();

@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShareLiveButton } from "./live-share";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
 import { useHdar } from "@/lib/hdar/store";
@@ -26,6 +26,7 @@ function ice(): RTCIceServer[] {
   const s: RTCIceServer[] = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"] }];
   const turn = import.meta.env.VITE_TURN_URL as string | undefined;
   if (turn) s.push({ urls: turn.split(","), username: import.meta.env.VITE_TURN_USER as string | undefined, credential: import.meta.env.VITE_TURN_PASS as string | undefined });
+  turnCache = turnCached().length ? turnCached() : turnCache;
   return [...s, ...turnCache];
 }
 function gathered(c: RTCPeerConnection) {
@@ -63,6 +64,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     catch (e) { const m = e instanceof Error ? e.message : ""; if (m.includes("no_hearts")) { setHearts(0); setPacksOpen(true); } else toast(m || "Impossible"); }
   };
   const [askSent, setAskSent] = useState(false);
+  const [gotVideo, setGotVideo] = useState(!!demo);
   const [theyBlur, setTheyBlur] = useState(!demo?.unblurred);
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const dc = useRef<RTCDataChannel | null>(null);
@@ -108,6 +110,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
 
   const makePc = () => {
     closePc();
+    setGotVideo(false);
     const c = new RTCPeerConnection({ iceServers: ice() });
     const raw = localRef.current;
     if (raw) {
@@ -122,7 +125,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     };
     c.ondatachannel = (e) => wire(e.channel);
     if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
-    c.ontrack = (e) => { if (themVid.current) { themVid.current.srcObject = e.streams[0] ?? new MediaStream([e.track]); void themVid.current.play().catch(() => undefined); } };
+    c.ontrack = (e) => { setGotVideo(true); if (themVid.current) { themVid.current.srcObject = e.streams[0] ?? new MediaStream([e.track]); void themVid.current.play().catch(() => undefined); } };
     c.onconnectionstatechange = () => {
       if (c !== pc.current) return;
       if (c.connectionState === "connected") { clearWatch(); setPhase("live"); }
@@ -347,9 +350,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           </div>
         </div>
       )}
-      {peer && (theyBlur || blurred) && (
+      {peer && (theyBlur || blurred || phase !== "live" || !gotVideo) && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
-          {theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Caméra floutée</span>}
+          {phase !== "live" || !gotVideo ? <span className="inline-flex items-center gap-2">Connexion…</span> : theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Caméra floutée</span>}
           {blurred && <span className="text-xs font-normal text-white/85">{pro ? "👆 Appuyez au milieu pour vous montrer" : "👆 Appuie au milieu pour te montrer"}</span>}
         </span>
       )}

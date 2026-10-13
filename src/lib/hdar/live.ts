@@ -949,13 +949,17 @@ export async function rouletteSignal(to: string, kind: "live-offer" | "live-answ
 }
 export const roulettePollSignals = (after: number) => rpc<SignalRow[]>("hdar_signal_poll", { p_self: "", p_after: after });
 /** Serveurs TURN (Cloudflare) de courte durée ; liste vide si non configuré. */
+let turnAt = 0; let turnVal: RTCIceServer[] = [];
+export function turnCached(): RTCIceServer[] { if (Date.now() - turnAt > 240000) void turnServers(); return turnVal; }
 export async function turnServers(): Promise<RTCIceServer[]> {
+  if (turnVal.length && Date.now() - turnAt < 240000) return turnVal;
   try {
     const token = await accessToken();
     const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-turn`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}` } });
     const d = (await res.json()) as { iceServers?: RTCIceServer[] };
+    if (d.iceServers?.length) { turnVal = d.iceServers; turnAt = Date.now(); }
     return d.iceServers ?? [];
-  } catch { return []; }
+  } catch { return turnVal; }
 }
 export const LIVE_TERMS_VERSION = 1;
 export const liveAccept = () => rpc("hdar_live_accept", { p_version: LIVE_TERMS_VERSION });
