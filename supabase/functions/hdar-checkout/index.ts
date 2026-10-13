@@ -86,8 +86,26 @@ Deno.serve(async (req) => {
       "line_items[0][price_data][currency]": "eur",
       "line_items[0][price_data][unit_amount]": String(p.price_cents),
       "line_items[0][price_data][product_data][name]":
-        p.kind === "boost" ? `hdar · Boost ${p.label}` : `hdar · Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
+        p.kind === "boost" ? `Boost hdar · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
+      "line_items[0][price_data][product_data][description]":
+        p.kind === "boost"
+          ? "Ton profil brille plus fort sur la carte hdar et remonte en tête autour de toi."
+          : "Ta fiche mise en avant sur la carte hdar : halo, photos, lien vers ton site et stats de visites.",
+      "line_items[0][price_data][product_data][images][0]": `${SITE}/boost-cover.jpg`,
+      "custom_text[submit][message]":
+        p.kind === "boost" ? "Ton boost s'active dès le paiement ✨" : "Ta fiche apparaît sur la carte dès le paiement ✨",
+      // Habillage de la page Checkout (l'API refuse de modifier le branding du compte lui-même).
+      "branding_settings[display_name]": "hdar",
+      "branding_settings[background_color]": "#0B0B10",
+      "branding_settings[button_color]": "#FA6F6C",
+      "branding_settings[border_style]": "rounded",
+      "branding_settings[icon][type]": "file",
+      "branding_settings[icon][file]": Deno.env.get("HDAR_STRIPE_ICON_FILE") ?? "file_1UPtQgLsLZMIGwHyI0tfd8uV",
+      "branding_settings[logo][type]": "file",
+      "branding_settings[logo][file]": Deno.env.get("HDAR_STRIPE_LOGO_FILE") ?? "file_1UPtQhLsLZMIGwHy9GvdN8M2",
     };
+    // payment_method_types n'est plus accepté : on exclut les moyens inutiles (reste carte + Link + wallets).
+    ["klarna", "bancontact", "amazon_pay", "eps", "mb_way", "satispay"].forEach((m, i) => (params[`excluded_payment_method_types[${i}]`] = m));
     for (const [k, v] of Object.entries(meta)) params[`metadata[${k}]`] = v;
     if (recurring) {
       params["line_items[0][price_data][recurring][interval]"] = p.interval;
