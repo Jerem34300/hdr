@@ -32,14 +32,14 @@ export function ProSpace() {
       <div className="mx-auto max-w-2xl">
         <a href="/" className="text-sm text-muted underline">← Retour à la carte</a>
         <h1 className="mt-3 font-display text-3xl font-extrabold">hdar<span className="text-signal">.</span> pro</h1>
-        <p className="mt-1 text-sm text-muted">Fais briller ton établissement sur la carte.</p>
+        <p className="mt-1 text-sm text-muted">Faites briller votre établissement sur la carte.</p>
         {payOk === false && (
           <p className="mt-4 rounded-2xl border border-[#fbbf24] px-4 py-3 text-sm text-[#fbbf24]">
-            💳 Paiement bientôt disponible. Tu peux déjà préparer ta fiche, elle s'activera dès le paiement.
+            💳 Paiement bientôt disponible. Vous pouvez déjà préparer votre fiche, elle s'activera dès le paiement.
           </p>
         )}
         <Places prices={prices.filter((p) => p.kind === "listing")} boostPrices={prices.filter((p) => p.kind === "pro_boost")} payOk={!!payOk} />
-        <ShinyCta href="/boost" sub="Ton profil à toi, en tête de la carte">Booster mon profil</ShinyCta>
+        <ShinyCta href="/boost" sub="Votre profil perso, en tête de la carte">Booster mon profil</ShinyCta>
       </div>
     </main>
   );
@@ -141,7 +141,7 @@ function PlaceForm({ init, onDone }: { init: PartnerInput; onDone: () => void })
   const set = (x: Partial<PartnerInput>) => setP((o) => ({ ...o, ...x }));
   const parsed = pos.match(/(-?\d{1,2}(?:\.\d+)?)[,\s/]+(-?\d{1,3}(?:\.\d+)?)/);
   const save = () => {
-    if (!parsed) return toast("Indique la position (ex. 43.6108, 3.8767) ou utilise ta position");
+    if (!parsed) return toast("Indiquez la position (ex. 43.6108, 3.8767) ou utilisez votre position");
     setBusy(true);
     partnerSave({ ...p, lat: Number(parsed[1]), lng: Number(parsed[2]) })
       .then(() => { toast("Fiche enregistrée"); onDone(); })
@@ -235,7 +235,7 @@ function Stats({ id }: { id: string }) {
       </div>
       <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[11px] text-muted sm:grid-cols-4">
         {([
-          ["Vues de la fiche", s.views], ["Visiteurs uniques", s.visitors], ["Clics vers ton site", s.clicks], ["Messages dans le chat", s.messages],
+          ["Vues de la fiche", s.views], ["Visiteurs uniques", s.visitors], ["Clics vers votre site", s.clicks], ["Messages dans le chat", s.messages],
           ["Note moyenne", s.avg != null ? `${s.avg}★` : "—"], ["Notes", s.ratings], ["Commentaires", s.comments],
         ] as const).map(([l, v]) => (
           <span key={l} className="rounded-xl bg-night px-2 py-2"><b className="block text-lg text-ink">{v}</b>{l}</span>

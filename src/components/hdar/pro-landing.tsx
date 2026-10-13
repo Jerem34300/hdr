@@ -35,7 +35,7 @@ export function MapSnippet() {
         <span key={n} className="absolute flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-online bg-surface text-xs font-bold" style={{ left: l, top: t }}>{n}</span>
       ))}
       <span className="absolute top-3 left-3 rounded-full bg-night/85 px-3 py-1 text-[11px] font-bold">Exemple · Montpellier</span>
-      <span className="absolute right-3 bottom-3 rounded-full bg-night/85 px-3 py-1 text-[11px]" style={{ color: "#f472b6" }}>✨ ton lieu brille sur la carte</span>
+      <span className="absolute right-3 bottom-3 rounded-full bg-night/85 px-3 py-1 text-[11px]" style={{ color: "#f472b6" }}>✨ votre lieu brille sur la carte</span>
     </div>
   );
 }
@@ -90,18 +90,18 @@ export function SampleFiche() {
 }
 
 const BENEFITS = [
-  ["📍", "Vu en temps réel", "Ton lieu s'affiche aux mecs connectés autour de toi, au moment où ils cherchent où sortir."],
+  ["📍", "Vu en temps réel", "Votre lieu s'affiche aux mecs connectés autour de vous, au moment où ils cherchent où sortir."],
   ["✨", "Un halo qui attire l'œil", "Ton pin brille sur la carte, impossible de le rater parmi les autres lieux."],
   ["💬", "Ton propre chat", "Annonce une soirée, réponds aux questions, crée l'envie avant même qu'ils arrivent."],
-  ["⭐", "Avis sous ton contrôle", "Notes et commentaires : activés ou non, publics sur la fiche ou privés pour toi seul."],
-  ["📊", "Des stats concrètes", "Vues, visiteurs uniques, clics vers ton site, zones d'origine, heures de pointe."],
-  ["🔒", "Respect de l'anonymat", "Stats agrégées par zone : tu mesures ton audience sans jamais savoir qui est qui."],
+  ["⭐", "Avis sous votre contrôle", "Notes et commentaires : activés ou non, publics sur la fiche ou privés pour vous seul."],
+  ["📊", "Des stats concrètes", "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe."],
+  ["🔒", "Respect de l'anonymat", "Stats agrégées par zone : vous mesurez votre audience sans jamais savoir qui est qui."],
 ] as const;
 
 const FAQ = [
-  ["Y a-t-il un engagement ?", "Non. Tu choisis 1 semaine, 1 mois ou 3 mois. L'abonnement se renouvelle, mais tu l'arrêtes quand tu veux."],
-  ["Comment résilier ?", "En un clic depuis ton espace pro, via le portail sécurisé Stripe. Ta fiche reste visible jusqu'à la fin de la période payée."],
-  ["Les utilisateurs restent-ils anonymes ?", "Oui. hdar ne te donne jamais l'identité ni la position exacte de quelqu'un : les statistiques sont regroupées par zone."],
+  ["Y a-t-il un engagement ?", "Non. Vous choisissez 1 semaine, 1 mois ou 3 mois. L'abonnement se renouvelle, mais vous l'arrêtez quand vous voulez."],
+  ["Comment résilier ?", "En un clic depuis votre espace pro, via le portail sécurisé Stripe. Votre fiche reste visible jusqu'à la fin de la période payée."],
+  ["Les utilisateurs restent-ils anonymes ?", "Oui. hdar ne vous donne jamais l'identité ni la position exacte de quelqu'un : les statistiques sont regroupées par zone."],
   ["Je peux désactiver les avis ?", "Oui, à tout moment : notes et commentaires activés ou non, publics ou privés."],
   ["Quels lieux sont acceptés ?", "Bars, clubs, saunas, événements, commerces gay-friendly. Les fiches sont modérées selon nos CGU."],
 ] as const;
@@ -156,12 +156,12 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
         <h2 className="font-display text-2xl font-extrabold">Tout ce qui est inclus</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {[
-            ["📍", "Ton lieu sur la carte", "Fiche avec photos, site, horaires, notes et chat du lieu, mise en avant avec son halo."],
-            ["🏷️", "Badge Partenaire", "Le nom de ton lieu et le badge Partenaire s'affichent partout où tu apparais."],
-            ["🎥", "Live Pro · toute la France", "Fais des lives vidéo sans limite de distance : tu croises des membres partout, pas seulement autour de toi."],
-            ["🎁", "Cadeaux pro", "Offre un verre, une entrée à -20 %… avec code promo et date d'expiration, à montrer sur place. 20 par jour."],
-            ["💬", "Écrire en pro", "Ouvre des conversations privées en tant que partenaire. 20 nouvelles conversations par jour."],
-            ["📊", "Stats en direct", "Vues, clics, messages et provenance de tes visiteurs, jour par jour."],
+            ["📍", "Votre lieu sur la carte", "Fiche avec photos, site, horaires, notes et chat du lieu, mise en avant avec son halo."],
+            ["🏷️", "Badge Partenaire", "Le nom de votre lieu et le badge Partenaire s'affichent partout où vous apparaissez."],
+            ["🎥", "Live Pro · toute la France", "Faites des lives vidéo sans limite de distance : vous croisez des membres partout, pas seulement autour de vous."],
+            ["🎁", "Cadeaux pro", "Offrez un verre, une entrée à -20 %… avec code promo et date d'expiration, à montrer sur place. 20 par jour."],
+            ["💬", "Écrire en pro", "Ouvrez des conversations privées en tant que partenaire. 20 nouvelles conversations par jour."],
+            ["📊", "Stats en direct", "Vues, clics, messages et provenance de vos visiteurs, jour par jour."],
           ].map(([i, t, d]) => (
             <div key={t} className="flex gap-3 rounded-2xl bg-night p-4">
               <span className="text-3xl">{i}</span>
@@ -213,7 +213,7 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
         <ul className="mt-3 space-y-1.5 text-sm">
           <li>🟡 <b>Pin doré</b> qui brille sur la carte</li>
           <li>⭐ En tête de <b>« À la une »</b> dans l'onglet Lieux</li>
-          <li>🎥 <b>Priorité dans le Live Pro</b> : les membres tombent sur toi en premier</li>
+          <li>🎥 <b>Priorité dans le Live Pro</b> : les membres tombent sur vous en premier</li>
         </ul>
         <table className="mt-4 w-full text-sm">
           <tbody>
@@ -222,7 +222,7 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-muted">Paiement unique, sans renouvellement. À acheter depuis ton espace partenaire, fiche par fiche.</p>
+        <p className="mt-2 text-xs text-muted">Paiement unique, sans renouvellement. À acheter depuis votre espace partenaire, fiche par fiche.</p>
       </section>
 
       {/* FAQ */}

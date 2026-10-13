@@ -324,7 +324,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       )}
       {asked && (
         <div className="absolute inset-x-6 top-1/3 z-20 animate-[pulse_1.6s_ease-in-out_infinite] rounded-3xl border border-[#fbbf24]/60 bg-night/90 p-4 text-center shadow-[0_0_40px_#fbbf24] backdrop-blur">
-          <p className="font-display text-lg font-bold">{peer?.pseudo} aimerait te voir 👀</p>
+          <p className="font-display text-lg font-bold">{peer?.pseudo} {pro ? "aimerait vous voir" : "aimerait te voir"} 👀</p>
           <div className="mt-3 flex gap-2">
             <button type="button" onClick={() => setAsked(false)} className="flex-1 rounded-full bg-white/10 py-2 text-sm">Non merci</button>
             <button type="button" onClick={() => { setAsked(false); void setBlur(false); }} className="flex-1 rounded-full bg-[#A1E3C3] py-2 text-sm font-bold text-night">Me montrer</button>
@@ -334,7 +334,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {peer && (theyBlur || blurred) && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
           {theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Il est flouté</span>}
-          {blurred && <span className="text-xs font-normal text-white/85">👆 Appuie au milieu pour te montrer</span>}
+          {blurred && <span className="text-xs font-normal text-white/85">{pro ? "👆 Appuyez au milieu pour vous montrer" : "👆 Appuie au milieu pour te montrer"}</span>}
         </span>
       )}
       <div ref={prevBox}
@@ -357,7 +357,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       </div>
       <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-center"><button type="button" onClick={() => void setBlur(!blurred)} className={`rounded-full px-4 py-1.5 text-sm font-bold backdrop-blur ${blurred ? "border border-white/70 bg-white/10" : "bg-[#A1E3C3] text-night"}`}>
-          {blurred ? <span className="inline-flex items-center gap-1.5"><Eye className="size-4" /> Tu es flouté · te montrer</span> : <span className="inline-flex items-center gap-1.5"><EyeOff className="size-4" /> Tu es visible · te flouter</span>}
+          {blurred ? <span className="inline-flex items-center gap-1.5"><Eye className="size-4" /> {pro ? "Vous êtes flouté · vous montrer" : "Tu es flouté · te montrer"}</span> : <span className="inline-flex items-center gap-1.5"><EyeOff className="size-4" /> {pro ? "Vous êtes visible · vous flouter" : "Tu es visible · te flouter"}</span>}
         </button></div>
         <div className="flex items-center justify-center gap-2.5">
           <Round label="Retourner la caméra" on={false} onClick={() => void flip()}><SwitchCamera className="size-5" /></Round>

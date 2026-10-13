@@ -43,7 +43,7 @@ export function ProGiftSheet({ places, to, pseudo, via, onClose }: { places: Pro
           <input value={code} maxLength={24} onChange={(e) => setCode(e.target.value)} placeholder="Code promo (optionnel)" className={inp} />
           <select value={days} onChange={(e) => setDays(Number(e.target.value))} className="rounded-xl bg-night px-2 text-sm">{[1, 3, 7, 14, 30].map((d) => <option key={d} value={d}>{d} j</option>)}</select>
         </div>
-        <p className="text-xs text-muted">20 cadeaux max par jour. La personne peut refuser les cadeaux pro ou te bloquer.</p>
+        <p className="text-xs text-muted">20 cadeaux max par jour. La personne peut refuser les cadeaux pro ou vous bloquer.</p>
         <button type="button" disabled={busy || !title.trim() || !place} onClick={() => void send()} className="boost-cta h-12 w-full rounded-full font-display font-extrabold text-night disabled:opacity-50">Envoyer le cadeau</button>
       </div>
     </div>
