@@ -941,3 +941,12 @@ export async function rouletteSignal(to: string, kind: "live-offer" | "live-answ
   await rpc("hdar_signal_send", { p_self: "", p_to: to, p_kind: kind, p_payload: payload });
 }
 export const roulettePollSignals = (after: number) => rpc<SignalRow[]>("hdar_signal_poll", { p_self: "", p_after: after });
+/** Serveurs TURN (Cloudflare) de courte durée ; liste vide si non configuré. */
+export async function turnServers(): Promise<RTCIceServer[]> {
+  try {
+    const token = await accessToken();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-turn`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}` } });
+    const d = (await res.json()) as { iceServers?: RTCIceServer[] };
+    return d.iceServers ?? [];
+  } catch { return []; }
+}

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ChevronUp, Crown, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
+import { turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
 
@@ -13,11 +13,12 @@ import { REPORT_REASONS } from "@/lib/hdar/report";
 type Phase = "intro" | "searching" | "connecting" | "live";
 type Filters = { iam: string[]; minAge: number | null; maxAge: number | null };
 
+let turnCache: RTCIceServer[] = [];
 function ice(): RTCIceServer[] {
   const s: RTCIceServer[] = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"] }];
   const turn = import.meta.env.VITE_TURN_URL as string | undefined;
   if (turn) s.push({ urls: turn.split(","), username: import.meta.env.VITE_TURN_USER as string | undefined, credential: import.meta.env.VITE_TURN_PASS as string | undefined });
-  return s;
+  return [...s, ...turnCache];
 }
 function gathered(c: RTCPeerConnection) {
   if (c.iceGatheringState === "complete") return Promise.resolve();
@@ -36,6 +37,10 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const [seeThem, setSeeThem] = useState(!!demo?.unblurred);
   const [showMe, setShowMe] = useState(false);
   const [mic, setMic] = useState(true);
+  const [theyShow, setTheyShow] = useState(!!demo?.unblurred);
+  const [facing, setFacing] = useState<"user" | "environment">("user");
+  const dc = useRef<RTCDataChannel | null>(null);
+  const showRef = useRef(false);
   const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
   const [filterOpen, setFilterOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -48,12 +53,19 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const running = useRef(false);
   const touchY = useRef<number | null>(null);
 
-  const closePc = () => { pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
+  const closePc = () => { dc.current = null; setTheyShow(false); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
   const makePc = () => {
     closePc();
     const c = new RTCPeerConnection({ iceServers: ice() });
     localRef.current?.getTracks().forEach((t) => c.addTrack(t, localRef.current!));
+    const wire = (ch: RTCDataChannel) => {
+      dc.current = ch;
+      ch.onopen = () => ch.send(JSON.stringify({ cam: showRef.current }));
+      ch.onmessage = (ev) => { try { setTheyShow(!!JSON.parse(String(ev.data)).cam); } catch { /* */ } };
+    };
+    c.ondatachannel = (e) => wire(e.channel);
+    if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
     c.ontrack = (e) => { if (themVid.current) { themVid.current.srcObject = e.streams[0] ?? new MediaStream([e.track]); void themVid.current.play().catch(() => undefined); } };
     c.onconnectionstatechange = () => {
       if (c !== pc.current) return;
@@ -99,6 +111,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
       localRef.current = s;
       if (meVid.current) { meVid.current.srcObject = s; void meVid.current.play().catch(() => undefined); }
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
+    turnCache = await turnServers();
     running.current = true;
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
@@ -142,7 +155,27 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   }
 
   useEffect(() => () => { if (running.current) { running.current = false; closePc(); localRef.current?.getTracks().forEach((t) => t.stop()); void rouletteLeave(false).catch(() => undefined); } }, []);
-  useEffect(() => { localRef.current?.getVideoTracks().forEach((t) => (t.enabled = showMe)); }, [showMe]);
+  useEffect(() => {
+    showRef.current = showMe;
+    localRef.current?.getVideoTracks().forEach((t) => (t.enabled = showMe));
+    if (dc.current?.readyState === "open") dc.current.send(JSON.stringify({ cam: showMe }));
+  }, [showMe]);
+  const flip = async () => {
+    const nextF = facing === "user" ? "environment" : "user";
+    try {
+      const fresh = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: nextF }, width: { ideal: 640 }, height: { ideal: 480 } }, audio: false })
+        .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: nextF }, audio: false }));
+      const track = fresh.getVideoTracks()[0];
+      if (!track || !localRef.current) return;
+      track.enabled = showRef.current;
+      const sender = pc.current?.getSenders().find((x) => x.track?.kind === "video");
+      if (sender) await sender.replaceTrack(track);
+      localRef.current.getVideoTracks().forEach((t) => { t.stop(); localRef.current!.removeTrack(t); });
+      localRef.current.addTrack(track);
+      if (meVid.current) meVid.current.srcObject = localRef.current;
+      setFacing(nextF);
+    } catch { toast("Impossible de changer de caméra"); }
+  };
   useEffect(() => { localRef.current?.getAudioTracks().forEach((t) => (t.enabled = mic)); }, [mic]);
 
   const report = async (reason: string) => {
@@ -193,6 +226,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         <div className="min-w-0">
           {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ml-1 text-sm">👑+</span>}</p>}
           {peer && <p className="text-xs text-white/80">{label(peer)}</p>}
+          {peer && <p className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${theyShow ? "bg-[#A1E3C3] text-night" : "bg-white/15 text-white/70"}`}>{theyShow ? "● Il se montre" : "Caméra cachée"}</p>}
           {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
         </div>
         <div className="flex items-center gap-2">
@@ -201,15 +235,23 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         </div>
       </div>
       {peer && !seeThem && (
-        <button type="button" onClick={() => setSeeThem(true)} className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-white/15 px-5 py-3 text-sm font-semibold backdrop-blur"><Eye className="size-4" /> Déflouter</button>
+        <button type="button" onClick={() => setSeeThem(true)} className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2 rounded-3xl bg-white/15 px-6 py-4 text-center backdrop-blur">
+          <span className="flex items-center gap-2 text-base font-bold"><Eye className="size-5" /> Il est flouté</span>
+          <span className="text-xs text-white/80">appuie pour voir</span>
+        </button>
       )}
       <div className="absolute right-3 bottom-40 h-40 w-28 overflow-hidden rounded-2xl border border-white/20 bg-night">
         <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover" style={{ opacity: showMe ? 1 : 0 }} />
-        {!showMe && <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center text-[11px] text-white/70"><EyeOff className="size-5" />Caméra cachée</div>}
+        {!showMe && <button type="button" onClick={() => setShowMe(true)} className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center text-[11px] text-white"><EyeOff className="size-5" /><b>Tu es caché</b>appuie pour te montrer</button>}
+        {showMe && <button type="button" aria-label="Retourner la caméra" onClick={() => void flip()} className="absolute right-1 bottom-1 flex size-8 items-center justify-center rounded-full bg-black/60"><SwitchCamera className="size-4" /></button>}
       </div>
       <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className="flex items-center justify-center gap-3">
+        {!showMe && peer && (
+          <button type="button" onClick={() => setShowMe(true)} className="w-full rounded-full border-2 border-white/80 bg-white/10 py-2.5 font-display font-bold backdrop-blur">🙈 Tu es caché — appuie pour te montrer</button>
+        )}
+        <div className="flex items-center justify-center gap-2.5">
           <Round label={showMe ? "Cacher ma caméra" : "Montrer ma caméra"} on={showMe} onClick={() => setShowMe(!showMe)}>{showMe ? <Video className="size-5" /> : <VideoOff className="size-5" />}</Round>
+          <Round label="Retourner la caméra" on={false} onClick={() => void flip()}><SwitchCamera className="size-5" /></Round>
           <Round label={mic ? "Couper le micro" : "Activer le micro"} on={mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>
           <Round label="Revenir en arrière (hdar+)" on={false} onClick={() => { if (!premium) return void nav({ to: "/premium" }); if (!prev) return toast("Personne avant"); void next(prev.id); }}>
             <RotateCcw className="size-5" />{!premium && <Crown className="absolute -top-1 -right-1 size-4 text-[#fbbf24]" />}
@@ -249,5 +291,5 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
 }
 
 function Round({ children, label: l, on, danger, onClick }: { children: React.ReactNode; label: string; on: boolean; danger?: boolean; onClick: () => void }) {
-  return <button type="button" aria-label={l} title={l} onClick={onClick} className={`relative flex size-12 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-500/80" : on ? "bg-white text-night" : "bg-white/15"}`}>{children}</button>;
+  return <button type="button" aria-label={l} title={l} onClick={onClick} className={`relative flex size-11 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-500/80" : on ? "bg-white text-night" : "bg-white/15"}`}>{children}</button>;
 }
