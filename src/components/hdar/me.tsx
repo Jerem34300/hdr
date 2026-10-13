@@ -42,7 +42,9 @@ export function Me() {
     if (me.onboarded) void getProfile(deviceId(), deviceId()).then((p) => { if (p) { setIam(p.iam); setSeeking(p.seeking); } }).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const [consent, setConsent] = useState(() => typeof localStorage !== "undefined" && localStorage.getItem("hdar.sensitiveConsent") === "1");
   const saveIdentity = (a: string, b: string[]) => {
+    if (!consent && (a || b.length)) { toast("Coche d'abord la case de consentement"); return; }
     setIam(a); setSeeking(b);
     void setIdentity(a, b).catch((e: Error) => toast(e.message.includes("profil") ? "Crée d'abord ton profil" : e.message));
   };
@@ -93,17 +95,25 @@ export function Me() {
       <BoostButton />
 
       <section className="mt-6">
+        <label className="mb-3 flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
+          <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => {
+            const v = e.target.checked; setConsent(v);
+            try { localStorage.setItem("hdar.sensitiveConsent", v ? "1" : "0"); } catch { /* ignore */ }
+            if (!v && (iam || seeking.length)) { setIam(""); setSeeking([]); void setIdentity("", []).catch(() => undefined); }
+          }} />
+          <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; décocher efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
+        </label>
         <h2 className="font-display text-lg font-bold">Je suis</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {GENDERS.map((g) => (
-            <button key={g.id} type="button" disabled={!me.onboarded} onClick={() => saveIdentity(iam === g.id ? "" : g.id, seeking)}
+            <button key={g.id} type="button" disabled={!me.onboarded || !consent} onClick={() => saveIdentity(iam === g.id ? "" : g.id, seeking)}
               className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (iam === g.id ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
           ))}
         </div>
         <h2 className="mt-4 font-display text-lg font-bold">Je cherche</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {GENDERS.map((g) => (
-            <button key={g.id} type="button" disabled={!me.onboarded} onClick={() => saveIdentity(iam, seeking.includes(g.id) ? seeking.filter((x) => x !== g.id) : [...seeking, g.id])}
+            <button key={g.id} type="button" disabled={!me.onboarded || !consent} onClick={() => saveIdentity(iam, seeking.includes(g.id) ? seeking.filter((x) => x !== g.id) : [...seeking, g.id])}
               className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (seeking.includes(g.id) ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
           ))}
         </div>

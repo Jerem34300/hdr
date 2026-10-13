@@ -56,58 +56,156 @@ function Privacy() {
         </li>
       </ul>
 
-      <h2>Messages et photos</h2>
+      <h2>Ton profil et données sensibles</h2>
       <ul>
         <li>
-          Les messages privés (texte, photos, vocaux) ne sont visibles que par toi et ton
-          interlocuteur.
+          La <strong>phrase du moment</strong> que tu écris est affichée sur ta fiche, visible par
+          les personnes qui cliquent sur toi depuis la carte.
+        </li>
+        <li>
+          « <strong>Je suis</strong> » et « <strong>Je cherche</strong> » (H, F, X) sont{" "}
+          <strong>facultatifs</strong>. Comme ils peuvent révéler ton orientation sexuelle, ce sont
+          des données sensibles (article 9 du RGPD) : ils ne sont enregistrés qu'avec ton{" "}
+          <strong>consentement explicite</strong> (case à cocher dans ton profil). Tu peux retirer
+          ce consentement à tout moment en décochant la case : ces infos sont alors effacées.
+        </li>
+        <li>Ces infos ne sont jamais vendues ni utilisées pour de la publicité.</li>
+      </ul>
+
+      <h2>Messages, photos, vidéos et vocaux</h2>
+      <ul>
+        <li>
+          Les messages privés (texte, photos, vidéos, vocaux) ne sont visibles que par toi et ton
+          interlocuteur. Dans le chat de quartier et les chats de lieux, ils sont visibles par les
+          personnes présentes dans ce chat.
+        </li>
+        <li>
+          Les médias sont stockés chez notre hébergeur (Supabase, UE) et{" "}
+          <strong>effacés automatiquement</strong> dès que plus personne ne peut voir leur message :
+          24 h pour le chat de quartier, 24 h après la fermeture d'un lieu, 30 jours en privé.
+          Vidéos limitées à 60 secondes.
+        </li>
+        <li>
+          Chaque média peut être signalé (🚩). Après <strong>3 signalements</strong>, il est masqué
+          automatiquement en attendant l'examen d'un modérateur.
         </li>
         <li>
           La première photo de ton profil passe un contrôle automatique de nudité explicite,
           effectué <strong>dans ton navigateur</strong> (NSFW.js) : l'image n'est envoyée à aucun
-          service tiers pour cela. Une photo signalée n'est visible que par toi jusqu'à vérification
-          par un modérateur.
+          service tiers pour cela.
         </li>
         <li>
-          Les modérateurs peuvent consulter les contenus d'un profil signalé pour traiter le
-          signalement.
+          Les modérateurs peuvent consulter les contenus signalés pour traiter le signalement.
         </li>
       </ul>
+
+      <h2>Live vidéo</h2>
+      <ul>
+        <li>Réservé aux 18 ans et plus, comme toute l'appli.</li>
+        <li>
+          La vidéo passe <strong>directement d'un appareil à l'autre</strong> (WebRTC, pair à pair).
+          Elle n'est <strong>ni enregistrée ni stockée</strong> par hdar. Seuls de courts signaux de
+          connexion transitent par nos serveurs, puis sont effacés.
+        </li>
+        <li>
+          En connexion directe, ton <strong>adresse IP</strong> peut être visible techniquement par
+          la personne en face. Aucune distance ni position n'est affichée.
+        </li>
+        <li>
+          Ta caméra est <strong>floutée par défaut</strong> ; c'est toi qui décides de la
+          déflouter. Tu peux passer, bloquer ou signaler à tout moment ; un signalement peut
+          entraîner un bannissement.
+        </li>
+      </ul>
+
+      <h2>Paiements (boosts, hdar+, partenaires)</h2>
+      <ul>
+        <li>
+          Les paiements (boost de profil ou de lieu, abonnement hdar+, fiches partenaires) sont
+          traités par <strong>Stripe</strong>. hdar. ne voit ni ne stocke jamais ton numéro de
+          carte.
+        </li>
+        <li>
+          Stripe reçoit les informations nécessaires au paiement (carte, email si tu le saisis pour
+          le reçu, pays) et les traite selon sa propre politique de confidentialité. hdar. ne garde
+          que l'identifiant de paiement, le produit, le montant et les dates, pour activer ton achat
+          et pour la comptabilité (factures conservées 10 ans, obligation légale).
+        </li>
+      </ul>
+
+      <h2>hdar+ : visites, favoris, recherche</h2>
+      <ul>
+        <li>
+          Quand tu ouvres une fiche ou mets quelqu'un en favori, cela est enregistré pour que les
+          abonnés hdar+ puissent voir <strong>qui a vu leur profil</strong> et qui les a mis en
+          favori. Les visites sont gardées <strong>30 jours</strong>.
+        </li>
+        <li>
+          Les abonnés peuvent chercher un profil par pseudo. La recherche ne montre jamais de
+          position, ni les profils bloqués, cachés ou supprimés.
+        </li>
+      </ul>
+
+      <h2>Lieux partenaires : notes et commentaires</h2>
+      <p>
+        Tu peux noter et commenter un lieu partenaire. Ta note et ton commentaire sont publics,
+        affichés avec ton pseudo, et peuvent être signalés et retirés par la modération. Ils sont
+        effacés si tu supprimes tes données.
+      </p>
+
+      <h2>Statistiques anonymes</h2>
+      <p>
+        Pour savoir si l'appli est utilisée et aider nos partenaires, nous comptons des visites de
+        façon <strong>agrégée et anonyme</strong>, par zones d'environ <strong>1 km</strong>, sans
+        lien avec ton profil. Ces statistiques sont gardées <strong>400 jours</strong>. Aucun
+        outil d'analyse tiers, aucun traceur publicitaire.
+      </p>
 
       <h2>Durées de conservation</h2>
       <ul>
         <li>Position sur la carte : effacée à la fin de la durée choisie (1, 3 ou 12 h).</li>
         <li>Position exacte partagée en privé : 1 h.</li>
+        <li>Signaux d'appel et de live vidéo : 1 h maximum. Le live n'est jamais enregistré.</li>
+        <li>Chat de quartier et ses médias : 24 h. Lieux et leurs messages : 24 h après fermeture.</li>
         <li>
-          Signaux d'appel vidéo : 1 h. Messages du chat de quartier : 24 h. Lieux et leurs messages
-          : 24 h après leur fermeture.
+          Messages privés et leurs médias : <strong>30 jours</strong>.
         </li>
-        <li>
-          Messages privés : <strong>30 jours</strong>.
-        </li>
-        <li>Statistiques de fréquentation (nombre de visites) : 90 jours.</li>
-        <li>Une purge automatique tourne toutes les 10 minutes.</li>
+        <li>Visites de profil (hdar+) : 30 jours.</li>
+        <li>Statistiques agrégées anonymes : 400 jours.</li>
+        <li>Profil, favoris, notes : jusqu'à suppression de tes données.</li>
+        <li>Données de paiement et factures : 10 ans (obligation comptable).</li>
+        <li>Messages du formulaire de contact : 1 an maximum.</li>
+        <li>Une purge automatique tourne en continu (toutes les 10 minutes à 1 heure).</li>
       </ul>
 
-      <h2>Où sont les données</h2>
-      <p>
-        Les données sont hébergées par Supabase dans l'Union européenne (région{" "}
-        <strong>Paris</strong>). Le site est servi par Netlify. Aucune donnée n'est vendue.{" "}
-        <strong>Aucune publicité, aucun traceur publicitaire</strong>, aucun outil d'analyse tiers.
-      </p>
+      <h2>Sous-traitants</h2>
+      <ul>
+        <li><strong>Supabase</strong> : base de données et fichiers, hébergés dans l'UE (Paris).</li>
+        <li><strong>Netlify</strong> : hébergement du site.</li>
+        <li><strong>Stripe</strong> : paiements.</li>
+        <li><strong>Cloudflare</strong> : contrôle anti-robot Turnstile à l'entrée.</li>
+        <li>
+          <strong>Fonds de carte</strong> (tuiles cartographiques, données © OpenStreetMap) : ton
+          navigateur les télécharge, ce qui transmet ton adresse IP au serveur de tuiles.
+        </li>
+      </ul>
+      <p>Aucune donnée n'est vendue. Aucune publicité.</p>
 
       <h2>Tes droits (RGPD)</h2>
       <ul>
         <li>
-          Tu peux supprimer à tout moment <strong>toutes tes données</strong> depuis « Mon profil »
-          → « Supprimer toutes mes données » : profil, photos, vocal, messages, médias, favoris,
-          position et compte anonyme.
+          Tu peux supprimer à tout moment <strong>toutes tes données</strong> et ton compte depuis
+          « Mon profil » → ⚙️ <strong>Paramètres</strong> → « Supprimer toutes mes données » :
+          profil, photos, vocal, messages, médias, favoris, notes, position et compte anonyme.
         </li>
         <li>
-          Pour toute question ou demande (accès, rectification, opposition) : via le <ContactLink />{" "}
-          (sujet « RGPD / suppression »). Les messages envoyés via ce formulaire sont conservés au maximum 1 an pour traiter ta demande, y compris après « Supprimer toutes mes données » (ils sont ensuite effacés automatiquement).
+          Pour exercer tes droits d'accès, de rectification, d'opposition, de portabilité ou de
+          retrait du consentement : via le <ContactLink /> (sujet « RGPD / suppression »). Réponse
+          sous un mois.
         </li>
-        <li>Tu peux aussi saisir la CNIL (cnil.fr).</li>
+        <li>
+          Tu peux aussi introduire une réclamation auprès de la <strong>CNIL</strong> (cnil.fr).
+        </li>
       </ul>
     </LegalPage>
   );

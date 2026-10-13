@@ -16,26 +16,39 @@ function Terms() {
       </p>
       <h2>2. Anonymat</h2>
       <p>
-        Le service est anonyme et gratuit. Tu restes responsable de ce que tu publies et partages, y
+        Le service est anonyme et gratuit dans sa version de base. Tu restes responsable de ce que tu publies et partages, y
         compris ta position exacte lorsque tu choisis de l'envoyer.
       </p>
       <h2>3. Ce qui est interdit</h2>
       <ul>
         <li>
-          Photo de profil explicite (l'album et les messages privés restent sous ta responsabilité
-          et doivent respecter la loi).
+          <strong>Toute présence ou tout contenu impliquant un mineur</strong> : signalé aux
+          autorités et banni définitivement.
         </li>
-        <li>Tout contenu impliquant un mineur, non consenti, haineux, menaçant ou illégal.</li>
+        <li>
+          Photo de profil explicite. Nudité ou contenu sexuel imposé à quelqu'un qui ne l'a pas
+          demandé, dans les chats publics ou en live (caméra floutée par défaut).
+        </li>
+        <li>Contenu non consenti, haineux, violent, menaçant ou illégal ; drogue, armes.</li>
         <li>
           Harcèlement, usurpation d'identité, spam, prostitution ou sollicitation commerciale.
         </li>
-        <li>Diffuser hors de l'appli des contenus ou positions reçus d'autres personnes.</li>
+        <li>
+          Enregistrer, capturer ou diffuser hors de l'appli des contenus, lives ou positions reçus
+          d'autres personnes.
+        </li>
       </ul>
-      <h2>4. Modération</h2>
+      <h2>4. Modération et signalement</h2>
       <p>
-        Tu peux bloquer et signaler n'importe quel profil. Les modérateurs peuvent masquer des
-        contenus, retirer une photo ou suspendre un appareil, sans préavis, en cas de non-respect de
-        ces règles.
+        Tu peux bloquer et signaler n'importe quel profil, média ou live. Un média signalé 3 fois
+        est masqué automatiquement. Les modérateurs peuvent masquer des contenus, retirer une photo,
+        suspendre ou bannir un appareil, sans préavis, en cas de non-respect de ces règles.
+      </p>
+      <p>
+        <strong>Contenus illicites (DSA)</strong> : le point de contact unique pour les
+        utilisateurs et les autorités est le <ContactLink /> (sujet « Signalement »). Indique le
+        contenu concerné et pourquoi il est illicite ; nous agissons rapidement et t'informons de
+        la décision.
       </p>
       <h2>5. Sécurité lors des rencontres</h2>
       <p>
@@ -52,9 +65,39 @@ function Terms() {
       </p>
       <h2>7. Lieux permanents</h2>
       <p>La couche « Lieux permanents » affiche des lieux publics et gratuits. Une partie provient d'OpenStreetMap (© OpenStreetMap contributors, licence ODbL). Les lieux proposés par les utilisateurs sont vérifiés avant publication. hdar. n'encourage aucune pratique illégale : la loi, le consentement et le respect des autres usagers s'appliquent partout.</p>
-      <h2>8. Contact</h2>
+      <h2>8. Services payants</h2>
+      <ul>
+        <li>
+          Boosts (profil ou lieu), abonnement <strong>hdar+</strong> et fiches partenaires sont
+          payés via Stripe. Les prix TTC sont affichés avant paiement.
+        </li>
+        <li>
+          Ces services numériques sont <strong>exécutés immédiatement</strong>. En payant, tu
+          demandes cette exécution immédiate et <strong>renonces à ton droit de rétractation</strong>{" "}
+          de 14 jours (article L221-28 du Code de la consommation).
+        </li>
+        <li>Un boost commencé n'est pas remboursable.</li>
+        <li>
+          hdar+ et les fiches partenaires se renouvellent automatiquement et sont résiliables à
+          tout moment depuis le portail de gestion Stripe (lien dans l'appli) ; l'accès reste actif
+          jusqu'à la fin de la période payée. Les factures sont disponibles dans ce portail.
+        </li>
+      </ul>
+      <h2>9. Lieux partenaires, notes et commentaires</h2>
       <p>
-        Via le <ContactLink /> (accessible aussi depuis « Mon profil »).
+        Les notes et commentaires doivent refléter une expérience réelle, rester respectueux et ne
+        pas contenir de données personnelles de tiers. Ils peuvent être retirés par la modération.
+      </p>
+      <h2>10. Live vidéo</h2>
+      <p>
+        Le live met en relation au hasard des personnes majeures. Il n'est pas enregistré par
+        hdar. La vidéo passant d'appareil à appareil, ton adresse IP peut être visible par ton
+        interlocuteur. Les règles ci-dessus s'appliquent ; tout abus entraîne un bannissement.
+      </p>
+      <h2>11. Mentions légales et contact</h2>
+      <p>
+        Éditeur : hdar. Hébergement : Netlify, Inc. (site) et Supabase (données, UE). Contact,
+        RGPD et signalements : via le <ContactLink /> (accessible aussi depuis « Mon profil »).
       </p>
     </LegalPage>
   );
