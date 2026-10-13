@@ -944,7 +944,7 @@ export const rouletteNext = (o: { iam?: string[]; minAge?: number | null; maxAge
 export const roulettePoll = () => rpc<LiveState>("hdar_live_poll", {});
 export const rouletteLeave = (stay = false) => rpc("hdar_live_leave", { p_stay: stay });
 export const rouletteReport = (other: string, reason: string) => rpc("hdar_live_report", { p_other: other, p_reason: reason });
-export async function rouletteSignal(to: string, kind: "live-offer" | "live-answer" | "live-bye", payload = "") {
+export async function rouletteSignal(to: string, kind: "live-offer" | "live-answer" | "live-bye" | "live-ice", payload = "") {
   await rpc("hdar_signal_send", { p_self: "", p_to: to, p_kind: kind, p_payload: payload });
 }
 export const roulettePollSignals = (after: number) => rpc<SignalRow[]>("hdar_signal_poll", { p_self: "", p_after: after });

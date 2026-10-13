@@ -814,10 +814,11 @@ function LiveBadge() {
   const [n, setN] = useState(0);
   useEffect(() => {
     let alive = true;
-    const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => undefined); };
+    const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => alive && setN(0)); };
     tick();
-    const t = setInterval(tick, 30000);
-    return () => { alive = false; clearInterval(t); };
+    const t = setInterval(tick, 10000);
+    document.addEventListener("visibilitychange", tick); window.addEventListener("focus", tick);
+    return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); window.removeEventListener("focus", tick); };
   }, []);
   return n > 0 ? (
     <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-night px-1.5 py-0.5 text-[10px] font-bold text-white">

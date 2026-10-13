@@ -31,7 +31,7 @@ function ice(): RTCIceServer[] {
 }
 function gathered(c: RTCPeerConnection) {
   if (c.iceGatheringState === "complete") return Promise.resolve();
-  return new Promise<void>((r) => { const t = setTimeout(r, 2500); c.addEventListener("icegatheringstatechange", () => { if (c.iceGatheringState === "complete") { clearTimeout(t); r(); } }); });
+  return new Promise<void>((r) => { const t = setTimeout(r, 700); c.addEventListener("icegatheringstatechange", () => { if (c.iceGatheringState === "complete") { clearTimeout(t); r(); } }); });
 }
 const label = (c: LiveCard) => [c.age ? `${c.age} ans` : null, c.iam || null, c.seeking ? `cherche ${c.seeking.split(",").join(", ")}` : null].filter(Boolean).join(" · ");
 
@@ -80,6 +80,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const running = useRef(false);
   const touchY = useRef<number | null>(null);
 
+  const pendingIce = useRef<RTCIceCandidateInit[]>([]);
   const closePc = () => { dc.current = null; setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
   useEffect(() => { if (phase !== "intro") showPreview(); });
@@ -108,6 +109,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     try { await liveAsk(); setAskSent(true); toast("Demande envoyée 👀"); } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
   };
 
+  
+  const flushIce = async (c: RTCPeerConnection) => { if (!c.remoteDescription) return; const l = pendingIce.current; pendingIce.current = []; for (const x of l) await c.addIceCandidate(x).catch(() => undefined); };
   const makePc = () => {
     closePc();
     setGotVideo(false);
@@ -124,6 +127,12 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       ch.onmessage = (ev) => { try { const b = JSON.parse(String(ev.data)).blur !== false; setTheyBlur((was) => { if (was && !b) toast(askSentRef.current ? "Il a accepté, il se montre 👀" : "Il se montre 👀"); return b; }); } catch { /* */ } };
     };
     c.ondatachannel = (e) => wire(e.channel);
+    let batch: RTCIceCandidateInit[] = []; let bt: ReturnType<typeof setTimeout> | null = null;
+    c.onicecandidate = (e) => {
+      if (!e.candidate) return;
+      batch.push(e.candidate.toJSON());
+      if (!bt) bt = setTimeout(() => { bt = null; const to = peerRef.current?.id; const b = batch; batch = []; if (to && c === pc.current && b.length) void rouletteSignal(to, "live-ice", JSON.stringify(b)).catch(() => undefined); }, 250);
+    };
     if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
     c.ontrack = (e) => { setGotVideo(true); if (themVid.current) { themVid.current.srcObject = e.streams[0] ?? new MediaStream([e.track]); void themVid.current.play().catch(() => undefined); } };
     c.onconnectionstatechange = () => {
@@ -145,11 +154,11 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     if (pc.current === c && peerRef.current?.id === card.id) await rouletteSignal(card.id, "live-offer", JSON.stringify(c.localDescription)).catch(() => undefined);
   };
   const matched = async (card: LiveCard) => {
-    peerRef.current = card; setPeer(card); setAsked(false); setAskSent(false); setPhase("connecting");
+    peerRef.current = card; pendingIce.current = []; setPeer(card); setAsked(false); setAskSent(false); setPhase("connecting");
     clearWatch();
     const stuck = () => peerRef.current?.id === card.id && pc.current?.connectionState !== "connected";
     // Pas de connexion après 10 s : on renvoie l'offre (redémarrage ICE) ; après 30 s on passe au suivant.
-    watchdog.current.push(setTimeout(() => { if (stuck() && card.role === "offer") void sendOffer(card, true).catch(() => undefined); }, 10000));
+    watchdog.current.push(setTimeout(() => { if (stuck() && card.role === "offer") void sendOffer(card, true).catch(() => undefined); }, 8000));
     watchdog.current.push(setTimeout(() => { if (stuck()) { toast("Connexion impossible avec cette personne (réseau), on passe au suivant"); void next(); } }, 30000));
     if (card.role === "offer") await sendOffer(card);
   };
@@ -183,7 +192,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       blurRef.current = !pro; setBlurred(!pro);
       showPreview();
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
-    turnCache = await turnServers();
+    void turnServers().then((l) => { if (l.length) turnCache = l; });
     running.current = true;
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
@@ -217,18 +226,25 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           if (k === "live-bye") { void next(); break; }
           if (k === "live-heart") { setBurst(Date.now()); toast("Tu as reçu un ❤️"); continue; }
           if (k === "live-ask") { if (blurRef.current) { setAsked(true); navigator.vibrate?.(120); } continue; }
+          if (k === "live-ice") {
+            try { pendingIce.current.push(...(JSON.parse(r.payload) as RTCIceCandidateInit[])); } catch { /* */ }
+            if (pc.current) await flushIce(pc.current);
+            continue;
+          }
           if (k === "live-offer") {
             const c = pc.current && pc.current.signalingState === "stable" && pc.current.connectionState !== "closed" ? pc.current : makePc();
             await c.setRemoteDescription(JSON.parse(r.payload));
+            await flushIce(c);
             await c.setLocalDescription(await c.createAnswer());
             await gathered(c);
             if (pc.current === c) await rouletteSignal(r.from_id, "live-answer", JSON.stringify(c.localDescription));
           } else if (k === "live-answer" && pc.current && pc.current.signalingState === "have-local-offer") {
             await pc.current.setRemoteDescription(JSON.parse(r.payload));
+            await flushIce(pc.current);
           }
         }
       } catch { /* réseau : on réessaie */ }
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, peerRef.current && pc.current?.connectionState !== "connected" ? 400 : 1500));
     }
   }
 

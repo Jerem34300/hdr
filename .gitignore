@@ -12,3 +12,4 @@ attachments
 .env
 .env.*
 
+supabase/.temp
