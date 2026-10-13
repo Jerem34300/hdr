@@ -193,8 +193,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       if (r.id) await matched(r as LiveCard);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
-      toast(m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
-      if (m.includes("live_photo") || m.includes("live_age") || m.includes("profil")) { stop(false); setGate(m.includes("live_age") ? "Indique ton âge." : m.includes("live_photo") ? "Ta première photo doit être validée." : "Crée ton profil."); setPhase("intro"); }
+      toast(m.includes("live_nopos") ? "Active ta position : le Live ne te met jamais en relation avec quelqu'un à moins de 2 km" : m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
+      if (m.includes("live_nopos")) { stop(false); setGate("Active ta position pour entrer dans le Live."); setPhase("intro"); }
+      else if (m.includes("live_photo") || m.includes("live_age") || m.includes("profil")) { stop(false); setGate(m.includes("live_age") ? "Indique ton âge." : m.includes("live_photo") ? "Ta première photo doit être validée." : "Crée ton profil."); setPhase("intro"); }
       if (m.includes("live_terms")) { localStorage.removeItem(`hdar-live-terms-v${LIVE_TERMS_VERSION}`); stop(); }
     }
   }

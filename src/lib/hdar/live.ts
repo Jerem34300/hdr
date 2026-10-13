@@ -939,8 +939,19 @@ export const mediaReport = (scope: "area" | "place" | "spot", id: string) => rpc
 // Live roulette (v32) -------------------------------------------------------------
 export type LiveCard = { pro?: { place: string; name: string; kind: string } | null; id: string; pseudo: string; age: number | null; iam: string | null; seeking: string | null; note: string | null; premium: boolean; role: "offer" | "answer" };
 export type LiveState = Partial<LiveCard> & { waiting?: boolean; in_queue?: boolean; back_gone?: boolean; peer_gone?: boolean; online?: number };
-export const rouletteNext = (o: { iam?: string[]; minAge?: number | null; maxAge?: number | null; back?: string | null } = {}) =>
-  rpc<LiveState>("hdar_live_next", { p_iam: o.iam?.length ? o.iam : null, p_min_age: o.minAge ?? null, p_max_age: o.maxAge ?? null, p_back: o.back ?? null });
+/** Position pour la règle des 2 km du Live (arrondie à ~500 m côté serveur, jamais stockée exacte). */
+let livePosVal: { lat: number; lng: number } | null = null; let livePosAt = 0;
+export function livePos(): Promise<{ lat: number; lng: number } | null> {
+  if (livePosVal && Date.now() - livePosAt < 600_000) return Promise.resolve(livePosVal);
+  if (typeof navigator === "undefined" || !navigator.geolocation) return Promise.resolve(livePosVal);
+  return new Promise((res) => navigator.geolocation.getCurrentPosition(
+    (g) => { livePosVal = { lat: g.coords.latitude, lng: g.coords.longitude }; livePosAt = Date.now(); res(livePosVal); },
+    () => res(livePosVal), { enableHighAccuracy: false, maximumAge: 600_000, timeout: 8000 }));
+}
+export const rouletteNext = async (o: { iam?: string[]; minAge?: number | null; maxAge?: number | null; back?: string | null } = {}) => {
+  const at = await livePos();
+  return rpc<LiveState>("hdar_live_next", { p_iam: o.iam?.length ? o.iam : null, p_min_age: o.minAge ?? null, p_max_age: o.maxAge ?? null, p_back: o.back ?? null, p_lat: at?.lat ?? null, p_lng: at?.lng ?? null });
+};
 export const roulettePoll = () => rpc<LiveState>("hdar_live_poll", {});
 export const rouletteLeave = (stay = false) => rpc("hdar_live_leave", { p_stay: stay });
 export const rouletteReport = (other: string, reason: string) => rpc("hdar_live_report", { p_other: other, p_reason: reason });
@@ -963,7 +974,12 @@ export async function turnServers(): Promise<RTCIceServer[]> {
 }
 export const LIVE_TERMS_VERSION = 1;
 export const liveAccept = () => rpc("hdar_live_accept", { p_version: LIVE_TERMS_VERSION });
-export const liveCount = () => rpc<number>("hdar_live_count", {});
+export const liveCount = async () => {
+  // Position seulement si déjà autorisée (aucune demande de permission depuis le badge)
+  let at = livePosVal;
+  try { if (!at && (await navigator.permissions?.query({ name: "geolocation" as PermissionName }))?.state === "granted") at = await livePos(); } catch { /* ignore */ }
+  return rpc<number>("hdar_live_count", { p_lat: at?.lat ?? null, p_lng: at?.lng ?? null });
+};
 export const liveAsk = () => rpc("hdar_live_ask", {});
 export const liveIds = () => rpc<string[]>("hdar_live_ids", {});
 const regionCache = new Map<string, Promise<string | null>>();
