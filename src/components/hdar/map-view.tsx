@@ -608,8 +608,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             key={pl.id}
             type="button"
             aria-label={`${k.label} : ${pl.name}`}
-            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.partner ? "partner-glow z-[15] size-10" : "z-10 size-8")}
-            style={{ left: c.x, top: c.y, borderColor: k.color }}
+            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "partner-glow z-[16] size-12 shadow-[0_0_24px_#fbbf24]" : pl.partner ? "partner-glow z-[15] size-10" : "z-10 size-8")}
+            style={{ left: c.x, top: c.y, borderColor: pl.pro_boost ? "#fbbf24" : k.color }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setPlaceId(pl.id)}
           >

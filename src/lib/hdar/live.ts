@@ -674,7 +674,7 @@ export function activity(lat: number | null, lng: number | null, areaSince: stri
 }
 
 export type PlaceKind = "cruising" | "beach" | "park" | "aire" | "other" | "toilets" | "bar" | "club" | "sauna";
-export type PlacePin = { id: string; kind: PlaceKind; name: string; lat: number; lng: number; partner: boolean };
+export type PlacePin = { id: string; kind: PlaceKind; name: string; lat: number; lng: number; partner: boolean; pro_boost?: boolean };
 export type PlaceDetail = PlacePin & { description: string; source: string; source_ref: string | null };
 export function listPlaces(s: number, w: number, n: number, e: number) {
   return rpc<PlacePin[]>("hdar_places", { p_s: s, p_w: w, p_n: n, p_e: e });
@@ -789,16 +789,16 @@ export const placeCommentReport = (id: string, reason: string) => rpc("hdar_plac
 export const placeClick = (id: string) => rpc("hdar_place_click", { p_id: id });
 export const placeSeen = (id: string, lat: number | null, lng: number | null) => rpc("hdar_place_seen", { p_id: id, p_lat: lat, p_lng: lng });
 
-export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost" | "premium" | "hearts"; label: string; price_cents: number };
+export type PriceRow = { product: string; kind: "listing" | "boost" | "place_boost" | "premium" | "hearts" | "pro_boost"; label: string; price_cents: number };
 export const pricing = () => rpc<PriceRow[]>("hdar_pricing", {});
 
 export type MyPlace = {
   id: string; kind: PlaceKind; name: string; description: string; lat: number; lng: number;
   website: string | null; contact: string | null; photos: string[];
   ratings_on: boolean; comments_on: boolean; comments_public: boolean;
-  partner_until: string | null; active: boolean; status: string; sub_status: string | null;
+  partner_until: string | null; pro_boost_until?: string | null; active: boolean; status: string; sub_status: string | null;
 };
-export type PartnerInput = Omit<MyPlace, "id" | "partner_until" | "active" | "status" | "sub_status"> & { id: string | null };
+export type PartnerInput = Omit<MyPlace, "id" | "partner_until" | "pro_boost_until" | "active" | "status" | "sub_status"> & { id: string | null };
 export const myPlaces = () => rpc<MyPlace[]>("hdar_my_places", {});
 export const partnerSave = (p: PartnerInput) =>
   rpc<string>("hdar_partner_save", {

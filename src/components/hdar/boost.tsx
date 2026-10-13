@@ -214,6 +214,12 @@ export function BoostPage() {
         </section>
 
         <SpotBoost prices={spotPrices} payOk={payOk} now={now} />
+        <section className="mt-12 rounded-3xl border border-[#fbbf24]/60 bg-surface p-5 text-center">
+          <p className="text-xs font-bold tracking-[0.25em] text-[#fbbf24] uppercase">Pour les lieux partenaires</p>
+          <h2 className="mt-1 font-display text-2xl font-extrabold">⭐ Boost Pro</h2>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted">Pin doré sur la carte, en tête « À la une » des Lieux et priorité dans le Live Pro. 24 h 4,99 € · 7 j 19,99 € · 30 j 59,99 €.</p>
+          <a href="/pro" className="boost-cta mt-4 inline-flex h-12 items-center rounded-full px-6 font-display font-extrabold text-night">Mon espace partenaire ›</a>
+        </section>
 
         {rows && rows.length > 0 && (
           <section className="mt-12">

@@ -111,7 +111,10 @@ function Terms() {
         <strong> cadeaux pro</strong> (offre, code promo, date d'expiration ; 20 par jour maximum) et ouvrir
         des conversations privées (20 nouvelles par jour maximum). L'offre engage uniquement le partenaire,
         pas hdar. Tu peux refuser ces messages et cadeaux dans Paramètres, bloquer ou signaler un partenaire.
-        Tout démarchage abusif entraîne la suspension du partenaire.
+        Tout démarchage abusif entraîne la suspension du partenaire. Le <strong>Boost Pro</strong> (24 h, 7 jours
+        ou 30 jours, paiement unique) est réservé aux partenaires actifs : pin doré sur la carte, place « À la une »
+        dans l'onglet Lieux et priorité dans le Live Pro pendant la durée achetée. Il démarre dès le paiement ; en
+        cochant la case prévue, tu demandes son exécution immédiate et renonces au droit de rétractation de 14 jours.
       </p>
       <h2>9 ter. Codes cadeaux, parrainage et surprises</h2>
       <p>

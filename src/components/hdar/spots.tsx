@@ -9,6 +9,8 @@ import { useHdar, type SpotMsg } from "@/lib/hdar/store";
 import { RoomAttach, RoomMedia } from "./media-composer";
 import { bindTap } from "./tap";
 import { useActivity } from "@/lib/hdar/activity";
+import { flyTo } from "@/lib/hdar/map-focus";
+import { PLACE_KINDS, usePlaces } from "./places-layer";
 
 export function Spots() {
   const { spots } = useScene();
@@ -16,6 +18,7 @@ export function Spots() {
   const openCreate = useHdar((s) => s.openCreate);
   const joinSpot = useHdar((s) => s.joinSpot);
   const act = useActivity();
+  const featured = usePlaces(true).filter((p) => p.pro_boost).slice(0, 8);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6">
@@ -28,6 +31,16 @@ export function Spots() {
       <button type="button" data-act="create" {...bindTap(openCreate)} className="mt-4 h-12 w-full rounded-full bg-spot text-night">
         Créer un lieu
       </button>
+      {featured.length > 0 && (
+        <section className="mt-4">
+          <p className="text-xs font-bold tracking-[0.2em] text-[#fbbf24] uppercase">⭐ À la une</p>
+          <ul className="mt-2 space-y-2">{featured.map((p) => (
+            <li key={p.id}><button type="button" onClick={() => flyTo(p.lat, p.lng, 16)} className="partner-glow flex w-full items-center gap-3 rounded-2xl border border-[#fbbf24] bg-surface px-4 py-3 text-left">
+              <span className="text-2xl">{PLACE_KINDS[p.kind]?.icon ?? "📍"}</span>
+              <span className="min-w-0 flex-1"><b className="block truncate">{p.name}</b><span className="text-xs text-[#fbbf24]">🏷️ Partenaire · Voir sur la carte</span></span>
+            </button></li>))}</ul>
+        </section>
+      )}
       <ul className="mt-4 space-y-2">
         {spots.map((spot) => (
           <li key={spot.id} className="flex items-stretch gap-2">

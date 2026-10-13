@@ -38,7 +38,7 @@ export function ProSpace() {
             💳 Paiement bientôt disponible. Tu peux déjà préparer ta fiche, elle s'activera dès le paiement.
           </p>
         )}
-        <Places prices={prices.filter((p) => p.kind === "listing")} payOk={!!payOk} />
+        <Places prices={prices.filter((p) => p.kind === "listing")} boostPrices={prices.filter((p) => p.kind === "pro_boost")} payOk={!!payOk} />
         <ShinyCta href="/boost" sub="Ton profil à toi, en tête de la carte">Booster mon profil</ShinyCta>
       </div>
     </main>
@@ -74,14 +74,14 @@ function PriceButtons({ prices, payOk, onPick }: { prices: PriceRow[]; payOk: bo
 }
 
 // ---------------------------------------------------------------- lieux
-function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
+function Places({ prices, boostPrices, payOk }: { prices: PriceRow[]; boostPrices: PriceRow[]; payOk: boolean }) {
   const [rows, setRows] = useState<MyPlace[] | null>(null);
   const [edit, setEdit] = useState<PartnerInput | null>(null);
   const load = useCallback(() => void myPlaces().then(setRows).catch((e: Error) => toast(e.message)), []);
   useEffect(load, [load]);
   const blank = (): PartnerInput => ({ id: null, kind: "bar", name: "", description: "", lat: NaN, lng: NaN, website: "", contact: "", photos: [], ratings_on: true, comments_on: true, comments_public: true });
   if (edit) return <PlaceForm init={edit} onDone={() => { setEdit(null); load(); }} />;
-  if (!rows || rows.length === 0) return <ProLanding prices={prices} onCreate={() => { setEdit(blank()); scrollTo(0, 0); document.querySelector("main")?.scrollTo(0, 0); }} />;
+  if (!rows || rows.length === 0) return <ProLanding prices={prices} boostPrices={boostPrices} onCreate={() => { setEdit(blank()); scrollTo(0, 0); document.querySelector("main")?.scrollTo(0, 0); }} />;
   return (
     <div className="mt-5 space-y-4">
       {rows?.map((p) => (
@@ -102,6 +102,13 @@ function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
               🎥 Lancer un Live Pro · toute la France
             </a>
           )}
+          {p.active && boostPrices.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-[#fbbf24]/60 bg-night p-3">
+              <p className="text-sm font-bold text-[#fbbf24]">⭐ Boost Pro{p.pro_boost_until && new Date(p.pro_boost_until) > new Date() ? ` · actif jusqu'au ${day(p.pro_boost_until)}` : ""}</p>
+              <p className="text-xs text-muted">Pin doré sur la carte, en tête « À la une » des Lieux, priorité dans le Live Pro.</p>
+              <PriceButtons prices={boostPrices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />
+            </div>
+          )}
           <p className="mt-3 text-sm font-bold">{p.active ? "Prolonger" : "Mettre en ligne"}</p>
           <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />
           {p.sub_status && payOk && (
@@ -121,7 +128,7 @@ function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
       </button>
       <details className="rounded-3xl border border-line p-4">
         <summary className="cursor-pointer text-sm font-bold">Voir la présentation hdar pro</summary>
-        <ProLanding prices={prices} onCreate={() => setEdit(blank())} />
+        <ProLanding prices={prices} boostPrices={boostPrices} onCreate={() => setEdit(blank())} />
       </details>
     </div>
   );

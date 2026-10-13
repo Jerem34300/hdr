@@ -106,7 +106,7 @@ const FAQ = [
   ["Quels lieux sont acceptés ?", "Bars, clubs, saunas, événements, commerces gay-friendly. Les fiches sont modérées selon nos CGU."],
 ] as const;
 
-export function ProLanding({ prices, onCreate }: { prices: PriceRow[]; onCreate: () => void }) {
+export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: PriceRow[]; boostPrices?: PriceRow[]; onCreate: () => void }) {
   const cta = (label = "Créer ma fiche") => (
     <button type="button" onClick={onCreate} className="h-14 w-full rounded-full font-display text-lg font-extrabold text-night shadow-lg sm:w-auto sm:px-10" style={{ background: CORAL, boxShadow: `0 10px 40px -8px ${CORAL}` }}>
       {label}
@@ -205,6 +205,25 @@ export function ProLanding({ prices, onCreate }: { prices: PriceRow[]; onCreate:
           <p className="mt-2 text-xs text-muted">Prix TTC, renouvellement automatique, résiliable à tout moment.</p>
         </section>
       )}
+
+      {/* Boost Pro */}
+      <section className="rounded-3xl border border-[#fbbf24]/60 bg-surface p-5 shadow-[0_0_30px_#fbbf2433]">
+        <p className="text-xs font-bold tracking-[0.25em] text-[#fbbf24] uppercase">Option · partenaires actifs</p>
+        <h2 className="mt-1 font-display text-2xl font-extrabold">⭐ Boost Pro</h2>
+        <ul className="mt-3 space-y-1.5 text-sm">
+          <li>🟡 <b>Pin doré</b> qui brille sur la carte</li>
+          <li>⭐ En tête de <b>« À la une »</b> dans l'onglet Lieux</li>
+          <li>🎥 <b>Priorité dans le Live Pro</b> : les membres tombent sur toi en premier</li>
+        </ul>
+        <table className="mt-4 w-full text-sm">
+          <tbody>
+            {(boostPrices.length ? boostPrices.map((p) => [p.label, euros(p.price_cents)]) : [["24 heures", "4,99 €"], ["7 jours", "19,99 €"], ["30 jours", "59,99 €"]]).map(([l, e]) => (
+              <tr key={l} className="border-t border-line"><td className="py-2">{l}</td><td className="py-2 text-right font-display text-lg font-extrabold text-[#fbbf24]">{e}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="mt-2 text-xs text-muted">Paiement unique, sans renouvellement. À acheter depuis ton espace partenaire, fiche par fiche.</p>
+      </section>
 
       {/* FAQ */}
       <section>
