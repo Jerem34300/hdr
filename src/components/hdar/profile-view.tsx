@@ -120,7 +120,7 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
             <button type="button" onClick={() => showOnMap(userId)} className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold">🗺️ Voir sur la carte</button>
           )}
           {inLive && !self && (
-            <Link to="/live" search={{ with: userId } as never} className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-full bg-signal px-3 py-1.5 text-xs font-bold text-white">🎥 Rejoindre son live</Link>
+            <Link to="/live" search={{ with: userId, name } as never} className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-full bg-signal px-3 py-1.5 text-xs font-bold text-white">🎥 Rejoindre son live</Link>
           )}
         </div>
         {extras?.voice && (

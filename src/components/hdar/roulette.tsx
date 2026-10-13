@@ -8,6 +8,7 @@ import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServe
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
 import { useHdar } from "@/lib/hdar/store";
+import { startCall } from "@/lib/hdar/call";
 import { usePhoto } from "@/lib/hdar/photos";
 import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
@@ -193,7 +194,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       if (r.id) await matched(r as LiveCard);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
-      toast(m.includes("live_nopos") ? "Active ta position : le Live ne te met jamais en relation avec quelqu'un à moins de 2 km" : m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
+      if (!(m.includes("live_tooclose") && back)) toast(m.includes("live_nopos") ? "Active ta position : le Live ne te met jamais en relation avec quelqu'un à moins de 2 km" : m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
+      if (m.includes("live_tooclose") && back) { stop(false); setPhase("intro"); setTooClose({ id: back, name: new URLSearchParams(location.search).get("name") || prev?.pseudo || "" }); return; }
       if (m.includes("live_nopos")) { stop(false); setGate("Active ta position pour entrer dans le Live."); setPhase("intro"); }
       else if (m.includes("live_photo") || m.includes("live_age") || m.includes("profil")) { stop(false); setGate(m.includes("live_age") ? "Indique ton âge." : m.includes("live_photo") ? "Ta première photo doit être validée." : "Crée ton profil."); setPhase("intro"); }
       if (m.includes("live_terms")) { localStorage.removeItem(`hdar-live-terms-v${LIVE_TERMS_VERSION}`); stop(); }
@@ -305,6 +307,29 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   };
   const me = useHdar((s) => s.me);
   const [gate, setGate] = useState<string | null>(null);
+  const [tooClose, setTooClose] = useState<{ id: string; name: string } | null>(null);
+  if (tooClose) {
+    const goChat = () => { useHdar.getState().openLive(tooClose.id, tooClose.name); void nav({ to: "/" }); };
+    const goCall = () => { const t = tooClose; void nav({ to: "/" }); void startCall(t.id, t.name); };
+    const hasProfile = !!me.pseudo;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur">
+        <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#FA6F6C]/40 bg-night p-6 text-center text-ink shadow-[0_0_60px_#FA6F6C55]">
+          <span aria-hidden className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-[#FA6F6C] opacity-30 blur-3xl" />
+          <span className="relative text-5xl">👀</span>
+          <h2 className="relative mt-3 font-display text-2xl font-bold">Vous êtes trop proches</h2>
+          <p className="relative mt-2 text-sm text-ink/80">Le Live, c'est pour rencontrer des gens plus loin. Cette personne est juste à côté : écris-lui directement en privé, et passez en appel vidéo à deux. Plus intime, et rien que pour vous deux.</p>
+          {hasProfile ? <>
+            <button type="button" onClick={goChat} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display text-lg font-bold text-night shadow-[0_0_30px_#FA6F6C88]">💬 Lui écrire en privé</button>
+            <button type="button" onClick={goCall} className="relative mt-3 w-full rounded-full border border-[#FA6F6C]/60 py-3 font-bold text-[#FA6F6C]">🎥 Appel vidéo à deux</button>
+          </> : (
+            <button type="button" onClick={() => { useHdar.getState().setTab("me"); void nav({ to: "/" }); }} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Crée ton profil pour lui écrire</button>
+          )}
+          <button type="button" onClick={() => { setTooClose(null); void nav({ to: "/" }); }} className="relative mt-4 text-sm text-ink/60 underline">Fermer</button>
+        </div>
+      </div>
+    );
+  }
   const missing = !me.pseudo ? "un pseudo" : pro ? null : !me.age ? "ton âge" : !me.photo ? "une photo" : null;
   if (phase === "intro" && !demo && (missing || gate)) {
     return (
