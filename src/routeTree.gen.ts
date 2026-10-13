@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AmbassadeurRouteImport } from './routes/ambassadeur'
 import { Route as BoostRouteImport } from './routes/boost'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
@@ -32,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AmbassadeurRoute = AmbassadeurRouteImport.update({
+  id: '/ambassadeur',
+  path: '/ambassadeur',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BoostRoute = BoostRouteImport.update({
@@ -99,6 +105,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/ambassadeur': typeof AmbassadeurRoute
   '/boost': typeof BoostRoute
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/ambassadeur': typeof AmbassadeurRoute
   '/boost': typeof BoostRoute
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/ambassadeur': typeof AmbassadeurRoute
   '/boost': typeof BoostRoute
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/ambassadeur'
     | '/boost'
     | '/cgu'
     | '/confidentialite'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/ambassadeur'
     | '/boost'
     | '/cgu'
     | '/confidentialite'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/ambassadeur'
     | '/boost'
     | '/cgu'
     | '/confidentialite'
@@ -199,6 +211,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AmbassadeurRoute: typeof AmbassadeurRoute
   BoostRoute: typeof BoostRoute
   CguRoute: typeof CguRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ambassadeur': {
+      id: '/ambassadeur'
+      path: '/ambassadeur'
+      fullPath: '/ambassadeur'
+      preLoaderRoute: typeof AmbassadeurRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/boost': {
@@ -319,6 +339,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AmbassadeurRoute: AmbassadeurRoute,
   BoostRoute: BoostRoute,
   CguRoute: CguRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,

@@ -1,3 +1,4 @@
+import { captureAmb, tryAmbAttach } from "./ambassador";
 import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -187,9 +188,9 @@ export function SurprisePopup() {
     return () => revealBus?.removeEventListener("reveal", on);
   }, []);
   useEffect(() => {
-    captureRef();
+    captureRef(); captureAmb();
     const t = setTimeout(() => {
-      void tryRefClaim();
+      void tryRefClaim(); void tryAmbAttach();
       if (usePremium.getState().premium) return;
       void surprise().then((r) => { if (r) { setS(r); void usePremium.getState().refresh(); } }).catch(() => undefined);
     }, 9000);

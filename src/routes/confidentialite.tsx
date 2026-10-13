@@ -248,6 +248,9 @@ function Privacy() {
         outil d'analyse tiers, aucun traceur publicitaire.
       </p>
 
+      <h2>Programme ambassadeur</h2>
+      <p>Quand tu t'inscris via le lien ou QR code d'un ambassadeur, nous enregistrons ce rattachement pour calculer sa commission. L'ambassadeur ne voit <b>que des compteurs agrégés</b> (nombre d'inscrits, de profils validés, de codes utilisés, chiffre d'affaires global) : jamais ton pseudo, ta photo, ta position ni tes achats. Pour les ambassadeurs, nous conservons nom, IBAN et SIRET uniquement pour les versements et obligations comptables (visibles par l'administration hdar seulement, conservés 10 ans pour les pièces comptables, sinon supprimés à la fin du programme).</p>
+
       <h2>Durées de conservation</h2>
       <ul>
         <li>Position sur la carte : effacée à la fin de la durée choisie (1, 3 ou 12 h).</li>

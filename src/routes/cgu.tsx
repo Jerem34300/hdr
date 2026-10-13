@@ -127,6 +127,9 @@ function Terms() {
         une fois tous les 10 jours, sans aucune obligation. Tout abus (faux comptes, revente de codes) entraîne
         l'annulation des avantages et un bannissement.
       </p>
+      <h2>9 quater. Programme ambassadeur</h2>
+      <p>Le programme ambassadeur est sur invitation de hdar. L'ambassadeur doit avoir un profil avec photo validée, accepter la charte (aucun spam, aucune fausse inscription, proposer hdar uniquement à des adultes consentants, ne jamais demander d'identité ni de données personnelles) et disposer d'un statut d'auto-entrepreneur (SIRET) pour être rémunéré. Les commissions sont calculées par hdar selon les règles affichées dans son espace (par exemple : montant par inscrit dont la photo est validée et toujours actif 7 jours après, pourcentage du chiffre d'affaires net des membres et partenaires apportés pendant une durée limitée, bonus éventuel). Elles sont versées sur facture déclarée, à partir du seuil indiqué. Les codes cadeaux remis par un ambassadeur sont à usage unique et limités. Les fiches partenaires créées par un ambassadeur sont des brouillons que l'établissement réclame puis valide ; toute offre de lancement doit être approuvée par hdar. hdar peut modifier les règles ou retirer le rôle à tout moment ; toute fraude entraîne l'annulation des commissions concernées.</p>
+
       <h2>10. Live vidéo</h2>
       <p>
         Le live met en relation au hasard des personnes majeures. Il n'est pas enregistré par

@@ -1046,3 +1046,24 @@ export type Revenue = { gross: number; refunds: number; fees: number; net: numbe
   series: { t: string; cents: number }[]; sources: { kind: string; product: string; label: string; cents: number; n: number }[];
   partners: { name: string; cents: number; n: number }[]; spenders: { pseudo: string; cents: number; n: number }[] };
 export const adminRevenue = (key: string, period: string) => rpc<Revenue>("hdar_admin_revenue", { p_key: key, p_period: period });
+export type AmbStats = { signups: number; validated: number; codes_created: number; codes_redeemed: number; places: number; places_claimed: number; places_active: number; revenue_users: number; revenue_partners: number; commission: number; paid: number; bonuses?: number };
+export type AmbMe = { needs_terms?: boolean; user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; paid_total: number; has_payout_info: boolean; code: string; codes_per_week: number; codes_left: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number;
+  month: AmbStats; total: AmbStats; codes: { code: string; kind: string; amount: number; used: boolean; expires_at: string }[];
+  places: { id: string; name: string; kind: string; claimed: boolean; active: boolean; token: string | null; promo: string | null; promo_status: string | null }[] };
+export type AdminAmb = { user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; terms_at: string | null; payout_info: { name: string; iban: string; siret: string } | null; user_id: string; pseudo: string; code: string; active: boolean; codes_per_week: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number; note: string | null;
+  stats: AmbStats; paid_total: number; due_total: number; payouts: { amount: number; from: string | null; to: string | null; note: string | null; at: string }[]; promos: { id: string; name: string; promo: string; status: string }[] };
+export const ambMe = () => rpc<AmbMe | null>("hdar_amb_me", {});
+export const ambAttach = (code: string) => rpc<boolean>("hdar_amb_attach", { p_code: code });
+export const ambCodeCreate = (kind: string, amount: number) => rpc<string>("hdar_amb_code_create", { p_kind: kind, p_amount: amount });
+export const ambPlaceCreate = (o: { kind: string; name: string; description: string; lat: number; lng: number; contact: string; promo: string }) =>
+  rpc<{ id: string; token: string }>("hdar_amb_place_create", { p_kind: o.kind, p_name: o.name, p_description: o.description, p_lat: o.lat, p_lng: o.lng, p_contact: o.contact, p_promo: o.promo });
+export const placeClaim = (token: string) => rpc<{ id: string; name: string; promo: string | null }>("hdar_place_claim", { p_token: token });
+export const placeClaimInfo = (token: string) => rpc<{ name: string; kind: string; promo: string | null } | null>("hdar_place_claim_info", { p_token: token });
+export const adminAmbSearch = (key: string, q: string) => rpc<{ user_id: string; pseudo: string; amb: boolean }[]>("hdar_admin_amb_search", { p_key: key, p_q: q });
+export const adminAmbSet = (key: string, user: string, active: boolean, rules: Record<string, unknown> = {}) => rpc("hdar_admin_amb_set", { p_key: key, p_user: user, p_active: active, p_rules: rules });
+export const adminAmbs = (key: string, from: string | null, to: string | null) => rpc<AdminAmb[]>("hdar_admin_ambs", { p_key: key, p_from: from ?? "-infinity", p_to: to });
+export const adminAmbPayout = (key: string, user: string, cents: number, from: string | null, to: string | null, note: string) => rpc("hdar_admin_amb_payout", { p_key: key, p_user: user, p_cents: cents, p_from: from, p_to: to, p_note: note });
+export const adminAmbPromo = (key: string, place: string, status: "approved" | "refused") => rpc("hdar_admin_amb_promo", { p_key: key, p_place: place, p_status: status });
+export const ambInviteInfo = (token: string) => rpc<{ valid: boolean; photo_ok: boolean }>("hdar_amb_invite_info", { p_token: token });
+export const ambAccept = (token: string, name: string, iban: string, siret: string) => rpc("hdar_amb_accept", { p_token: token, p_name: name, p_iban: iban, p_siret: siret });
+export const adminAmbInvite = (key: string, note?: string) => rpc<string>("hdar_admin_amb_invite", { p_key: key, p_note: note ?? null });

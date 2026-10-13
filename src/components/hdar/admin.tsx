@@ -1,3 +1,4 @@
+import { AmbassadorsTab } from "./admin-ambassadors";
 import { RevenueTab } from "./admin-revenue";
 import { adminPartners, type AdminPartner } from "@/lib/hdar/live";
 import { ProDashboard } from "./pro-dashboard";
@@ -27,7 +28,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs";
 
 function readKey() {
   try {
@@ -175,6 +176,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               ["codes", "Codes cadeaux"],
               ["partners", "Partenaires"],
               ["revenus", "Revenus"],
+              ["ambassadeurs", "Ambassadeurs"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
@@ -237,6 +239,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "codes" && <CodesTab adminKey={adminKey} />}
         {tab === "partners" && <PartnersTab adminKey={adminKey} />}
         {tab === "revenus" && <RevenueTab adminKey={adminKey} />}
+        {tab === "ambassadeurs" && <AmbassadorsTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}

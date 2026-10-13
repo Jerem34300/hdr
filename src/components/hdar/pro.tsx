@@ -27,6 +27,11 @@ export function ProSpace() {
     const q = new URLSearchParams(location.search);
     if (q.get("paid")) toast("Paiement reçu, merci ! L'activation prend quelques secondes.");
     if (q.get("cancel")) toast("Paiement annulé.");
+    const claim = q.get("claim");
+    if (claim) void import("@/lib/hdar/live").then((m) => m.placeClaim(claim)).then((r) => {
+      toast(`Fiche « ${r.name} » ajoutée à votre espace${r.promo ? ` · offre de lancement : ${r.promo}` : ""}. Choisissez votre abonnement pour la mettre en ligne.`, { duration: 9000 });
+      location.replace("/pro");
+    }).catch((e: Error) => toast(e.message));
   }, []);
   return (
     <main className="h-dvh overflow-y-auto bg-night px-5 py-8 text-ink">

@@ -1,3 +1,4 @@
+import { AmbassadorCard } from "./ambassador";
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { NotifySettings } from "./notify-settings";
@@ -129,6 +130,7 @@ export function Me() {
           </button>
         </div>
       </div>
+      <AmbassadorCard />
       <ProSpaceCard />
       <BoostButton />
       <PremiumCard />
