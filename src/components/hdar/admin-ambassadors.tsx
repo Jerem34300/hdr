@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
+import { adminAmbContractPdf, adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
 
 const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const PERIODS = [["month", "Ce mois"], ["last", "Mois dernier"], ["30d", "30 j"], ["all", "Tout"]] as const;
@@ -78,7 +78,9 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
       </div>
       <p className="text-xs text-muted">Validé = photo approuvée et profil encore actif 7 jours après l'inscription. CA net = après remboursements et frais Stripe estimés.</p>
       <div className="rounded-xl bg-night p-3 text-xs">
-        <p className="mb-1 font-bold">Versements Stripe Connect</p>
+        <p className="mb-1 font-bold">Contrat</p>
+        {r.contract ? <p>✍️ Signé par {r.contract.name} le {new Date(r.contract.at).toLocaleString("fr-FR")} · {r.contract.version} <button type="button" className="ml-1 underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, r.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button></p> : <p className="text-muted">Non signé</p>}
+        <p className="mt-2 mb-1 font-bold">Versements Stripe Connect</p>
         <p>{!r.stripe_account ? "⚪ Compte Stripe non créé" : r.payouts_enabled ? `✅ Compte prêt (${r.stripe_account})` : `🟡 Inscription Stripe incomplète (${r.stripe_account})`}{r.paused ? " · ⏸️ en pause" : ""}{r.hold_next ? " · prochain versement suspendu" : ""}</p>
         <p className="mt-1 text-muted">Virement automatique le 1er du mois si dû ≥ seuil. Identité, IBAN et SIRET : chez Stripe uniquement.</p>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -116,7 +118,7 @@ export function demoAdminAmbs(): AdminAmb[] {
   const st = { signups: 23, validated: 17, codes_created: 9, codes_redeemed: 7, places: 2, places_claimed: 2, places_active: 1, revenue_users: 4590, revenue_partners: 7900, commission: 3743, paid: 0, bonuses: 0 };
   const base = { user_pct: 20, user_months: 6, bonus_cents: 2000, bonus_at: 50, min_payout_cents: 2000, codes_per_week: 10, max_days: 3, max_boost_h: 24, max_hearts: 20, per_signup_cents: 50, partner_pct: 25, partner_months: 3, note: null, promos: [] };
   return [
-    { ...base, user_id: "1", pseudo: "Lucas (exemple)", code: "LUCAS7", active: true, terms_at: "x", stats: st, paid_total: 5000, due_total: 2310, stripe_account: "acct_1Exemple", payouts_enabled: true, paused: false, hold_next: false,
+    { ...base, user_id: "1", pseudo: "Lucas (exemple)", code: "LUCAS7", active: true, terms_at: "x", stats: st, paid_total: 5000, due_total: 2310, contract: { version: "v1", at: "2026-10-13T12:00:00Z", name: "Lucas Martin" }, stripe_account: "acct_1Exemple", payouts_enabled: true, paused: false, hold_next: false,
       payouts: [{ amount: 5000, from: null, to: "2026-09-30", note: "Virement Stripe automatique", at: "2026-10-01", status: "paid" }], promos: [{ id: "p", name: "Le Néon", promo: "1er mois -50 %", status: "pending" }] },
     { ...base, user_id: "2", pseudo: "Nico (exemple)", code: "NICO42", active: true, terms_at: null, stats: { ...st, signups: 4, validated: 2, commission: 100, revenue_users: 0, revenue_partners: 0, places: 0, places_active: 0 }, paid_total: 0, due_total: 100, stripe_account: null, payouts_enabled: false, paused: false, hold_next: false, payouts: [] },
   ];

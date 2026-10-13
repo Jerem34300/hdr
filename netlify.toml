@@ -4,3 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/ambassadeur/guide"
+  to = "/ambassadeur/guide.pdf"
+  status = 301
+  force = true

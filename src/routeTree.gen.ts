@@ -22,6 +22,7 @@ import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
 import { Route as FrRencontreGayChar123villeChar125RouteImport } from './routes/fr/rencontre-gay-{$ville}'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -90,6 +91,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AmbassadeurGuideRoute = AmbassadeurGuideRouteImport.update({
+  id: '/ambassadeur_/guide',
+  path: '/ambassadeur/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FrRencontreGayChar123villeChar125Route =
   FrRencontreGayChar123villeChar125RouteImport.update({
     id: '/fr/rencontre-gay-{$ville}',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
   '/fr/rencontre-gay-{$ville}': typeof FrRencontreGayChar123villeChar125Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/ambassadeur/guide'
     | '/fr/rencontre-gay-{$ville}'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/ambassadeur/guide'
     | '/fr/rencontre-gay-{$ville}'
     | '/api/auth/$'
   id:
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/ambassadeur_/guide'
     | '/fr/rencontre-gay-{$ville}'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   ProRoute: typeof ProRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
   FrRencontreGayChar123villeChar125Route: typeof FrRencontreGayChar123villeChar125Route
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ambassadeur_/guide': {
+      id: '/ambassadeur_/guide'
+      path: '/ambassadeur/guide'
+      fullPath: '/ambassadeur/guide'
+      preLoaderRoute: typeof AmbassadeurGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fr/rencontre-gay-{$ville}': {
       id: '/fr/rencontre-gay-{$ville}'
       path: '/fr/rencontre-gay-{$ville}'
@@ -350,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProRoute: ProRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AmbassadeurGuideRoute: AmbassadeurGuideRoute,
   FrRencontreGayChar123villeChar125Route:
     FrRencontreGayChar123villeChar125Route,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
