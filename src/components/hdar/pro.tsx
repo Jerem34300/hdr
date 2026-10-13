@@ -6,6 +6,7 @@ import {
 } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
 import { PLACE_KINDS } from "./places-layer";
+import { ProLanding } from "./pro-landing";
 
 const KINDS: PlaceKind[] = ["bar", "club", "sauna", "other"];
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
@@ -78,7 +79,9 @@ function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
   const [edit, setEdit] = useState<PartnerInput | null>(null);
   const load = useCallback(() => void myPlaces().then(setRows).catch((e: Error) => toast(e.message)), []);
   useEffect(load, [load]);
+  const blank = (): PartnerInput => ({ id: null, kind: "bar", name: "", description: "", lat: NaN, lng: NaN, website: "", contact: "", photos: [], ratings_on: true, comments_on: true, comments_public: true });
   if (edit) return <PlaceForm init={edit} onDone={() => { setEdit(null); load(); }} />;
+  if (!rows || rows.length === 0) return <ProLanding prices={prices} onCreate={() => { setEdit(blank()); scrollTo(0, 0); document.querySelector("main")?.scrollTo(0, 0); }} />;
   return (
     <div className="mt-5 space-y-4">
       {rows?.map((p) => (
@@ -104,14 +107,17 @@ function Places({ prices, payOk }: { prices: PriceRow[]; payOk: boolean }) {
           <Stats id={p.id} />
         </section>
       ))}
-      {rows && rows.length === 0 && <p className="text-sm text-muted">Tu n'as pas encore de lieu. Bar, club, sauna, événement : crée ta fiche, elle apparaîtra sur la carte avec un halo lumineux.</p>}
       <button
         type="button"
         className="h-12 w-full rounded-full bg-signal font-bold text-night"
-        onClick={() => setEdit({ id: null, kind: "bar", name: "", description: "", lat: NaN, lng: NaN, website: "", contact: "", photos: [], ratings_on: true, comments_on: true, comments_public: true })}
+        onClick={() => setEdit(blank())}
       >
         + Créer une fiche lieu
       </button>
+      <details className="rounded-3xl border border-line p-4">
+        <summary className="cursor-pointer text-sm font-bold">Voir la présentation hdar pro</summary>
+        <ProLanding prices={prices} onCreate={() => setEdit(blank())} />
+      </details>
     </div>
   );
 }

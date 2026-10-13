@@ -299,7 +299,7 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
   );
 }
 
-function Stars({ value, onPick, size = "text-2xl" }: { value: number; onPick?: (n: number) => void; size?: string }) {
+export function Stars({ value, onPick, size = "text-2xl" }: { value: number; onPick?: (n: number) => void; size?: string }) {
   return (
     <span className={"inline-flex " + size}>
       {[1, 2, 3, 4, 5].map((n) =>
