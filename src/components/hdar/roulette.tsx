@@ -125,30 +125,39 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     c.ontrack = (e) => { if (themVid.current) { themVid.current.srcObject = e.streams[0] ?? new MediaStream([e.track]); void themVid.current.play().catch(() => undefined); } };
     c.onconnectionstatechange = () => {
       if (c !== pc.current) return;
-      if (c.connectionState === "connected") setPhase("live");
+      if (c.connectionState === "connected") { clearWatch(); setPhase("live"); }
       if (c.connectionState === "failed") { toast("Connexion impossible, on passe au suivant"); void next(); }
     };
     pc.current = c;
     return c;
   };
 
+  const watchdog = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const clearWatch = () => { watchdog.current.forEach(clearTimeout); watchdog.current = []; };
+  const sendOffer = async (card: LiveCard, restart = false) => {
+    const c = restart && pc.current ? pc.current : makePc();
+    await c.setLocalDescription(await c.createOffer(restart ? { iceRestart: true } : undefined));
+    await gathered(c);
+    if (pc.current === c && peerRef.current?.id === card.id) await rouletteSignal(card.id, "live-offer", JSON.stringify(c.localDescription)).catch(() => undefined);
+  };
   const matched = async (card: LiveCard) => {
     peerRef.current = card; setPeer(card); setAsked(false); setAskSent(false); setPhase("connecting");
-    if (card.role === "offer") {
-      const c = makePc();
-      await c.setLocalDescription(await c.createOffer());
-      await gathered(c);
-      if (pc.current === c) await rouletteSignal(card.id, "live-offer", JSON.stringify(c.localDescription)).catch(() => undefined);
-    }
+    clearWatch();
+    const stuck = () => peerRef.current?.id === card.id && pc.current?.connectionState !== "connected";
+    // Pas de connexion après 10 s : on renvoie l'offre (redémarrage ICE) ; après 30 s on passe au suivant.
+    watchdog.current.push(setTimeout(() => { if (stuck() && card.role === "offer") void sendOffer(card, true).catch(() => undefined); }, 10000));
+    watchdog.current.push(setTimeout(() => { if (stuck()) { toast("Connexion impossible avec cette personne (réseau), on passe au suivant"); void next(); } }, 30000));
+    if (card.role === "offer") await sendOffer(card);
   };
 
   async function next(back?: string) {
+    clearWatch();
     closePc();
     const old = peerRef.current;
     peerRef.current = null; setPeer(null); setPhase("searching");
     if (old && !back) setPrev(old);
     try {
-      const r = pro ? await proLiveNext(pro) : await rouletteNext(premium ? { ...filters, back: back ?? null } : {});
+      const r = pro ? await proLiveNext(pro) : await rouletteNext(premium ? { ...filters, back: back ?? null } : { back: back ?? null });
       if (typeof r.online === "number") setOnline(r.online);
       if (r.back_gone) { toast("Cette personne n'est plus disponible"); return void next(); }
       if (r.id) await matched(r as LiveCard);
@@ -173,7 +182,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     running.current = true;
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
-    void next();
+    const w = new URLSearchParams(location.search).get("with");
+    void next(w && /^[0-9a-f-]{36}$/i.test(w) ? w : undefined);
   }
 
   function stop(leave = true) {
@@ -201,7 +211,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           if (k === "live-heart") { setBurst(Date.now()); toast("Tu as reçu un ❤️"); continue; }
           if (k === "live-ask") { if (blurRef.current) { setAsked(true); navigator.vibrate?.(120); } continue; }
           if (k === "live-offer") {
-            const c = makePc();
+            const c = pc.current && pc.current.signalingState === "stable" && pc.current.connectionState !== "closed" ? pc.current : makePc();
             await c.setRemoteDescription(JSON.parse(r.payload));
             await c.setLocalDescription(await c.createAnswer());
             await gathered(c);

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { HeartsCount } from "./hearts";
 import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
 import { ChevronLeft, MessageCircle, Pencil, Star, Video } from "lucide-react";
@@ -58,6 +59,7 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
   const name = profile?.pseudo || pseudo;
   const region = useRegion(self ? null : userId);
   const onMap = useMapFocus((s) => !!s.pins[userId]);
+  const inLive = useMapFocus((s) => !!s.liveIds?.has(userId));
   const distance =
     here && profile?.lat != null && profile.lng != null
       ? bucketDistance(haversine(here, { lat: profile.lat, lng: profile.lng }))
@@ -116,6 +118,9 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
           <div className="mt-1"><HeartsCount id={userId} /></div>
           {onMap && !self && (
             <button type="button" onClick={() => showOnMap(userId)} className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold">🗺️ Voir sur la carte</button>
+          )}
+          {inLive && !self && (
+            <Link to="/live" search={{ with: userId } as never} className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-full bg-signal px-3 py-1.5 text-xs font-bold text-white">🎥 Rejoindre son live</Link>
           )}
         </div>
         {extras?.voice && (
