@@ -36,7 +36,7 @@ export const Route = createRootRoute({
         <Scripts />
         <script
           dangerouslySetInnerHTML={{
-            __html: "if('serviceWorker' in navigator&&location.hostname!=='localhost')window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})",
+            __html: "(function(){if(location.hostname==='localhost')return;var W=window,base=null,pending=false,reg=null;function busy(){return !!(W.__hdarLive||W.__hdarCall)}function go(){if(busy()){pending=true;return}pending=false;location.reload()}W.__hdarIdle=function(){if(pending)go()};function check(){if(reg)reg.update().catch(function(){});fetch('/version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){if(!d||!d.v)return;if(base===null)base=d.v;else if(d.v!==base)go()}).catch(function(){})}if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',function(){if(had)go();had=true});W.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').then(function(r){reg=r}).catch(function(){})})}check();document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')check()});setInterval(check,300000)})()",
           }}
         />
       </body>

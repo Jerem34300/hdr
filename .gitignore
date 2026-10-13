@@ -13,3 +13,4 @@ attachments
 .env.*
 
 supabase/.temp
+public/version.json

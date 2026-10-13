@@ -287,3 +287,5 @@ export function watchSignals() {
     window.clearTimeout(timer);
   };
 }
+
+if (typeof window !== "undefined") useCall.subscribe((st) => { const w = window as unknown as { __hdarCall?: boolean; __hdarIdle?: () => void }; const b = st.phase !== "idle"; if (w.__hdarCall && !b) setTimeout(() => w.__hdarIdle?.(), 1500); w.__hdarCall = b; });

@@ -194,7 +194,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       showPreview();
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
     void turnServers().then((l) => { if (l.length) turnCache = l; });
-    running.current = true;
+    running.current = true; (window as unknown as { __hdarLive?: boolean }).__hdarLive = true;
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
     const w = new URLSearchParams(location.search).get("with");
@@ -202,7 +202,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   }
 
   function stop(leave = true) {
-    running.current = false;
+    running.current = false; (window as unknown as { __hdarLive?: boolean }).__hdarLive = false; setTimeout(() => (window as unknown as { __hdarIdle?: () => void }).__hdarIdle?.(), 1500);
     closePc();
     localRef.current?.getTracks().forEach((t) => t.stop());
     localRef.current = null;
@@ -249,7 +249,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     }
   }
 
-  useEffect(() => () => { if (running.current) { running.current = false; closePc(); localRef.current?.getTracks().forEach((t) => t.stop()); void rouletteLeave(false).catch(() => undefined); } }, []);
+  useEffect(() => () => { (window as unknown as { __hdarLive?: boolean }).__hdarLive = false; setTimeout(() => (window as unknown as { __hdarIdle?: () => void }).__hdarIdle?.(), 1500); if (running.current) { running.current = false; closePc(); localRef.current?.getTracks().forEach((t) => t.stop()); void rouletteLeave(false).catch(() => undefined); } }, []);
   const flip = async () => {
     const nextF = facing === "user" ? "environment" : "user";
     try {
