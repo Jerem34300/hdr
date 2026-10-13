@@ -6,7 +6,7 @@ import { Layers, LocateFixed, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
-import { listBoosted, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
+import { listBoosted, liveCount, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
@@ -707,7 +707,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
         <Link to="/live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
           <Video className="size-5" />
-          <span className="absolute -top-1 -right-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]">LIVE</span>
+          <LiveBadge />
         </Link>
         <button type="button" className="size-11 rounded-full bg-night/90 text-lg text-ink" aria-label="Zoom avant" onClick={() => animateTo(viewRef.current.zoom + 1)}>
           +
@@ -736,5 +736,24 @@ export function PinFace({ id, pseudo }: { id: string; pseudo: string }) {
     <span className="flex size-full items-center justify-center font-display text-sm font-bold">
       {pseudo.slice(0, 1).toUpperCase()}
     </span>
+  );
+}
+
+function LiveBadge() {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => undefined); };
+    tick();
+    const t = setInterval(tick, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+  return n > 0 ? (
+    <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-night px-1.5 py-0.5 text-[10px] font-bold text-white">
+      <span className="relative flex size-1.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-1.5 rounded-full bg-red-500" /></span>
+      {n}
+    </span>
+  ) : (
+    <span className="absolute -top-1 -right-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]/70">LIVE</span>
   );
 }
