@@ -164,6 +164,17 @@ function Privacy() {
         </li>
       </ul>
 
+      <h2>Nouveautés par email</h2>
+      <ul>
+        <li>
+          Si tu as lié un email et coché « Recevoir les nouveautés hdar » (case décochée par défaut),
+          nous t'envoyons occasionnellement des nouvelles de l'appli depuis contact@hdar.chat, via
+          notre prestataire d'envoi Resend. La date de ton consentement est enregistrée. Chaque
+          email contient un lien de désinscription en un clic ; tu peux aussi décocher la case dans
+          ton profil à tout moment. Ton email n'est jamais partagé ni affiché.
+        </li>
+      </ul>
+
       <h2>Modération et support</h2>
       <ul>
         <li>

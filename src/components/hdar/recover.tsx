@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
+import { newsSet, newsStatus } from "@/lib/hdar/live";
 import { linkedEmail, linkEmailStart, linkEmailVerify, recoverStart, recoverVerify } from "@/lib/hdar/recover";
 
 const input = "h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal";
@@ -13,13 +14,24 @@ export function ProtectProfileCard() {
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
   useEffect(() => { void linkedEmail().then((s) => { setState(s); if (s.pending) { setEmail(s.pending); setStep("code"); } }).catch(() => setState({ email: null, pending: null })); }, []);
+  const [news, setNews] = useState(false);
+  useEffect(() => { void newsStatus().then((r) => setNews(r.on)).catch(() => undefined); }, []);
+  const newsBox = (apply: boolean) => (
+    <label className="mt-3 flex items-start gap-2 text-xs text-muted">
+      <input type="checkbox" className="mt-0.5" checked={news} onChange={(e) => { const v = e.target.checked; setNews(v); if (apply) void newsSet(v).then(() => toast(v ? "Inscrit aux nouveautés ✅" : "Désinscrit des nouveautés")).catch((err: Error) => { setNews(!v); toast(err.message); }); }} />
+      <span>Recevoir les nouveautés hdar par email (facultatif, désinscription en un clic dans chaque email).</span>
+    </label>
+  );
   const run = async (f: () => Promise<void>) => { setBusy(true); try { await f(); } catch (e) { toast(e instanceof Error ? e.message : "Erreur"); } finally { setBusy(false); } };
 
   if (state?.email) {
     return (
-      <section className="mt-8 flex items-center gap-3 rounded-3xl border border-[#A1E3C3]/50 bg-[#A1E3C3]/10 p-4">
-        <ShieldCheck className="size-6 shrink-0 text-[#A1E3C3]" />
-        <p className="text-sm"><b>Profil protégé.</b> <span className="text-muted">Tu peux le retrouver avec {state.email}. Jamais visible par les autres.</span></p>
+      <section className="mt-8 rounded-3xl border border-[#A1E3C3]/50 bg-[#A1E3C3]/10 p-4">
+        <div className="flex items-center gap-3">
+          <ShieldCheck className="size-6 shrink-0 text-[#A1E3C3]" />
+          <p className="text-sm"><b>Profil protégé.</b> <span className="text-muted">Tu peux le retrouver avec {state.email}. Jamais visible par les autres.</span></p>
+        </div>
+        {newsBox(true)}
       </section>
     );
   }
@@ -38,12 +50,13 @@ export function ProtectProfileCard() {
           <p className="text-xs text-muted">Code à 6 chiffres envoyé à <b className="text-ink">{email}</b></p>
           <div className="flex gap-2">
             <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
-            <button type="button" disabled={busy || code.length !== 6} onClick={() => void run(async () => { await linkEmailVerify(email, code); setState({ email, pending: null }); toast("Profil protégé ✅"); })}
+            <button type="button" disabled={busy || code.length !== 6} onClick={() => void run(async () => { await linkEmailVerify(email, code); if (news) await newsSet(true).catch(() => undefined); setState({ email, pending: null }); toast("Profil protégé ✅"); })}
               className="h-11 shrink-0 rounded-full bg-[#FA6F6C] px-4 text-sm font-bold text-night disabled:opacity-40">Vérifier</button>
           </div>
           <button type="button" className="text-xs text-muted underline" onClick={() => { setStep("email"); setCode(""); }}>Changer d'email</button>
         </div>
       )}
+      {newsBox(false)}
     </section>
   );
 }

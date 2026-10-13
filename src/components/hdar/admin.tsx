@@ -20,7 +20,7 @@ import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails";
 
 function readKey() {
   try {
@@ -163,6 +163,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
             [
               ["overview", "Vue d'ensemble"],
               ["users", "Utilisateurs"],
+              ["emails", "Emails"],
               ["heat", "Carte de chaleur"],
               ["week", "Horaires"],
               ["top", "Top lieux"],
@@ -220,6 +221,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
         {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
         {tab === "support" && <SupportTab adminKey={adminKey} />}
+        {tab === "emails" && <EmailsTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
@@ -971,6 +973,38 @@ function UserExtra({ adminKey, id }: { adminKey: string; id: string }) {
         {out && <p className="text-xs">{out}</p>}
         {x.gifts.length > 0 && <ul className="text-xs text-muted">{x.gifts.map((g, i) => <li key={i}>{new Date(g.at).toLocaleString("fr-FR")} · {g.detail.kind} {g.detail.amount}{g.detail.msg ? ` · « ${g.detail.msg} »` : ""}</li>)}</ul>}
       </div>
+    </section>
+  );
+}
+
+/** Nouveautés par email : uniquement aux utilisateurs avec email lié ET opt-in. Lien de désinscription ajouté automatiquement. */
+function EmailsTab({ adminKey }: { adminKey: string }) {
+  const [info, setInfo] = useState<{ optin: number; history: { at: string; subject: string; recipients: number }[] } | null>(null);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [test, setTest] = useState("");
+  const [out, setOut] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = useCallback(() => void import("@/lib/hdar/live").then((m) => m.adminNewsInfo(adminKey)).then(setInfo).catch((e: Error) => setOut(e.message)), [adminKey]);
+  useEffect(load, [load]);
+  const send = async (t?: string) => {
+    if (!t && !window.confirm(`Envoyer à ${info?.optin ?? 0} abonné(s) ?`)) return;
+    setBusy(true); setOut("");
+    try { const m = await import("@/lib/hdar/live"); const r = await m.adminNewsSend(subject, body, t); setOut(`✅ Envoyé à ${r.sent}`); if (!t) load(); }
+    catch (e) { setOut(`❌ ${(e as Error).message}`); } finally { setBusy(false); }
+  };
+  return (
+    <section className="max-w-xl space-y-3">
+      <p className="text-sm text-muted">Expéditeur : <b>hdar &lt;contact@hdar.chat&gt;</b> · {info?.optin ?? "…"} abonné(s) (email lié + « Recevoir les nouveautés »). Un lien « Se désinscrire » est ajouté à chaque email.</p>
+      <input className="h-11 w-full rounded-xl border border-line bg-night px-3" placeholder="Sujet" maxLength={200} value={subject} onChange={(e) => setSubject(e.target.value)} />
+      <textarea className="h-48 w-full rounded-xl border border-line bg-night p-3" placeholder="Message (texte simple, les retours à la ligne sont gardés)" value={body} onChange={(e) => setBody(e.target.value)} />
+      <div className="flex flex-wrap gap-2">
+        <input className="h-10 flex-1 rounded-xl border border-line bg-night px-3" placeholder="Email de test" value={test} onChange={(e) => setTest(e.target.value)} />
+        <button type="button" disabled={busy || !subject || !body || !/^\S+@\S+$/.test(test)} onClick={() => void send(test)} className="h-10 rounded-full border border-line px-4 text-sm disabled:opacity-40">Envoyer un test</button>
+        <button type="button" disabled={busy || !subject || !body || !info?.optin} onClick={() => void send()} className="h-10 rounded-full bg-[#3EE08F] px-4 text-sm font-bold text-night disabled:opacity-40">Envoyer à tous</button>
+      </div>
+      {out && <p className="text-sm">{out}</p>}
+      {!!info?.history.length && <ul className="text-xs text-muted">{info.history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("fr-FR")} · {h.subject} · {h.recipients} envoi(s)</li>)}</ul>}
     </section>
   );
 }

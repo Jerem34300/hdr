@@ -984,3 +984,15 @@ export type AdminUserExtra = { region: string | null; iam: string | null; seekin
   hearts: { balance: number; received: number; bought: number } | null;
   activity: Record<string, number>; payments: { at: string; product: string; kind: string; cents: number; ref: string }[]; gifts: { at: string; detail: { kind: string; amount: number; msg: string | null } }[] };
 export const myNotices = () => rpc<{ id: number; title: string; body: string | null; at: string }[]>("hdar_my_notices", {});
+
+/** Nouveautés hdar (opt-in, email lié requis). */
+export const newsStatus = () => rpc<{ on: boolean; at: string | null }>("hdar_news_status", {});
+export const newsSet = (on: boolean) => rpc<{ on: boolean; at: string | null }>("hdar_news_set", { p_on: on });
+export const adminNewsInfo = (key: string) => rpc<{ optin: number; history: { at: string; subject: string; recipients: number }[] }>("hdar_admin_news_count", { p_key: key });
+export async function adminNewsSend(subject: string, body: string, test?: string): Promise<{ sent: number }> {
+  const token = await accessToken();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-mail`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ subject, body, test }) });
+  const d = (await res.json()) as { sent?: number; error?: string };
+  if (!res.ok || d.error) throw new Error(d.error || "Envoi impossible");
+  return { sent: d.sent ?? 0 };
+}
