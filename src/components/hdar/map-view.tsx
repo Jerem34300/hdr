@@ -6,6 +6,8 @@ import { Layers, LocateFixed, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
+import { liveIds } from "@/lib/hdar/live";
+import { useMapFocus } from "@/lib/hdar/map-focus";
 import { listBoosted, liveCount, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
@@ -49,6 +51,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 520 });
   const favIds = new Set(useFavorites().map((f) => f.id));
+  const convoIds = new Set(useHdar((s) => s.liveConvos).map((c) => c.otherId));
+  const inLive = useMapFocus((s) => s.liveIds);
+  const focus = useMapFocus((s) => s.focus);
+  const [hl, setHl] = useState<string | null>(null);
+  useEffect(() => {
+    const t = () => { if (document.visibilityState === "visible") void liveIds().then((ids) => useMapFocus.setState({ liveIds: new Set(ids ?? []) })).catch(() => undefined); };
+    t(); const i = setInterval(t, 30000); return () => clearInterval(i);
+  }, []);
   const act = useActivity();
   const [boosted, setBoosted] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -127,6 +137,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         })
         .then((rows) => {
           if (!stop) setLive(rows);
+          useMapFocus.setState({ pins: Object.fromEntries(rows.map((r) => [r.id, { lat: r.lat, lng: r.lng }])) });
           noticeLiveFavorites(rows);
         })
         .catch(() => undefined);
@@ -275,6 +286,18 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       near.lng += (pl.lng - near.lng) / k;
     } else placeClusters.push({ key: `p-${pl.id}`, x: pt.x, y: pt.y, lat: pl.lat, lng: pl.lng, items: [pl] });
   }
+
+  useEffect(() => {
+    if (!focus || Date.now() - focus.at > 5000) return;
+    follow.current = false;
+    setView((v) => ({ ...v, lat: focus.lat, lng: focus.lng }));
+    animateTo(16);
+    setHl(focus.id);
+    const t = setTimeout(() => setHl(null), 6000);
+    useMapFocus.setState({ focus: null });
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
 
   const pins = live.map((p) => ({
     id: p.id,
@@ -489,9 +512,19 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         if (c.x < -40 || c.y < -40 || c.x > size.w + 40 || c.y > size.h + 40) return null;
         if (c.pins.length === 1) {
           const pin = c.pins[0];
+          const live = inLive.has(pin.id), convo = convoIds.has(pin.id), fav = favIds.has(pin.id);
           return (
+            <span key={pin.id} className="contents">
+            {(live || hl === pin.id) && <span className={`pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border-2 ${hl === pin.id ? "border-[#A1E3C3]" : "border-red-500"}`} style={{ left: c.x, top: c.y, width: face + 10, height: face + 10 }} />}
+            {live && <span className="pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-red-500" style={{ left: c.x, top: c.y, width: face + 4, height: face + 4 }} />}
+            {(live || convo || fav) && (
+              <span className="pointer-events-none absolute z-[22] flex items-center gap-px" style={{ left: c.x + face / 2 - 10, top: c.y - face / 2 - 6 }}>
+                {live && <span className="flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white shadow" aria-label="En Live">🎥</span>}
+                {convo && <span className="flex size-4 items-center justify-center rounded-full bg-[#A1E3C3] text-[9px] shadow" aria-label="Conversation">💬</span>}
+                {fav && <span className="flex size-4 items-center justify-center rounded-full bg-amber-400 text-[9px] shadow" aria-label="Favori">⭐</span>}
+              </span>
+            )}
             <button
-              key={pin.id}
               type="button"
               data-act="live"
               data-id={pin.id}
@@ -499,7 +532,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               aria-label={`Voir le profil de ${pin.pseudo}${favIds.has(pin.id) ? " (favori)" : ""}`}
               className={
                 "absolute z-20 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 bg-surface " +
-                (favIds.has(pin.id) ? "border-amber-400 ring-2 ring-amber-400/50 " : "border-white ") +
+                (hl === pin.id ? "border-[#A1E3C3] ring-4 ring-[#A1E3C3]/60 z-[23] " : favIds.has(pin.id) ? "border-amber-400 ring-2 ring-amber-400/50 " : "border-white ") +
                 (boosted.has(pin.id) ? "partner-glow z-[21] " : pin.hot ? "pin-hot" : "")
               }
               style={{ left: c.x, top: c.y, width: face, height: face }}
@@ -509,6 +542,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               <PinFace id={pin.id} pseudo={pin.pseudo} />
               {pin.premium && <PremiumBadge className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 scale-75 !px-1" />}
             </button>
+            </span>
           );
         }
         // Zoomed out: people close together become one glowing bubble showing where it's busy.

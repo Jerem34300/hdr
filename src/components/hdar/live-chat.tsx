@@ -1,4 +1,5 @@
 import { useFavorites } from "@/lib/hdar/favorites";
+import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
@@ -45,6 +46,8 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
+  const region = useRegion(userId);
+  const onMap = useMapFocus((s) => !!s.pins[userId]);
   const favs = useFavorites();
   const onboarded = useHdar((s) => s.me.onboarded);
   const [camera, setCamera] = useState(false);
@@ -262,10 +265,13 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               )}
             </span>
             <span className="flex items-center text-xs text-muted">
-              Voir le profil <ChevronRight className="size-3" />
+              {region ? <>📍 {region} · </> : null}Voir le profil <ChevronRight className="size-3" />
             </span>
           </span>
         </button>
+        {onMap && (
+          <button type="button" aria-label="Voir sur la carte" title="Voir sur la carte" onClick={() => showOnMap(userId)} className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-lg">🗺️</button>
+        )}
         <button
           type="button"
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-signal text-night"

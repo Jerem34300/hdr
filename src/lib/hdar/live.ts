@@ -954,3 +954,18 @@ export const LIVE_TERMS_VERSION = 1;
 export const liveAccept = () => rpc("hdar_live_accept", { p_version: LIVE_TERMS_VERSION });
 export const liveCount = () => rpc<number>("hdar_live_count", {});
 export const liveAsk = () => rpc("hdar_live_ask", {});
+export const liveIds = () => rpc<string[]>("hdar_live_ids", {});
+const regionCache = new Map<string, Promise<string | null>>();
+/** Région générale (« Hérault, France ») calculée côté serveur ; jamais de coordonnées. */
+export function regionOf(id: string): Promise<string | null> {
+  if (!regionCache.has(id)) {
+    regionCache.set(id, (async () => {
+      try {
+        const token = await accessToken();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-region`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ id }) });
+        return ((await res.json()) as { label?: string | null }).label ?? null;
+      } catch { return null; }
+    })());
+  }
+  return regionCache.get(id)!;
+}

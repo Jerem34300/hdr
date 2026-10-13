@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
 import { ChevronLeft, MessageCircle, Pencil, Star, Video } from "lucide-react";
 import { toggleFav, useFavorites } from "@/lib/hdar/favorites";
 import { toast } from "sonner";
@@ -51,6 +52,8 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
   }, [userId]);
 
   const name = profile?.pseudo || pseudo;
+  const region = useRegion(self ? null : userId);
+  const onMap = useMapFocus((s) => !!s.pins[userId]);
   const distance =
     here && profile?.lat != null && profile.lng != null
       ? bucketDistance(haversine(here, { lat: profile.lat, lng: profile.lng }))
@@ -104,7 +107,11 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
               <span className="text-muted">Hors ligne</span>
             ) : null}
             {distance && <span className="text-muted"> · {distance}</span>}
+            {region && <span className="text-muted"> · 📍 {region}</span>}
           </p>
+          {onMap && !self && (
+            <button type="button" onClick={() => showOnMap(userId)} className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold">🗺️ Voir sur la carte</button>
+          )}
         </div>
         {extras?.voice && (
           <section className="mt-5">

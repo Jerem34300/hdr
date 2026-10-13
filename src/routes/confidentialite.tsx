@@ -117,6 +117,12 @@ function Privacy() {
           du live.
         </li>
         <li>
+          Dans le Live, sur ta fiche et dans l'en-tête des conversations, seule une <strong>zone
+          générale</strong> est affichée (département et pays, ex. « Hérault, France »). Elle est
+          calculée sur nos serveurs à partir de ta position arrondie (~10 km), via OpenStreetMap
+          Nominatim, puis gardée en cache par zone : aucune coordonnée n'est envoyée à l'autre personne.
+        </li>
+        <li>
           En connexion directe, ton <strong>adresse IP</strong> peut être visible techniquement par
           la personne en face. Aucune distance ni position n'est affichée.
         </li>

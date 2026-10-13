@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
 import { LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
+import { useRegion } from "@/lib/hdar/map-focus";
+import { useHdar } from "@/lib/hdar/store";
 import { usePhoto } from "@/lib/hdar/photos";
 import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
@@ -134,7 +136,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
       toast(m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
-      if (m.includes("live_photo")) stop();
+      if (m.includes("live_photo") || m.includes("live_age") || m.includes("profil")) { stop(false); setGate(m.includes("live_age") ? "Indique ton âge." : m.includes("live_photo") ? "Ta première photo doit être validée." : "Crée ton profil."); setPhase("intro"); }
       if (m.includes("live_terms")) { localStorage.removeItem(`hdar-live-terms-v${LIVE_TERMS_VERSION}`); stop(); }
     }
   }
@@ -155,14 +157,14 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     void next();
   }
 
-  function stop() {
+  function stop(leave = true) {
     running.current = false;
     closePc();
     localRef.current?.getTracks().forEach((t) => t.stop());
     localRef.current = null;
     pipe.current?.stop(); pipe.current = null;
     void rouletteLeave(false).catch(() => undefined);
-    void nav({ to: "/" });
+    if (leave) void nav({ to: "/" });
   }
 
   async function loop() {
@@ -230,6 +232,20 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     try { await liveAccept(); localStorage.setItem(termsKey, new Date().toISOString()); } catch (e) { return toast(e instanceof Error ? e.message : "Réessaie"); }
     void start();
   };
+  const me = useHdar((s) => s.me);
+  const [gate, setGate] = useState<string | null>(null);
+  const missing = !me.pseudo ? "un pseudo" : !me.age ? "ton âge" : !me.photo ? "une photo" : null;
+  if (phase === "intro" && !demo && (missing || gate)) {
+    return (
+      <div className="relative flex min-h-dvh flex-col items-center justify-center gap-4 bg-night px-6 text-center text-ink">
+        <span className="text-5xl">🎥</span>
+        <h1 className="font-display text-2xl font-bold">Crée ton profil pour entrer dans le Live</h1>
+        <p className="max-w-xs text-sm text-ink/80">{gate ?? `Il te manque ${missing}.`} Le Live est réservé aux profils avec un pseudo, un âge et une première photo validée.</p>
+        <button type="button" onClick={() => { useHdar.getState().setTab("me"); void nav({ to: "/" }); }} className="w-full max-w-xs rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Compléter mon profil</button>
+        <button type="button" onClick={() => void nav({ to: "/" })} className="text-sm text-ink/60">Retour à la carte</button>
+      </div>
+    );
+  }
   if (phase === "intro") {
     return (
       <div className="relative flex min-h-dvh flex-col items-center justify-center gap-5 overflow-hidden bg-night px-6 text-center text-ink">
@@ -271,11 +287,12 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         <div className="min-w-0 flex-1">
           {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ml-1 text-sm">👑+</span>}</p>}
           {peer && <p className="text-xs text-white/80">{label(peer)}</p>}
+          {peer && <PeerRegion id={peer.id} demo={!!demo} />}
                     {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
-          <button type="button" aria-label="Quitter" onClick={stop} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
+          <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
       </div>
       {peer && <button type="button" aria-label={blurred ? "Me montrer" : "Me flouter"} onClick={() => void setBlur(!blurred)} className="absolute inset-x-0 top-28 bottom-48" />}
@@ -368,4 +385,10 @@ function Round({ children, label: l, on, danger, onClick }: { children: React.Re
 function PeerPhoto({ id }: { id: string }) {
   const src = usePhoto(id === "demo" ? null : id);
   return <span className="size-12 shrink-0 overflow-hidden rounded-full border-2 border-[#FA6F6C] bg-[#c9a58c]/60">{src && <img src={src} alt="" className="size-full object-cover" />}</span>;
+}
+
+function PeerRegion({ id, demo }: { id: string; demo: boolean }) {
+  const r = useRegion(demo ? null : id);
+  const txt = demo ? "Hérault, France" : r;
+  return txt ? <p className="text-xs text-white/70">📍 {txt}</p> : null;
 }
