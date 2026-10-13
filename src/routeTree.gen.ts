@@ -15,6 +15,7 @@ import { Route as BoostRouteImport } from './routes/boost'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as LiveRouteImport } from './routes/live'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as ProRouteImport } from './routes/pro'
@@ -51,6 +52,11 @@ const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
+  '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
+  '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
+  '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/confidentialite'
     | '/contact'
+    | '/live'
     | '/login'
     | '/premium'
     | '/pro'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/confidentialite'
     | '/contact'
+    | '/live'
     | '/login'
     | '/premium'
     | '/pro'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/confidentialite'
     | '/contact'
+    | '/live'
     | '/login'
     | '/premium'
     | '/pro'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   CguRoute: typeof CguRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
+  LiveRoute: typeof LiveRoute
   LoginRoute: typeof LoginRoute
   PremiumRoute: typeof PremiumRoute
   ProRoute: typeof ProRoute
@@ -242,6 +255,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   CguRoute: CguRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
+  LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   PremiumRoute: PremiumRoute,
   ProRoute: ProRoute,

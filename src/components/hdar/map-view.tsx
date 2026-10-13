@@ -2,7 +2,8 @@ import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
-import { Layers, LocateFixed } from "lucide-react";
+import { Layers, LocateFixed, Video } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
 import { listBoosted, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
@@ -704,6 +705,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         <span className="pointer-events-none absolute top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-3xl">⌖</span>
       )}
       <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
+        <Link to="/live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
+          <Video className="size-5" />
+          <span className="absolute -top-1 -right-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]">LIVE</span>
+        </Link>
         <button type="button" className="size-11 rounded-full bg-night/90 text-lg text-ink" aria-label="Zoom avant" onClick={() => animateTo(viewRef.current.zoom + 1)}>
           +
         </button>

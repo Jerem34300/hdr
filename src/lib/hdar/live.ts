@@ -928,3 +928,16 @@ export const spotSendMedia = (id: string, pseudo: string, kind: string, path: st
 export const placeSendMedia = (id: string, kind: string, path: string, duration: number | null, lat: number, lng: number) =>
   rpc("hdar_place_send_media", { p_id: id, p_kind: kind, p_path: path, p_duration: duration, p_lat: lat, p_lng: lng });
 export const mediaReport = (scope: "area" | "place" | "spot", id: string) => rpc("hdar_media_report", { p_scope: scope, p_id: id });
+
+// Live roulette (v32) -------------------------------------------------------------
+export type LiveCard = { id: string; pseudo: string; age: number | null; iam: string | null; seeking: string | null; note: string | null; premium: boolean; role: "offer" | "answer" };
+export type LiveState = Partial<LiveCard> & { waiting?: boolean; in_queue?: boolean; back_gone?: boolean; online?: number };
+export const rouletteNext = (o: { iam?: string[]; minAge?: number | null; maxAge?: number | null; back?: string | null } = {}) =>
+  rpc<LiveState>("hdar_live_next", { p_iam: o.iam?.length ? o.iam : null, p_min_age: o.minAge ?? null, p_max_age: o.maxAge ?? null, p_back: o.back ?? null });
+export const roulettePoll = () => rpc<LiveState>("hdar_live_poll", {});
+export const rouletteLeave = (stay = false) => rpc("hdar_live_leave", { p_stay: stay });
+export const rouletteReport = (other: string, reason: string) => rpc("hdar_live_report", { p_other: other, p_reason: reason });
+export async function rouletteSignal(to: string, kind: "live-offer" | "live-answer" | "live-bye", payload = "") {
+  await rpc("hdar_signal_send", { p_self: "", p_to: to, p_kind: kind, p_payload: payload });
+}
+export const roulettePollSignals = (after: number) => rpc<SignalRow[]>("hdar_signal_poll", { p_self: "", p_after: after });
