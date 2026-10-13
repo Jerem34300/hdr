@@ -80,7 +80,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     const wire = (ch: RTCDataChannel) => {
       dc.current = ch;
       ch.onopen = () => ch.send(JSON.stringify({ blur: blurRef.current }));
-      ch.onmessage = (ev) => { try { setTheyBlur(JSON.parse(String(ev.data)).blur !== false); } catch { /* */ } };
+      ch.onmessage = (ev) => { try { const b = JSON.parse(String(ev.data)).blur !== false; setTheyBlur((was) => { if (was && !b) toast("Il se montre 👀"); return b; }); } catch { /* */ } };
     };
     c.ondatachannel = (e) => wire(e.channel);
     if (peerRef.current?.role === "offer") wire(c.createDataChannel("ctl"));
@@ -260,8 +260,12 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
           <button type="button" aria-label="Quitter" onClick={stop} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
       </div>
-      {peer && theyBlur && (
-        <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-black/50 px-4 py-2 text-sm font-semibold backdrop-blur"><EyeOff className="size-4" /> Flouté — c'est lui qui choisit de se montrer</span>
+      {peer && <button type="button" aria-label={blurred ? "Me montrer" : "Me flouter"} onClick={() => void setBlur(!blurred)} className="absolute inset-x-0 top-28 bottom-48" />}
+      {peer && (theyBlur || blurred) && (
+        <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
+          {theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Il est flouté</span>}
+          {blurred && <span className="text-xs font-normal text-white/85">👆 Appuie au milieu pour te montrer</span>}
+        </span>
       )}
       <div className="absolute right-3 bottom-40 h-40 w-28 overflow-hidden rounded-2xl border border-white/20 bg-night">
         <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover" />
