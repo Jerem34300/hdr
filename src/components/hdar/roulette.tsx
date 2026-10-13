@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
 import { turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { usePhoto } from "@/lib/hdar/photos";
 import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
 
@@ -35,12 +36,12 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
   const [prev, setPrev] = useState<LiveCard | null>(null);
   const [online, setOnline] = useState(demo?.online ?? 0);
   const [seeThem, setSeeThem] = useState(!!demo?.unblurred);
-  const [showMe, setShowMe] = useState(false);
+  const showMe = true;
   const [mic, setMic] = useState(true);
   const [theyShow, setTheyShow] = useState(!!demo?.unblurred);
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const dc = useRef<RTCDataChannel | null>(null);
-  const showRef = useRef(false);
+  const showRef = useRef(true);
   const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
   const [filterOpen, setFilterOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -107,8 +108,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
     if (!navigator.mediaDevices?.getUserMedia || typeof RTCPeerConnection === "undefined") return toast("Ton navigateur ne gère pas la vidéo");
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: { echoCancellation: true, noiseSuppression: true } });
-      s.getVideoTracks().forEach((t) => (t.enabled = false)); // caméra cachée tant que tu ne la montres pas
-      localRef.current = s;
+            localRef.current = s;
       if (meVid.current) { meVid.current.srcObject = s; void meVid.current.play().catch(() => undefined); }
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
     turnCache = await turnServers();
@@ -199,7 +199,7 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         <ul className="relative max-w-xs space-y-1.5 text-left text-sm text-ink/80">
           <li>🛡️ Jamais quelqu'un de ton quartier : personne à moins de 2 km.</li>
           <li>📍 Aucune position ni distance n'est montrée.</li>
-          <li>🙈 Ta caméra reste cachée tant que tu ne la montres pas, et l'autre est flouté.</li>
+          <li>🙈 Tout le monde arrive flouté : chacun choisit de déflouter l'autre.</li>
           <li>🚩 Un geste pour signaler : la personne est bloquée tout de suite.</li>
         </ul>
         <button type="button" onClick={() => void start()} className="relative w-full max-w-xs rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3.5 font-display font-bold text-night shadow-[0_0_30px_#FA6F6C]">Entrer dans le Live</button>
@@ -223,11 +223,11 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         </div>
       )}
       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
-        <div className="min-w-0">
+        {peer && <PeerPhoto id={peer.id} />}
+        <div className="min-w-0 flex-1">
           {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ml-1 text-sm">👑+</span>}</p>}
           {peer && <p className="text-xs text-white/80">{label(peer)}</p>}
-          {peer && <p className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${theyShow ? "bg-[#A1E3C3] text-night" : "bg-white/15 text-white/70"}`}>{theyShow ? "● Il se montre" : "Caméra cachée"}</p>}
-          {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
+                    {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
@@ -241,16 +241,12 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
         </button>
       )}
       <div className="absolute right-3 bottom-40 h-40 w-28 overflow-hidden rounded-2xl border border-white/20 bg-night">
-        <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover" style={{ opacity: showMe ? 1 : 0 }} />
-        {!showMe && <button type="button" onClick={() => setShowMe(true)} className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center text-[11px] text-white"><EyeOff className="size-5" /><b>Tu es caché</b>appuie pour te montrer</button>}
-        {showMe && <button type="button" aria-label="Retourner la caméra" onClick={() => void flip()} className="absolute right-1 bottom-1 flex size-8 items-center justify-center rounded-full bg-black/60"><SwitchCamera className="size-4" /></button>}
+        <video ref={meVid} autoPlay playsInline muted className="size-full -scale-x-100 object-cover"  />
+        {<button type="button" aria-label="Retourner la caméra" onClick={() => void flip()} className="absolute right-1 bottom-1 flex size-8 items-center justify-center rounded-full bg-black/60"><SwitchCamera className="size-4" /></button>}
+        <span className="absolute top-1 left-1 rounded-full bg-black/60 px-1.5 text-[9px]">Toi · flouté pour lui</span>
       </div>
       <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        {!showMe && peer && (
-          <button type="button" onClick={() => setShowMe(true)} className="w-full rounded-full border-2 border-white/80 bg-white/10 py-2.5 font-display font-bold backdrop-blur">🙈 Tu es caché — appuie pour te montrer</button>
-        )}
         <div className="flex items-center justify-center gap-2.5">
-          <Round label={showMe ? "Cacher ma caméra" : "Montrer ma caméra"} on={showMe} onClick={() => setShowMe(!showMe)}>{showMe ? <Video className="size-5" /> : <VideoOff className="size-5" />}</Round>
           <Round label="Retourner la caméra" on={false} onClick={() => void flip()}><SwitchCamera className="size-5" /></Round>
           <Round label={mic ? "Couper le micro" : "Activer le micro"} on={mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>
           <Round label="Revenir en arrière (hdar+)" on={false} onClick={() => { if (!premium) return void nav({ to: "/premium" }); if (!prev) return toast("Personne avant"); void next(prev.id); }}>
@@ -292,4 +288,9 @@ export function RouletteScreen({ demo }: { demo?: { peer: LiveCard; premium?: bo
 
 function Round({ children, label: l, on, danger, onClick }: { children: React.ReactNode; label: string; on: boolean; danger?: boolean; onClick: () => void }) {
   return <button type="button" aria-label={l} title={l} onClick={onClick} className={`relative flex size-11 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-500/80" : on ? "bg-white text-night" : "bg-white/15"}`}>{children}</button>;
+}
+
+function PeerPhoto({ id }: { id: string }) {
+  const src = usePhoto(id === "demo" ? null : id);
+  return <span className="size-12 shrink-0 overflow-hidden rounded-full border-2 border-[#FA6F6C] bg-[#c9a58c]/60">{src && <img src={src} alt="" className="size-full object-cover" />}</span>;
 }
