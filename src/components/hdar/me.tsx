@@ -1,5 +1,6 @@
 import { AmbassadorCard } from "./ambassador";
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
+import { openIntro } from "./intro-video";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { NotifySettings } from "./notify-settings";
 import { ProtectProfileCard } from "./recover";
@@ -136,6 +137,7 @@ export function Me() {
       <PremiumCard />
       <InviteCard />
       <RedeemCode />
+      <button type="button" onClick={openIntro} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-surface font-display font-bold text-ink active:scale-[.98]">🎬 Comment ça marche</button>
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Je suis</h2>

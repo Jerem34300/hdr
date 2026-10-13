@@ -1,5 +1,6 @@
 import { resyncProfileFromServer } from "@/lib/hdar/recover";
 import { SurprisePopup } from "./growth";
+import { IntroVideo } from "./intro-video";
 import { useActivity, useActivityPolling } from "@/lib/hdar/activity";
 import { GiftNotices } from "./gift-notices";
 import { useEffect, type ReactNode } from "react";
@@ -82,6 +83,7 @@ export function App() {
       <ReportSheet />
       <PushPrompt />
       <InstallPrompt />
+      <IntroVideo />
       {cover && <Cover />}
       <div className={cn("app-frame text-ink", cover && "hidden")}>
         <aside className="hidden flex-col justify-between border-r border-line px-10 py-12 lg:flex">
