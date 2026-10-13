@@ -64,6 +64,7 @@ export async function storyImage(code: string): Promise<Blob> {
   g.textAlign = "center"; g.fillStyle = "#f5f5f5"; g.font = "800 120px system-ui, sans-serif";
   const lw = g.measureText("hdar").width; g.fillText("hdar", 540 - 22, 200); g.fillStyle = "#FA6F6C"; g.fillText(".", 540 + lw / 2 + 4, 200);
   g.fillStyle = "#f5f5f5"; g.font = "800 84px system-ui, sans-serif"; g.fillText("Qui est autour,", 540, 330); g.fillStyle = "#3EE08F"; g.fillText("maintenant.", 540, 425);
+  g.fillStyle = "rgba(245,245,245,.8)"; g.font = "600 40px system-ui, sans-serif"; g.fillText("Sorties et rencontres, pour tout le monde", 540, 500); g.font = "500 32px system-ui, sans-serif"; g.fillStyle = "rgba(245,245,245,.6)"; g.fillText("Gratuit · anonyme · 18+ · 🏳️‍🌈 LGBT-friendly", 540, 552);
   // carte cadeau
   const x0 = 110, y0 = 1330, w = 860, h = 360;
   const cg = g.createLinearGradient(x0, y0, x0 + w, y0 + h); cg.addColorStop(0, "#FA6F6C"); cg.addColorStop(0.55, "#f472b6"); cg.addColorStop(1, "#3EE08F");

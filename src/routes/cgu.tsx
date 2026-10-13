@@ -12,7 +12,7 @@ function Terms() {
       <h2>1. Accès</h2>
       <p>
         hdar. est réservé aux personnes <strong>majeures (18 ans et plus)</strong>. En entrant, tu
-        certifies avoir au moins 18 ans. Tout profil d'une personne mineure sera supprimé.
+        certifies avoir au moins 18 ans. Tout profil d'une personne mineure sera supprimé. hdar. est ouvert à toutes et tous, quels que soient le genre, l'orientation ou l'identité : sorties et rencontres autour de toi, dans le respect de chacun·e. Toute discrimination (homophobie, transphobie, racisme, sexisme…) est interdite.
       </p>
       <h2>2. Anonymat</h2>
       <p>

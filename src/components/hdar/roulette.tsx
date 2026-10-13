@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FloatingHearts, HeartPacks } from "./hearts";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { ShareLiveButton } from "./live-share";
 import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
 import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
@@ -149,7 +150,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     try {
       const r = pro ? await proLiveNext(pro) : await rouletteNext(premium ? { ...filters, back: back ?? null } : {});
       if (typeof r.online === "number") setOnline(r.online);
-      if (r.back_gone) { toast("Il n'est plus disponible"); return void next(); }
+      if (r.back_gone) { toast("Cette personne n'est plus disponible"); return void next(); }
       if (r.id) await matched(r as LiveCard);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
@@ -272,7 +273,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         <span aria-hidden className="pointer-events-none absolute right-0 bottom-20 size-64 rounded-full bg-[#A1E3C3] opacity-25 blur-3xl" />
         <span className="relative flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] shadow-[0_0_40px_#FA6F6C]"><Video className="size-9 text-night" /></span>
         <h1 className="relative font-display text-3xl font-bold">Live</h1>
-        <p className="relative max-w-xs text-sm text-ink/80">Des mecs au hasard, en vidéo. Glisse vers le haut pour passer au suivant.</p>
+        <p className="relative max-w-xs text-sm text-ink/80">Des gens au hasard, en vidéo. Glisse vers le haut pour passer au suivant.</p>
         <div className="relative max-w-xs space-y-2 rounded-2xl bg-white/5 p-4 text-left text-sm text-ink/90">
           <p>Ta caméra est envoyée en direct à la personne en face, <b>floutée sur ton téléphone avant l'envoi</b>. Ton image nette n'est jamais envoyée tant que tu n'appuies pas sur « te montrer ».</p>
           <p>Personne ne peut te déflouter à ta place. Rien n'est enregistré par hdar. Jamais personne à moins de 2 km, aucune distance affichée.</p>
@@ -313,6 +314,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
+          <ShareLiveButton />
           <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
       </div>
@@ -333,7 +335,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       )}
       {peer && (theyBlur || blurred) && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
-          {theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Il est flouté</span>}
+          {theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Caméra floutée</span>}
           {blurred && <span className="text-xs font-normal text-white/85">{pro ? "👆 Appuyez au milieu pour vous montrer" : "👆 Appuie au milieu pour te montrer"}</span>}
         </span>
       )}

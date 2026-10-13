@@ -673,7 +673,7 @@ export function activity(lat: number | null, lng: number | null, areaSince: stri
   return rpc<{ area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
 }
 
-export type PlaceKind = "cruising" | "beach" | "park" | "aire" | "other" | "toilets" | "bar" | "club" | "sauna";
+export type PlaceKind = "cruising" | "beach" | "park" | "garden" | "viewpoint" | "square" | "promenade" | "aire" | "other" | "toilets" | "bar" | "club" | "sauna";
 export type PlacePin = { id: string; kind: PlaceKind; name: string; lat: number; lng: number; partner: boolean; pro_boost?: boolean };
 export type PlaceDetail = PlacePin & { description: string; source: string; source_ref: string | null };
 export function listPlaces(s: number, w: number, n: number, e: number) {
@@ -703,6 +703,9 @@ export function placeHide(msg: string) {
   return rpc("hdar_place_hide", { p_msg: msg });
 }
 
+export function listOutings(s: number, w: number, n: number, e: number) {
+  return rpc<{ id: string; kind: PlaceKind; name: string; lat: number; lng: number }[]>("hdar_outings", { p_s: s, p_w: w, p_n: n, p_e: e });
+}
 export function listToilets(s: number, w: number, n: number, e: number) {
   return rpc<{ id: string; lat: number; lng: number }[]>("hdar_toilets", { p_s: s, p_w: w, p_n: n, p_e: e });
 }
@@ -1046,11 +1049,11 @@ export type Revenue = { gross: number; refunds: number; fees: number; net: numbe
   series: { t: string; cents: number }[]; sources: { kind: string; product: string; label: string; cents: number; n: number }[];
   partners: { name: string; cents: number; n: number }[]; spenders: { pseudo: string; cents: number; n: number }[] };
 export const adminRevenue = (key: string, period: string) => rpc<Revenue>("hdar_admin_revenue", { p_key: key, p_period: period });
-export type AmbStats = { signups: number; validated: number; codes_created: number; codes_redeemed: number; places: number; places_claimed: number; places_active: number; revenue_users: number; revenue_partners: number; commission: number; paid: number; bonuses?: number };
+export type AmbStats = { signups: number; validated: number; codes_created: number; codes_redeemed: number; places: number; places_claimed: number; places_active: number; revenue_users: number; revenue_partners: number; commission: number; paid: number; bonuses?: number; signup_bonus?: number };
 export type AmbMe = { needs_terms?: boolean; user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; paid_total: number; connect: "none" | "pending" | "ready"; paused: boolean; contract?: { version: string; at: string; name: string } | null; code: string; codes_per_week: number; codes_left: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number;
   month: AmbStats; total: AmbStats; codes: { code: string; kind: string; amount: number; used: boolean; expires_at: string }[];
   places: { id: string; name: string; kind: string; claimed: boolean; active: boolean; token: string | null; promo: string | null; promo_status: string | null }[] };
-export type AdminAmb = { user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; terms_at: string | null; contract?: { version: string; at: string; name: string } | null; stripe_account: string | null; payouts_enabled: boolean; paused: boolean; hold_next: boolean; user_id: string; pseudo: string; code: string; active: boolean; codes_per_week: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number; note: string | null;
+export type AdminAmb = { user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; signup_cap_cents: number | null; terms_at: string | null; contract?: { version: string; at: string; name: string } | null; stripe_account: string | null; payouts_enabled: boolean; paused: boolean; hold_next: boolean; user_id: string; pseudo: string; code: string; active: boolean; codes_per_week: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number; note: string | null;
   stats: AmbStats; paid_total: number; due_total: number; payouts: { amount: number; from: string | null; to: string | null; note: string | null; at: string; status?: string; error?: string | null }[]; promos: { id: string; name: string; promo: string; status: string }[] };
 export const ambMe = () => rpc<AmbMe | null>("hdar_amb_me", {});
 export const ambAttach = (code: string) => rpc<boolean>("hdar_amb_attach", { p_code: code });
@@ -1091,3 +1094,19 @@ async function saveBlob(res: Response, name: string) {
 }
 export const ambContractPdf = async () => saveBlob(await contractCall({ action: "pdf" }), "contrat-ambassadeur-hdar.pdf");
 export const adminAmbContractPdf = async (key: string, user: string) => saveBlob(await contractCall({ action: "admin_pdf", key, user }), `contrat-ambassadeur-${user.slice(0, 8)}.pdf`);
+export type AmbBudget = { signup_cap_cents: number; global_budget_cents: number; month_requested_cents: number; month_used_cents: number; factor: number };
+export const adminAmbBudget = (key: string, cap?: number | null, budget?: number | null) => rpc<AmbBudget>("hdar_admin_amb_budget", { p_key: key, p_cap: cap ?? null, p_budget: budget ?? null });
+export const adminAmbCap = (key: string, user: string, cap: number | null) => rpc("hdar_admin_amb_cap", { p_key: key, p_user: user, p_cap: cap });
+
+// Partager mon live (v50)
+export type LiveShareView = { pseudo: string; active: boolean; ref: string | null; lat: number; lng: number; area: string | null; live: number; pins: { lat: number; lng: number; live: boolean }[]; places: { kind: string; name: string | null; lat: number; lng: number }[] };
+export const liveShareCreate = () => rpc<{ code: string; ref: string }>("hdar_live_share_create", {});
+export const liveShareDone = (code: string) => rpc<{ kind: string; amount: number; label: string } | null>("hdar_live_share_done", { p_code: code });
+/** Appel public (visiteur non inscrit) : clé anonyme seulement, aucune session créée. */
+export async function anonRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}`, "content-type": "application/json" }, body: JSON.stringify(args) });
+  if (!res.ok) throw new Error((await res.text()).slice(0, 200));
+  return (await res.json()) as T;
+}
+export const liveShareView = (code: string) => anonRpc<LiveShareView | null>("hdar_live_share_view", { p_code: code });
+export const liveShareMeta = (code: string) => anonRpc<{ pseudo: string; active: boolean; area: string | null; around: number } | null>("hdar_live_share_meta", { p_code: code });

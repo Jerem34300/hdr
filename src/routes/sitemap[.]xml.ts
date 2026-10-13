@@ -6,7 +6,7 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: ({ request }) => {
         const origin = new URL(request.url).origin;
-        const urls = ["/", ...SEO_CITIES.map((c) => `/fr/rencontre-gay-${c.slug}`)];
+        const urls = ["/", ...SEO_CITIES.map((c) => `/fr/sortir-rencontrer-${c.slug}`)];
         const body =
           `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
           urls.map((u) => `  <url><loc>${origin}${u}</loc><lastmod>2026-10-12</lastmod></url>`).join("\n") +

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { adminAmbContractPdf, adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
+import { adminAmbBudget, adminAmbCap, type AmbBudget, adminAmbContractPdf, adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
 
 const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const PERIODS = [["month", "Ce mois"], ["last", "Mois dernier"], ["30d", "30 j"], ["all", "Tout"]] as const;
@@ -49,6 +49,7 @@ export function AmbassadorsTab({ adminKey, preview }: { adminKey: string; previe
           <div key={h.user_id} className="mt-1 flex items-center justify-between text-sm"><span>{h.pseudo}</span>
             <button type="button" className="text-xs underline" onClick={() => void adminAmbSet(adminKey, h.user_id, !h.amb).then(() => { toast(h.amb ? "Rôle retiré" : "Rôle donné (il devra accepter la charte)"); setHits([]); load(); }).catch((e: Error) => toast(e.message))}>{h.amb ? "Retirer" : "Nommer ambassadeur"}</button></div>))}
       </section>
+      <BudgetBox adminKey={adminKey} demo={!!preview} />
       <div className="flex flex-wrap items-center gap-2">{PERIODS.map(([k, l]) => (
         <button key={k} type="button" onClick={() => setPeriod(k)} className={"rounded-full px-3 py-1 text-sm " + (period === k ? "bg-[#3EE08F] font-bold text-night" : "border border-line")}>{l}</button>))}
         <button type="button" onClick={csv} className="ml-auto rounded-full border border-line px-3 py-1 text-sm">⬇︎ CSV</button></div>
@@ -88,6 +89,7 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
           <button type="button" className="rounded-full border border-line px-3 py-1" onClick={() => ro(adminAmbFlags(adminKey, r.user_id, null, !r.hold_next), r.hold_next ? "Versement rétabli" : "Prochain versement suspendu")}>{r.hold_next ? "Rétablir le prochain versement" : "Suspendre le prochain versement"}</button>
         </div>
       </div>
+      <CapRow r={r} adminKey={adminKey} demo={demo} onDone={onDone} />
       <div>
         <p className="mb-1 font-bold">Règles</p>
         <div className="grid grid-cols-2 gap-2">{RULES.map(([k, l, t]) => (
@@ -116,10 +118,43 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
 
 export function demoAdminAmbs(): AdminAmb[] {
   const st = { signups: 23, validated: 17, codes_created: 9, codes_redeemed: 7, places: 2, places_claimed: 2, places_active: 1, revenue_users: 4590, revenue_partners: 7900, commission: 3743, paid: 0, bonuses: 0 };
-  const base = { user_pct: 20, user_months: 6, bonus_cents: 2000, bonus_at: 50, min_payout_cents: 2000, codes_per_week: 10, max_days: 3, max_boost_h: 24, max_hearts: 20, per_signup_cents: 50, partner_pct: 25, partner_months: 3, note: null, promos: [] };
+  const base = { signup_cap_cents: null, user_pct: 20, user_months: 6, bonus_cents: 2000, bonus_at: 50, min_payout_cents: 2000, codes_per_week: 10, max_days: 3, max_boost_h: 24, max_hearts: 20, per_signup_cents: 50, partner_pct: 25, partner_months: 3, note: null, promos: [] };
   return [
     { ...base, user_id: "1", pseudo: "Lucas (exemple)", code: "LUCAS7", active: true, terms_at: "x", stats: st, paid_total: 5000, due_total: 2310, contract: { version: "v1", at: "2026-10-13T12:00:00Z", name: "Lucas Martin" }, stripe_account: "acct_1Exemple", payouts_enabled: true, paused: false, hold_next: false,
       payouts: [{ amount: 5000, from: null, to: "2026-09-30", note: "Virement Stripe automatique", at: "2026-10-01", status: "paid" }], promos: [{ id: "p", name: "Le Néon", promo: "1er mois -50 %", status: "pending" }] },
     { ...base, user_id: "2", pseudo: "Nico (exemple)", code: "NICO42", active: true, terms_at: null, stats: { ...st, signups: 4, validated: 2, commission: 100, revenue_users: 0, revenue_partners: 0, places: 0, places_active: 0 }, paid_total: 0, due_total: 100, stripe_account: null, payouts_enabled: false, paused: false, hold_next: false, payouts: [] },
   ];
+}
+
+function BudgetBox({ adminKey, demo }: { adminKey: string; demo: boolean }) {
+  const [b, setB] = useState<AmbBudget | null>(demo ? { signup_cap_cents: 10000, global_budget_cents: 50000, month_requested_cents: 12350, month_used_cents: 12350, factor: 1 } : null);
+  const [cap, setCap] = useState(""); const [bud, setBud] = useState("");
+  useEffect(() => { if (!demo) void adminAmbBudget(adminKey).then(setB).catch(() => undefined); }, [adminKey, demo]);
+  if (!b) return null;
+  const pct = Math.min(100, (b.month_requested_cents / Math.max(1, b.global_budget_cents)) * 100);
+  const save = () => { if (demo) return void toast("Aperçu"); void adminAmbBudget(adminKey, cap ? Math.round(Number(cap) * 100) : null, bud ? Math.round(Number(bud) * 100) : null).then((x) => { setB(x); setCap(""); setBud(""); toast("Plafonds enregistrés"); }).catch((e: Error) => toast(e.message)); };
+  return (
+    <section className="rounded-2xl border border-line p-3 text-sm">
+      <p className="font-bold">Budget des primes d'inscription · ce mois</p>
+      <div className="mt-2 h-2 rounded-full bg-night"><div className={"h-full rounded-full " + (pct >= 100 ? "bg-signal" : pct >= 80 ? "bg-[#fbbf24]" : "bg-[#3EE08F]")} style={{ width: `${pct}%` }} /></div>
+      <p className="mt-1 text-xs text-muted">{eur(b.month_requested_cents)} demandés / {eur(b.global_budget_cents)} de budget global{b.factor < 1 ? ` · budget atteint : primes réduites à ${Math.round(b.factor * 100)} %` : ""}. Plafond par ambassadeur : {eur(b.signup_cap_cents)}/mois (bonus palier inclus). Les % sur encaissements ne sont pas plafonnés.</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <input value={cap} onChange={(e) => setCap(e.target.value)} type="number" placeholder={`Plafond/ambassadeur (${b.signup_cap_cents / 100} €)`} className="w-48 rounded-lg border border-line bg-night px-2 py-1" />
+        <input value={bud} onChange={(e) => setBud(e.target.value)} type="number" placeholder={`Budget global (${b.global_budget_cents / 100} €)`} className="w-44 rounded-lg border border-line bg-night px-2 py-1" />
+        <button type="button" onClick={save} className="rounded-full bg-[#3EE08F] px-4 py-1 font-bold text-night">Enregistrer</button>
+      </div>
+    </section>
+  );
+}
+
+function CapRow({ r, adminKey, demo, onDone }: { r: AdminAmb; adminKey: string; demo: boolean; onDone: () => void }) {
+  const [v, setV] = useState(r.signup_cap_cents == null ? "" : String(r.signup_cap_cents / 100));
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <span className="font-bold">Plafond primes d'inscription (€/mois)</span>
+      <input value={v} onChange={(e) => setV(e.target.value)} type="number" placeholder="global" className="w-24 rounded-lg border border-line bg-night px-2 py-1" />
+      <button type="button" className="rounded-full border border-line px-3 py-1" onClick={() => demo ? toast("Aperçu") : void adminAmbCap(adminKey, r.user_id, v === "" ? null : Math.round(Number(v) * 100)).then(() => { toast("Plafond enregistré"); onDone(); }).catch((e: Error) => toast(e.message))}>OK</button>
+      <span className="text-muted">Primes d'inscription sur la période : {eur(r.stats.signup_bonus ?? 0)}</span>
+    </div>
+  );
 }

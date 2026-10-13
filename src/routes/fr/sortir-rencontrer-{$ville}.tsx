@@ -2,16 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SEO_CITIES, SITE_URL } from "@/lib/hdar/seo";
 import { LOCAL } from "@/lib/hdar/seo-local";
 
-export const Route = createFileRoute("/fr/rencontre-gay-{$ville}")({
+export const Route = createFileRoute("/fr/sortir-rencontrer-{$ville}")({
   head: ({ params }) => {
     const city = SEO_CITIES.find((c) => c.slug === params.ville);
     if (!city) return { meta: [{ title: "Ville inconnue — hdar." }, { name: "robots", content: "noindex" }] };
-    const url = `${SITE_URL}/fr/rencontre-gay-${city.slug}`;
+    const url = `${SITE_URL}/fr/sortir-rencontrer-${city.slug}`;
     const local = LOCAL[city.slug];
     const desc =
       local?.description ??
-      `Rencontre gay à ${city.name} : vois sur la carte qui est connecté autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`;
-    const title = `Rencontre gay à ${city.name} : qui est autour, en direct — hdar.`;
+      `Sorties et rencontres à ${city.name}, pour tout le monde : vois sur la carte qui est connecté et où sortir autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`;
+    const title = `Sortir et rencontrer à ${city.name} : qui est autour, en direct — hdar.`;
     const og = `${SITE_URL}${local?.og ?? "/og.jpg"}`;
     return {
       meta: [
@@ -50,10 +50,10 @@ function CityPage() {
     );
   }
   const local = LOCAL[city.slug];
-  const url = `${SITE_URL}/fr/rencontre-gay-${city.slug}`;
+  const url = `${SITE_URL}/fr/sortir-rencontrer-${city.slug}`;
   const faq = [
     {
-      q: `Comment faire une rencontre gay à ${city.name} avec hdar ?`,
+      q: `Comment sortir et faire des rencontres à ${city.name} avec hdar ?`,
       a: `Ouvre hdar, autorise ta position et touche Connexion : tu apparais sur la carte de ${city.name} pour quelques heures. Touche un profil pour le voir, puis écris-lui, envoie une photo, un vocal ou lance un appel vidéo.`,
     },
     {
@@ -92,7 +92,7 @@ function CityPage() {
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: "hdar.", item: SITE_URL + "/" },
-            { "@type": "ListItem", position: 2, name: `Rencontre gay à ${city.name}`, item: url },
+            { "@type": "ListItem", position: 2, name: `Sortir et rencontrer à ${city.name}`, item: url },
           ],
         })}
       </script>
@@ -111,10 +111,10 @@ function CityPage() {
         <Link to="/" className="font-display text-sm font-extrabold tracking-tight">
           hdar<span className="text-signal">.</span>
         </Link>
-        <h1 className="mt-6 font-display text-4xl font-extrabold tracking-tight">Rencontre gay à {city.name}</h1>
+        <h1 className="mt-6 font-display text-4xl font-extrabold tracking-tight">Sortir et rencontrer à {city.name}</h1>
         <p className="mt-3 text-lg">{city.line}</p>
         <p className="mt-3 text-muted">
-          hdar est une appli de rencontre gay géolocalisée, en direct, pour {city.name} et toute la région {city.region}.
+          hdar est une appli de sorties et de rencontres géolocalisée, en direct et pour tout le monde (LGBT-friendly), pour {city.name} et toute la région {city.region}.
           Pas de profil à remplir pendant des heures : tu ouvres, tu vois qui est connecté autour, tu discutes.
         </p>
         <Link to="/" className="mt-6 inline-flex h-12 items-center rounded-full bg-signal px-6 font-medium text-night">
@@ -132,7 +132,7 @@ function CityPage() {
             <strong>Messages privés</strong> — texte, photos, vocaux et appel vidéo.
           </li>
           <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>Les lieux</strong> — crée un lieu pour quelques heures (bar, soirée, plage) et retrouve-toi avec ceux du coin.
+            <strong>Les lieux</strong> — crée un lieu pour quelques heures (bar, soirée, plage) et retrouve les gens du coin.
           </li>
         </ul>
         {local?.body}
@@ -148,23 +148,23 @@ function CityPage() {
         <p className="mt-8 text-sm text-muted">Réservé aux 18 ans et plus. Aucune photo explicite sur les pages publiques.</p>
         {local?.nearby && (
           <>
-            <h2 className="mt-10 font-display text-lg font-bold">Rencontre gay près de {city.name}</h2>
+            <h2 className="mt-10 font-display text-lg font-bold">Sortir près de {city.name}</h2>
             <nav className="mt-3 flex flex-wrap gap-2 text-sm">
               {local.nearby
                 .map((slug) => SEO_CITIES.find((c) => c.slug === slug))
                 .filter((c) => !!c)
                 .map((c) => (
-                  <Link key={c.slug} to="/fr/rencontre-gay-{$ville}" params={{ ville: c.slug }} className="rounded-full border border-line px-3 py-1.5">
+                  <Link key={c.slug} to="/fr/sortir-rencontrer-{$ville}" params={{ ville: c.slug }} className="rounded-full border border-line px-3 py-1.5">
                     {c.name}
                   </Link>
                 ))}
             </nav>
           </>
         )}
-        <h2 className="mt-10 font-display text-lg font-bold">Rencontre gay dans d'autres villes</h2>
+        <h2 className="mt-10 font-display text-lg font-bold">Sortir et rencontrer dans d'autres villes</h2>
         <nav className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted">
           {SEO_CITIES.filter((c) => c.slug !== city.slug).map((c) => (
-            <Link key={c.slug} to="/fr/rencontre-gay-{$ville}" params={{ ville: c.slug }} className="underline-offset-2 hover:underline">
+            <Link key={c.slug} to="/fr/sortir-rencontrer-{$ville}" params={{ ville: c.slug }} className="underline-offset-2 hover:underline">
               {c.name}
             </Link>
           ))}

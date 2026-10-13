@@ -140,7 +140,8 @@ function AdultGateInner({ children }: { children: ReactNode }) {
         }}
       >
         <h1 className="font-display text-3xl font-extrabold">hdar.</h1>
-        <p className="text-sm text-muted">Anonyme, sans inscription. Réservé aux adultes.</p>
+        <p className="text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.</p>
+        <p className="text-xs text-muted">Sans inscription. Ouvert à toutes et tous, LGBT-friendly 🏳️‍🌈</p>
         {needsAdult && (
           <label className="flex items-center gap-3 text-sm">
             <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} />

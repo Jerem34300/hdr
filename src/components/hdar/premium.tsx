@@ -42,14 +42,14 @@ const PERKS = [
   ["🎥", "Live : revenir en arrière", "Tu as zappé trop vite ? Reviens sur la personne d'avant si elle est encore dans le Live."],
   ["🎚️", "Filtres du Live", "H/F/X et tranche d'âge : choisis qui tu croises en vidéo."],
   ["⚡", "Matching prioritaire", "Tu tombes d'abord sur ceux qui cherchent ce que tu es, et que tu cherches."],
-  ["👀", "Demande à se voir", "Il est flouté ? Envoie-lui une demande. Lui seul décide de se montrer."],
+  ["👀", "Demande à se voir", "Caméra floutée ? Envoie une demande. Seule l'autre personne décide de se montrer."],
 ] as const;
 
 const FAQ = [
   ["C'est un abonnement ?", "Oui, renouvelé automatiquement chaque semaine ou chaque mois. Tu résilies en deux clics depuis cette page, et tu gardes hdar+ jusqu'à la fin de la période payée."],
   ["Mon anonymat ?", "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Stripe gère le paiement, hdar ne voit jamais ta carte."],
   ["La recherche montre où sont les gens ?", "Non. Tu vois le pseudo et s'il est en ligne, jamais sa position. Les profils bloqués, bannis ou inactifs depuis 7 jours n'apparaissent pas."],
-  ["Demande à se voir, ça défloute l'autre ?", "Jamais. L'autre reçoit une invitation « Il aimerait te voir 👀 » et choisit « Me montrer » ou « Non merci ». Une seule demande par rencontre."],
+  ["Demande à se voir, ça défloute l'autre ?", "Jamais. L'autre reçoit une invitation « … aimerait te voir 👀 » et choisit « Me montrer » ou « Non merci ». Une seule demande par rencontre."],
   ["Le Live est réservé à hdar+ ?", "Non, le Live est gratuit pour tous les profils avec photo validée. hdar+ ajoute le retour en arrière, les filtres, le matching prioritaire et la demande à se voir."],
   ["Et les cœurs du Live ?", "Les cœurs s'achètent en packs (sans abonnement) et s'envoient dans le Live. Ils n'ont aucune valeur monétaire, ne sont ni remboursables ni échangeables contre de l'argent."],
   ["Et si je me cache ?", "Tu restes invisible : hdar+ ne change rien à ta visibilité."],
@@ -83,7 +83,7 @@ export function FilterSheet({ onClose }: { onClose: () => void }) {
           <input inputMode="numeric" placeholder="99" value={f.maxAge ?? ""} onChange={(e) => setF({ ...f, maxAge: e.target.value ? Math.max(18, Math.min(99, +e.target.value || 99)) : null })} className="h-10 w-20 rounded-xl border border-line bg-surface px-3" />
           <span className="text-muted">ans</span>
         </div>
-        <h3 className="mt-5 text-xs font-bold tracking-widest text-muted uppercase">Il est</h3>
+        <h3 className="mt-5 text-xs font-bold tracking-widest text-muted uppercase">Profil</h3>
         <div className="mt-2 flex flex-wrap gap-2">{GENDERS.map((g) => <button key={g.id} type="button" className={chip(f.iam.includes(g.id))} onClick={() => tog("iam", g.id)}>{g.label}</button>)}</div>
         <h3 className="mt-5 text-xs font-bold tracking-widest text-muted uppercase">Envies</h3>
         <div className="mt-2 flex flex-wrap gap-2">{DESIRES.map((d) => <button key={d.id} type="button" className={chip(f.desires.includes(d.id))} onClick={() => tog("desires", d.id)}>{d.label}</button>)}</div>

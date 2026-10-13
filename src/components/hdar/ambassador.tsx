@@ -97,7 +97,7 @@ export function AmbassadorSpace({ demo }: { demo?: AmbMe }) {
             <button type="button" className="h-9 flex-1 rounded-full border border-line" onClick={() => demo ? toast("Aperçu") : void ambContractPdf().catch((e: Error) => toast(e.message))}>📄 Mon contrat{me.contract ? ` (${me.contract.version})` : ""}</button>
             <a href="/ambassadeur/guide" className="flex h-9 flex-1 items-center justify-center rounded-full border border-line">📘 Guide ambassadeur</a>
           </div></div>
-        <p className="mt-3 text-xs text-muted">Tes règles : {eur(me.per_signup_cents)} par inscrit validé (photo approuvée et toujours actif 7 jours après) · {me.user_pct} % du net dépensé par tes inscrits pendant {me.user_months} mois · {me.partner_pct} % de l'abonnement net des partenaires signés pendant {me.partner_months} mois · bonus {eur(me.bonus_cents)} à {me.bonus_at} validés dans le mois. Tu ne vois que des compteurs, jamais l'identité des membres.</p>
+        <p className="mt-3 text-xs text-muted">Tes règles : {eur(me.per_signup_cents)} par inscrit validé (photo approuvée et toujours actif 7 jours après) · {me.user_pct} % du net dépensé par tes inscrits pendant {me.user_months} mois · {me.partner_pct} % de l'abonnement net des partenaires signés pendant {me.partner_months} mois · bonus {eur(me.bonus_cents)} à {me.bonus_at} validés dans le mois. Primes d'inscription (bonus inclus) plafonnées (100 € par mois par défaut) ; hdar peut fixer un budget global mensuel. Les % ne sont pas plafonnés. Tu ne vois que des compteurs, jamais l'identité des membres.</p>
       </section>
       {me.places.length > 0 && <section className="mt-4 rounded-3xl border border-line bg-surface p-4">
         <p className="text-sm font-bold">Mes fiches partenaires</p>
@@ -216,7 +216,7 @@ function Onboard({ token, onDone }: { token: string; onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => void ambInviteInfo(token).then(setInfo).catch(() => setInfo({ valid: false, photo_ok: false })), [token]);
-  useEffect(() => void fetch("/ambassadeur/contrat-v1.html").then((r) => r.text()).then(setHtml).catch(() => undefined), []);
+  useEffect(() => void fetch("/ambassadeur/contrat-v2.html").then((r) => r.text()).then(setHtml).catch(() => undefined), []);
   if (!info) return <p className="p-6 text-center text-muted">Chargement…</p>;
   const nameOk = name.trim().length >= 4 && /\s/.test(name.trim());
   const submit = () => {
@@ -235,7 +235,7 @@ function Onboard({ token, onDone }: { token: string; onDone: () => void }) {
       <section className="rounded-3xl border border-line bg-surface p-4"><p className="font-bold">Charte ambassadeur</p>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{CHARTE.map((c) => <li key={c}>{c}</li>)}</ul></section>
       <section className="rounded-3xl border border-line bg-surface p-4">
-        <div className="flex items-center justify-between"><p className="font-bold">📄 Contrat ambassadeur (v1)</p><a href="/ambassadeur/contrat-v1.pdf" target="_blank" rel="noreferrer" className="text-xs underline">PDF</a></div>
+        <div className="flex items-center justify-between"><p className="font-bold">📄 Contrat ambassadeur (v2)</p><a href="/ambassadeur/contrat-v2.pdf" target="_blank" rel="noreferrer" className="text-xs underline">PDF</a></div>
         <div className="amb-contract mt-2 max-h-[55vh] overflow-y-auto rounded-2xl bg-white p-4 text-[13px] leading-relaxed text-[#111]" dangerouslySetInnerHTML={{ __html: html || "Chargement du contrat…" }} />
       </section>
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /> J'ai lu et j'accepte le contrat (et la charte).</label>

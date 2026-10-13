@@ -1,17 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, placeHide, placeMessages, placeSend, placeSendMedia, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
 import { RoomAttach, RoomMedia } from "./media-composer";
 import { useHdar } from "@/lib/hdar/store";
 
 export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color: string }> = {
-  cruising: { label: "Lieu de drague", icon: "🌲", color: "#34d399" },
+  cruising: { label: "Lieu de rencontre", icon: "🌲", color: "#34d399" },
   beach: { label: "Plage naturiste", icon: "🏖️", color: "#38bdf8" },
   park: { label: "Parc / jardin", icon: "🌳", color: "#a3e635" },
   aire: { label: "Aire / parking", icon: "🅿️", color: "#fbbf24" },
+  garden: { label: "Jardin", icon: "🌷", color: "#86efac" },
+  viewpoint: { label: "Belvédère / point de vue", icon: "🔭", color: "#fcd34d" },
+  square: { label: "Place", icon: "⛲", color: "#93c5fd" },
+  promenade: { label: "Promenade", icon: "🚶", color: "#5eead4" },
   other: { label: "Autre lieu", icon: "📌", color: "#c4b5fd" },
   toilets: { label: "Toilettes publiques", icon: "🚻", color: "#94a3b8" },
   // Réservés aux futurs partenaires (annonces payantes) — aucun affiché aujourd'hui.
@@ -19,7 +23,7 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   club: { label: "Club partenaire", icon: "🪩", color: "#f472b6" },
   sauna: { label: "Sauna partenaire", icon: "♨️", color: "#f472b6" },
 };
-const PROPOSABLE: PlaceKind[] = ["cruising", "beach", "park", "aire", "other"];
+const PROPOSABLE: PlaceKind[] = ["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"];
 const LAYER_KEY = "hdar-places-layer";
 const TOILETS_KEY = "hdar-toilets-layer";
 export function toiletsLayerOn() {
@@ -147,7 +151,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
 export function ProposePlaceSheet({ at, onClose }: { at: { lat: number; lng: number }; onClose: () => void }) {
   const onboarded = useHdar((s) => s.me.onboarded);
   const openGate = useHdar((s) => s.openGate);
-  const [kind, setKind] = useState<PlaceKind>("cruising");
+  const [kind, setKind] = useState<PlaceKind>("park");
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [busy, setBusy] = useState(false);
@@ -447,4 +451,23 @@ function PlaceExtras({ id }: { id: string }) {
       )}
     </>
   );
+}
+
+/** Lieux de sortie OSM (parcs, jardins, belvédères, places, promenades), chargés pour la zone visible à partir du zoom 12. */
+export function useOutings(on: boolean, box: { s: number; w: number; n: number; e: number }, zoom: number): PlacePin[] {
+  const [rows, setRows] = useState<PlacePin[]>([]);
+  const active = on && zoom >= 12;
+  const key = [box.s, box.w, box.n, box.e].map((v) => v.toFixed(2)).join(",");
+  useEffect(() => {
+    if (!active) { setRows([]); return; }
+    const [s, w, n, e] = key.split(",").map(Number);
+    let stop = false;
+    const t = window.setTimeout(() => {
+      void listOutings(s - 0.02, w - 0.02, n + 0.02, e + 0.02)
+        .then((r) => { if (!stop) setRows(r.map((x) => ({ ...x, partner: false }))); })
+        .catch(() => undefined);
+    }, 450);
+    return () => { stop = true; window.clearTimeout(t); };
+  }, [active, key]);
+  return active ? rows : [];
 }

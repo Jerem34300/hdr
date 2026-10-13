@@ -43,7 +43,7 @@ export const mail = (body: string, unsub: string, tpl: Tpl = "news", o: { code?:
 <tr><td style="padding:20px 26px 6px;font-size:16px;line-height:1.6">${esc(body).replace(/\n/g, "<br>")}${giftBlock}</td></tr>
 <tr><td style="padding:18px 24px 30px;text-align:center"><a href="${href}" style="display:inline-block;background:${C.coral};color:${C.night};font-weight:800;font-size:17px;text-decoration:none;border-radius:999px;padding:16px 34px">${h.cta} →</a></td></tr>
 </table>
-<p style="text-align:center;font-size:11px;color:#71717a;margin-top:16px;line-height:1.5">hdar. · la carte en direct, 100 % anonyme · 18+<br>Tu reçois cet email car tu as coché « Recevoir les nouveautés hdar ». <a href="${unsub}" style="color:${C.muted}">Se désinscrire</a></p>
+<p style="text-align:center;font-size:11px;color:#71717a;margin-top:16px;line-height:1.5">hdar. · sorties et rencontres autour de toi, pour tout le monde · gratuit, anonyme, 18+<br>Tu reçois cet email car tu as coché « Recevoir les nouveautés hdar ». <a href="${unsub}" style="color:${C.muted}">Se désinscrire</a></p>
 </div></body></html>`;
 };
 

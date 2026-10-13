@@ -19,7 +19,7 @@ function Privacy() {
   return (
     <LegalPage title="Politique de confidentialité">
       <p>
-        hdar. est une appli de rencontre gay <strong>anonyme</strong>, réservée aux{" "}
+        hdar. est une appli de sorties et de rencontres pour tout le monde, <strong>anonyme</strong>, réservée aux{" "}
         <strong>18 ans et plus</strong>. Pas d'email, pas de numéro de téléphone, pas de compte
         Google ou réseau social. Cette page explique quelles données existent, pourquoi, et combien
         de temps elles sont gardées.

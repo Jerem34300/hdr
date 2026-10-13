@@ -626,7 +626,7 @@ export const useHdar = create<State>()(
           sheet: null,
           view: chatOrTabs(get().view, id),
         });
-        toast("Bloqué des deux côtés. Il disparaît de ta carte.");
+        toast("Bloqué des deux côtés. Cette personne disparaît de ta carte.");
       },
       report: (id) => {
         const reports = get().reports.includes(id) ? get().reports : [...get().reports, id];

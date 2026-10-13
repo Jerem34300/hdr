@@ -55,7 +55,7 @@ export function HeartPacks({ onClose, demo }: { onClose: () => void; demo?: Pric
     <div className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={onClose}>
       <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
         <p className="font-display text-xl font-extrabold">Envoie des ❤️ dans le Live</p>
-        <p className="text-xs text-muted">1 cœur = 1 envoi. Il voit tes cœurs s'envoler sur son écran.</p>
+        <p className="text-xs text-muted">1 cœur = 1 envoi. L'autre voit tes cœurs s'envoler sur son écran.</p>
         <div className="grid grid-cols-3 gap-2">
           {packs.map((p, i) => (
             <button key={p.product} type="button" disabled={!!busy} onClick={() => void buy(p.product)}

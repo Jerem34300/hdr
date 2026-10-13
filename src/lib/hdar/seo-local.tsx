@@ -15,12 +15,12 @@ export const LOCAL: Record<string, LocalContent> = {
   montpellier: {
     og: "/og-montpellier.jpg",
     description:
-      "Rencontre gay à Montpellier : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Lieux de drague, prévention, conseils. Gratuit, anonyme, sans compte, 18+.",
+      "Sortir et rencontrer à Montpellier, pour tout le monde : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Parcs, belvédères, places, lieux partenaires, conseils. Gratuit, anonyme, sans compte, 18+.",
     nearby: ["sete", "nimes", "agde", "cap-d-agde", "beziers"],
     faq: [
       {
-        q: "Où sortir gay à Montpellier ?",
-        a: "La vie gay se concentre dans l'Écusson et autour de Saint-Roch et des Beaux-Arts. Pour les soirées de la semaine, consulte l'agenda LGBT de Montpellier, et ouvre la carte hdar pour voir qui est sorti ce soir.",
+        q: "Où sortir à Montpellier ?",
+        a: "La vie nocturne se concentre dans l'Écusson et autour de Saint-Roch, des Beaux-Arts et d'Antigone. Ouvre la carte hdar pour voir qui est sorti ce soir et quels lieux sont autour ; pour les soirées LGBT+, l'agenda LGBT de Montpellier est une bonne référence.",
       },
       {
         q: "Où se faire dépister ou trouver de la prévention à Montpellier ?",
@@ -31,7 +31,7 @@ export const LOCAL: Record<string, LocalContent> = {
       <>
         <h2 className="mt-10 font-display text-xl font-bold">Montpellier, une ville où ça bouge à pied</h2>
         <p className="mt-3 text-sm leading-relaxed">
-          Montpellier est l'une des villes les plus ouvertes du sud de la France, et sa vie gay tient dans un périmètre
+          Montpellier est l'une des villes les plus ouvertes du sud de la France, et sa vie nocturne tient dans un périmètre
           étonnamment petit. L'<strong>Écusson</strong>, le centre historique piéton, concentre la plupart des bars, des
           terrasses et des soirées. Juste à côté, le quartier <strong>Saint-Roch</strong> et la gare, puis les{" "}
           <strong>Beaux-Arts</strong> au nord et <strong>Antigone</strong> à l'est complètent la carte. C'est
@@ -45,7 +45,7 @@ export const LOCAL: Record<string, LocalContent> = {
           quartier permet de demander simplement « qui sort ce soir ? ».
         </p>
 
-        <h2 className="mt-10 font-display text-xl font-bold">Sortir gay à Montpellier</h2>
+        <h2 className="mt-10 font-display text-xl font-bold">Sortir à Montpellier</h2>
         <p className="mt-3 text-sm leading-relaxed">
           Bars, terrasses et soirées se trouvent pour l'essentiel dans l'Écusson, autour de Saint-Roch et vers les
           Beaux-Arts. Une bonne partie de la nuit est animée par des collectifs qui organisent des soirées ponctuelles :
@@ -53,32 +53,18 @@ export const LOCAL: Record<string, LocalContent> = {
           <a className={ext} href="https://agendalgbt.com/montpellier" rel="noopener" target="_blank">
             Agenda LGBT Montpellier
           </a>{" "}
-          avant de sortir. Dans hdar, crée un « lieu » éphémère pour ta soirée afin que les gens autour te retrouvent.
+          pour les soirées LGBT+. Dans hdar, crée un « lieu » éphémère pour ta soirée afin que les gens autour te retrouvent.
         </p>
 
-        <h2 className="mt-10 font-display text-xl font-bold">Lieux de drague et plages naturistes</h2>
+        <h2 className="mt-10 font-display text-xl font-bold">Parcs, belvédères et plages</h2>
         <p className="mt-3 text-sm leading-relaxed">
-          La drague en plein air (parcs, bois, plages, aires) fait partie de la culture gay depuis longtemps. Sur la carte
-          hdar, la couche <strong>« Lieux permanents »</strong> affiche des lieux publics et gratuits : plages naturistes
-          issues d'OpenStreetMap et lieux proposés par la communauté, vérifiés avant publication. Sur le littoral
-          héraultais, plusieurs plages naturistes officielles existent, comme celle du Cap d'Agde ou de Sérignan.
+          La carte hdar affiche aussi des lieux publics et gratuits issus d'OpenStreetMap : parcs et jardins, belvédères,
+          places et promenades, plages, toilettes publiques, ainsi que les lieux proposés par la communauté, vérifiés avant
+          publication. Pratique pour fixer un point de rendez-vous ou trouver où se poser, du Peyrou au Lez.
         </p>
         <ul className="mt-3 space-y-2 text-sm">
-          <li>
-            <strong>La loi s'applique partout</strong> : l'exhibition sexuelle dans un lieu accessible au public est un
-            délit. Le naturisme n'est autorisé que sur les zones prévues.
-          </li>
-          <li>
-            <strong>Respect</strong> des autres usagers, des familles et des riverains ; discrétion et consentement
-            toujours, uniquement entre adultes.
-          </li>
-          <li>
-            <strong>Sécurité</strong> : préviens un proche, méfie-toi des guet-apens, ne garde pas d'objets de valeur.
-          </li>
-          <li>
-            <strong>Prévention</strong> : AIDES mène des actions de réduction des risques sur les lieux de drague
-            (préservatifs, PrEP, dépistage).
-          </li>
+          <li><strong>Respect</strong> des autres usagers, des familles et des riverains ; la loi s'applique partout.</li>
+          <li><strong>Sécurité</strong> : préviens un proche, privilégie les lieux fréquentés pour un premier rendez-vous.</li>
         </ul>
 
         <h2 className="mt-10 font-display text-xl font-bold">Associations et prévention</h2>
@@ -114,7 +100,7 @@ export const LOCAL: Record<string, LocalContent> = {
           <li>Regarde qui est autour, écris dans le chat du quartier (effacé après 24 h) ou crée un « lieu » pour ta soirée.</li>
           <li>Pour les messages privés, crée un pseudo : texte, photos, vocaux, appel vidéo et partage de position exacte facultatif (1 h).</li>
           <li>Ajoute des favoris : tu es prévenu quand ils se connectent à Montpellier.</li>
-          <li>Active la couche « Lieux permanents » pour voir les plages naturistes et lieux de drague publics, ou proposer un lieu.</li>
+          <li>Active la couche « Lieux permanents » pour voir parcs, belvédères, places, plages et lieux partenaires, ou proposer un lieu.</li>
         </ol>
 
         <h2 className="mt-10 font-display text-xl font-bold">Rencontrer en sécurité</h2>
@@ -122,7 +108,7 @@ export const LOCAL: Record<string, LocalContent> = {
           <li>Premier rendez-vous dans un lieu public, par exemple une terrasse de l'Écusson, plutôt qu'un appartement.</li>
           <li>Préviens un proche de l'endroit où tu vas. Le partage de position exacte de hdar expire seul au bout d'une heure.</li>
           <li>Garde ta PrEP, tes préservatifs, et pense au dépistage régulier (AIDES, CeGIDD).</li>
-          <li>Si quelqu'un insiste, bloque-le et signale-le dans l'appli : les signalements sont examinés.</li>
+          <li>Si quelqu'un insiste, bloque et signale la personne dans l'appli : les signalements sont examinés.</li>
           <li>Pour toute urgence, compose le 17 ou le 112.</li>
         </ul>
       </>

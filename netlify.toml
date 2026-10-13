@@ -10,3 +10,9 @@
   to = "/ambassadeur/guide.pdf"
   status = 301
   force = true
+
+[[redirects]]
+  from = "/fr/rencontre-gay-:ville"
+  to = "/fr/sortir-rencontrer-:ville"
+  status = 301
+  force = true

@@ -3,7 +3,7 @@
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 
 const SITE = Deno.env.get("HDAR_SITE_URL") ?? "https://hdar.chat";
-const VERSION = "v1";
+const VERSION = "v2";
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

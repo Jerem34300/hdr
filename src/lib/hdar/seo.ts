@@ -3,7 +3,7 @@ export const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://hdar.chat").r
 
 export type SeoCity = { slug: string; name: string; region: string; line: string };
 
-/** Cities with a public landing page ("Rencontre gay à …"), listed in the sitemap. */
+/** Cities with a public landing page ("Sortir et rencontrer à …"), listed in the sitemap. */
 export const SEO_CITIES: SeoCity[] = [
   { slug: "paris", name: "Paris", region: "Île-de-France", line: "Le Marais, Pigalle, Oberkampf : la carte montre qui est connecté autour de toi." },
   { slug: "lyon", name: "Lyon", region: "Auvergne-Rhône-Alpes", line: "Des Pentes de la Croix-Rousse à la Guillotière, vois qui est dispo dans ton quartier." },

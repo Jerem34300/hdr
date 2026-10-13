@@ -1,7 +1,8 @@
 import { MapGiftButton } from "./growth";
+import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
-import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useToilets } from "./places-layer";
+import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { Layers, LocateFixed, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -155,6 +156,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     };
   }, [filterKey]);
   useEffect(() => void usePremium.getState().refresh(), []);
+  // Arrivée via un lien « Partager mon live » : on centre sur la zone partagée.
+  useEffect(() => { const n = consumeNear(); if (n) useMapFocus.setState({ fly: { lat: n.lat, lng: n.lng, zoom: 14, at: Date.now() } }); }, []);
 
   useEffect(() => {
     if (!visible) void goDark({ data: deviceId() }).catch(() => undefined);
@@ -275,7 +278,17 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     },
     zoom,
   );
-  const places = toilets.length ? [...basePlaces, ...toilets] : basePlaces;
+  const outings = useOutings(
+    placesOn,
+    {
+      s: latFromY((top + size.h) / scale, z),
+      n: latFromY(top / scale, z),
+      w: lngFromX(left / scale, z),
+      e: lngFromX((left + size.w) / scale, z),
+    },
+    zoom,
+  );
+  const places = toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces;
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {

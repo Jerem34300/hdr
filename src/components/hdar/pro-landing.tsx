@@ -90,9 +90,9 @@ export function SampleFiche() {
 }
 
 const BENEFITS = [
-  ["📍", "Vu en temps réel", "Votre lieu s'affiche aux mecs connectés autour de vous, au moment où ils cherchent où sortir."],
+  ["📍", "Vu en temps réel", "Votre lieu s'affiche aux personnes connectées autour de vous, au moment où elles cherchent où sortir."],
   ["✨", "Un halo qui attire l'œil", "Ton pin brille sur la carte, impossible de le rater parmi les autres lieux."],
-  ["💬", "Ton propre chat", "Annonce une soirée, réponds aux questions, crée l'envie avant même qu'ils arrivent."],
+  ["💬", "Votre propre chat", "Annoncez une soirée, répondez aux questions, créez l'envie avant même que les gens arrivent."],
   ["⭐", "Avis sous votre contrôle", "Notes et commentaires : activés ou non, publics sur la fiche ou privés pour vous seul."],
   ["📊", "Des stats concrètes", "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe."],
   ["🔒", "Respect de l'anonymat", "Stats agrégées par zone : vous mesurez votre audience sans jamais savoir qui est qui."],
@@ -103,7 +103,7 @@ const FAQ = [
   ["Comment résilier ?", "En un clic depuis votre espace pro, via le portail sécurisé Stripe. Votre fiche reste visible jusqu'à la fin de la période payée."],
   ["Les utilisateurs restent-ils anonymes ?", "Oui. hdar ne vous donne jamais l'identité ni la position exacte de quelqu'un : les statistiques sont regroupées par zone."],
   ["Je peux désactiver les avis ?", "Oui, à tout moment : notes et commentaires activés ou non, publics ou privés."],
-  ["Quels lieux sont acceptés ?", "Bars, clubs, saunas, événements, commerces gay-friendly. Les fiches sont modérées selon nos CGU."],
+  ["Quels lieux sont acceptés ?", "Bars, clubs, saunas, événements, restaurants, commerces, lieux LGBT-friendly et inclusifs. Les fiches sont modérées selon nos CGU."],
 ] as const;
 
 export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: PriceRow[]; boostPrices?: PriceRow[]; onCreate: () => void }) {
@@ -122,7 +122,7 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
           <h2 className="mt-5 font-display text-[2rem] leading-[1.1] font-extrabold sm:text-5xl">
             Mettez votre lieu sur <span style={{ color: CORAL }}>la carte</span> que la communauté regarde <span style={{ color: MINT }}>en ce moment</span>.
           </h2>
-          <p className="mt-4 text-base text-muted">hdar, c'est la carte live des mecs autour de soi. Votre bar, club ou sauna apparaît là où ils décident de sortir, avec un halo lumineux, votre chat et vos avis.</p>
+          <p className="mt-4 text-base text-muted">hdar, c'est la carte live des sorties et rencontres autour de soi, pour tout le monde. Votre bar, club ou sauna apparaît là où les gens décident de sortir, avec un halo lumineux, votre chat et vos avis.</p>
           <div className="mt-6">{cta()}</div>
           <p className="mt-2 text-xs text-muted">Sans engagement · en ligne en quelques minutes · paiement sécurisé Stripe</p>
           <div className="mt-8"><MapSnippet /></div>
@@ -242,8 +242,8 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
       <section className="relative overflow-hidden rounded-3xl border border-line p-6 text-center">
         <Bokeh />
         <div className="relative">
-          <h2 className="font-display text-2xl font-extrabold">Ce soir, ils cherchent où sortir.</h2>
-          <p className="mt-2 text-sm text-muted">Faites en sorte qu'ils vous trouvent.</p>
+          <h2 className="font-display text-2xl font-extrabold">Ce soir, tout le monde cherche où sortir.</h2>
+          <p className="mt-2 text-sm text-muted">Faites en sorte qu'on vous trouve.</p>
           <div className="mt-5">{cta("Créer ma fiche maintenant")}</div>
         </div>
       </section>
