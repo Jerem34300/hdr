@@ -1,3 +1,4 @@
+import { CardHead, cardCls, cardStyle } from "./profile-card";
 import { captureAmb, tryAmbAttach } from "./ambassador";
 import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
@@ -115,20 +116,17 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
   if (!n) return null;
   const copy = async () => { try { await navigator.clipboard.writeText(`https://hdar.chat/?r=${n.code}`); toast("Lien copié 📋"); } catch { toast(n.code); } };
   return (
-    <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#3EE08F] p-[2px] shadow-[0_0_30px_rgba(250,111,108,.35)]">
-      <div className="relative rounded-[22px] bg-[#0b0b10]/90 p-4">
-        <span aria-hidden className="pointer-events-none absolute -top-10 -right-8 size-32 rounded-full bg-[#3EE08F]/25 blur-2xl" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-10 size-36 rounded-full bg-[#FA6F6C]/30 blur-2xl" />
-        <p className="relative font-display text-lg font-extrabold">Invite un ami 🎁</p>
-        <p className="relative text-xs text-white/75">Partage = un petit cadeau tout de suite, +3 jours hdar+ quand ton ami s'inscrit{n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}</p>
-        <div className="relative mt-3 flex items-center justify-between gap-2 rounded-2xl border-2 border-dashed border-[#fbbf24]/80 bg-black/40 px-4 py-3">
-          <div><p className="text-[10px] font-bold tracking-[0.25em] text-[#fbbf24] uppercase">Ton code</p>
-            <p className="font-mono text-3xl font-extrabold tracking-[0.2em] text-[#3EE08F]">{n.code}</p></div>
+    <div className={cardCls} style={cardStyle("#FA6F6C")}>
+      <div>
+        <CardHead icon="🎁" accent="#FA6F6C" chevron={false} title="Invite un ami" sub={`+3 jours hdar+ pour vous deux${n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}`} />
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-dashed border-white/20 bg-black/30 px-4 py-2.5">
+          <div><p className="text-[10px] font-bold tracking-[0.25em] text-muted uppercase">Ton code</p>
+            <p className="font-mono text-2xl font-extrabold tracking-[0.2em] text-[#FA6F6C]">{n.code}</p></div>
           <button type="button" onClick={() => void copy()} className="rounded-full bg-white/10 px-3 py-2 text-xs font-bold">📋 Copier</button>
         </div>
-        <div className="relative mt-3 flex gap-2">
-          <button type="button" onClick={() => { void shareInvite(); onAction?.(); }} className="boost-cta h-11 flex-1 rounded-full font-display font-extrabold text-night">Partager</button>
-          <button type="button" onClick={() => { void downloadStory(); onAction?.(); }} className="h-11 rounded-full border border-white/30 px-4 text-sm">📸 Story</button>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={() => { void shareInvite(); onAction?.(); }} className="h-11 flex-1 rounded-full bg-[#FA6F6C] font-display font-extrabold text-night">Partager</button>
+          <button type="button" onClick={() => { void downloadStory(); onAction?.(); }} className="h-11 rounded-full border border-white/15 px-4 text-sm font-bold">📸 Story</button>
         </div>
       </div>
     </div>
@@ -139,11 +137,8 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
 export function PremiumCard() {
   const premium = usePremium((s) => s.premium);
   return (
-    <Link to="/premium" className="mt-3 flex items-center gap-3 rounded-3xl border border-[#fbbf24]/60 bg-gradient-to-r from-[#fbbf24]/15 to-transparent p-4 shadow-[0_0_24px_rgba(251,191,36,.18)]">
-      <span className="text-3xl">👑</span>
-      <span className="min-w-0 flex-1"><b className="block font-display">hdar<span className="text-[#fbbf24]">+</span>{premium ? " · actif" : ""}</b>
-        <span className="text-xs text-muted">Filtres, qui t'a vu, recherche, Live+, 20 photos</span></span>
-      <span className="text-sm font-bold text-[#fbbf24]">{premium ? "Mon espace ›" : "Essayer ›"}</span>
+    <Link to="/premium" className={cardCls} style={cardStyle("#fbbf24")}>
+      <CardHead icon="👑" accent="#fbbf24" title={<>hdar<span className="text-[#fbbf24]">+</span>{premium ? " · actif" : ""}</>} sub={premium ? "Mon espace · filtres, qui t'a vu, Live+" : "Essayer · filtres, qui t'a vu, Live+"} />
     </Link>
   );
 }

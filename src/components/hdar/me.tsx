@@ -1,4 +1,4 @@
-import { AmbassadorCard } from "./ambassador";
+import { AmbNudge, ProfileAmb } from "./profile-card";
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { openIntro } from "./intro-video";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
@@ -131,8 +131,9 @@ export function Me() {
           </button>
         </div>
       </div>
-      <AmbassadorCard />
       <ProSpaceCard />
+      <ProfileAmb />
+      <AmbNudge />
       <BoostButton />
       <PremiumCard />
       <InviteCard />

@@ -1,3 +1,4 @@
+import { ProSpaceCard } from "./pro-tools";
 import { AmbassadorsTab, demoAdminAmbs } from "./admin-ambassadors";
 import { AmbOnboardPreview, AmbassadorSpace, BecomeAmbCard, demoAmb } from "./ambassador";
 import { AmbLanding, ApplyQuiz } from "./amb-landing";
@@ -169,6 +170,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 function DevPreview() {
   if (location.search.includes("amblanding")) return <main className="h-dvh overflow-y-auto bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><a href="/" className="text-sm text-muted underline">← Retour</a><AmbLanding status={null} onApply={() => undefined} /></div></main>;
   if (location.search.includes("ambquiz")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><ApplyQuiz demo start={Number(new URLSearchParams(location.search).get("step") ?? 0)} onBack={() => undefined} onDone={() => undefined} /></div></main>;
+  if (location.search.includes("profilcards")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="font-display text-xl font-extrabold">Profil (aperçu cartes)</p><ProSpaceCard demo /><a className="mt-2 block px-1 text-center text-[13px] text-muted">💸 Gagne de l'argent : <span className="font-bold text-[#3EE08F]">deviens ambassadeur ›</span></a><PremiumCard /><InviteCard demo="X7K2Q9" /></main>;
   if (location.search.includes("ambcard")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="font-display text-xl font-extrabold">Profil</p><BecomeAmbCard /></main>;
   if (location.search.includes("ambadmin")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-2xl"><p className="mb-3 text-xs text-[#fbbf24]">🧪 Données d'exemple</p><AmbassadorsTab adminKey="" preview={demoAdminAmbs()} /></div></main>;
   if (location.search.includes("ambsign")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><h1 className="mb-4 font-display text-3xl font-extrabold">🎯 Espace ambassadeur</h1><AmbOnboardPreview /></div></main>;

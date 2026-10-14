@@ -1,3 +1,4 @@
+import { CardHead, cardCls, cardStyle } from "./profile-card";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { myPro, myProGifts, proBadge, proChatBlock, proChatOpen, proGiftSend, proGiftsPref, type ProGift, type ProPlace } from "@/lib/hdar/live";
@@ -118,12 +119,8 @@ export function ProSpaceCard({ demo }: { demo?: boolean }) {
   );
   if (!n) return null;
   return (
-    <a href="/pro" className="mt-3 block rounded-3xl bg-gradient-to-r from-[#fbbf24] via-[#FA6F6C] to-[#3EE08F] p-[2px] shadow-[0_0_24px_rgba(251,191,36,.3)]">
-      <span className="flex items-center gap-3 rounded-[22px] bg-[#0b0b10]/90 p-4">
-        <span className="text-3xl">🏷️</span>
-        <span className="min-w-0 flex-1"><b className="block font-display text-lg">Mon espace pro</b><span className="text-xs text-white/75">Tableau de bord, avis, Live Pro, cadeaux, Boost Pro</span></span>
-        <span className="text-sm font-bold text-[#fbbf24]">Ouvrir ›</span>
-      </span>
+    <a href="/pro" className={cardCls} style={cardStyle("#fbbf24")}>
+      <CardHead icon="🏷️" accent="#fbbf24" title="Mon espace pro" sub="Tableau de bord, avis, Live Pro" />
     </a>
   );
 }
