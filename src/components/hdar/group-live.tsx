@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Room, RoomEvent, Track, type LocalTrack, type LocalTrackPublication, type RemoteParticipant, type RemoteTrack, type RemoteTrackPublication } from "livekit-client";
-import { Flag, LayoutGrid, MessageCircle, MessageCircleOff, Mic, MicOff, Video, VideoOff, X } from "lucide-react";
+import { ChevronUp, Eye, EyeOff, Flag, MessageCircle, MessageCircleOff, Mic, MicOff, Video, VideoOff, X } from "lucide-react";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
-import { StageGrid, type Tile } from "./stage-grid";
 import { myHearts, roomLeave, roomOpen, roomReportMsg, roomSay, roomStage, roomState, roomToken, rouletteReport, type RoomMsg, type RoomState } from "@/lib/hdar/live";
 import { usePhoto } from "@/lib/hdar/photos";
 import { REPORT_REASONS } from "@/lib/hdar/report";
@@ -34,16 +33,15 @@ export function groupError(m: string): string {
 
 /** Mesure la barre du bas et publie sa hauteur dans --live-bb sur l'écran parent : le chat et l'aperçu se posent au-dessus, sans jamais la chevaucher. */
 export function useBottomBar<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    const el = ref.current, host = el?.parentElement;
-    if (!el || !host) return;
+  // ref « callback » : se remesure à chaque fois que la barre est (re)montée (diffusion ↔ 1:1)
+  const ro = useRef<ResizeObserver | null>(null);
+  return useCallback((el: T | null) => {
+    ro.current?.disconnect(); ro.current = null;
+    const host = el?.parentElement; if (!el || !host) return;
     const set = () => host.style.setProperty("--live-bb", `${Math.ceil(el.getBoundingClientRect().height)}px`);
     set();
-    const ro = new ResizeObserver(set); ro.observe(el);
-    return () => ro.disconnect();
+    ro.current = new ResizeObserver(set); ro.current.observe(el);
   }, []);
-  return ref;
 }
 
 /** Chat et état du salon, sondés toutes les 1,5 s. */
@@ -52,6 +50,7 @@ function useRoomState(room: string | null, onGone: (banned: boolean) => void) {
   const [msgs, setMsgs] = useState<RoomMsg[]>([]);
   const [pops, setPops] = useState<{ k: number; e: string }[]>([]);
   const after = useRef(0);
+  const kick = useRef<() => void>(() => undefined);
   const goneRef = useRef(onGone); goneRef.current = onGone;
   useEffect(() => {
     if (!room) return;
@@ -70,21 +69,40 @@ function useRoomState(room: string | null, onGone: (banned: boolean) => void) {
         }
       } catch { /* réseau */ }
     };
+    kick.current = () => void tick();
     void tick();
     const t = setInterval(() => void tick(), 1500);
     return () => { on = false; clearInterval(t); };
   }, [room]);
-  return { st, msgs, pops };
+  return { st, msgs, pops, refresh: () => kick.current() };
 }
 
-function Chat({ room, msgs, pops, show, canReport, reserve }: { room: string; msgs: RoomMsg[]; pops: { k: number; e: string }[]; show: boolean; canReport: boolean; reserve?: "l" | "r" }) {
+/** Une ligne du chat : message du salon (spectateurs) ou message privé du partenaire 1:1 (canal P2P). */
+export type ChatLine = { key: string; pseudo: string | null; body: string; room?: RoomMsg; mine?: boolean };
+export const roomLines = (msgs: RoomMsg[]): ChatLine[] => msgs.map((m) => ({ key: `r${m.id}`, pseudo: m.pseudo, body: m.body, room: m }));
+
+/** Bandeau « son bloqué » : petit, en haut, ne recouvre jamais les boutons. N'apparaît que si le navigateur a VRAIMENT bloqué le son. */
+export function SoundToast({ show, onTap }: { show: boolean; onTap: () => void }) {
+  if (!show) return null;
+  return (
+    <button type="button" data-testid="sound-toast" onClick={onTap} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+      className="absolute top-[5.5rem] right-3 z-20 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-night shadow-lg">
+      🔇 Son coupé par le navigateur · <u>activer</u>
+    </button>
+  );
+}
+
+function Chat({ room, lines, pops, show, canReport, reserve, onP2P, onSent }: { room: string | null; lines: ChatLine[]; pops: { k: number; e: string }[]; show: boolean; canReport: boolean; reserve?: "l" | "r"; onP2P?: (body: string, echo: boolean) => void; onSent?: () => void }) {
   const [txt, setTxt] = useState("");
   const [rep, setRep] = useState<RoomMsg | null>(null);
   const demo = room === "demo";
   const [bal, setBal] = useState<number | null>(demo ? (location.search.includes("nohearts") ? 0 : 12) : null);
   const [packs, setPacks] = useState(demo && location.search.includes("packs"));
-  useEffect(() => { if (!demo) void myHearts().then((h) => setBal(h.unlimited ? Infinity : h.balance)).catch(() => undefined); }, [demo]);
+  const list = useRef<HTMLUListElement>(null);
+  useEffect(() => { if (room && !demo) void myHearts().then((h) => setBal(h.unlimited ? Infinity : h.balance)).catch(() => undefined); }, [room, demo]);
+  useEffect(() => { const l = list.current; if (l) l.scrollTop = l.scrollHeight; }, [lines.length]);
   const react = async (r: string) => {
+    if (!room) return;
     if (bal === 0) return setPacks(true);
     if (demo) return setBal((b) => (b ?? 1) - 1);
     try { const x = await roomSay(room, r, "react"); if (x) setBal(x.unlimited ? Infinity : x.balance ?? 0); }
@@ -92,29 +110,35 @@ function Chat({ room, msgs, pops, show, canReport, reserve }: { room: string; ms
   };
   const send = async () => {
     const b = txt.trim(); if (!b) return;
-    try { await roomSay(room, b); setTxt(""); } catch (e) { toast(groupError(e instanceof Error ? e.message : "")); }
+    setTxt("");
+    onP2P?.(b, !room); // pendant une diffusion, l'écho vient déjà du salon : pas de doublon
+    if (!room || demo) return;
+    try { await roomSay(room, b); onSent?.(); } catch (e) { setTxt(b); toast(groupError(e instanceof Error ? e.message : "")); }
   };
   return (
     <>
-      <div className="pointer-events-none absolute right-3 z-10 flex flex-col items-center gap-1" style={{ bottom: "calc(var(--live-bb, 9rem) + 4rem)" }}>
+      <div className="pointer-events-none absolute right-3 z-10 flex flex-col items-center gap-1" style={{ bottom: "calc(var(--live-bb, 9rem) + 6rem)" }}>
         {pops.map((p) => <span key={p.k} className="animate-[ping_1.2s_ease-out_1] text-3xl">{p.e}</span>)}
       </div>
       {show && (
-        <div className={`absolute inset-x-0 z-10 ${reserve === "l" ? "pl-[7.5rem]" : "pl-3"} ${reserve === "r" ? "pr-[7.5rem]" : "pr-3"}`} style={{ bottom: "calc(var(--live-bb, 9rem) + 0.5rem)" }} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-          <ul className="mb-2 max-h-48 space-y-1 overflow-y-auto pr-16 [mask-image:linear-gradient(to_bottom,transparent,black_30%)]">
-            {msgs.map((m) => (
-              <li key={m.id}><button type="button" onClick={() => canReport && setRep(m)} className="max-w-full rounded-2xl bg-black/45 px-3 py-1 text-left text-sm backdrop-blur">
-                <b className="text-[#FA6F6C]">{m.pseudo ?? "?"}</b> {m.body}</button></li>
+        <div data-testid="chat" className={`absolute inset-x-0 z-10 ${reserve === "l" ? "pl-[7.5rem]" : "pl-3"} ${reserve === "r" ? "pr-[7.5rem]" : "pr-3"}`} style={{ bottom: "calc(var(--live-bb, 9rem) + 0.5rem)" }} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <ul ref={list} className="mb-2 max-h-40 space-y-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,black_25%)]">
+            {lines.map((m) => (
+              <li key={m.key} data-testid="chat-line"><button type="button" onClick={() => canReport && m.room && setRep(m.room)} className="max-w-full rounded-2xl bg-black/50 px-3 py-1 text-left text-sm backdrop-blur">
+                <b className={m.mine ? "text-[#A1E3C3]" : "text-[#FA6F6C]"}>{m.pseudo ?? "?"}</b> {m.body}</button></li>
             ))}
           </ul>
-          <div className="flex items-center gap-2">
-            <input value={txt} maxLength={200} onChange={(e) => setTxt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void send()} placeholder="Écris un message…"
-              className="min-w-0 flex-1 rounded-full bg-black/50 px-4 py-2 text-sm text-white placeholder:text-white/50 backdrop-blur" />
-            <div className="relative flex shrink-0 items-center gap-1 rounded-full bg-black/40 px-1.5 py-0.5 backdrop-blur">
-              {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r} (1 cœur)`} onClick={() => void react(r)} className="text-[22px] leading-none">{r}</button>)}
-              <span className="absolute -top-2 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{bal === Infinity ? "∞" : bal ?? "·"}</span>
+          {room && (
+            <div className="mb-1.5 flex items-center gap-2">
+              {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r} (1 cœur)`} onClick={() => void react(r)} className="flex size-9 items-center justify-center rounded-full bg-black/45 text-xl backdrop-blur">{r}</button>)}
+              <span className="rounded-full bg-[#FA6F6C] px-1.5 text-[10px] font-bold text-night">{bal === Infinity ? "∞" : bal ?? "·"} ❤️</span>
             </div>
-          </div>
+          )}
+          <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+            <input data-testid="chat-input" value={txt} maxLength={200} onChange={(e) => setTxt(e.target.value)} placeholder="Écris un message…" enterKeyHint="send"
+              className="min-w-0 flex-1 rounded-full bg-black/55 px-4 py-2 text-sm text-white placeholder:text-white/50 backdrop-blur" />
+            <button type="submit" aria-label="Envoyer" className="shrink-0 rounded-full bg-[#FA6F6C] px-4 py-2 text-sm font-bold text-night">Envoyer</button>
+          </form>
         </div>
       )}
       {packs && <HeartPacks empty={!bal} onClose={() => setPacks(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
@@ -129,75 +153,87 @@ function Chat({ room, msgs, pops, show, canReport, reserve }: { room: string; ms
     </>
   );
 }
+export { Chat };
 
-/** Côté diffuseur : publie une COPIE de sa caméra (floutée ou non, comme en 1:1) et de son micro. Jamais le partenaire. */
-export function useBroadcast(getVideo: () => MediaStreamTrack | null, getAudio: () => MediaStreamTrack | null) {
+/**
+ * Côté diffuseur : publie dans LiveKit LES MÊMES pistes caméra/micro que le 1:1 (aucune copie, aucun 2e getUserMedia).
+ * La caméra n'est jamais ouverte deux fois. Couper la caméra « pour les spectateurs » met juste l'envoi LiveKit en pause
+ * (pauseUpstream) : la piste partagée n'est jamais coupée ni arrêtée, le 1:1 continue.
+ */
+export function useBroadcast(getVideo: () => MediaStreamTrack | null, getAudio: () => MediaStreamTrack | null, opts?: { demoToken?: boolean }) {
   const [room, setRoom] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cam, setCam] = useState(true);
   const lk = useRef<Room | null>(null);
   const [lkRoom, setLkRoom] = useState<Room | null>(null);
   const vPub = useRef<LocalTrackPublication | null>(null);
-  const clones = useRef<MediaStreamTrack[]>([]);
-  const stop = async (r = room) => {
-    const l = lk.current; lk.current = null; vPub.current = null; setLkRoom(null);
-    clones.current.forEach((t) => t.stop()); clones.current = [];
-    await l?.disconnect().catch(() => undefined);
+  const aPub = useRef<LocalTrackPublication | null>(null);
+  const roomRef = useRef<string | null>(null);
+  const stop = async (r = roomRef.current) => {
+    const l = lk.current; lk.current = null; setLkRoom(null);
+    // jamais stopper les pistes : elles appartiennent au 1:1
+    for (const p of [vPub.current, aPub.current]) if (p?.track && l) await l.localParticipant.unpublishTrack(p.track, false).catch(() => undefined);
+    vPub.current = null; aPub.current = null;
+    await l?.disconnect(false).catch(() => undefined);
     if (r) await roomLeave(r).catch(() => undefined);
-    setRoom(null);
+    roomRef.current = null; setRoom(null);
   };
   const start = async () => {
-    if (busy || room) return;
+    if (busy || roomRef.current) return;
     setBusy(true);
     let id: string | null = null;
     try {
       id = (await roomOpen()).room;
       const t = await roomToken(id);
       if (t.configured === false || !t.token) throw new Error("room_full");
-      const l = new Room({ adaptiveStream: true, dynacast: true });
+      const l = new Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: false });
       await l.connect(t.url, t.token, { autoSubscribe: true });
+      void l.startAudio().catch(() => undefined); // dans la foulée du geste « Inviter » : débloque le son des spectateurs
       lk.current = l; setLkRoom(l);
-      const v = getVideo()?.clone(), a = getAudio()?.clone();
-      if (v) { clones.current.push(v); vPub.current = await l.localParticipant.publishTrack(v, { source: Track.Source.Camera, name: "cam" }); }
-      if (a) { clones.current.push(a); await l.localParticipant.publishTrack(a, { source: Track.Source.Microphone, name: "mic" }); }
-      setRoom(id); setCam(true);
-      toast("📣 Ton Live est ouvert : les gens qui font défiler peuvent te regarder");
+      const v = getVideo(), a = getAudio();
+      if (v) vPub.current = await l.localParticipant.publishTrack(v, { source: Track.Source.Camera, name: "cam", simulcast: false });
+      if (a) aPub.current = await l.localParticipant.publishTrack(a, { source: Track.Source.Microphone, name: "mic" });
+      roomRef.current = id; setRoom(id); setCam(true);
+      toast("📣 Tu diffuses : les gens qui font défiler peuvent te regarder");
     } catch (e) {
       toast(groupError(e instanceof Error ? e.message : ""));
       await stop(id);
     } finally { setBusy(false); }
   };
-  /** Le flou (ou non) suit exactement l'image envoyée au 1:1. */
+  /** Flou / changement de caméra : on envoie la nouvelle piste du 1:1 (même objet), sans copie. */
   const syncVideo = async () => {
-    const p = vPub.current; const src = getVideo(); if (!p?.track || !src) return;
-    const c = src.clone(); c.enabled = cam;
-    await p.track.replaceTrack(c, true).catch(() => undefined);
-    clones.current.forEach((t) => t.kind === "video" && t.stop());
-    clones.current = [...clones.current.filter((t) => t.kind !== "video"), c];
+    const p = vPub.current; const src = getVideo(); if (!p?.track || !src || p.track.mediaStreamTrack === src) return;
+    await p.track.replaceTrack(src, true).catch(() => undefined);
   };
-  const setMic = (on: boolean) => clones.current.forEach((t) => t.kind === "audio" && (t.enabled = on));
-  const toggleCam = async () => { const n = !cam; setCam(n); const p = vPub.current; if (p) await (n ? p.unmute() : p.mute()).catch(() => undefined); };
+  const toggleCam = async () => {
+    const n = !cam; setCam(n); const t = vPub.current?.track; if (!t) return;
+    await (n ? t.resumeUpstream() : t.pauseUpstream()).catch(() => undefined);
+  };
   useEffect(() => () => { void stop(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const self = () => vPub.current?.track?.mediaStreamTrack ?? null;
-  return { room, busy, cam, start, stop: () => stop(), syncVideo, setMic, toggleCam, lk: lkRoom, self };
+  void opts;
+  return { room, busy, cam, start, stop: () => stop(), syncVideo, toggleCam, lk: lkRoom };
 }
 
-/** Petite vidéo branchée sur une piste (LiveKit ou locale). */
-function TrackVideo({ track, mirror, blur }: { track: MediaStreamTrack | RemoteTrack | null; mirror?: boolean; blur?: boolean }) {
+/** Vidéo branchée UNE fois sur une piste (LiveKit ou locale) : pas de re-branchement à chaque rendu. */
+export const TrackVideo = memo(function TrackVideo({ track, mirror, blur }: { track: MediaStreamTrack | RemoteTrack | null; mirror?: boolean; blur?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const el = ref.current; if (!el || !track) return;
-    if (track instanceof MediaStreamTrack) { el.srcObject = new MediaStream([track]); void el.play().catch(() => undefined); return () => { el.srcObject = null; }; }
+    if (track instanceof MediaStreamTrack) {
+      if ((el.srcObject as MediaStream | null)?.getTracks()[0] !== track) el.srcObject = new MediaStream([track]);
+      void el.play().catch(() => undefined);
+      return;
+    }
     track.attach(el); return () => { track.detach(el); };
   }, [track]);
   return <video ref={ref} autoPlay playsInline muted className={`pointer-events-none size-full object-cover ${mirror ? "-scale-x-100" : ""}`} style={{ filter: blur ? "blur(10px)" : "none" }} />;
-}
+});
 
 function Avatar({ id, pseudo }: { id: string; pseudo: string | null }) {
   const ph = usePhoto(id);
   return (
     <div className="flex size-full items-center justify-center bg-gradient-to-br from-[#2a1830] to-night">
-      <span className="flex aspect-square w-1/2 max-w-28 items-center justify-center overflow-hidden rounded-full border-2 border-[#FA6F6C]/70 bg-[#c9a58c]/40 text-2xl font-bold">
+      <span className="flex aspect-square w-2/3 max-w-28 items-center justify-center overflow-hidden rounded-full border-2 border-[#FA6F6C]/70 bg-[#c9a58c]/40 text-lg font-bold">
         {ph ? <img src={ph} alt="" className="size-full scale-110 object-cover blur-md" /> : (pseudo ?? "?").slice(0, 1).toUpperCase()}
       </span>
     </div>
@@ -221,7 +257,7 @@ function useViewerMedia(lk: Room | null, audios: React.RefObject<HTMLDivElement 
       });
       setMedia(m);
     };
-    const onSub = (t: RemoteTrack) => { if (t.kind === Track.Kind.Audio && audios.current) audios.current.appendChild(t.attach()); sync(); };
+    const onSub = (t: RemoteTrack) => { if (t.kind === Track.Kind.Audio && audios.current) { const el = t.attach(); el.dataset.lk = "audio"; audios.current.appendChild(el); setNeedTap(!lk.canPlaybackAudio); } sync(); };
     const onUnsub = (t: RemoteTrack) => { t.detach().forEach((e) => e.remove()); sync(); };
     const onAudio = () => setNeedTap(!lk.canPlaybackAudio);
     lk.on(RoomEvent.TrackSubscribed, onSub).on(RoomEvent.TrackUnsubscribed, onUnsub).on(RoomEvent.TrackMuted, sync).on(RoomEvent.TrackUnmuted, sync)
@@ -234,35 +270,57 @@ function useViewerMedia(lk: Room | null, audios: React.RefObject<HTMLDivElement 
 }
 
 export type GridViewer = { id: string; pseudo: string | null; video?: RemoteTrack | MediaStreamTrack | null; mic?: boolean };
-/** Les cases du diffuseur : lui-même + chaque spectateur (sa vidéo s'il la partage, sinon sa photo floutée). */
-export function BroadcastGrid({ self, selfBlur, viewers, onAsk, onAct }: { self: MediaStreamTrack | null; selfBlur?: boolean; viewers: GridViewer[]; onAsk?: (id: string, what: "cam" | "mic") => void; onAct?: (id: string) => void }) {
-  const [focus, setFocus] = useState<string | null>(null);
-  const tiles: Tile[] = [
-    { key: "me", node: <>{self ? <TrackVideo track={self} mirror blur={selfBlur} /> : <div className="size-full bg-night" />}<span className="absolute bottom-1 left-1 rounded-full bg-[#FA6F6C] px-1.5 text-[10px] font-bold text-night">Toi · en direct</span></> },
-    ...viewers.map((v) => ({ key: v.id, node: (
-      <>
-        {v.video ? <TrackVideo track={v.video} /> : <Avatar id={v.id} pseudo={v.pseudo} />}
-        <span className="absolute bottom-1 left-1 max-w-[70%] truncate rounded-full bg-black/60 px-1.5 text-[10px] font-bold">{v.mic ? "🎤 " : ""}{v.pseudo ?? "?"}</span>
-        {onAsk && (
-          <span className="absolute top-1 right-1 flex gap-1" onClick={(e) => e.stopPropagation()}>
-            {!v.video && <button type="button" aria-label={`Demander à ${v.pseudo} d'allumer sa caméra`} onClick={() => onAsk(v.id, "cam")} className="flex size-7 items-center justify-center rounded-full bg-black/60"><Video className="size-3.5" /></button>}
-            {!v.mic && <button type="button" aria-label={`Demander à ${v.pseudo} d'allumer son micro`} onClick={() => onAsk(v.id, "mic")} className="flex size-7 items-center justify-center rounded-full bg-black/60"><Mic className="size-3.5" /></button>}
-            {onAct && <button type="button" aria-label={`Gérer ${v.pseudo}`} onClick={() => onAct(v.id)} className="flex size-7 items-center justify-center rounded-full bg-black/60 text-xs">⋯</button>}
-          </span>
-        )}
-      </>
-    ) })),
-  ];
-  return <StageGrid tiles={tiles} focus={focus} onFocus={setFocus} />;
+
+/** Bandeau horizontal des spectateurs : n'apparaît que s'il y a du monde ; les cases entrent / sortent en s'animant. */
+export function ViewerStrip({ viewers, onOpen }: { viewers: GridViewer[]; onOpen: (id: string) => void }) {
+  const [gone, setGone] = useState<GridViewer[]>([]);
+  const prev = useRef<GridViewer[]>([]);
+  useEffect(() => {
+    const left = prev.current.filter((p) => !viewers.some((v) => v.id === p.id));
+    prev.current = viewers;
+    if (!left.length) return;
+    setGone((g) => [...g, ...left]);
+    const t = setTimeout(() => setGone((g) => g.filter((x) => !left.includes(x))), 320);
+    return () => clearTimeout(t);
+  }, [viewers]);
+  const all = [...viewers.map((v) => ({ v, out: false })), ...gone.filter((g) => !viewers.some((v) => v.id === g.id)).map((v) => ({ v, out: true }))];
+  if (!all.length) return null;
+  return (
+    <div data-testid="viewer-strip" className="absolute inset-x-3 top-[11rem] z-10 flex gap-2 overflow-x-auto pb-1" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+      {all.map(({ v, out }) => (
+        <button key={v.id} type="button" onClick={() => !out && onOpen(v.id)} aria-label={`Voir ${v.pseudo ?? "spectateur"}`}
+          className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-night ring-1 ring-white/25 ${out ? "pointer-events-none animate-[tileout_.32s_ease-in_forwards]" : "animate-[tilein_.32s_cubic-bezier(.2,.8,.2,1)]"}`}>
+          {v.video ? <TrackVideo track={v.video} /> : <Avatar id={v.id} pseudo={v.pseudo} />}
+          <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1 text-[9px] font-bold">{v.mic ? "🎤 " : ""}{v.pseudo ?? "?"}</span>
+        </button>
+      ))}
+    </div>
+  );
 }
 
-/** Surcouche du diffuseur (dans son 1:1) : grille animée, compteur, chat, demandes caméra/micro, faire sortir / expulser / signaler. */
-export function BroadcastOverlay({ room, cam, onCam, onStop, lk, self, selfBlur, reserve }: { room: string; cam: boolean; onCam: () => void; onStop: () => void; lk: Room | null; self: () => MediaStreamTrack | null; selfBlur?: boolean; reserve?: "l" | "r" }) {
-  const { st, msgs, pops } = useRoomState(room, () => { toast("Ton Live à plusieurs s'est arrêté"); onStop(); });
+/** Bouton de la barre du bas : icône + texte dessous, pour que tout le monde comprenne. */
+export function BarBtn({ label, on, danger, wide, onClick, children, testid }: { label: string; on?: boolean; danger?: boolean; wide?: boolean; onClick: () => void; children: React.ReactNode; testid?: string }) {
+  return (
+    <button type="button" data-testid={testid} aria-label={label} onClick={onClick} className={`flex ${wide ? "min-w-[5.5rem]" : "w-14"} shrink-0 flex-col items-center gap-1 text-[10px] leading-tight font-semibold`}>
+      <span className={`flex size-11 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-600 text-white" : on ? "bg-white text-night" : "bg-white/15 text-white"}`}>{children}</span>
+      <span className={danger ? "text-red-300" : ""}>{label}</span>
+    </button>
+  );
+}
+
+/**
+ * Surcouche du diffuseur (dans son 1:1) : le partenaire reste en plein écran, UN seul petit aperçu de soi (celui du 1:1),
+ * un badge « En diffusion », le bandeau des spectateurs, le chat et UNE barre de boutons nommés.
+ */
+export function BroadcastOverlay({ room, cam, onCam, mic, onMic, blurred, onBlur, onStop, lk, reserve, p2p }: {
+  room: string; cam: boolean; onCam: () => void; mic: boolean; onMic: () => void; blurred: boolean; onBlur: () => void; onStop: () => void; lk: Room | null; reserve?: "l" | "r";
+  p2p?: { lines: ChatLine[]; send: (b: string, echo: boolean) => void };
+}) {
+  const { st, msgs, pops, refresh } = useRoomState(room === "demo" ? null : room, () => { toast("Ta diffusion s'est arrêtée"); onStop(); });
   const [chat, setChat] = useState(true);
-  const [grid, setGrid] = useState(true);
   const [list, setList] = useState<string | true | false>(false);
   const audios = useRef<HTMLDivElement>(null);
+  const bar = useBottomBar<HTMLDivElement>();
   const { media, needTap, setNeedTap } = useViewerMedia(lk, audios);
   const act = async (action: "remove" | "kick", id: string) => {
     try { await roomStage(action, room, id); toast(action === "kick" ? "Expulsé de tes Lives pour 24 h" : "Fait sortir"); } catch (e) { toast(groupError(e instanceof Error ? e.message : "")); }
@@ -271,39 +329,41 @@ export function BroadcastOverlay({ room, cam, onCam, onStop, lk, self, selfBlur,
     try { await lk?.localParticipant.publishData(ENC.encode(JSON.stringify({ t: "ask", what } satisfies Ask)), { reliable: true, topic: "hdar", destinationIdentities: [id] }); toast(what === "cam" ? "Demande envoyée : il choisit d'allumer sa caméra ou non" : "Demande envoyée : il choisit d'allumer son micro ou non"); }
     catch { toast("Demande impossible"); }
   };
-  const viewers: GridViewer[] = (st?.viewer_list ?? []).map((v) => ({ ...v, video: media[v.id]?.video, mic: media[v.id]?.mic }));
-  const shown = list === true ? st?.viewer_list ?? [] : (st?.viewer_list ?? []).filter((v) => v.id === list);
+  const vl = st?.viewer_list;
+  const viewers: GridViewer[] = useMemo(() => (vl ?? []).map((v) => ({ ...v, video: media[v.id]?.video, mic: media[v.id]?.mic })), [vl, media]);
+  const shown = list === true ? vl ?? [] : (vl ?? []).filter((v) => v.id === list);
+  const one = typeof list === "string" ? viewers.find((v) => v.id === list) : undefined;
+  const lines = useMemo(() => [...roomLines(msgs), ...(p2p?.lines ?? [])], [msgs, p2p?.lines]);
   return (
     <>
       <div ref={audios} className="hidden" />
-      <div className="absolute top-24 left-3 z-20 flex flex-col items-start gap-1.5">
-        <button type="button" onClick={() => setList(true)} className="rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">📣 En diffusion · 👁 {st?.viewers ?? 0}/{st?.cap ?? 6}</button>
-        <span className="rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80">{RULES}</span>
-        <div className="flex gap-1.5">
-          <button type="button" aria-label={cam ? "Couper ta caméra pour les spectateurs" : "Rallumer ta caméra pour les spectateurs"} onClick={onCam} className={`flex size-9 items-center justify-center rounded-full ${cam ? "bg-white text-night" : "bg-white/15"}`}>{cam ? <Video className="size-4" /> : <VideoOff className="size-4" />}</button>
-          <button type="button" aria-label={chat ? "Masquer le chat" : "Afficher le chat"} onClick={() => setChat(!chat)} className={`flex size-9 items-center justify-center rounded-full ${chat ? "bg-white text-night" : "bg-white/15"}`}>{chat ? <MessageCircle className="size-4" /> : <MessageCircleOff className="size-4" />}</button>
-          <button type="button" aria-label={grid ? "Masquer les spectateurs" : "Afficher les spectateurs"} onClick={() => setGrid(!grid)} className={`flex size-9 items-center justify-center rounded-full ${grid ? "bg-white text-night" : "bg-white/15"}`}><LayoutGrid className="size-4" /></button>
-          <button type="button" onClick={onStop} className="rounded-full bg-black/60 px-3 text-xs font-bold">Arrêter</button>
+      <button type="button" data-testid="bc-badge" onClick={() => setList(true)} className="absolute top-[8.75rem] left-3 z-20 rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">
+        ● En diffusion · 👁 {st?.viewers ?? 0}/{st?.cap ?? 12}
+      </button>
+      <ViewerStrip viewers={viewers} onOpen={(id) => setList(id)} />
+      <SoundToast show={needTap} onTap={() => { void lk?.startAudio(); setNeedTap(false); }} />
+      <Chat room={room} lines={lines} pops={pops} show={chat} canReport reserve={reserve} onP2P={p2p?.send} onSent={refresh} />
+      <div ref={bar} data-testid="bc-bar" className="absolute inset-x-0 bottom-0 z-[12] bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div className="flex items-end justify-between gap-1">
+          <BarBtn testid="bc-cam" label={cam ? "Caméra" : "Caméra coupée"} on={cam} onClick={onCam}>{cam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-mic" label={mic ? "Micro" : "Micro coupé"} on={mic} onClick={onMic}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-blur" label={blurred ? "Flouté" : "Visible"} on={!blurred} onClick={onBlur}>{blurred ? <EyeOff className="size-5" /> : <Eye className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-chat" label={chat ? "Chat" : "Chat caché"} on={chat} onClick={() => setChat(!chat)}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-stop" label="Arrêter la diffusion" danger wide onClick={onStop}><X className="size-5" /></BarBtn>
         </div>
       </div>
-      {grid && (
-        <div className="absolute inset-x-3 top-48 z-10 h-[38vh] rounded-3xl bg-black/35 p-1.5 backdrop-blur-sm">
-          <BroadcastGrid self={self()} selfBlur={selfBlur} viewers={viewers} onAsk={(id, w) => void ask(id, w)} onAct={(id) => setList(id)} />
-        </div>
-      )}
-      {needTap && <button type="button" onClick={() => { void lk?.startAudio(); setNeedTap(false); }} className="absolute top-[calc(12rem+38vh+0.5rem)] left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-bold text-night shadow-lg">🔊 Touche pour activer le son</button>}
-      <Chat room={room} msgs={msgs} pops={pops} show={chat} canReport reserve={reserve} />
       {list !== false && (
-        <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setList(false)}>
-          <div className="max-h-[70%] w-full space-y-2 overflow-y-auto rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
-            <p className="font-display text-lg font-bold">Qui te regarde ({st?.viewers ?? 0}/{st?.cap ?? 6})</p>
-            <p className="text-xs text-ink/60">Personne ne te voit à moins de 2 km. Ton partenaire en 1:1 n'est jamais montré. Un spectateur qui allume sa caméra ou son micro n'est vu et entendu que par toi.</p>
+        <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setList(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <div className="max-h-[80%] w-full space-y-2 overflow-y-auto rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
+            {one && <div data-testid="viewer-big" className="relative mx-auto aspect-[3/4] w-2/3 overflow-hidden rounded-2xl bg-night">{one.video ? <TrackVideo track={one.video} /> : <Avatar id={one.id} pseudo={one.pseudo} />}</div>}
+            <p className="font-display text-lg font-bold">{one ? one.pseudo : `Qui te regarde (${st?.viewers ?? 0}/${st?.cap ?? 12})`}</p>
+            <p className="text-xs text-ink/60">Ton partenaire en 1:1 n'est jamais montré. Un spectateur qui allume sa caméra ou son micro n'est vu et entendu que par toi.</p>
             {shown.length === 0 && <p className="py-3 text-sm text-ink/60">Personne pour l'instant. Reste là, les gens qui font défiler vont arriver.</p>}
             {shown.map((v) => (
-              <div key={v.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-night px-3 py-2 text-sm">
+              <div key={v.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-night px-3 py-2 text-sm text-white">
                 <span className="min-w-0 flex-1 truncate font-bold">{v.pseudo ?? "?"}</span>
-                <button type="button" aria-label="Demander la caméra" onClick={() => void ask(v.id, "cam")} className="rounded-full bg-white/10 p-1.5"><Video className="size-3.5" /></button>
-                <button type="button" aria-label="Demander le micro" onClick={() => void ask(v.id, "mic")} className="rounded-full bg-white/10 p-1.5"><Mic className="size-3.5" /></button>
+                <button type="button" onClick={() => void ask(v.id, "cam")} className="rounded-full bg-white/10 px-2 py-1 text-xs">📷 Demander caméra</button>
+                <button type="button" onClick={() => void ask(v.id, "mic")} className="rounded-full bg-white/10 px-2 py-1 text-xs">🎤 Demander micro</button>
                 <button type="button" onClick={() => void act("remove", v.id)} className="rounded-full bg-white/10 px-2 py-1 text-xs">Faire sortir</button>
                 <button type="button" onClick={() => void act("kick", v.id)} className="rounded-full bg-red-500/80 px-2 py-1 text-xs font-bold">Expulser 24 h</button>
                 <button type="button" aria-label="Signaler" onClick={() => void rouletteReport(v.id, "Live à plusieurs (spectateur)").then(() => { toast("Signalé et bloqué"); void act("kick", v.id); }).catch(() => toast("Signalement impossible"))} className="rounded-full bg-white/10 p-1.5"><Flag className="size-3.5" /></button>
@@ -342,8 +402,9 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
     setMyCam(false); setMyMic(false); setPreview(null);
   };
   const leave = () => { if (done.current) return; done.current = true; unpublishAll(); void lk.current?.disconnect(); void roomLeave(room).catch(() => undefined); };
-  const { st, msgs, pops } = useRoomState(room, (banned) => { toast(banned ? "Tu as été expulsé de ce Live" : "Ce Live est terminé"); leave(); onNext(); });
+  const { st, msgs, pops, refresh } = useRoomState(room, (banned) => { toast(banned ? "Tu as été expulsé de ce Live" : "Ce Live est terminé"); leave(); onNext(); });
   const host = usePhoto(st?.host ?? null);
+  const lines = useMemo(() => roomLines(msgs), [msgs]);
   /** Allume / éteint ma caméra ou mon micro — uniquement après un geste explicite (accepter / toucher le bouton). */
   const setMine = async (what: "cam" | "mic", on: boolean) => {
     const l = lk.current, h = hostId.current; if (!l || !h) return;
@@ -431,7 +492,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           <p className="text-sm text-white/70">{st ? "Caméra coupée pour l'instant" : "Connexion…"}</p>
         </div>
       )}
-      {needTap && <button type="button" onClick={() => { void lk.current?.startAudio(); setNeedTap(false); }} className="absolute top-40 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-bold text-night shadow-lg">🔊 Touche pour activer le son</button>}
+      <SoundToast show={needTap} onTap={() => { void lk.current?.startAudio(); setNeedTap(false); }} />
       <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-xl font-bold">{st?.host_pseudo ?? "…"}{st?.host_premium && <span className="ml-1 text-sm">👑+</span>}</p>
@@ -442,14 +503,14 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
         <button type="button" aria-label="Signaler" onClick={() => setReporting(true)} className="flex size-10 items-center justify-center rounded-full bg-red-500/80"><Flag className="size-5" /></button>
         <button type="button" aria-label="Quitter" onClick={() => { leave(); onExit(); }} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
       </div>
-      <Chat room={room} msgs={msgs} pops={pops} show={chat} canReport />
-      <div ref={bottomBar} className="absolute inset-x-0 bottom-0 z-10 space-y-2 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className="flex justify-center gap-2">
-          <button type="button" aria-label={myCam ? "Éteindre ma caméra" : "Proposer ma caméra (seul le diffuseur la voit)"} onClick={() => myCam ? void setMine("cam", false) : setAsked("cam")} className={`flex size-11 items-center justify-center rounded-full ${myCam ? "bg-[#A1E3C3] text-night" : "bg-white/15"}`}>{myCam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</button>
-          <button type="button" aria-label={myMic ? "Couper mon micro" : "Proposer mon micro (seul le diffuseur l'entend)"} onClick={() => myMic ? void setMine("mic", false) : setAsked("mic")} className={`flex size-11 items-center justify-center rounded-full ${myMic ? "bg-[#A1E3C3] text-night" : "bg-white/15"}`}>{myMic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</button>
-          <button type="button" aria-label={chat ? "Masquer le chat" : "Afficher le chat"} onClick={() => setChat(!chat)} className={`flex size-11 items-center justify-center rounded-full ${chat ? "bg-white text-night" : "bg-white/15"}`}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</button>
+      <Chat room={room} lines={lines} pops={pops} show={chat} canReport onSent={refresh} />
+      <div ref={bottomBar} data-testid="watch-bar" className="absolute inset-x-0 bottom-0 z-[12] bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div className="flex items-end justify-between gap-1">
+          <BarBtn testid="w-cam" label={myCam ? "Ma caméra" : "Caméra"} on={myCam} onClick={() => myCam ? void setMine("cam", false) : setAsked("cam")}>{myCam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</BarBtn>
+          <BarBtn testid="w-mic" label={myMic ? "Mon micro" : "Micro"} on={myMic} onClick={() => myMic ? void setMine("mic", false) : setAsked("mic")}>{myMic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</BarBtn>
+          <BarBtn testid="w-chat" label={chat ? "Chat" : "Chat caché"} on={chat} onClick={() => setChat(!chat)}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</BarBtn>
+          <BarBtn testid="w-next" label="Suivant" wide onClick={() => { leave(); onNext(); }}><ChevronUp className="size-5" /></BarBtn>
         </div>
-        <button type="button" onClick={() => { leave(); onNext(); }} className="w-full rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3 font-display font-bold text-night">Suivant <span className="text-xs font-normal opacity-70">· ou glisse vers le haut</span></button>
       </div>
       {preview && (
         <div className="absolute top-28 right-3 z-20 h-36 w-24 overflow-hidden rounded-2xl border-2 border-[#A1E3C3]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
