@@ -132,7 +132,7 @@ export function Me() {
         </div>
       </div>
       <ProSpaceCard />
-      <ProfileAmb />
+      <ProfileAmb where="top" />
       <AmbNudge />
       <BoostButton />
       <PremiumCard />
@@ -352,6 +352,7 @@ export function Me() {
           </button>
         </div>
       )}
+      <ProfileAmb where="bottom" />
     </div>
   );
 }

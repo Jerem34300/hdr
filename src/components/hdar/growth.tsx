@@ -1,4 +1,4 @@
-import { CardHead, cardCls, cardStyle } from "./profile-card";
+import { CardHead, glowInner, glowOuter } from "./profile-card";
 import { captureAmb, tryAmbAttach } from "./ambassador";
 import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
@@ -116,8 +116,10 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
   if (!n) return null;
   const copy = async () => { try { await navigator.clipboard.writeText(`https://hdar.chat/?r=${n.code}`); toast("Lien copié 📋"); } catch { toast(n.code); } };
   return (
-    <div className={cardCls} style={cardStyle("#FA6F6C")}>
-      <div>
+    <div {...glowOuter("relative overflow-hidden bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#3EE08F]", "rgba(250,111,108,.35)")}>
+      <div className={glowInner}>
+        <span aria-hidden className="pointer-events-none absolute -top-10 -right-8 size-32 rounded-full bg-[#3EE08F]/25 blur-2xl" />
+        <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-10 size-36 rounded-full bg-[#FA6F6C]/30 blur-2xl" />
         <CardHead icon="🎁" accent="#FA6F6C" chevron={false} title="Invite un ami" sub={`+3 jours hdar+ pour vous deux${n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}`} />
         <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-dashed border-white/20 bg-black/30 px-4 py-2.5">
           <div><p className="text-[10px] font-bold tracking-[0.25em] text-muted uppercase">Ton code</p>
@@ -125,7 +127,7 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
           <button type="button" onClick={() => void copy()} className="rounded-full bg-white/10 px-3 py-2 text-xs font-bold">📋 Copier</button>
         </div>
         <div className="mt-3 flex gap-2">
-          <button type="button" onClick={() => { void shareInvite(); onAction?.(); }} className="h-11 flex-1 rounded-full bg-[#FA6F6C] font-display font-extrabold text-night">Partager</button>
+          <button type="button" onClick={() => { void shareInvite(); onAction?.(); }} className="boost-cta h-11 flex-1 rounded-full font-display font-extrabold text-night">Partager</button>
           <button type="button" onClick={() => { void downloadStory(); onAction?.(); }} className="h-11 rounded-full border border-white/15 px-4 text-sm font-bold">📸 Story</button>
         </div>
       </div>
@@ -137,7 +139,7 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
 export function PremiumCard() {
   const premium = usePremium((s) => s.premium);
   return (
-    <Link to="/premium" className={cardCls} style={cardStyle("#fbbf24")}>
+    <Link to="/premium" className="mt-3 block rounded-3xl border border-[#fbbf24]/60 bg-gradient-to-r from-[#fbbf24]/15 to-transparent p-4 shadow-[0_0_24px_rgba(251,191,36,.18)]">
       <CardHead icon="👑" accent="#fbbf24" title={<>hdar<span className="text-[#fbbf24]">+</span>{premium ? " · actif" : ""}</>} sub={premium ? "Mon espace · filtres, qui t'a vu, Live+" : "Essayer · filtres, qui t'a vu, Live+"} />
     </Link>
   );

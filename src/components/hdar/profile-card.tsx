@@ -28,13 +28,14 @@ const ambState = () => (ambQ ??= Promise.all([ambMe().catch(() => null), ambAppl
   .then(([m, s]) => ({ amb: !!m, applied: !!s })).catch(() => { ambQ = null; return { amb: false, applied: false }; }));
 
 /** Ambassadeur → sa carte ; sinon un simple lien discret. */
-export function ProfileAmb() {
+export function ProfileAmb({ where }: { where: "top" | "bottom" }) {
   const [st, setSt] = useState<{ amb: boolean; applied: boolean } | null>(null);
   useEffect(() => void ambState().then(setSt), []);
   if (!st) return null;
-  if (st.amb) return <AmbassadorCard />;
+  if (st.amb) return where === "top" ? <AmbassadorCard /> : null;
+  if (where === "top") return null;
   return (
-    <a href="/ambassadeur" className="mt-2 block px-1 text-center text-[13px] text-muted">
+    <a href="/ambassadeur" className="mt-6 mb-4 block px-1 text-center text-[13px] text-muted">
       💸 Gagne de l'argent : <span className="font-bold text-[#3EE08F]">deviens ambassadeur ›</span>
     </a>
   );
@@ -70,3 +71,7 @@ export function AmbNudge() {
     </div>
   );
 }
+
+/** Bordure dégradée lumineuse (style d'origine). */
+export const glowOuter = (grad: string, glow: string) => ({ className: `mt-3 block rounded-3xl p-[2px] ${grad}`, style: { boxShadow: `0 0 26px ${glow}` } });
+export const glowInner = "relative block overflow-hidden rounded-[22px] bg-[#0b0b10]/90 p-4";

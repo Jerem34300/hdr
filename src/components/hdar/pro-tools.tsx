@@ -1,4 +1,4 @@
-import { CardHead, cardCls, cardStyle } from "./profile-card";
+import { CardHead, glowInner, glowOuter } from "./profile-card";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { myPro, myProGifts, proBadge, proChatBlock, proChatOpen, proGiftSend, proGiftsPref, type ProGift, type ProPlace } from "@/lib/hdar/live";
@@ -119,8 +119,8 @@ export function ProSpaceCard({ demo }: { demo?: boolean }) {
   );
   if (!n) return null;
   return (
-    <a href="/pro" className={cardCls} style={cardStyle("#fbbf24")}>
-      <CardHead icon="🏷️" accent="#fbbf24" title="Mon espace pro" sub="Tableau de bord, avis, Live Pro" />
+    <a href="/pro" {...glowOuter("bg-gradient-to-r from-[#fbbf24] via-[#FA6F6C] to-[#3EE08F]", "rgba(251,191,36,.3)")}>
+      <span className={glowInner}><CardHead icon="🏷️" accent="#fbbf24" title="Mon espace pro" sub="Tableau de bord, avis, Live Pro" /></span>
     </a>
   );
 }
