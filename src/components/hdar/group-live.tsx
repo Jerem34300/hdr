@@ -327,7 +327,6 @@ export function ConfirmBroadcast({ onOk, onCancel }: { onOk: () => void; onCance
       <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
         <p className="flex items-center gap-2 font-display text-lg font-bold"><Radio className="size-5 text-[#FA6F6C]" /> Ouvrir ta caméra aux gens qui font défiler ?</p>
         <p className="text-sm text-ink/75">Jusqu'à 6 personnes pourront te voir et t'entendre en même temps. Ton partenaire en face à face reste privé : il n'est jamais montré. Tu arrêtes quand tu veux.</p>
-        <p className="text-[11px] text-ink/55">{FULL_RULES}</p>
         <button type="button" data-testid="confirm-bc-ok" onClick={onOk} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">Diffuser</button>
         <button type="button" onClick={onCancel} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Annuler</button>
       </div>
@@ -559,7 +558,6 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display text-lg font-bold">{asked === "cam" ? "📷 Allumer ta caméra ?" : "🎤 Allumer ton micro ?"}</p>
             <p className="text-sm text-ink/75">{asked === "cam" ? "Seul·e" : "Seul·e"} <b>{st?.host_pseudo ?? "la personne qui diffuse"}</b> {asked === "cam" ? "te verra" : "t'entendra"}. Les autres spectateurs, jamais. {asked === "cam" ? "Tu restes flouté tant que tu ne choisis pas « me montrer »." : ""} Tu coupes quand tu veux.</p>
-            <p className="text-[11px] text-ink/55">{FULL_RULES}</p>
             <button type="button" onClick={() => { const w = asked; setAsked(null); void setMine(w, true); }} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">{asked === "cam" ? "Allumer ma caméra" : "Allumer mon micro"}</button>
             <button type="button" onClick={() => setAsked(null)} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Non merci</button>
           </div>
