@@ -1135,3 +1135,39 @@ export async function anonRpc<T>(fn: string, args: Record<string, unknown>): Pro
 }
 export const liveShareView = (code: string) => anonRpc<LiveShareView | null>("hdar_live_share_view", { p_code: code });
 export const liveShareMeta = (code: string) => anonRpc<{ pseudo: string; active: boolean; area: string | null; around: number } | null>("hdar_live_share_meta", { p_code: code });
+
+// Live à plusieurs (v52, LiveKit) : une personne diffuse (« Inviter »), les spectateurs regardent et chattent -------------
+export type RoomFeedItem = { room: string; host: string; pseudo: string | null; viewers: number; cap: number };
+export type RoomMsg = { id: number; from: string; pseudo: string | null; kind: "msg" | "react" | "sys"; body: string };
+export type RoomState = { gone?: boolean; banned?: boolean; role: "viewer" | "stage"; host: string; host_pseudo: string | null; host_premium: boolean;
+  viewers: number; cap: number; viewer_list: { id: string; pseudo: string | null }[]; msgs: RoomMsg[] };
+const withPos = async () => { const at = await livePos(); return { p_lat: at?.lat ?? null, p_lng: at?.lng ?? null }; };
+export const roomOpen = async () => rpc<{ room: string }>("hdar_room_open", await withPos());
+export const roomFeed = async () => rpc<RoomFeedItem[]>("hdar_room_feed", await withPos());
+export const roomOf = (user: string) => rpc<string | null>("hdar_room_of", { p_user: user });
+export const roomState = (room: string, after: number) => rpc<RoomState>("hdar_room_state", { p_room: room, p_after: after });
+export const roomSay = (room: string, body: string, kind: "msg" | "react" = "msg") => rpc("hdar_room_say", { p_room: room, p_body: body, p_kind: kind });
+export const roomLeave = (room: string) => rpc("hdar_room_leave", { p_room: room });
+export const roomReportMsg = (msg: number, reason: string) => rpc("hdar_room_report_msg", { p_msg: msg, p_reason: reason });
+export type AdminRooms = { usage: { month_minutes: number; concurrent: number; rooms: number; cap_minutes: number; cap_concurrent: number };
+  settings: { month_minutes_cap: number; concurrent_cap: number; viewer_cap: number; viewer_cap_premium: number; enabled: boolean };
+  rooms: { room: string; host: string | null; since: string; viewers: number; cap: number; msgs: number }[] };
+export const adminLiveRooms = (key: string) => rpc<AdminRooms>("hdar_admin_live_rooms", { p_key: key });
+export const adminLiveSettings = (key: string, o: { minutes?: number; concurrent?: number; enabled?: boolean; cap?: number; capPremium?: number }) =>
+  rpc("hdar_admin_live_settings", { p_key: key, p_free: null, p_minutes: o.minutes ?? null, p_concurrent: o.concurrent ?? null, p_enabled: o.enabled ?? null, p_cap: o.cap ?? null, p_cap_premium: o.capPremium ?? null });
+async function lkFn<T>(fn: string, body: unknown): Promise<T> {
+  const token = await accessToken();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body) });
+  const d = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok || d.error) throw new Error(d.error || `Serveur indisponible (${res.status})`);
+  return d;
+}
+let groupOk: Promise<boolean> | null = null;
+/** Le Live à plusieurs n'apparaît que si LiveKit est configuré côté serveur. */
+export function groupEnabled(): Promise<boolean> {
+  if (!groupOk) groupOk = lkFn<{ configured: boolean }>("hdar-live-token", { check: true }).then((d) => !!d.configured).catch(() => { groupOk = null; return false; });
+  return groupOk;
+}
+export const roomToken = async (room: string) => { const p = await livePos(); return lkFn<{ url: string; token: string; role: "viewer" | "stage"; identity: string; configured?: boolean }>("hdar-live-token", { room, lat: p?.lat ?? null, lng: p?.lng ?? null }); };
+export const roomStage = (action: "kick" | "remove" | "kill" | "usage", room: string | null, user?: string) =>
+  lkFn<{ ok?: boolean; rooms?: number; participants?: number }>("hdar-live-stage", { action, room, user });

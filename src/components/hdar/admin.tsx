@@ -1,7 +1,7 @@
 import { AmbassadorsTab } from "./admin-ambassadors";
 import { RevenueTab } from "./admin-revenue";
 import { adminPartners, type AdminPartner } from "@/lib/hdar/live";
-import { adminLiveEvents, type LiveEventsSummary } from "@/lib/hdar/live";
+import { adminLiveEvents, adminLiveRooms, adminLiveSettings, roomStage, type AdminRooms, type LiveEventsSummary } from "@/lib/hdar/live";
 import { ProDashboard } from "./pro-dashboard";
 import { adminCodes, adminCodeCreate, adminNewsSend, type GiftCode } from "@/lib/hdar/live";
 import { mail as mailHtml, type Tpl } from "@/lib/hdar/mail-template";
@@ -1137,14 +1137,50 @@ function LiveQualityTab({ adminKey }: { adminKey: string }) {
   useEffect(() => { void adminLiveEvents(adminKey).then(setD).catch((e) => toast(e instanceof Error ? e.message : "Erreur")); }, [adminKey]);
   if (!d) return <p className="text-sm text-muted">Chargement…</p>;
   const sec = (ms: number | null) => (ms == null ? "—" : `${(ms / 1000).toFixed(1)} s`);
-  const L: Record<string, string> = { video: "✅ vidéo", failed: "❌ échec", timeout: "⏱️ délai dépassé", abandon: "↩️ abandon" };
+  const L: Record<string, string> = { video: "✅ vidéo", failed: "❌ échec", timeout: "⏱️ délai dépassé", abandon: "↩️ abandon", group: "📣 Live à plusieurs (durée)" };
   return (
     <div className="space-y-4">
+      <LiveRoomsPanel adminKey={adminKey} />
       <p className="text-sm text-muted">Chaque mise en relation Live envoie un événement anonyme : vidéo reçue (avec délai), échec, ou abandon avant l'image.</p>
       <table className="w-full text-sm"><thead><tr className="text-left text-muted"><th>Jour</th><th>Vidéo</th><th>Échecs</th><th>Abandons</th><th>Délai médian</th><th>Via relais</th></tr></thead>
         <tbody>{d.days.length === 0 ? <tr><td colSpan={6} className="py-2 text-muted">Aucun Live mesuré pour l'instant.</td></tr> : d.days.map((x) => { const tot = x.video + x.failed + x.abandon; return <tr key={x.day} className="border-t border-white/10"><td>{x.day}</td><td>{x.video}{tot ? ` (${Math.round((x.video / tot) * 100)} %)` : ""}</td><td>{x.failed}</td><td>{x.abandon}</td><td>{sec(x.median_ms)}</td><td>{x.relay}</td></tr>; })}</tbody></table>
       <h3 className="font-display font-bold">30 derniers</h3>
       <ul className="space-y-1 text-sm">{d.last.map((e, i) => <li key={i} className="flex justify-between border-b border-white/5 py-1"><span>{new Date(e.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}</span><span>{L[e.outcome] ?? e.outcome}</span><span>{sec(e.ms)}</span><span className="text-muted">{e.ice === "relay" ? "relais" : e.ice === "direct" ? "direct" : "?"}</span></li>)}</ul>
+    </div>
+  );
+}
+
+function LiveRoomsPanel({ adminKey }: { adminKey: string }) {
+  const [d, setD] = useState<AdminRooms | null>(null);
+  const [lk, setLk] = useState<{ rooms?: number; participants?: number } | null>(null);
+  const [f, setF] = useState({ cap: "", capPremium: "", minutes: "", concurrent: "" });
+  const load = () => { void adminLiveRooms(adminKey).then(setD).catch((e) => toast(e instanceof Error ? e.message : "Erreur")); void roomStage("usage", null).then(setLk).catch(() => setLk(null)); };
+  useEffect(load, [adminKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!d) return <p className="text-sm text-muted">Chargement des Lives à plusieurs…</p>;
+  const u = d.usage;
+  const save = async (enabled?: boolean) => {
+    const n = (v: string) => (v.trim() ? Number(v) : undefined);
+    try { await adminLiveSettings(adminKey, { cap: n(f.cap), capPremium: n(f.capPremium), minutes: n(f.minutes), concurrent: n(f.concurrent), enabled }); toast("Enregistré"); setF({ cap: "", capPremium: "", minutes: "", concurrent: "" }); load(); } catch (e) { toast(e instanceof Error ? e.message : "Erreur"); }
+  };
+  const kill = async (room: string) => { try { await roomStage("kill", room); toast("Live coupé"); load(); } catch (e) { toast(e instanceof Error ? e.message : "Erreur"); } };
+  return (
+    <div className="space-y-3 rounded-2xl border border-white/10 p-4">
+      <h3 className="font-display font-bold">Lives à plusieurs (LiveKit)</h3>
+      <p className="text-sm">Ce mois : <b>{u.month_minutes}</b> / {u.cap_minutes} minutes-participant · en ce moment : <b>{u.concurrent}</b> / {u.cap_concurrent} connectés · {u.rooms} diffusion(s){lk ? ` · LiveKit : ${lk.rooms ?? 0} salon(s), ${lk.participants ?? 0} connecté(s)` : ""}</p>
+      <p className="text-xs text-muted">Offre gratuite LiveKit : 5 000 minutes/mois et 100 connectés max. Au-delà, l'appli affiche « Live à plusieurs complet, réessaie plus tard ».</p>
+      <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+        {([["cap", `Places spectateurs (${d.settings.viewer_cap})`], ["capPremium", `Places si hdar+ (${d.settings.viewer_cap_premium})`], ["minutes", `Plafond minutes/mois (${d.settings.month_minutes_cap})`], ["concurrent", `Plafond connectés (${d.settings.concurrent_cap})`]] as const).map(([k, l]) => (
+          <label key={k} className="space-y-1"><span className="block text-xs text-muted">{l}</span><input type="number" min={0} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} className="w-full rounded-lg bg-night px-2 py-1" /></label>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => void save()} className="rounded-full bg-signal px-4 py-1.5 text-sm font-bold text-night">Enregistrer</button>
+        <button type="button" onClick={() => void save(!d.settings.enabled)} className="rounded-full border border-white/20 px-4 py-1.5 text-sm">{d.settings.enabled ? "Désactiver le Live à plusieurs" : "Réactiver le Live à plusieurs"}</button>
+      </div>
+      <ul className="space-y-1 text-sm">
+        {d.rooms.length === 0 && <li className="text-muted">Aucune diffusion en cours.</li>}
+        {d.rooms.map((r) => <li key={r.room} className="flex items-center justify-between gap-2 border-b border-white/5 py-1"><span>{r.host ?? "?"} · depuis {new Date(r.since).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" })} · 👁 {r.viewers}/{r.cap} · {r.msgs} msg</span><button type="button" onClick={() => void kill(r.room)} className="rounded-full bg-red-500/80 px-3 py-1 text-xs font-bold">Couper</button></li>)}
+      </ul>
     </div>
   );
 }

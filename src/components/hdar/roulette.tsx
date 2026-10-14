@@ -14,6 +14,8 @@ import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
 import { proLiveNext } from "@/lib/hdar/live";
 import { PartnerBadge, ProGiftSheet, useMyPro } from "./pro-tools";
+import { BroadcastOverlay, CoachMark, WatchView, useBroadcast } from "./group-live";
+import { groupEnabled, roomFeed, roomOf } from "@/lib/hdar/live";
 
 /**
  * « Live » : vidéo au hasard, pair-à-pair (WebRTC). Le serveur choisit quelqu'un dans la région
@@ -83,6 +85,13 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const touchY = useRef<number | null>(null);
 
   const pendingIce = useRef<RTCIceCandidateInit[]>([]);
+  // Live à plusieurs (v52) : diffusion « Inviter » + fil de Lives à regarder
+  const [gOn, setGOn] = useState(false);
+  useEffect(() => { if (!demo && !pro) void groupEnabled().then(setGOn); }, [demo, pro]);
+  const [watching, setWatching] = useState<string | null>(null);
+  const watchRef = useRef<string | null>(null);
+  const feed = useRef<{ at: number; rooms: string[]; seen: Set<string>; turn: number }>({ at: 0, rooms: [], seen: new Set(), turn: 0 });
+  const bc = useBroadcast(() => outgoing(), () => localRef.current?.getAudioTracks()[0] ?? null);
   const closePc = () => { dc.current = null; setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
   useEffect(() => { if (phase !== "intro") showPreview(); });
@@ -101,6 +110,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     showPreview();
     if (dc.current?.readyState === "open") dc.current.send(JSON.stringify({ blur: b }));
     if (!b) setAsked(false);
+    void bc.syncVideo();
   };
   const askSentRef = useRef(false);
   useEffect(() => { askSentRef.current = askSent; }, [askSent]);
@@ -179,7 +189,28 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     if (card.role === "offer") await sendOffer(card);
   };
 
+  /** Prochain Live à regarder dans le fil (un sur deux), sauf si je diffuse moi-même. */
+  async function pickRoom(): Promise<string | null> {
+    if (!gOn || bc.room || pro) return null;
+    const f = feed.current;
+    f.turn++;
+    if (Date.now() - f.at > 15000) { try { f.rooms = (await roomFeed()).map((r) => r.room); f.at = Date.now(); } catch { f.rooms = []; } }
+    const fresh = f.rooms.filter((r) => !f.seen.has(r));
+    if (!fresh.length) { if (f.rooms.length && f.seen.size) f.seen.clear(); return null; }
+    if (f.turn % 2 === 1 && online > 1 && !watchRef.current) return null; // alterne avec le 1:1 quand il y a du monde
+    f.seen.add(fresh[0]);
+    return fresh[0];
+  }
+  function enterWatch(room: string) {
+    if (tele.current && !tele.current.done && Date.now() - tele.current.t0 > 3000) logLive("abandon");
+    clearWatch(); closePc();
+    const old = peerRef.current; peerRef.current = null; setPeer(null); if (old) setPrev(old);
+    void rouletteLeave(false).catch(() => undefined);
+    watchRef.current = room; setWatching(room);
+  }
   async function next(back?: string) {
+    if (!back) { const r = await pickRoom(); if (r) return enterWatch(r); }
+    if (watchRef.current) { watchRef.current = null; setWatching(null); }
     if (tele.current && !tele.current.done && Date.now() - tele.current.t0 > 3000) logLive("abandon");
     lastNext.current = Date.now();
     clearWatch();
@@ -216,7 +247,10 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
     const w = new URLSearchParams(location.search).get("with");
-    void next(w && /^[0-9a-f-]{36}$/i.test(w) ? w : undefined);
+    const target = w && /^[0-9a-f-]{36}$/i.test(w) ? w : undefined;
+    // « Rejoindre son live » : s'il diffuse à plusieurs, on regarde sa diffusion (règle des 2 km vérifiée à l'entrée)
+    if (target && (await groupEnabled())) { try { const r = await roomOf(target); if (r) return enterWatch(r); } catch { /* */ } }
+    void next(target);
   }
 
   function stop(leave = true) {
@@ -226,12 +260,15 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     localRef.current?.getTracks().forEach((t) => t.stop());
     localRef.current = null;
     pipe.current?.stop(); pipe.current = null;
+    void bc.stop();
+    watchRef.current = null; setWatching(null);
     void rouletteLeave(false).catch(() => undefined);
     if (leave) void nav({ to: "/" });
   }
 
   async function loop() {
     while (running.current) {
+      if (watchRef.current) { await new Promise((r) => setTimeout(r, 1000)); continue; } // je regarde un Live à plusieurs
       try {
         const st = await roulettePoll();
         if (typeof st.online === "number") setOnline(st.online);
@@ -279,6 +316,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       localRef.current.getVideoTracks().forEach((t) => { t.stop(); localRef.current!.removeTrack(t); });
       localRef.current.addTrack(track);
       pipe.current?.setSource(localRef.current);
+      void bc.syncVideo();
       if (!blurRef.current) {
         const sender = pc.current?.getSenders().find((x) => x.track?.kind === "video");
         if (sender) await sender.replaceTrack(track);
@@ -287,7 +325,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       setFacing(nextF);
     } catch { toast("Impossible de changer de caméra"); }
   };
-  useEffect(() => { localRef.current?.getAudioTracks().forEach((t) => (t.enabled = mic)); }, [mic]);
+  useEffect(() => { localRef.current?.getAudioTracks().forEach((t) => (t.enabled = mic)); bc.setMic(mic); }, [mic]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const report = async (reason: string) => {
     setReporting(false);
@@ -364,6 +402,13 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     );
   }
 
+  if (watching) {
+    return <>
+      <WatchView key={watching} room={watching} onNext={() => { watchRef.current = null; setWatching(null); void next(); }} onExit={() => stop()}
+        onTooClose={() => { watchRef.current = null; setWatching(null); const w = new URLSearchParams(location.search).get("with"); if (w) { stop(false); setPhase("intro"); setTooClose({ id: w, name: new URLSearchParams(location.search).get("name") || "" }); } else void next(); }} />
+      <CoachMark group />
+    </>;
+  }
   return (
     <div className="fixed inset-0 z-50 select-none overflow-hidden bg-black text-white"
       onTouchStart={(e) => (touchY.current = e.touches[0].clientY)}
@@ -454,10 +499,17 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           {pro && <Round label="Cadeau pro" on={false} onClick={() => peer && proPlace && setGiftOpen(true)}><span className="text-lg">🎁</span></Round>}
           <Round label="Signaler" on={false} danger onClick={() => peer && setReporting(true)}><Flag className="size-5" /></Round>
         </div>
+        {gOn && !bc.room && (
+          <button type="button" disabled={bc.busy} onClick={() => void bc.start()} className="w-full rounded-full border-2 border-[#FA6F6C] bg-black/40 py-2.5 font-display text-lg font-bold text-[#FA6F6C] shadow-[0_0_24px_#FA6F6C88] backdrop-blur disabled:opacity-50">
+            ➕ Inviter <span className="text-xs font-normal text-white/80">· ouvre ta caméra aux gens qui font défiler</span>
+          </button>
+        )}
         <button type="button" onClick={() => !demo && void next()} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3 font-display font-bold text-night">
           <ChevronUp className="size-5" /> Suivant <span className="text-xs font-normal opacity-70">· ou glisse vers le haut</span>
         </button>
       </div>
+      {bc.room && <BroadcastOverlay room={bc.room} cam={bc.cam} onCam={() => void bc.toggleCam()} onStop={() => void bc.stop()} />}
+      {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
       {packsOpen && <HeartPacks onClose={() => setPacksOpen(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
