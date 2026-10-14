@@ -29,6 +29,11 @@ function Terms() {
           Photo de profil explicite. Nudité ou contenu sexuel imposé à quelqu'un qui ne l'a pas
           demandé, dans les chats publics ou en live (caméra floutée par défaut).
         </li>
+        <li>
+          <strong>Nudité dans le Live</strong> (en face à face comme en diffusion à plusieurs) : le Live
+          peut être coquin, mais sexe et parties intimes restent couverts. Expulsion et suspension en cas
+          de manquement.
+        </li>
         <li>Contenu non consenti, haineux, violent, menaçant ou illégal ; drogue, armes.</li>
         <li>
           Harcèlement, usurpation d'identité, spam, prostitution ou sollicitation commerciale.

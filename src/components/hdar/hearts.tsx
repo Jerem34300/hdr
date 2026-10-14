@@ -55,9 +55,9 @@ export function HeartPacks({ onClose, demo, empty }: { onClose: () => void; demo
     <div className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={onClose}>
       <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto -mt-1 mb-1 h-1 w-10 rounded-full bg-line" />
-        <p className="font-display text-xl font-extrabold">{empty ? "Tu n'as plus de ❤️" : "Envoie des ❤️ dans le Live"}</p>
-        <p className="text-sm text-muted">Les cœurs, c'est ce qui compte vraiment : ils s'envolent en grand sur son écran et restent sur son profil. Les 🔥 🥵 😛 restent gratuits.</p>
-        <p className="text-xs text-muted">1 cœur = 1 envoi.</p>
+        <p className="font-display text-xl font-extrabold">{empty ? "Tu n'as plus de cœurs ❤️" : "Réagis dans le Live 🔥🥵😛❤️"}</p>
+        <p className="text-sm text-muted">Dans le Live, chaque réaction 🔥 🥵 😛 ❤️ coûte 1 cœur. Elle s'envole sur son écran et compte dans ses cœurs reçus : il sait que tu kiffes vraiment.</p>
+        <p className="text-xs text-muted">1 cœur = 1 réaction.</p>
         <div className="grid grid-cols-3 gap-2">
           {packs.map((p, i) => (
             <button key={p.product} type="button" disabled={!!busy} onClick={() => void buy(p.product)}

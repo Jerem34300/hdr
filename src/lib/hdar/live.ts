@@ -1146,7 +1146,7 @@ export const roomOpen = async () => rpc<{ room: string }>("hdar_room_open", awai
 export const roomFeed = async () => rpc<RoomFeedItem[]>("hdar_room_feed", await withPos());
 export const roomOf = (user: string) => rpc<string | null>("hdar_room_of", { p_user: user });
 export const roomState = (room: string, after: number) => rpc<RoomState>("hdar_room_state", { p_room: room, p_after: after });
-export const roomSay = (room: string, body: string, kind: "msg" | "react" = "msg") => rpc("hdar_room_say", { p_room: room, p_body: body, p_kind: kind });
+export const roomSay = (room: string, body: string, kind: "msg" | "react" = "msg") => rpc<{ balance: number | null; unlimited?: boolean } | null>("hdar_room_say", { p_room: room, p_body: body, p_kind: kind });
 export const roomLeave = (room: string) => rpc("hdar_room_leave", { p_room: room });
 export const roomReportMsg = (msg: number, reason: string) => rpc("hdar_room_report_msg", { p_msg: msg, p_reason: reason });
 export type AdminRooms = { usage: { month_minutes: number; concurrent: number; rooms: number; cap_minutes: number; cap_concurrent: number };

@@ -4,9 +4,10 @@ import { Room, RoomEvent, Track, type LocalTrack, type LocalTrackPublication, ty
 import { Flag, LayoutGrid, MessageCircle, MessageCircleOff, Mic, MicOff, Video, VideoOff, X } from "lucide-react";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { StageGrid, type Tile } from "./stage-grid";
-import { roomLeave, roomOpen, roomReportMsg, roomSay, roomStage, roomState, roomToken, rouletteReport, type RoomMsg, type RoomState } from "@/lib/hdar/live";
+import { myHearts, roomLeave, roomOpen, roomReportMsg, roomSay, roomStage, roomState, roomToken, rouletteReport, type RoomMsg, type RoomState } from "@/lib/hdar/live";
 import { usePhoto } from "@/lib/hdar/photos";
 import { REPORT_REASONS } from "@/lib/hdar/report";
+import { HeartPacks } from "./hearts";
 
 /**
  * Live à plusieurs : la personne qui diffuse touche « Inviter » et ouvre SA caméra aux gens qui font défiler le Live.
@@ -18,8 +19,8 @@ import { REPORT_REASONS } from "@/lib/hdar/report";
 /** Badge permanent : juste « 18+ ». La règle complète reste dans les règles d'entrée, le coach mark et les CGU. */
 export const RULES = "18+";
 export const FULL_RULES = "18+ · pas de nudité · enregistrement interdit";
-/** Réactions gratuites. Les ❤️ sont payants (solde de cœurs / hdar+), jamais ici. */
-export const REACTIONS = ["🔥", "🥵", "😛"] as const;
+/** Réactions du Live : toutes payantes, 1 réaction = 1 cœur du solde (packs Stripe, prix dans l'admin). Vérifié côté serveur (hdar_room_say). */
+export const REACTIONS = ["🔥", "🥵", "😛", "❤️"] as const;
 
 export function groupError(m: string): string {
   if (m.includes("room_viewers_full")) return "Ce Live est complet, on passe au suivant";
@@ -79,6 +80,16 @@ function useRoomState(room: string | null, onGone: (banned: boolean) => void) {
 function Chat({ room, msgs, pops, show, canReport, reserve }: { room: string; msgs: RoomMsg[]; pops: { k: number; e: string }[]; show: boolean; canReport: boolean; reserve?: "l" | "r" }) {
   const [txt, setTxt] = useState("");
   const [rep, setRep] = useState<RoomMsg | null>(null);
+  const demo = room === "demo";
+  const [bal, setBal] = useState<number | null>(demo ? (location.search.includes("nohearts") ? 0 : 12) : null);
+  const [packs, setPacks] = useState(demo && location.search.includes("packs"));
+  useEffect(() => { if (!demo) void myHearts().then((h) => setBal(h.unlimited ? Infinity : h.balance)).catch(() => undefined); }, [demo]);
+  const react = async (r: string) => {
+    if (bal === 0) return setPacks(true);
+    if (demo) return setBal((b) => (b ?? 1) - 1);
+    try { const x = await roomSay(room, r, "react"); if (x) setBal(x.unlimited ? Infinity : x.balance ?? 0); }
+    catch (e) { const m = e instanceof Error ? e.message : ""; if (m.includes("no_hearts")) { setBal(0); setPacks(true); } else toast(groupError(m)); }
+  };
   const send = async () => {
     const b = txt.trim(); if (!b) return;
     try { await roomSay(room, b); setTxt(""); } catch (e) { toast(groupError(e instanceof Error ? e.message : "")); }
@@ -99,10 +110,14 @@ function Chat({ room, msgs, pops, show, canReport, reserve }: { room: string; ms
           <div className="flex items-center gap-2">
             <input value={txt} maxLength={200} onChange={(e) => setTxt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void send()} placeholder="Écris un message…"
               className="min-w-0 flex-1 rounded-full bg-black/50 px-4 py-2 text-sm text-white placeholder:text-white/50 backdrop-blur" />
-            {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r}`} onClick={() => void roomSay(room, r, "react").catch(() => undefined)} className="shrink-0 text-2xl">{r}</button>)}
+            <div className="relative flex shrink-0 items-center gap-1 rounded-full bg-black/40 px-1.5 py-0.5 backdrop-blur">
+              {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r} (1 cœur)`} onClick={() => void react(r)} className="text-[22px] leading-none">{r}</button>)}
+              <span className="absolute -top-2 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{bal === Infinity ? "∞" : bal ?? "·"}</span>
+            </div>
           </div>
         </div>
       )}
+      {packs && <HeartPacks empty={!bal} onClose={() => setPacks(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
       {rep && (
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setRep(null)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>

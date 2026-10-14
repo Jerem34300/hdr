@@ -34,7 +34,7 @@ begin
   perform public.hdar_room_say(r, 'salut 🔥');
   begin perform public.hdar_room_say(r, 'appelle 06 12 34 56 78'); out := out || 'FAIL filtre tel; '; exception when others then out := out || 'ok filtre tel; '; end;
   begin perform public.hdar_room_say(r, 'moi@exemple.fr'); out := out || 'FAIL filtre mail; '; exception when others then out := out || 'ok filtre mail; '; end;
-  perform public.hdar_room_say(r, '😏', 'react');
+  perform public.hdar_room_say(r, '🥵', 'react');
   -- demande : 1/jour gratuit
   perform public.hdar_room_request(r);
   req := (select id from hdar.live_join_requests where room=r and user_id=c and kind='request');
