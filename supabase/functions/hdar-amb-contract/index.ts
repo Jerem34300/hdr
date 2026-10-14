@@ -59,6 +59,24 @@ async function sendMail(to: string[], s: Sig, pdf: Uint8Array) {
       attachments: [{ filename: `contrat-ambassadeur-hdar-${s.version}.pdf`, content: btoa(bin) }] }) });
   return r.ok;
 }
+async function applyMail(i: { email: string | null; pseudo: string | null; status: string; note: string | null; token: string | null; expires_at: string | null }) {
+  const key = Deno.env.get("RESEND_NEWS_KEY");
+  if (!key || !i.email) return false;
+  const e = (x: string) => x.replace(/[<>&"]/g, "");
+  const hi = `Salut ${e(i.pseudo ?? "")} 👋`;
+  const note = i.note ? `<p style="background:#f4f4f5;border-radius:12px;padding:12px">💬 ${e(i.note)}</p>` : "";
+  const ok = i.status === "accepted";
+  const link = i.token ? `${SITE}/ambassadeur?i=${i.token}` : `${SITE}/ambassadeur`;
+  const html = ok
+    ? `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;max-width:560px"><p>${hi}</p><p><b>Ta candidature ambassadeur hdar est acceptée 🎯</b></p>${note}<p>Dernière étape : lis ton contrat d'ambassadeur (v2) et signe-le en tapant ton nom. Ce lien est personnel, utilisable une seule fois${i.expires_at ? ` et valable jusqu'au ${fmt(i.expires_at)}` : ""}. Ouvre-le sur le téléphone où tu es connecté à hdar.</p>
+<p style="text-align:center;margin:28px 0"><a href="${link}" style="background:#FA6F6C;color:#0b0b10;font-weight:800;text-decoration:none;border-radius:999px;padding:14px 30px">Lire et signer mon contrat →</a></p>
+<p>Une fois signé, tu reçois le PDF par email et tu accèdes à ton espace : ton code, ton lien et ton QR d'inscription, et le guide ambassadeur.</p><p style="font-size:12px;color:#71717a">Tu n'es pas à l'origine de cette demande ? Ignore ce message.</p></div>`
+    : `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;max-width:560px"><p>${hi}</p><p>Merci pour ta candidature au programme ambassadeur hdar. Elle n'a pas été retenue pour le moment ; tu pourras repostuler dans 30 jours.</p>${note}<p>À très vite sur hdar.chat !</p></div>`;
+  const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: "hdar <contact@hdar.chat>", to: [i.email], reply_to: "contact@hdar.chat",
+      subject: ok ? "🎯 Tu es accepté·e : signe ton contrat ambassadeur hdar" : "Ta candidature ambassadeur hdar", html }) });
+  return r.ok;
+}
 const pdfResp = (pdf: Uint8Array, name: string) => new Response(pdf as unknown as BodyInit, { headers: { ...cors, "content-type": "application/pdf", "content-disposition": `attachment; filename="${name}"` } });
 
 Deno.serve(async (req) => {
@@ -72,6 +90,12 @@ Deno.serve(async (req) => {
       const s = await rpc("hdar_amb_contract_get", { p_user: body.user }) as Sig | null;
       if (!s) return json({ error: "Aucun contrat signé" }, 404);
       return pdfResp(await buildPdf(s), `contrat-${s.code ?? "amb"}-${s.version}.pdf`);
+    }
+    if (body.action === "apply_mail") {
+      await rpc("hdar_admin_amb_contract_ok", { p_key: body.key ?? "" }, auth);
+      const info = await rpc("hdar_amb_apply_mail_info", { p_id: Number(body.id) });
+      if (!info) return json({ ok: true, mailed: false });
+      return json({ ok: true, mailed: await applyMail(info) });
     }
     const me = await rpc("hdar_amb_whoami", {}, auth) as { user_id: string; photo_ok: boolean; email: string | null } | null;
     if (!me) return json({ error: "Profil introuvable" }, 403);

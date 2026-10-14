@@ -1171,3 +1171,17 @@ export function groupEnabled(): Promise<boolean> {
 export const roomToken = async (room: string) => { const p = await livePos(); return lkFn<{ url: string; token: string; role: "viewer" | "stage"; identity: string; configured?: boolean }>("hdar-live-token", { room, lat: p?.lat ?? null, lng: p?.lng ?? null }); };
 export const roomStage = (action: "kick" | "remove" | "kill" | "usage", room: string | null, user?: string) =>
   lkFn<{ ok?: boolean; rooms?: number; participants?: number }>("hdar-live-stage", { action, room, user });
+
+// v53 — candidatures ambassadeur
+export type AmbApplyStatus = { profile: boolean; ambassador: boolean; application: { status: "pending" | "accepted" | "refused"; at: string; decided_at: string | null; note: string | null } | null };
+export type AmbApplyForm = { motivation: string; city: string; audience: string; promote: string; email: string; consent: boolean };
+export const ambApplyStatus = () => rpc<AmbApplyStatus>("hdar_amb_apply_status", {});
+export const ambApply = (f: AmbApplyForm) => rpc<{ status: string }>("hdar_amb_apply", { p_motivation: f.motivation, p_city: f.city, p_audience: f.audience, p_promote: f.promote, p_email: f.email, p_consent: f.consent });
+export type AdminAmbApp = { id: number; user_id: string; pseudo: string; age: number | null; photo_ok: boolean; motivation: string; city: string; audience: string | null; promote: string; status: "pending" | "accepted" | "refused"; note: string | null; at: string; decided_at: string | null; already_amb: boolean };
+export const adminAmbApps = (key: string) => rpc<AdminAmbApp[]>("hdar_admin_amb_applications", { p_key: key });
+export const adminAmbDecide = async (key: string, id: number, accept: boolean, note: string) => {
+  await rpc("hdar_admin_amb_apply_decide", { p_key: key, p_id: id, p_accept: accept, p_note: note || null });
+  try { return ((await (await contractCall({ action: "apply_mail", key, id })).json()) as { mailed: boolean }).mailed; } catch { return false; }
+};
+export type AdminAmbContract = { user_id: string; pseudo: string; name: string; version: string; at: string; code: string | null };
+export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });

@@ -589,6 +589,10 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
           <br />
           <a className="mt-2 inline-block text-[11px] opacity-70 hover:underline" href="/pro">
             Espace pro · lieux partenaires
+          </a>{" "}
+          <span className="text-[11px] opacity-70">·</span>{" "}
+          <a className="mt-2 inline-block text-[11px] opacity-70 hover:underline" href="/ambassadeur">
+            Deviens ambassadeur
           </a>
         </p>
       </section>

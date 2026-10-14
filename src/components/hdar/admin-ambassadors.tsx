@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { adminAmbBudget, adminAmbCap, type AmbBudget, adminAmbContractPdf, adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
+import { adminAmbApps, adminAmbContracts, adminAmbDecide, type AdminAmbApp, type AdminAmbContract, adminAmbBudget, adminAmbCap, type AmbBudget, adminAmbContractPdf, adminAmbFlags, adminAmbInvite, adminAmbPayout, adminAmbPromo, adminAmbs, adminAmbSearch, adminAmbSet, type AdminAmb } from "@/lib/hdar/live";
 
 const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const PERIODS = [["month", "Ce mois"], ["last", "Mois dernier"], ["30d", "30 j"], ["all", "Tout"]] as const;
@@ -37,6 +37,7 @@ export function AmbassadorsTab({ adminKey, preview }: { adminKey: string; previe
   };
   return (
     <div className="space-y-4">
+      <Applications adminKey={adminKey} demo={!!preview} onChange={load} />
       <section className="rounded-2xl border border-line p-3">
         <p className="text-sm font-bold">Inviter un ambassadeur</p>
         <button type="button" onClick={() => void (preview ? Promise.resolve("demo") : adminAmbInvite(adminKey)).then((t) => setInvite(`https://hdar.chat/ambassadeur?i=${t}`)).catch((e: Error) => toast(e.message))}
@@ -50,6 +51,7 @@ export function AmbassadorsTab({ adminKey, preview }: { adminKey: string; previe
             <button type="button" className="text-xs underline" onClick={() => void adminAmbSet(adminKey, h.user_id, !h.amb).then(() => { toast(h.amb ? "Rôle retiré" : "Rôle donné (il devra accepter la charte)"); setHits([]); load(); }).catch((e: Error) => toast(e.message))}>{h.amb ? "Retirer" : "Nommer ambassadeur"}</button></div>))}
       </section>
       <BudgetBox adminKey={adminKey} demo={!!preview} />
+      <SignedContracts adminKey={adminKey} demo={!!preview} />
       <div className="flex flex-wrap items-center gap-2">{PERIODS.map(([k, l]) => (
         <button key={k} type="button" onClick={() => setPeriod(k)} className={"rounded-full px-3 py-1 text-sm " + (period === k ? "bg-[#3EE08F] font-bold text-night" : "border border-line")}>{l}</button>))}
         <button type="button" onClick={csv} className="ml-auto rounded-full border border-line px-3 py-1 text-sm">⬇︎ CSV</button></div>
@@ -156,5 +158,67 @@ function CapRow({ r, adminKey, demo, onDone }: { r: AdminAmb; adminKey: string; 
       <button type="button" className="rounded-full border border-line px-3 py-1" onClick={() => demo ? toast("Aperçu") : void adminAmbCap(adminKey, r.user_id, v === "" ? null : Math.round(Number(v) * 100)).then(() => { toast("Plafond enregistré"); onDone(); }).catch((e: Error) => toast(e.message))}>OK</button>
       <span className="text-muted">Primes d'inscription sur la période : {eur(r.stats.signup_bonus ?? 0)}</span>
     </div>
+  );
+}
+
+export function demoApps(): AdminAmbApp[] {
+  return [
+    { id: 1, user_id: "1", pseudo: "Sami (exemple)", age: 27, photo_ok: true, motivation: "J'adore sortir 🪩, Je connais plein de monde 🤝 — Je sors tous les week-ends à Montpellier, je connais les barmans du quartier", city: "Montpellier", audience: "@mtp.nights ~2 000 abonnés", promote: "Soirées & bars 🍸, Instagram / TikTok 📱", status: "pending", note: null, at: new Date().toISOString(), decided_at: null, already_amb: false },
+    { id: 2, user_id: "2", pseudo: "Léa (exemple)", age: 31, photo_ok: false, motivation: "Je veux un petit complément 💸 — j'organise des soirées dans une asso", city: "Lyon", audience: null, promote: "Asso / communauté 🏳️‍🌈", status: "pending", note: null, at: new Date(Date.now() - 864e5).toISOString(), decided_at: null, already_amb: false },
+    { id: 3, user_id: "3", pseudo: "Tom (exemple)", age: 24, photo_ok: true, motivation: "J'aime l'appli ❤️", city: "Nice", audience: null, promote: "Bouche à oreille 🗣️", status: "accepted", note: "Bienvenue !", at: new Date(Date.now() - 3 * 864e5).toISOString(), decided_at: new Date(Date.now() - 2 * 864e5).toISOString(), already_amb: false },
+  ];
+}
+
+function Applications({ adminKey, demo, onChange }: { adminKey: string; demo: boolean; onChange: () => void }) {
+  const [rows, setRows] = useState<AdminAmbApp[] | null>(demo ? demoApps() : null);
+  const [notes, setNotes] = useState<Record<number, string>>({});
+  const [busy, setBusy] = useState<number | null>(null);
+  const load = () => { if (!demo) void adminAmbApps(adminKey).then(setRows).catch((e: Error) => toast(e.message)); };
+  useEffect(load, [adminKey, demo]);
+  const decide = (a: AdminAmbApp, ok: boolean) => {
+    if (demo) return void toast("Aperçu");
+    setBusy(a.id);
+    void adminAmbDecide(adminKey, a.id, ok, notes[a.id] ?? "").then((mailed) => {
+      toast(ok ? `Accepté ✅ ${mailed ? "Lien de signature envoyé par email." : "Email non envoyé (vérifie Resend)."}` : `Refusé. ${mailed ? "Réponse envoyée par email." : ""}`);
+      load(); onChange();
+    }).catch((e: Error) => toast(e.message)).finally(() => setBusy(null));
+  };
+  const pending = rows?.filter((r) => r.status === "pending") ?? [];
+  const done = rows?.filter((r) => r.status !== "pending") ?? [];
+  return (
+    <section className="rounded-2xl border border-[#3EE08F]/60 p-3">
+      <p className="text-sm font-bold">📝 Candidatures {pending.length > 0 && <span className="ml-1 rounded-full bg-[#3EE08F] px-2 text-xs text-night">{pending.length}</span>}</p>
+      {!rows ? <p className="mt-2 text-sm text-muted">Chargement…</p> : pending.length === 0 ? <p className="mt-2 text-sm text-muted">Aucune candidature en attente.</p> : pending.map((a) => (
+        <div key={a.id} className="mt-3 rounded-xl bg-night p-3 text-sm">
+          <p><b>{a.pseudo}</b>{a.age ? ` · ${a.age} ans` : ""} · 📍 {a.city} <span className="text-xs text-muted">· {new Date(a.at).toLocaleDateString("fr-FR")}</span>{!a.photo_ok && <span className="ml-1 text-xs text-[#fbbf24]">📸 photo non validée</span>}{a.already_amb && <span className="ml-1 text-xs text-[#3EE08F]">déjà ambassadeur</span>}</p>
+          <p className="mt-1"><span className="text-xs text-muted">Motivation :</span> {a.motivation}</p>
+          <p className="mt-1"><span className="text-xs text-muted">Promotion :</span> {a.promote}</p>
+          {a.audience && <p className="mt-1"><span className="text-xs text-muted">Audience :</span> {a.audience}</p>}
+          <input value={notes[a.id] ?? ""} onChange={(e) => setNotes({ ...notes, [a.id]: e.target.value })} maxLength={300} placeholder="Note pour le candidat (facultatif, envoyée avec la réponse)" className="mt-2 w-full rounded-lg border border-line bg-surface px-2 py-1.5 text-xs" />
+          <div className="mt-2 flex gap-2">
+            <button type="button" disabled={busy === a.id} onClick={() => decide(a, true)} className="flex-1 rounded-full bg-[#3EE08F] py-1.5 font-bold text-night disabled:opacity-50">Accepter</button>
+            <button type="button" disabled={busy === a.id} onClick={() => decide(a, false)} className="flex-1 rounded-full border border-signal py-1.5 text-signal disabled:opacity-50">Refuser</button>
+          </div>
+        </div>))}
+      {done.length > 0 && <details className="mt-3 text-xs"><summary className="cursor-pointer text-muted">Traitées (60 derniers jours) · {done.length}</summary>
+        {done.map((a) => <p key={a.id} className="mt-1">{a.status === "accepted" ? "✅" : "❌"} <b>{a.pseudo}</b> · {a.city} · {a.decided_at ? new Date(a.decided_at).toLocaleDateString("fr-FR") : ""}{a.note ? ` · « ${a.note} »` : ""}</p>)}</details>}
+      <p className="mt-2 text-[11px] text-muted">Accepter envoie un lien de signature personnel (usage unique, 7 jours) depuis contact@hdar.chat + une notification in-app. L'email du candidat n'est jamais affiché.</p>
+    </section>
+  );
+}
+
+function SignedContracts({ adminKey, demo }: { adminKey: string; demo: boolean }) {
+  const [rows, setRows] = useState<AdminAmbContract[] | null>(demo ? [{ user_id: "1", pseudo: "Lucas (exemple)", name: "Lucas Martin", version: "v2", at: "2026-10-13T12:00:00Z", code: "LUCAS7" }] : null);
+  useEffect(() => { if (!demo) void adminAmbContracts(adminKey).then(setRows).catch(() => undefined); }, [adminKey, demo]);
+  if (!rows) return null;
+  return (
+    <details className="rounded-2xl border border-line p-3 text-sm">
+      <summary className="cursor-pointer font-bold">✍️ Contrats signés · {rows.length}</summary>
+      {rows.length === 0 ? <p className="mt-2 text-xs text-muted">Aucun contrat signé.</p> : rows.map((c, i) => (
+        <div key={i} className="mt-2 flex items-center justify-between gap-2 text-xs">
+          <span><b>{c.pseudo}</b> · {c.name} · {c.version} · {new Date(c.at).toLocaleDateString("fr-FR")} <span className="font-mono text-muted">{c.code}</span></span>
+          <button type="button" className="underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, c.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button>
+        </div>))}
+    </details>
   );
 }

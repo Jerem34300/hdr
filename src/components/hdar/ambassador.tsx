@@ -26,12 +26,24 @@ function Qr({ text, size = 240 }: { text: string; size?: number }) {
   return src ? <img src={src} alt="QR code" width={size} height={size} className="mx-auto rounded-2xl bg-white p-2" /> : <div style={{ width: size, height: size }} className="mx-auto rounded-2xl bg-white/10" />;
 }
 
+/** Carte « Gagne de l'argent » pour les non-ambassadeurs (Profil). */
+export function BecomeAmbCard() {
+  return (
+    <a href="/ambassadeur" className="mt-3 flex items-center gap-3 rounded-3xl border border-[#3EE08F]/50 bg-surface p-4">
+      <span className="text-3xl">💸</span>
+      <span className="min-w-0 flex-1"><b className="block font-display">Gagne de l'argent avec hdar</b><span className="text-xs text-muted">Fais connaître l'appli autour de toi, touche une commission</span></span>
+      <span className="text-sm font-bold whitespace-nowrap text-[#3EE08F]">Deviens ambassadeur ›</span>
+    </a>
+  );
+}
+
 /** Carte en haut du Profil (seulement pour les ambassadeurs). */
 let ambCache: Promise<AmbMe | null> | null = null;
 export function AmbassadorCard() {
-  const [me, setMe] = useState<AmbMe | null>(null);
+  const [me, setMe] = useState<AmbMe | null | undefined>(undefined);
   useEffect(() => { ambCache ??= ambMe().catch(() => { ambCache = null; return null; }); void ambCache.then(setMe); }, []);
-  if (!me) return null;
+  if (me === undefined) return null;
+  if (!me) return <BecomeAmbCard />;
   if (me.needs_terms) return <a href="/ambassadeur" className="mt-3 block rounded-3xl border border-dashed border-[#3EE08F] p-4 text-sm">🎯 <b>Devenir ambassadeur</b> : accepte la charte pour activer ton espace ›</a>;
   return (
     <a href="/ambassadeur" className="mt-3 block rounded-3xl bg-gradient-to-r from-[#3EE08F] via-[#22d3ee] to-[#a78bfa] p-[2px]">
