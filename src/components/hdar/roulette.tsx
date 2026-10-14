@@ -14,7 +14,7 @@ import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
 import { proLiveNext } from "@/lib/hdar/live";
 import { PartnerBadge, ProGiftSheet, useMyPro } from "./pro-tools";
-import { BroadcastOverlay, CoachMark, WatchView, useBroadcast } from "./group-live";
+import { BroadcastOverlay, CoachMark, WatchView, useBottomBar, useBroadcast } from "./group-live";
 import { groupEnabled, roomFeed, roomOf } from "@/lib/hdar/live";
 
 /**
@@ -55,7 +55,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const [mic, setMic] = useState(true);
   const [asked, setAsked] = useState(false);
   const [burst, setBurst] = useState(demo && typeof location !== "undefined" && location.search.includes("heart") ? 1 : 0);
-  const [hearts, setHearts] = useState<number | null>(demo ? 12 : null);
+  const [hearts, setHearts] = useState<number | null>(demo ? (typeof location !== "undefined" && location.search.includes("nohearts") ? 0 : 12) : null);
+  const bottomBar = useBottomBar<HTMLDivElement>();
+  const demoBc = !!demo && typeof location !== "undefined" && location.search.includes("bcast");
   const [packsOpen, setPacksOpen] = useState(!!demo && typeof location !== "undefined" && location.search.includes("packs"));
   useEffect(() => { if (!demo) void myHearts().then((h) => setHearts(h.unlimited ? Infinity : h.balance)).catch(() => undefined); }, [demo]);
   const sendHeart = async () => {
@@ -462,8 +464,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         </span>
       )}
       <div ref={prevBox}
-        className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 left-3" : corner === "tr" ? "top-28 right-3" : corner === "bl" ? "bottom-44 left-3" : "bottom-44 right-3"}`}
-        style={drag ? { left: drag.x, top: drag.y } : undefined}
+        className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big && !bc.room && !demoBc ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 left-3" : corner === "tr" ? "top-28 right-3" : corner === "bl" ? "left-3" : "right-3"}`}
+        style={drag ? { left: drag.x, top: drag.y } : corner[0] === "b" ? { bottom: "calc(var(--live-bb, 11rem) + 0.5rem)" } : undefined}
         onPointerDown={(e) => { const r = prevBox.current!.getBoundingClientRect(); dragStart.current = { x: e.clientX, y: e.clientY, ox: r.left, oy: r.top, moved: false }; (e.target as Element).setPointerCapture?.(e.pointerId); e.stopPropagation(); }}
         onPointerMove={(e) => { const d = dragStart.current; if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.moved && Math.hypot(dx, dy) < 8) return; d.moved = true; setDrag({ x: d.ox + dx, y: d.oy + dy }); }}
         onPointerUp={(e) => {
@@ -479,7 +481,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         <span className={`absolute top-1 left-1 rounded-full px-1.5 text-[9px] font-bold ${blurred ? "bg-black/60" : "bg-[#A1E3C3] text-night"}`}>{blurred ? "Flouté" : "Visible"}</span>
         
       </div>
-      <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div ref={bottomBar} className="absolute inset-x-0 bottom-0 z-[11] space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-center"><button type="button" onClick={() => void setBlur(!blurred)} className={`rounded-full px-4 py-1.5 text-sm font-bold backdrop-blur ${blurred ? "border border-white/70 bg-white/10" : "bg-[#A1E3C3] text-night"}`}>
           {blurred ? <span className="inline-flex items-center gap-1.5"><Eye className="size-4" /> {pro ? "Vous êtes flouté · vous montrer" : "Tu es flouté · te montrer"}</span> : <span className="inline-flex items-center gap-1.5"><EyeOff className="size-4" /> {pro ? "Vous êtes visible · vous flouter" : "Tu es visible · te flouter"}</span>}
         </button></div>
@@ -508,11 +510,11 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <ChevronUp className="size-5" /> Suivant <span className="text-xs font-normal opacity-70">· ou glisse vers le haut</span>
         </button>
       </div>
-      {bc.room && <BroadcastOverlay room={bc.room} cam={bc.cam} onCam={() => void bc.toggleCam()} onStop={() => void bc.stop()} lk={bc.lk} self={bc.self} selfBlur={false} />}
+      {(bc.room || demoBc) && <BroadcastOverlay room={bc.room ?? "demo"} cam={bc.cam} onCam={() => void bc.toggleCam()} onStop={() => void bc.stop()} lk={bc.lk} self={bc.self} selfBlur={false} reserve={corner === "br" ? "r" : corner === "bl" ? "l" : undefined} />}
       {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
-      {packsOpen && <HeartPacks onClose={() => setPacksOpen(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
+      {packsOpen && <HeartPacks empty={!hearts} onClose={() => setPacksOpen(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
       {reporting && (
         <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setReporting(false)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>

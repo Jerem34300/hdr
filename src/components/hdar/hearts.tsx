@@ -43,7 +43,7 @@ export function FloatingHearts({ burst }: { burst: number }) {
 }
 
 /** Feuille d'achat de cœurs. */
-export function HeartPacks({ onClose, demo }: { onClose: () => void; demo?: PriceRow[] }) {
+export function HeartPacks({ onClose, demo, empty }: { onClose: () => void; demo?: PriceRow[]; empty?: boolean }) {
   const [packs, setPacks] = useState<PriceRow[]>(demo ?? []);
   const [busy, setBusy] = useState("");
   useEffect(() => { if (!demo) void pricing().then((r) => setPacks(r.filter((p) => p.kind === "hearts"))).catch(() => undefined); }, [demo]);
@@ -54,8 +54,10 @@ export function HeartPacks({ onClose, demo }: { onClose: () => void; demo?: Pric
   return (
     <div className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={onClose}>
       <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
-        <p className="font-display text-xl font-extrabold">Envoie des ❤️ dans le Live</p>
-        <p className="text-xs text-muted">1 cœur = 1 envoi. L'autre voit tes cœurs s'envoler sur son écran.</p>
+        <div className="mx-auto -mt-1 mb-1 h-1 w-10 rounded-full bg-line" />
+        <p className="font-display text-xl font-extrabold">{empty ? "Tu n'as plus de ❤️" : "Envoie des ❤️ dans le Live"}</p>
+        <p className="text-sm text-muted">Les cœurs, c'est ce qui compte vraiment : ils s'envolent en grand sur son écran et restent sur son profil. Les 🔥 🥵 😛 restent gratuits.</p>
+        <p className="text-xs text-muted">1 cœur = 1 envoi.</p>
         <div className="grid grid-cols-3 gap-2">
           {packs.map((p, i) => (
             <button key={p.product} type="button" disabled={!!busy} onClick={() => void buy(p.product)}

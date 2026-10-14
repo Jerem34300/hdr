@@ -66,6 +66,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   const widget = useRef<string | null>(null);
 
   useEffect(() => {
+    if (import.meta.env.DEV && location.pathname === "/live" && location.search.includes("demo")) return setState("ok"); // capture d'écran de dev
     const isAdult = adultConfirmed();
     setAdult(isAdult);
     if (!isAdult) return setState("ask");

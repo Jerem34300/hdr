@@ -15,8 +15,11 @@ import { REPORT_REASONS } from "@/lib/hdar/report";
  * appliquées par le serveur vidéo), jamais les autres spectateurs.
  * Le partenaire du 1:1 reste en privé (P2P) : son image n'est jamais envoyée au salon.
  */
-export const RULES = "18+ · pas de nudité · enregistrement interdit";
-export const REACTIONS = ["🔥", "❤️", "😏"] as const;
+/** Badge permanent : juste « 18+ ». La règle complète reste dans les règles d'entrée, le coach mark et les CGU. */
+export const RULES = "18+";
+export const FULL_RULES = "18+ · pas de nudité · enregistrement interdit";
+/** Réactions gratuites. Les ❤️ sont payants (solde de cœurs / hdar+), jamais ici. */
+export const REACTIONS = ["🔥", "🥵", "😛"] as const;
 
 export function groupError(m: string): string {
   if (m.includes("room_viewers_full")) return "Ce Live est complet, on passe au suivant";
@@ -26,6 +29,20 @@ export function groupError(m: string): string {
   if (m.includes("live_nopos")) return "Active ta position : jamais personne à moins de 2 km dans le Live";
   if (m.includes("live_photo")) return "Le Live est réservé aux profils avec une photo validée";
   return m.replace(/^[a-z_]+: /, "") || "Live indisponible";
+}
+
+/** Mesure la barre du bas et publie sa hauteur dans --live-bb sur l'écran parent : le chat et l'aperçu se posent au-dessus, sans jamais la chevaucher. */
+export function useBottomBar<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current, host = el?.parentElement;
+    if (!el || !host) return;
+    const set = () => host.style.setProperty("--live-bb", `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    set();
+    const ro = new ResizeObserver(set); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return ref;
 }
 
 /** Chat et état du salon, sondés toutes les 1,5 s. */
@@ -59,7 +76,7 @@ function useRoomState(room: string | null, onGone: (banned: boolean) => void) {
   return { st, msgs, pops };
 }
 
-function Chat({ room, msgs, pops, show, canReport }: { room: string; msgs: RoomMsg[]; pops: { k: number; e: string }[]; show: boolean; canReport: boolean }) {
+function Chat({ room, msgs, pops, show, canReport, reserve }: { room: string; msgs: RoomMsg[]; pops: { k: number; e: string }[]; show: boolean; canReport: boolean; reserve?: "l" | "r" }) {
   const [txt, setTxt] = useState("");
   const [rep, setRep] = useState<RoomMsg | null>(null);
   const send = async () => {
@@ -68,11 +85,11 @@ function Chat({ room, msgs, pops, show, canReport }: { room: string; msgs: RoomM
   };
   return (
     <>
-      <div className="pointer-events-none absolute right-3 bottom-44 z-10 flex flex-col items-center gap-1">
+      <div className="pointer-events-none absolute right-3 z-10 flex flex-col items-center gap-1" style={{ bottom: "calc(var(--live-bb, 9rem) + 4rem)" }}>
         {pops.map((p) => <span key={p.k} className="animate-[ping_1.2s_ease-out_1] text-3xl">{p.e}</span>)}
       </div>
       {show && (
-        <div className="absolute inset-x-0 bottom-36 z-10 px-3" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div className={`absolute inset-x-0 z-10 ${reserve === "l" ? "pl-[7.5rem]" : "pl-3"} ${reserve === "r" ? "pr-[7.5rem]" : "pr-3"}`} style={{ bottom: "calc(var(--live-bb, 9rem) + 0.5rem)" }} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <ul className="mb-2 max-h-48 space-y-1 overflow-y-auto pr-16 [mask-image:linear-gradient(to_bottom,transparent,black_30%)]">
             {msgs.map((m) => (
               <li key={m.id}><button type="button" onClick={() => canReport && setRep(m)} className="max-w-full rounded-2xl bg-black/45 px-3 py-1 text-left text-sm backdrop-blur">
@@ -82,7 +99,7 @@ function Chat({ room, msgs, pops, show, canReport }: { room: string; msgs: RoomM
           <div className="flex items-center gap-2">
             <input value={txt} maxLength={200} onChange={(e) => setTxt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void send()} placeholder="Écris un message…"
               className="min-w-0 flex-1 rounded-full bg-black/50 px-4 py-2 text-sm text-white placeholder:text-white/50 backdrop-blur" />
-            {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r}`} onClick={() => void roomSay(room, r, "react").catch(() => undefined)} className="text-2xl">{r}</button>)}
+            {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r}`} onClick={() => void roomSay(room, r, "react").catch(() => undefined)} className="shrink-0 text-2xl">{r}</button>)}
           </div>
         </div>
       )}
@@ -225,7 +242,7 @@ export function BroadcastGrid({ self, selfBlur, viewers, onAsk, onAct }: { self:
 }
 
 /** Surcouche du diffuseur (dans son 1:1) : grille animée, compteur, chat, demandes caméra/micro, faire sortir / expulser / signaler. */
-export function BroadcastOverlay({ room, cam, onCam, onStop, lk, self, selfBlur }: { room: string; cam: boolean; onCam: () => void; onStop: () => void; lk: Room | null; self: () => MediaStreamTrack | null; selfBlur?: boolean }) {
+export function BroadcastOverlay({ room, cam, onCam, onStop, lk, self, selfBlur, reserve }: { room: string; cam: boolean; onCam: () => void; onStop: () => void; lk: Room | null; self: () => MediaStreamTrack | null; selfBlur?: boolean; reserve?: "l" | "r" }) {
   const { st, msgs, pops } = useRoomState(room, () => { toast("Ton Live à plusieurs s'est arrêté"); onStop(); });
   const [chat, setChat] = useState(true);
   const [grid, setGrid] = useState(true);
@@ -260,7 +277,7 @@ export function BroadcastOverlay({ room, cam, onCam, onStop, lk, self, selfBlur 
         </div>
       )}
       {needTap && <button type="button" onClick={() => { void lk?.startAudio(); setNeedTap(false); }} className="absolute top-[calc(12rem+38vh+0.5rem)] left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-bold text-night shadow-lg">🔊 Touche pour activer le son</button>}
-      <Chat room={room} msgs={msgs} pops={pops} show={chat} canReport />
+      <Chat room={room} msgs={msgs} pops={pops} show={chat} canReport reserve={reserve} />
       {list !== false && (
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setList(false)}>
           <div className="max-h-[70%] w-full space-y-2 overflow-y-auto rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
@@ -292,6 +309,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
   const [needTap, setNeedTap] = useState(false);
   const [chat, setChat] = useState(true);
   const [reporting, setReporting] = useState(false);
+  const bottomBar = useBottomBar<HTMLDivElement>();
   const lk = useRef<Room | null>(null);
   const hostId = useRef<string | null>(null);
   const done = useRef(false);
@@ -410,7 +428,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
         <button type="button" aria-label="Quitter" onClick={() => { leave(); onExit(); }} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
       </div>
       <Chat room={room} msgs={msgs} pops={pops} show={chat} canReport />
-      <div className="absolute inset-x-0 bottom-0 z-10 space-y-2 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div ref={bottomBar} className="absolute inset-x-0 bottom-0 z-10 space-y-2 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-center gap-2">
           <button type="button" aria-label={myCam ? "Éteindre ma caméra" : "Proposer ma caméra (seul le diffuseur la voit)"} onClick={() => myCam ? void setMine("cam", false) : setAsked("cam")} className={`flex size-11 items-center justify-center rounded-full ${myCam ? "bg-[#A1E3C3] text-night" : "bg-white/15"}`}>{myCam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</button>
           <button type="button" aria-label={myMic ? "Couper mon micro" : "Proposer mon micro (seul le diffuseur l'entend)"} onClick={() => myMic ? void setMine("mic", false) : setAsked("mic")} className={`flex size-11 items-center justify-center rounded-full ${myMic ? "bg-[#A1E3C3] text-night" : "bg-white/15"}`}>{myMic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</button>
@@ -429,7 +447,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display text-lg font-bold">{asked === "cam" ? "📷 Allumer ta caméra ?" : "🎤 Allumer ton micro ?"}</p>
             <p className="text-sm text-ink/75">{asked === "cam" ? "Seul·e" : "Seul·e"} <b>{st?.host_pseudo ?? "la personne qui diffuse"}</b> {asked === "cam" ? "te verra" : "t'entendra"}. Les autres spectateurs, jamais. {asked === "cam" ? "Tu restes flouté tant que tu ne choisis pas « me montrer »." : ""} Tu coupes quand tu veux.</p>
-            <p className="text-[11px] text-ink/55">{RULES}</p>
+            <p className="text-[11px] text-ink/55">{FULL_RULES}</p>
             <button type="button" onClick={() => { const w = asked; setAsked(null); void setMine(w, true); }} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">{asked === "cam" ? "Allumer ma caméra" : "Allumer mon micro"}</button>
             <button type="button" onClick={() => setAsked(null)} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Non merci</button>
           </div>
