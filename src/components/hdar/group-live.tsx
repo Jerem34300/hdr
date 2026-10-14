@@ -215,6 +215,67 @@ export function useBroadcast(getVideo: () => MediaStreamTrack | null, getAudio: 
   return { room, busy, cam, start, stop: () => stop(), syncVideo, toggleCam, lk: lkRoom };
 }
 
+/**
+ * Partenaire du 1:1 qui accepte « Diffuser aussi » : il rejoint le salon de la diffusion et y publie SES pistes du 1:1
+ * (mêmes objets, aucun 2e getUserMedia). Il ne s'abonne à rien (il voit déjà le diffuseur en P2P). Jamais sans son accord.
+ */
+export function useCoBroadcast(getVideo: () => MediaStreamTrack | null, getAudio: () => MediaStreamTrack | null) {
+  const [room, setRoom] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const lk = useRef<Room | null>(null);
+  const vPub = useRef<LocalTrackPublication | null>(null);
+  const roomRef = useRef<string | null>(null);
+  const stop = async () => {
+    const l = lk.current, r = roomRef.current; lk.current = null; roomRef.current = null; setRoom(null);
+    if (l) for (const p of l.localParticipant.trackPublications.values()) if (p.track) await l.localParticipant.unpublishTrack(p.track, false).catch(() => undefined);
+    vPub.current = null;
+    await l?.disconnect(false).catch(() => undefined);
+    if (r) await roomLeave(r).catch(() => undefined);
+  };
+  const join = async (id: string): Promise<string | null> => {
+    if (busy || roomRef.current) return null;
+    setBusy(true);
+    try {
+      const t = await roomToken(id);
+      if (t.configured === false || !t.token) throw new Error("room_full");
+      const l = new Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: false });
+      await l.connect(t.url, t.token, { autoSubscribe: false });
+      lk.current = l; roomRef.current = id;
+      await l.localParticipant.setTrackSubscriptionPermissions(true);
+      const v = getVideo(), a = getAudio();
+      if (v) vPub.current = await l.localParticipant.publishTrack(v, { source: Track.Source.Camera, name: "cam", simulcast: false });
+      if (a) await l.localParticipant.publishTrack(a, { source: Track.Source.Microphone, name: "mic" });
+      setRoom(id);
+      l.on(RoomEvent.Disconnected, () => { if (lk.current === l) void stop(); });
+      return l.localParticipant.identity;
+    } catch (e) {
+      toast(groupError(e instanceof Error ? e.message : ""));
+      await stop(); return null;
+    } finally { setBusy(false); }
+  };
+  const syncVideo = async () => {
+    const p = vPub.current; const src = getVideo(); if (!p?.track || !src || p.track.mediaStreamTrack === src) return;
+    await p.track.replaceTrack(src, true).catch(() => undefined);
+  };
+  useEffect(() => () => { void stop(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return { room, busy, join, stop: () => stop(), syncVideo };
+}
+
+/** Popup côté partenaire du 1:1 : « X diffuse en ce moment ». Rien ne part sans « Diffuser aussi ». */
+export function CoInvite({ pseudo, n, names, busy, onYes, onNo }: { pseudo: string; n: number; names: string[]; busy: boolean; onYes: () => void; onNo: () => void }) {
+  return (
+    <div data-testid="co-invite" className="absolute inset-x-4 top-[8.5rem] z-30 rounded-3xl border border-[#FA6F6C]/60 bg-night/95 p-4 shadow-[0_0_30px_#FA6F6C66] backdrop-blur" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+      <p className="flex items-center gap-2 font-display text-lg font-bold"><Radio className="size-5 text-[#FA6F6C]" /> {pseudo} diffuse en ce moment</p>
+      <p className="mt-1 text-sm text-white/80">👁 {n === 0 ? "Personne ne regarde encore" : `${n} ${n > 1 ? "personnes regardent" : "personne regarde"}`}{names.length > 0 && <span className="text-white/60"> · {names.slice(0, 4).join(", ")}{names.length > 4 ? "…" : ""}</span>}</p>
+      <p className="mt-2 text-xs text-white/70">Tu restes en privé : personne d'autre ne te voit. Si tu diffuses aussi, les spectateurs te verront et t'entendront à côté de {pseudo}. Tu arrêtes quand tu veux.</p>
+      <div className="mt-3 flex gap-2">
+        <button type="button" data-testid="co-no" onClick={onNo} className="flex-1 rounded-full bg-white/10 py-2.5 text-sm font-bold">Rester en privé</button>
+        <button type="button" data-testid="co-yes" disabled={busy} onClick={onYes} className="flex-1 rounded-full bg-[#FA6F6C] py-2.5 text-sm font-bold text-night disabled:opacity-50">Diffuser aussi</button>
+      </div>
+    </div>
+  );
+}
+
 /** Vidéo branchée UNE fois sur une piste (LiveKit ou locale) : pas de re-branchement à chaque rendu. */
 export const TrackVideo = memo(function TrackVideo({ track, mirror, blur }: { track: MediaStreamTrack | RemoteTrack | null; mirror?: boolean; blur?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -245,7 +306,7 @@ export type Ask = { t: "ask"; what: "cam" | "mic" };
 const ENC = new TextEncoder(), DEC = new TextDecoder();
 
 /** Pistes (vidéo/son) que chaque spectateur envoie au diffuseur, et à lui seul. */
-function useViewerMedia(lk: Room | null, audios: React.RefObject<HTMLDivElement | null>) {
+function useViewerMedia(lk: Room | null, audios: React.RefObject<HTMLDivElement | null>, skip?: React.RefObject<string[]>) {
   const [media, setMedia] = useState<Record<string, { video?: RemoteTrack; mic?: boolean }>>({});
   const [needTap, setNeedTap] = useState(false);
   useEffect(() => {
@@ -253,12 +314,13 @@ function useViewerMedia(lk: Room | null, audios: React.RefObject<HTMLDivElement 
     const sync = () => {
       const m: Record<string, { video?: RemoteTrack; mic?: boolean }> = {};
       lk.remoteParticipants.forEach((p: RemoteParticipant) => {
+        if (skip?.current?.includes(p.identity)) return;
         const v = p.getTrackPublication(Track.Source.Camera), a = p.getTrackPublication(Track.Source.Microphone);
         m[p.identity] = { video: v?.track && !v.isMuted ? v.track : undefined, mic: !!a?.track && !a.isMuted };
       });
       setMedia(m);
     };
-    const onSub = (t: RemoteTrack) => { if (t.kind === Track.Kind.Audio && audios.current) { const el = t.attach(); el.dataset.lk = "audio"; audios.current.appendChild(el); setNeedTap(!lk.canPlaybackAudio); } sync(); };
+    const onSub = (t: RemoteTrack, pub: RemoteTrackPublication, p: RemoteParticipant) => { if (skip?.current?.includes(p.identity)) { pub.setSubscribed(false); return; } if (t.kind === Track.Kind.Audio && audios.current) { const el = t.attach(); el.dataset.lk = "audio"; audios.current.appendChild(el); setNeedTap(!lk.canPlaybackAudio); } sync(); };
     const onUnsub = (t: RemoteTrack) => { t.detach().forEach((e) => e.remove()); sync(); };
     const onAudio = () => setNeedTap(!lk.canPlaybackAudio);
     lk.on(RoomEvent.TrackSubscribed, onSub).on(RoomEvent.TrackUnsubscribed, onUnsub).on(RoomEvent.TrackMuted, sync).on(RoomEvent.TrackUnmuted, sync)
@@ -326,7 +388,7 @@ export function ConfirmBroadcast({ onOk, onCancel }: { onOk: () => void; onCance
     <div data-testid="confirm-bc" className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={onCancel} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
       <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
         <p className="flex items-center gap-2 font-display text-lg font-bold"><Radio className="size-5 text-[#FA6F6C]" /> Ouvrir ta caméra aux gens qui font défiler ?</p>
-        <p className="text-sm text-ink/75">Jusqu'à 6 personnes pourront te voir et t'entendre en même temps. Ton partenaire en face à face reste privé : il n'est jamais montré. Tu arrêtes quand tu veux.</p>
+        <p className="text-sm text-ink/75">Jusqu'à 6 personnes pourront te voir et t'entendre en même temps. Ton partenaire en face à face reste privé : il n'est montré que s'il choisit lui-même de diffuser avec toi. Tu arrêtes quand tu veux.</p>
         <button type="button" data-testid="confirm-bc-ok" onClick={onOk} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">Diffuser</button>
         <button type="button" onClick={onCancel} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Annuler</button>
       </div>
@@ -338,16 +400,26 @@ export function ConfirmBroadcast({ onOk, onCancel }: { onOk: () => void; onCance
  * Surcouche du diffuseur (dans son 1:1) : le partenaire reste en plein écran, UN seul petit aperçu de soi (celui du 1:1),
  * un badge « En diffusion », le bandeau des spectateurs, le chat et UNE barre de boutons nommés.
  */
-export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, reserve, p2p }: {
+export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, reserve, p2p, co, onState }: {
   room: string; cam: boolean; onCam: () => void; mic: boolean; onMic: () => void; onStop: () => void; lk: Room | null; reserve?: "l" | "r";
   p2p?: { lines: ChatLine[]; send: (b: string, echo: boolean) => void };
+  co?: { id: string; pseudo: string } | null; onState?: (n: number, names: string[]) => void;
 }) {
   const { st, msgs, pops, refresh } = useRoomState(room === "demo" ? null : room, () => { toast("Ta diffusion s'est arrêtée"); onStop(); });
   const [chat, setChat] = useState(true);
   const [list, setList] = useState<string | true | false>(false);
   const audios = useRef<HTMLDivElement>(null);
   const bar = useBottomBar<HTMLDivElement>();
-  const { media, needTap, setNeedTap } = useViewerMedia(lk, audios);
+  const coIds = useRef<string[]>([]); coIds.current = co ? [co.id] : [];
+  const { media, needTap, setNeedTap } = useViewerMedia(lk, audios, coIds);
+  // annonce aux spectateurs qui diffuse avec moi (seul le diffuseur a le droit d'envoyer des données)
+  useEffect(() => {
+    if (!lk) return;
+    const say = () => void lk.localParticipant.publishData(ENC.encode(JSON.stringify({ t: "co", ids: co ? [co.id] : [], names: co ? [co.pseudo] : [] })), { reliable: true, topic: "hdar" }).catch(() => undefined);
+    say(); if (co) lk.remoteParticipants.get(co.id)?.trackPublications.forEach((p) => p.setSubscribed(false));
+    lk.on(RoomEvent.ParticipantConnected, say);
+    return () => { lk.off(RoomEvent.ParticipantConnected, say); };
+  }, [lk, co?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const act = async (action: "remove" | "kick", id: string) => {
     try { await roomStage(action, room, id); toast(action === "kick" ? "Expulsé de tes Lives pour 24 h" : "Fait sortir"); } catch (e) { toast(groupError(e instanceof Error ? e.message : "")); }
   };
@@ -355,7 +427,10 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, res
     try { await lk?.localParticipant.publishData(ENC.encode(JSON.stringify({ t: "ask", what } satisfies Ask)), { reliable: true, topic: "hdar", destinationIdentities: [id] }); toast(what === "cam" ? "Demande envoyée : il choisit d'allumer sa caméra ou non" : "Demande envoyée : il choisit d'allumer son micro ou non"); }
     catch { toast("Demande impossible"); }
   };
-  const vl = st?.viewer_list;
+  const vl = useMemo(() => st?.viewer_list?.filter((v) => v.id !== co?.id), [st?.viewer_list, co?.id]);
+  const nView = Math.max(0, (st?.viewers ?? 0) - (co && st?.viewer_list?.some((v) => v.id === co.id) ? 1 : 0));
+  const names = (vl ?? []).map((v) => v.pseudo ?? "?").join("|");
+  useEffect(() => { if (st) onState?.(nView, names ? names.split("|") : []); }, [nView, names, !!st]); // eslint-disable-line react-hooks/exhaustive-deps
   const viewers: GridViewer[] = useMemo(() => (vl ?? []).map((v) => ({ ...v, video: media[v.id]?.video, mic: media[v.id]?.mic })), [vl, media]);
   const shown = list === true ? vl ?? [] : (vl ?? []).filter((v) => v.id === list);
   const one = typeof list === "string" ? viewers.find((v) => v.id === list) : undefined;
@@ -364,7 +439,7 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, res
     <>
       <div ref={audios} className="hidden" />
       <button type="button" data-testid="bc-badge" onClick={() => setList(true)} className="absolute top-[8.75rem] left-3 z-20 rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">
-        ● En diffusion · 👁 {st?.viewers ?? 0}/{st?.cap ?? 12}
+        ● En diffusion{co ? ` avec ${co.pseudo}` : ""} · 👁 {nView}/{st?.cap ?? 12}
       </button>
       <ViewerStrip viewers={viewers} onOpen={(id) => setList(id)} />
       <SoundToast show={needTap} onTap={() => { void lk?.startAudio(); setNeedTap(false); }} />
@@ -381,8 +456,8 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, res
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setList(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <div className="max-h-[80%] w-full space-y-2 overflow-y-auto rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
             {one && <div data-testid="viewer-big" className="relative mx-auto aspect-[3/4] w-2/3 overflow-hidden rounded-2xl bg-night">{one.video ? <TrackVideo track={one.video} /> : <Avatar id={one.id} pseudo={one.pseudo} />}</div>}
-            <p className="font-display text-lg font-bold">{one ? one.pseudo : `Qui te regarde (${st?.viewers ?? 0}/${st?.cap ?? 12})`}</p>
-            <p className="text-xs text-ink/60">Ton partenaire en 1:1 n'est jamais montré. Un spectateur qui allume sa caméra ou son micro n'est vu et entendu que par toi.</p>
+            <p className="font-display text-lg font-bold">{one ? one.pseudo : `Qui te regarde (${nView}/${st?.cap ?? 12})`}</p>
+            <p className="text-xs text-ink/60">Ton partenaire en 1:1 n'est montré que s'il accepte de diffuser avec toi. Un spectateur qui allume sa caméra ou son micro n'est vu et entendu que par toi.</p>
             {shown.length === 0 && <p className="py-3 text-sm text-ink/60">Personne pour l'instant. Reste là, les gens qui font défiler vont arriver.</p>}
             {shown.map((v) => (
               <div key={v.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-night px-3 py-2 text-sm text-white">
@@ -413,6 +488,8 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
   const bottomBar = useBottomBar<HTMLDivElement>();
   const lk = useRef<Room | null>(null);
   const hostId = useRef<string | null>(null);
+  const coRef = useRef<string[]>([]);
+  const [coTiles, setCoTiles] = useState<{ id: string; pseudo: string; video?: RemoteTrack }[]>([]);
   const done = useRef(false);
   // ce que j'envoie au diffuseur (et à lui seul)
   const [myCam, setMyCam] = useState(false);
@@ -480,14 +557,33 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           if (track.kind === Track.Kind.Audio && audios.current) { const el = track.attach(); audios.current.appendChild(el); }
         };
         // je ne m'abonne qu'au diffuseur, jamais aux autres spectateurs
-        const want = (pub: RemoteTrackPublication, p: RemoteParticipant) => { if (p.identity === hostId.current) pub.setSubscribed(true); };
+        const want = (pub: RemoteTrackPublication, p: RemoteParticipant) => { if (p.identity === hostId.current || coRef.current.includes(p.identity)) pub.setSubscribed(true); };
         l.on(RoomEvent.TrackPublished, want);
-        l.on(RoomEvent.TrackSubscribed, (track, _pub, p) => { if (p.identity === hostId.current) attach(track); });
+        l.on(RoomEvent.TrackSubscribed, (track, _pub, p) => {
+          if (p.identity === hostId.current) return attach(track);
+          if (!coRef.current.includes(p.identity)) return;
+          if (track.kind === Track.Kind.Audio && audios.current) audios.current.appendChild(track.attach());
+          if (track.kind === Track.Kind.Video) setCoTiles((c) => c.map((x) => (x.id === p.identity ? { ...x, video: track } : x)));
+        });
+        l.on(RoomEvent.TrackUnsubscribed, (track, _pub, p) => {
+          if (p.identity === hostId.current) return;
+          track.detach().forEach((e) => e.remove());
+          if (track.kind === Track.Kind.Video) setCoTiles((c) => c.map((x) => (x.id === p.identity ? { ...x, video: undefined } : x)));
+        });
         l.on(RoomEvent.TrackMuted, (p, who) => { if (p.kind === Track.Kind.Video && who.identity === hostId.current) setHasVideo(false); });
         l.on(RoomEvent.TrackUnmuted, (p, who) => { if (p.kind === Track.Kind.Video && who.identity === hostId.current) setHasVideo(true); });
         l.on(RoomEvent.AudioPlaybackStatusChanged, () => setNeedTap(!l.canPlaybackAudio));
         l.on(RoomEvent.DataReceived, (payload, p, _k, topic) => {
           if (topic !== "hdar" || !p || p.identity !== hostId.current) return;
+          try { const c = JSON.parse(DEC.decode(payload)) as { t: string; ids?: string[]; names?: string[] };
+            if (c.t === "co" && Array.isArray(c.ids)) {
+              const ids = c.ids.filter((x) => typeof x === "string" && x !== hostId.current && x !== l.localParticipant.identity).slice(0, 3);
+              const gone = coRef.current.filter((x) => !ids.includes(x)); coRef.current = ids;
+              gone.forEach((g) => l.remoteParticipants.get(g)?.trackPublications.forEach((p) => p.setSubscribed(false)));
+              setCoTiles(ids.map((id, i) => ({ id, pseudo: String(c.names?.[i] ?? "").slice(0, 30), video: l.remoteParticipants.get(id)?.getTrackPublication(Track.Source.Camera)?.track as RemoteTrack | undefined })));
+              ids.forEach((id) => l.remoteParticipants.get(id)?.trackPublications.forEach((p) => want(p as RemoteTrackPublication, l.remoteParticipants.get(id)!)));
+              return;
+            } } catch { /* ignoré */ }
           try { const m = JSON.parse(DEC.decode(payload)) as Ask; if (m.t === "ask" && (m.what === "cam" || m.what === "mic")) setAsked(m.what); } catch { /* ignoré */ }
         });
         l.on(RoomEvent.Disconnected, () => { if (!done.current) { toast("Ce Live est terminé"); leave(); onNext(); } });
@@ -510,10 +606,20 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       onTouchStart={(e) => (touchY.current = e.touches[0].clientY)}
       onTouchEnd={(e) => { const y0 = touchY.current; touchY.current = null; if (y0 != null && y0 - e.changedTouches[0].clientY > 70) { leave(); onNext(); } }}
       onWheel={(e) => { if (e.deltaY > 60) { leave(); onNext(); } }}>
-      <video ref={vid} autoPlay playsInline muted className="absolute inset-0 size-full object-cover" />
+      <video ref={vid} autoPlay playsInline muted className={`absolute inset-x-0 top-0 w-full object-cover transition-all duration-300 ${coTiles.length ? "h-1/2" : "h-full"}`} />
+      {coTiles.length > 0 && (
+        <div data-testid="co-grid" className={`absolute inset-x-0 bottom-0 grid h-1/2 gap-0.5 ${coTiles.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+          {coTiles.map((c) => (
+            <div key={c.id} className="relative overflow-hidden bg-night">
+              {c.video ? <TrackVideo track={c.video} /> : <Avatar id={c.id} pseudo={c.pseudo} />}
+              {c.pseudo && <span className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold">{c.pseudo}</span>}
+            </div>
+          ))}
+        </div>
+      )}
       <div ref={audios} className="hidden" />
       {!hasVideo && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-night">
+        <div className={`absolute inset-x-0 top-0 flex ${coTiles.length ? "h-1/2" : "h-full"} flex-col items-center justify-center gap-3 bg-night`}>
           <span className="size-28 overflow-hidden rounded-full border-2 border-[#FA6F6C] bg-[#c9a58c]/60">{host && <img src={host} alt="" className="size-full object-cover blur-md" />}</span>
           <p className="text-sm text-white/70">{st ? "Caméra coupée pour l'instant" : "Connexion…"}</p>
         </div>
@@ -522,7 +628,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-xl font-bold">{st?.host_pseudo ?? "…"}{st?.host_premium && <span className="ml-1 text-sm">👑+</span>}</p>
-          <p className="text-xs text-white/80">📣 Diffuse en direct · {myCam || myMic ? `seul·e ${st?.host_pseudo ?? "la personne qui diffuse"} te ${myCam ? "voit" : "entend"}` : "tu regardes, personne ne te voit"}</p>
+          <p className="text-xs text-white/80">📣 Diffuse en direct{coTiles.length ? ` avec ${coTiles.map((c) => c.pseudo || "?").join(", ")}` : ""} · {myCam || myMic ? `seul·e ${st?.host_pseudo ?? "la personne qui diffuse"} te ${myCam ? "voit" : "entend"}` : "tu regardes, personne ne te voit"}</p>
           <span className="mt-1 inline-block rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80">{RULES}</span>
         </div>
         <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE · 👁 {st?.viewers ?? 0}/{st?.cap ?? 6}</span>

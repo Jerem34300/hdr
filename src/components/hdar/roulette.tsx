@@ -14,7 +14,7 @@ import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
 import { proLiveNext } from "@/lib/hdar/live";
 import { PartnerBadge, ProGiftSheet, useMyPro } from "./pro-tools";
-import { BroadcastOverlay, Chat, CoachMark, ConfirmBroadcast, NextChevron, SoundToast, SwipeHint, WatchView, useBottomBar, useBroadcast, type ChatLine } from "./group-live";
+import { BroadcastOverlay, Chat, CoachMark, CoInvite, ConfirmBroadcast, useCoBroadcast, NextChevron, SoundToast, SwipeHint, WatchView, useBottomBar, useBroadcast, type ChatLine } from "./group-live";
 import { groupEnabled, roomFeed, roomOf } from "@/lib/hdar/live";
 
 /**
@@ -108,7 +108,31 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const feed = useRef<{ at: number; rooms: string[]; seen: Set<string>; turn: number }>({ at: 0, rooms: [], seen: new Set(), turn: 0 });
   const bc = useBroadcast(() => outgoing(), () => localRef.current?.getAudioTracks()[0] ?? null);
   const broadcasting = !!bc.room || demoBc;
-  const closePc = () => { dc.current = null; setP2pLines([]); setNeedTap(false); setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
+  // partenaire du 1:1 : « X diffuse » → il peut diffuser aussi (cam à 3+), uniquement s'il accepte
+  const co = useCoBroadcast(() => outgoing(), () => localRef.current?.getAudioTracks()[0] ?? null);
+  const [hostBc, setHostBc] = useState<{ room: string; n: number; names: string[] } | null>(() => (demo && typeof location !== "undefined" && location.search.includes("coinvite") ? { room: "demo", n: 3, names: ["Léo", "Sam", "Max"] } : null));
+  const [coNo, setCoNo] = useState<string | null>(null);
+  const [coWith, setCoWith] = useState<{ id: string; pseudo: string } | null>(null); // côté diffuseur
+  const p2pSend = (m: object) => {
+    if (e2e) ((window as unknown as { __p2pOut: object[] }).__p2pOut ??= []).push(m);
+    if (dc.current?.readyState === "open") dc.current.send(JSON.stringify(m));
+  };
+  const onCoMsg = (d: { bc?: { room?: unknown; n?: unknown; names?: unknown } | null; co?: unknown }) => {
+    if ("bc" in d) {
+      const b = d.bc;
+      if (b && typeof b.room === "string" && /^[0-9a-f-]{36}$/i.test(b.room)) setHostBc({ room: b.room, n: Number(b.n) || 0, names: Array.isArray(b.names) ? b.names.map(String).slice(0, 12) : [] });
+      else { setHostBc(null); setCoNo(null); }
+      return true;
+    }
+    if ("co" in d) { setCoWith(typeof d.co === "string" && d.co.length < 80 ? { id: d.co, pseudo: peerRef.current?.pseudo ?? peer?.pseudo ?? "?" } : null); return true; }
+    return false;
+  };
+  if (e2e && typeof window !== "undefined") (window as unknown as { __p2pIn: typeof onCoMsg }).__p2pIn = onCoMsg;
+  useEffect(() => { if (!hostBc && co.room) { void co.stop(); toast("La diffusion est terminée, tu es de nouveau en privé"); } }, [hostBc]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!bc.room) { setCoWith(null); if (!demo || e2e) p2pSend({ bc: null }); } }, [bc.room]); // eslint-disable-line react-hooks/exhaustive-deps
+  const coJoin = async () => { if (!hostBc) return; const id = await co.join(hostBc.room); if (id) { p2pSend({ co: id }); toast("📣 Tu diffuses avec " + (peer?.pseudo ?? "ton partenaire")); } };
+  const coLeave = () => { void co.stop(); p2pSend({ co: null }); toast("Tu es de nouveau en privé"); };
+  const closePc = () => { setHostBc(null); setCoWith(null); if (co.room) void co.stop(); dc.current = null; setP2pLines([]); setNeedTap(false); setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
   useEffect(() => { if (phase !== "intro") showPreview(); });
   useEffect(() => {
@@ -136,7 +160,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     showPreview();
     if (dc.current?.readyState === "open") dc.current.send(JSON.stringify({ blur: b }));
     if (!b) setAsked(false);
-    void bc.syncVideo();
+    void bc.syncVideo(); void co.syncVideo();
   };
   const askSentRef = useRef(false);
   useEffect(() => { askSentRef.current = askSent; }, [askSent]);
@@ -162,7 +186,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     const wire = (ch: RTCDataChannel) => {
       dc.current = ch;
       ch.onopen = () => ch.send(JSON.stringify({ blur: blurRef.current }));
-      ch.onmessage = (ev) => { try { const d = JSON.parse(String(ev.data)) as { blur?: boolean; chat?: string };
+      ch.onmessage = (ev) => { try { const d = JSON.parse(String(ev.data)) as { blur?: boolean; chat?: string; bc?: { room?: unknown; n?: unknown; names?: unknown } | null; co?: unknown };
+        if (onCoMsg(d)) return;
         if (typeof d.chat === "string") { const body = d.chat.slice(0, 200); setP2pLines((l) => [...l, { key: `p${Date.now()}${Math.random()}`, pseudo: peerRef.current?.pseudo ?? "?", body }].slice(-30)); setP2pChat(true); return; }
         const b = d.blur !== false; setTheyBlur((was) => { if (was && !b) toast(askSentRef.current ? "Il a accepté, il se montre 👀" : "Il se montre 👀"); return b; }); } catch { /* */ } };
     };
@@ -357,7 +382,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       localRef.current.getVideoTracks().forEach((t) => { t.stop(); localRef.current!.removeTrack(t); });
       localRef.current.addTrack(track);
       pipe.current?.setSource(localRef.current);
-      void bc.syncVideo();
+      void bc.syncVideo(); void co.syncVideo();
       if (!blurRef.current) {
         const sender = pc.current?.getSenders().find((x) => x.track?.kind === "video");
         if (sender) await sender.replaceTrack(track);
@@ -477,7 +502,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         </div>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
-          {gOn && !broadcasting && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy} onClick={() => setConfirmBc(true)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+          {gOn && !broadcasting && !co.room && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy} onClick={() => setConfirmBc(true)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
             className="flex h-9 items-center gap-1 rounded-full border border-[#FA6F6C] bg-black/50 px-2.5 text-xs font-bold text-[#FA6F6C] backdrop-blur disabled:opacity-50"><Radio className="size-4" /> Diffuser</button>}
           <ShareLiveButton compact />
           <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
@@ -537,7 +562,16 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {!broadcasting && <SwipeHint />}
       {!broadcasting && p2pChat && peer && <Chat room={null} lines={p2pLines} pops={[]} show canReport={false} reserve={corner === "br" ? "r" : corner === "bl" ? "l" : undefined} onP2P={sendP2P} />}
       {broadcasting && <BroadcastOverlay room={bc.room ?? "demo"} cam={bc.cam} onCam={() => void bc.toggleCam()} mic={mic} onMic={() => setMic(!mic)}
-        onStop={() => void bc.stop()} lk={bc.lk} reserve={corner === "br" ? "r" : corner === "bl" ? "l" : undefined} p2p={peer ? { lines: p2pLines, send: sendP2P } : undefined} />}
+        onStop={() => void bc.stop()} lk={bc.lk} reserve={corner === "br" ? "r" : corner === "bl" ? "l" : undefined} p2p={peer ? { lines: p2pLines, send: sendP2P } : undefined}
+        co={coWith} onState={(n, names) => bc.room && p2pSend({ bc: { room: bc.room, n, names } })} />}
+      {hostBc && !co.room && !broadcasting && coNo !== hostBc.room && peer && <CoInvite pseudo={peer.pseudo ?? "?"} n={hostBc.n} names={hostBc.names} busy={co.busy} onYes={() => void coJoin()} onNo={() => setCoNo(hostBc.room)} />}
+      {hostBc && co.room && (
+        <div data-testid="co-badge" className="absolute top-[8.75rem] left-3 z-20 flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <span className="rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">● Tu diffuses avec {peer?.pseudo} · 👁 {hostBc.n}</span>
+          <button type="button" data-testid="co-stop" onClick={coLeave} className="rounded-full bg-black/60 px-3 py-1 text-xs font-bold">Revenir en privé</button>
+        </div>
+      )}
+      {hostBc && !co.room && !broadcasting && coNo === hostBc.room && <button type="button" data-testid="co-reopen" onClick={() => setCoNo(null)} className="absolute top-[8.75rem] left-3 z-20 rounded-full border border-[#FA6F6C] bg-black/60 px-3 py-1 text-xs font-bold text-[#FA6F6C]">📣 {peer?.pseudo} diffuse · 👁 {hostBc.n}</button>}
       {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
