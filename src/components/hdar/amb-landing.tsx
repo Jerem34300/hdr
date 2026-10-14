@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ambApply, ambApplyStatus, ambMe, type AmbApplyForm, type AmbApplyStatus } from "@/lib/hdar/live";
-import { AmbassadorSpace } from "./ambassador";
+import { AmbassadorSpace, demoAmb } from "./ambassador";
 import { Mark, Wordmark } from "./logo";
 
 const CORAL = "#FA6F6C";
@@ -24,6 +24,49 @@ const EARN = [
   ["🍸", "25 % des abonnements des lieux", "Tu fais signer un bar, un club ou un sauna : 25 % de son abonnement net pendant 3 mois."],
   ["🏆", "+20 € de bonus", "Si tu atteins 50 inscrits validés dans le mois."],
 ] as const;
+
+
+// Simulateur — règles réelles du programme (0,50 €/validé, +20 € à 50/mois, plafond 100 €/mois,
+// 20 % du net des inscrits pendant 6 mois, 25 % de l'abonnement lieu 1 mois = 49 € pendant 3 mois).
+// Hypothèse affichée : 5 % des inscrits paient en moyenne 6,99 €/mois (pack 50 cœurs).
+const SIM = { perSignup: 0.5, bonus: 20, bonusAt: 50, cap: 100, userPct: 0.2, userMonths: 6, payRate: 0.05, avgSpend: 6.99, partnerPct: 0.25, partnerPrice: 49, partnerMonths: 3 };
+const fmt = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+function simulate(n: number, p: number) {
+  const signup = Math.min(SIM.cap, n * SIM.perSignup + (n >= SIM.bonusAt ? SIM.bonus : 0));
+  const users = n * SIM.userMonths * SIM.payRate * SIM.avgSpend * SIM.userPct;
+  const partners = p * SIM.partnerMonths * SIM.partnerPrice * SIM.partnerPct;
+  return { signup, users, partners, total: signup + users + partners };
+}
+function Simulator() {
+  const [n, setN] = useState(30);
+  const [p, setP] = useState(0);
+  const r = simulate(n, p);
+  const ex: [string, number, number][] = [["Le week-end, entre potes", 10, 0], ["Tu sors chaque semaine", 50, 0], ["Tu bosses ta ville", 100, 1]];
+  return (
+    <section className="rounded-3xl border border-line bg-surface p-5">
+      <p className="text-xs font-bold tracking-widest uppercase" style={{ color: GOLD }}>Simulateur</p>
+      <h2 className="mt-1 font-display text-2xl font-extrabold">Combien tu peux gagner ?</h2>
+      <label className="mt-4 block text-sm font-bold">Inscrits validés par mois : <span style={{ color: MINT }}>{n}</span>
+        <input type="range" min={0} max={200} step={5} value={n} onChange={(e) => setN(+e.target.value)} className="mt-2 w-full accent-[#3EE08F]" /></label>
+      <label className="mt-3 block text-sm font-bold">Lieux signés par mois (facultatif) : <span style={{ color: MINT }}>{p}</span>
+        <input type="range" min={0} max={5} step={1} value={p} onChange={(e) => setP(+e.target.value)} className="mt-2 w-full accent-[#3EE08F]" /></label>
+      <div className="mt-4 space-y-1.5 rounded-2xl bg-night p-4 text-sm">
+        <p className="flex justify-between"><span className="text-muted">Primes d'inscription{n >= SIM.bonusAt ? " (bonus inclus)" : ""}</span><b>{fmt(r.signup)}</b></p>
+        <p className="flex justify-between"><span className="text-muted">20 % de ce que dépensent tes inscrits</span><b>≈ {fmt(r.users)}</b></p>
+        <p className="flex justify-between"><span className="text-muted">25 % des abonnements des lieux</span><b>≈ {fmt(r.partners)}</b></p>
+        <p className="flex justify-between border-t border-line pt-2 text-base"><span className="font-bold">Estimation par mois</span><b style={{ color: MINT }}>≈ {fmt(r.total)}</b></p>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        {ex.map(([t, en, ep]) => (
+          <button type="button" key={t} onClick={() => { setN(en); setP(ep); }} className="rounded-2xl border border-line p-3 text-left text-sm">
+            <b className="block">{t}</b><span className="text-muted">{en} inscrits{ep ? ` + ${ep} lieu` : ""}/mois</span><b className="mt-1 block" style={{ color: MINT }}>≈ {fmt(simulate(en, ep).total)}/mois</b>
+          </button>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-muted">Estimation, pas une promesse. Calculée une fois ton rythme installé (après 6 mois au même rythme, car tu touches 20 % de chaque inscrit pendant 6 mois, et 25 % de chaque lieu pendant 3 mois). Hypothèse : 5 % de tes inscrits dépensent en moyenne 6,99 € par mois ; lieu à l'abonnement mensuel de 49 €. Montants avant frais de paiement et cotisations. Primes d'inscription plafonnées à 100 € par mois.</p>
+    </section>
+  );
+}
 
 const STEPS = [
   ["Tu postules", "Un petit questionnaire de 2 minutes, depuis ton profil hdar."],
@@ -99,6 +142,8 @@ export function AmbLanding({ onApply, status }: { onApply: () => void; status: A
           <li>• Aucun revenu n'est garanti : ça dépend de toi.</li>
         </ul>
       </section>
+
+      <Simulator />
 
       <section>
         <h2 className="font-display text-2xl font-extrabold">Tes outils</h2>
@@ -202,10 +247,11 @@ export function ApplyQuiz({ onBack, onDone, demo, start = 0 }: { onBack: () => v
 
 /** /ambassadeur : espace si ambassadeur ou lien de signature, sinon page de présentation + candidature. */
 export function AmbassadorPage() {
-  const [mode, setMode] = useState<"loading" | "space" | "landing" | "apply">("loading");
+  const [mode, setMode] = useState<"loading" | "space" | "demo" | "landing" | "apply">("loading");
   const [st, setSt] = useState<AmbApplyStatus | null>(null);
   const load = () => {
     const q = new URLSearchParams(location.search);
+    if (import.meta.env.DEV && q.has("demo")) return setMode(q.get("demo") === "landing" ? "landing" : "demo");
     if (q.get("i") || q.get("connect")) return setMode("space");
     void Promise.all([ambMe().catch(() => null), ambApplyStatus().catch(() => null)]).then(([me, s]) => {
       setSt(s);
@@ -223,6 +269,7 @@ export function AmbassadorPage() {
         <a href="/" className="text-sm text-muted underline">← Retour</a>
         {mode === "loading" && <p className="p-6 text-center text-muted">Chargement…</p>}
         {mode === "space" && <><h1 className="mt-2 mb-4 font-display text-3xl font-extrabold">🎯 Espace ambassadeur</h1><AmbassadorSpace /></>}
+        {mode === "demo" && <><h1 className="mt-2 mb-4 font-display text-3xl font-extrabold">🎯 Espace ambassadeur</h1><AmbassadorSpace demo={demoAmb()} /></>}
         {mode === "landing" && <AmbLanding status={st} onApply={apply} />}
         {mode === "apply" && <ApplyQuiz onBack={() => setMode("landing")} onDone={() => { setMode("loading"); load(); }} />}
       </div>
