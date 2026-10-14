@@ -260,3 +260,7 @@
 .gift-wiggle { animation: gift-wiggle 4s ease-in-out infinite; }
 @keyframes gift-wiggle { 0%, 88%, 100% { transform: rotate(0); } 91% { transform: rotate(-14deg); } 94% { transform: rotate(12deg); } 97% { transform: rotate(-6deg); } }
 @media (prefers-reduced-motion: reduce) { .gift-wiggle { animation: none; } }
+
+/* Live à plusieurs : cases du diffuseur */
+@keyframes tilein { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes tileout { from { transform: scale(1); opacity: 1; } to { transform: scale(.2); opacity: 0; } }

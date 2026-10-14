@@ -508,7 +508,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <ChevronUp className="size-5" /> Suivant <span className="text-xs font-normal opacity-70">· ou glisse vers le haut</span>
         </button>
       </div>
-      {bc.room && <BroadcastOverlay room={bc.room} cam={bc.cam} onCam={() => void bc.toggleCam()} onStop={() => void bc.stop()} />}
+      {bc.room && <BroadcastOverlay room={bc.room} cam={bc.cam} onCam={() => void bc.toggleCam()} onStop={() => void bc.stop()} lk={bc.lk} self={bc.self} selfBlur={false} />}
       {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}

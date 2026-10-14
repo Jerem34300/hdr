@@ -1,4 +1,7 @@
-// hdar-live-token — jeton LiveKit. Seule la personne qui diffuse publie ; les spectateurs (cachés) ne font que regarder.
+// hdar-live-token — jeton LiveKit. La personne qui diffuse publie caméra + micro et envoie les demandes (données).
+// Les spectateurs peuvent publier caméra / micro (jamais d'écran partagé, jamais de données) après avoir accepté ;
+// leurs pistes sont limitées au seul diffuseur (setTrackSubscriptionPermissions côté client, appliqué par le SFU).
+// Nom vide pour les spectateurs : les autres spectateurs ne voient pas leur pseudo.
 // Places limitées vérifiées en base (hdar_room_join, sérialisé) avant de signer le jeton.
 // Secrets : LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET (env) ou Vault via hdar_livekit_config (service_role).
 const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, x-client-info, apikey, content-type", "access-control-allow-methods": "POST, OPTIONS" };
@@ -39,7 +42,7 @@ Deno.serve(async (req) => {
     if (!/^[0-9a-f-]{36}$/i.test(String(body.room ?? ""))) return json({ error: "room" }, 400);
     const j = await userRpc(req, "hdar_room_join", { p_room: body.room, p_lat: body.lat ?? null, p_lng: body.lng ?? null });
     const stage = j.role === "stage";
-    const token = await sign(cfg, { sub: j.identity, name: j.pseudo ?? "", video: { room: j.room, roomJoin: true, canSubscribe: !stage, canPublish: stage, canPublishData: false, canUpdateOwnMetadata: false, hidden: !stage, recorder: false } });
+    const token = await sign(cfg, { sub: j.identity, name: stage ? j.pseudo ?? "" : "", video: { room: j.room, roomJoin: true, canSubscribe: true, canPublish: true, canPublishSources: ["camera", "microphone"], canPublishData: stage, canUpdateOwnMetadata: false, hidden: false, recorder: false } });
     return json({ configured: true, url: cfg.url, token, role: j.role, identity: j.identity });
   } catch (e) { return json({ error: e instanceof Error ? e.message : "erreur" }, 400); }
 });
