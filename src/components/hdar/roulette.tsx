@@ -3,7 +3,7 @@ import { FloatingHearts, HeartPacks } from "./hearts";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShareLiveButton } from "./live-share";
-import { ChevronUp, Crown, SwitchCamera, Eye, EyeOff, Flag, MessageCircle, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
+import { ChevronUp, Crown, SwitchCamera, EyeOff, Flag, MoreHorizontal, Radio, MessageCircle, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
 import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, liveEvent, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
@@ -14,7 +14,7 @@ import { usePremium } from "@/lib/hdar/premium";
 import { REPORT_REASONS } from "@/lib/hdar/report";
 import { proLiveNext } from "@/lib/hdar/live";
 import { PartnerBadge, ProGiftSheet, useMyPro } from "./pro-tools";
-import { BroadcastOverlay, Chat, CoachMark, SoundToast, WatchView, useBottomBar, useBroadcast, type ChatLine } from "./group-live";
+import { BroadcastOverlay, Chat, CoachMark, ConfirmBroadcast, NextChevron, SoundToast, SwipeHint, WatchView, useBottomBar, useBroadcast, type ChatLine } from "./group-live";
 import { groupEnabled, roomFeed, roomOf } from "@/lib/hdar/live";
 
 /**
@@ -88,6 +88,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
   const [filterOpen, setFilterOpen] = useState(() => typeof location !== "undefined" && new URLSearchParams(location.search).has("filters"));
   const [reporting, setReporting] = useState(false);
+  const [more, setMore] = useState(false);
+  const [confirmBc, setConfirmBc] = useState(() => !!demo && typeof location !== "undefined" && location.search.includes("confirm"));
   const localRef = useRef<MediaStream | null>(null);
   const meVid = useRef<HTMLVideoElement>(null);
   const themVid = useRef<HTMLVideoElement>(null);
@@ -120,7 +122,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     return () => { live = false; clearTimeout(t); localRef.current?.getTracks().forEach((t) => t.stop()); pipe.current?.stop(); };
   }, [e2e]); // eslint-disable-line react-hooks/exhaustive-deps
   const [corner, setCorner] = useState<"tl" | "tr" | "bl" | "br">("br");
-  const [big, setBig] = useState(false);
+  const big = false;
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const dragStart = useRef<{ x: number; y: number; ox: number; oy: number; moved: boolean } | null>(null);
   const prevBox = useRef<HTMLDivElement>(null);
@@ -473,15 +475,16 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           {peer && <PeerRegion id={peer.id} demo={!!demo} />}
                     {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
-          <ShareLiveButton />
-          <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
+          {gOn && !broadcasting && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy} onClick={() => setConfirmBc(true)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+            className="flex h-9 items-center gap-1 rounded-full border border-[#FA6F6C] bg-black/50 px-2.5 text-xs font-bold text-[#FA6F6C] backdrop-blur disabled:opacity-50"><Radio className="size-4" /> Diffuser</button>}
+          <ShareLiveButton compact />
+          <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
       </div>
-      {peer && !broadcasting && <button type="button" aria-label={blurred ? "Me montrer" : "Me flouter"} onClick={() => void setBlur(!blurred)} className="absolute inset-x-0 top-28 bottom-48" />}
       {peer && theyBlur && !broadcasting && (
-        <button type="button" onClick={() => void ask()} disabled={askSent} className="absolute top-[60%] left-1/2 z-[5] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold text-night shadow-[0_0_20px_#fbbf24] disabled:opacity-60">
+        <button type="button" onClick={() => void ask()} disabled={askSent} className="absolute top-[62%] left-1/2 z-[5] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold text-night shadow-[0_0_20px_#fbbf24] disabled:opacity-60">
           {askSent ? "Demande envoyée 👀" : <>Demande à se voir 👀{!premium && <Crown className="ml-1 inline size-4" />}</>}
         </button>
       )}
@@ -497,17 +500,17 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {peer && (theyBlur || blurred || phase !== "live" || !gotVideo) && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
           {phase !== "live" || !gotVideo ? <span className="inline-flex items-center gap-2">Connexion…</span> : theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Caméra floutée</span>}
-          {blurred && <span className="text-xs font-normal text-white/85">{pro ? "👆 Appuyez au milieu pour vous montrer" : "👆 Appuie au milieu pour te montrer"}</span>}
+          {blurred && <span className="text-xs font-normal text-white/85">{pro ? "👆 Touchez votre aperçu pour vous montrer" : "👆 Touche ton aperçu pour te montrer"}</span>}
         </span>
       )}
       <div ref={prevBox}
-        className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big && !broadcasting ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 left-3" : corner === "tr" ? "top-28 right-3" : corner === "bl" ? "left-3" : "right-3"}`}
+        data-testid="self-preview" role="button" aria-label={blurred ? "Me montrer" : "Me flouter"} className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big && !broadcasting ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 left-3" : corner === "tr" ? "top-28 right-3" : corner === "bl" ? "left-3" : "right-3"}`}
         style={drag ? { left: drag.x, top: drag.y } : corner[0] === "b" ? { bottom: "calc(var(--live-bb, 11rem) + 0.5rem)" } : undefined}
         onPointerDown={(e) => { const r = prevBox.current!.getBoundingClientRect(); dragStart.current = { x: e.clientX, y: e.clientY, ox: r.left, oy: r.top, moved: false }; (e.target as Element).setPointerCapture?.(e.pointerId); e.stopPropagation(); }}
         onPointerMove={(e) => { const d = dragStart.current; if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.moved && Math.hypot(dx, dy) < 8) return; d.moved = true; setDrag({ x: d.ox + dx, y: d.oy + dy }); }}
         onPointerUp={(e) => {
           const d = dragStart.current; dragStart.current = null; e.stopPropagation();
-          if (!d?.moved) { setBig((b) => !b); return; }
+          if (!d?.moved) { void setBlur(!blurred); return; }
           const r = prevBox.current!.getBoundingClientRect();
           const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
           setCorner(`${cy < window.innerHeight / 2 ? "t" : "b"}${cx < window.innerWidth / 2 ? "l" : "r"}` as "tl");
@@ -515,48 +518,43 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         }}
         onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
         <video ref={meVid} autoPlay playsInline muted className="pointer-events-none size-full -scale-x-100 object-cover" style={{ filter: blurred ? "blur(4px)" : "none" }} />
-        <span className={`absolute top-1 left-1 rounded-full px-1.5 text-[9px] font-bold ${blurred ? "bg-black/60" : "bg-[#A1E3C3] text-night"}`}>{blurred ? "Flouté" : "Visible"}</span>
+        <span data-testid="self-badge" className={`absolute inset-x-1 bottom-1 rounded-full py-0.5 text-center text-[9px] font-bold ${blurred ? "bg-black/70" : "bg-[#A1E3C3] text-night"}`}>{blurred ? "Flouté · toucher" : "Visible"}</span>
         
       </div>
-      {!broadcasting && <div ref={bottomBar} className="absolute inset-x-0 bottom-0 z-[11] space-y-3 bg-gradient-to-t from-black/80 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className="flex justify-center"><button type="button" onClick={() => void setBlur(!blurred)} className={`rounded-full px-4 py-1.5 text-sm font-bold backdrop-blur ${blurred ? "border border-white/70 bg-white/10" : "bg-[#A1E3C3] text-night"}`}>
-          {blurred ? <span className="inline-flex items-center gap-1.5"><Eye className="size-4" /> {pro ? "Vous êtes flouté · vous montrer" : "Tu es flouté · te montrer"}</span> : <span className="inline-flex items-center gap-1.5"><EyeOff className="size-4" /> {pro ? "Vous êtes visible · vous flouter" : "Tu es visible · te flouter"}</span>}
-        </button></div>
-        <div className="flex items-center justify-center gap-2.5">
+      {!broadcasting && <div ref={bottomBar} data-testid="bar" className="absolute inset-x-0 bottom-0 z-[11] bg-gradient-to-t from-black/60 to-transparent px-4 pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center gap-4">
           <Round label="Retourner la caméra" on={false} onClick={() => void flip()}><SwitchCamera className="size-5" /></Round>
-          <Round label={mic ? "Couper le micro" : "Activer le micro"} on={mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>
-          <Round label="Revenir en arrière (hdar+)" on={false} onClick={() => { if (!premium) return void nav({ to: "/premium" }); if (!prev) return toast("Personne avant"); void next(prev.id); }}>
-            <RotateCcw className="size-5" />{!premium && <Crown className="absolute -top-1 -right-1 size-4 text-[#fbbf24]" />}
-          </Round>
-          <Round label="Filtres Live (hdar+)" on={!!(filters.iam.length || filters.minAge || filters.maxAge)} onClick={() => (premium ? setFilterOpen(true) : void nav({ to: "/premium" }))}>
-            <SlidersHorizontal className="size-5" />{!premium && <Crown className="absolute -top-1 -right-1 size-4 text-[#fbbf24]" />}
-          </Round>
+          <Round label={mic ? "Couper le micro" : "Activer le micro"} on={!mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>
           <Round label={p2pChat ? "Fermer le chat" : "Chat privé"} on={p2pChat} onClick={() => setP2pChat(!p2pChat)}><MessageCircle className="size-5" /></Round>
           <Round label="Envoyer un cœur" on={false} onClick={() => void sendHeart()}>
             <span className="text-lg">❤️</span>
             <span className="absolute -top-1 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts === Infinity ? "∞" : hearts ?? "·"}</span>
           </Round>
-          {pro && <Round label="Cadeau pro" on={false} onClick={() => peer && proPlace && setGiftOpen(true)}><span className="text-lg">🎁</span></Round>}
-          <Round label="Signaler" on={false} danger onClick={() => peer && setReporting(true)}><Flag className="size-5" /></Round>
+          <Round label="Plus d'options" on={more} onClick={() => setMore(true)}><MoreHorizontal className="size-5" /></Round>
         </div>
-        {gOn && !bc.room && (
-          <button type="button" disabled={bc.busy} onClick={() => void bc.start()} className="w-full rounded-full border-2 border-[#FA6F6C] bg-black/40 py-2.5 font-display text-lg font-bold text-[#FA6F6C] shadow-[0_0_24px_#FA6F6C88] backdrop-blur disabled:opacity-50">
-            ➕ Inviter <span className="text-xs font-normal text-white/80">· ouvre ta caméra aux gens qui font défiler</span>
-          </button>
-        )}
-        <button type="button" onClick={() => !demo && void next()} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3 font-display font-bold text-night">
-          <ChevronUp className="size-5" /> Suivant <span className="text-xs font-normal opacity-70">· ou glisse vers le haut</span>
-        </button>
       </div>}
+      {!broadcasting && peer && <NextChevron onClick={() => !demo && void next()} />}
+      {!broadcasting && <SwipeHint />}
       {!broadcasting && p2pChat && peer && <Chat room={null} lines={p2pLines} pops={[]} show canReport={false} reserve={corner === "br" ? "r" : corner === "bl" ? "l" : undefined} onP2P={sendP2P} />}
-      {broadcasting && <BroadcastOverlay room={bc.room ?? "demo"} cam={bc.cam} onCam={() => void bc.toggleCam()} mic={mic} onMic={() => setMic(!mic)} blurred={blurred} onBlur={() => void setBlur(!blurred)}
+      {broadcasting && <BroadcastOverlay room={bc.room ?? "demo"} cam={bc.cam} onCam={() => void bc.toggleCam()} mic={mic} onMic={() => setMic(!mic)}
         onStop={() => void bc.stop()} lk={bc.lk} reserve={corner === "br" ? "r" : corner === "bl" ? "l" : undefined} p2p={peer ? { lines: p2pLines, send: sendP2P } : undefined} />}
       {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
       {packsOpen && <HeartPacks empty={!hearts} onClose={() => setPacksOpen(false)} demo={demo ? [{ product: "hearts_10", kind: "hearts", label: "10 cœurs", price_cents: 199 }, { product: "hearts_50", kind: "hearts", label: "50 cœurs", price_cents: 699 }, { product: "hearts_150", kind: "hearts", label: "150 cœurs", price_cents: 1499 }] : undefined} />}
+      {more && (
+        <div data-testid="more-sheet" className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setMore(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
+            <MoreItem icon={<RotateCcw className="size-5" />} label="Revenir à la personne d'avant" crown={!premium} onClick={() => { setMore(false); if (!premium) return void nav({ to: "/premium" }); if (!prev) return toast("Personne avant"); void next(prev.id); }} />
+            <MoreItem icon={<SlidersHorizontal className="size-5" />} label="Filtres Live" crown={!premium} onClick={() => { setMore(false); if (premium) setFilterOpen(true); else void nav({ to: "/premium" }); }} />
+            {pro && <MoreItem icon={<span className="text-lg">🎁</span>} label="Cadeau pro" onClick={() => { setMore(false); if (peer && proPlace) setGiftOpen(true); }} />}
+            <MoreItem icon={<Flag className="size-5" />} label={`Signaler ${peer?.pseudo ?? ""}`} danger onClick={() => { setMore(false); if (peer) setReporting(true); }} />
+          </div>
+        </div>
+      )}
+      {confirmBc && <ConfirmBroadcast onOk={() => { setConfirmBc(false); if (!demo || e2e) void bc.start(); }} onCancel={() => setConfirmBc(false)} />}
       {reporting && (
-        <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setReporting(false)}>
+        <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setReporting(false)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display font-bold">Signaler {peer?.pseudo} — il sera bloqué tout de suite</p>
             {["Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => void report(r)} className="block w-full rounded-xl bg-night px-4 py-3 text-left text-sm">{r}</button>)}
@@ -580,9 +578,13 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   );
 }
 
-function Round({ children, label: l, on, danger, onClick }: { children: React.ReactNode; label: string; on: boolean; danger?: boolean; onClick: () => void }) {
-  return <button type="button" aria-label={l} title={l} onClick={onClick} className={`relative flex size-11 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-500/80" : on ? "bg-white text-night" : "bg-white/15"}`}>{children}</button>;
+function Round({ children, label: l, on, onClick }: { children: React.ReactNode; label: string; on: boolean; onClick: () => void }) {
+  return <button type="button" aria-label={l} title={l} onClick={onClick} className={`relative flex size-11 items-center justify-center rounded-full backdrop-blur ${on ? "bg-white text-night" : "bg-black/35"}`}>{children}</button>;
 }
+function MoreItem({ icon, label: l, crown, danger, onClick }: { icon: React.ReactNode; label: string; crown?: boolean; danger?: boolean; onClick: () => void }) {
+  return <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold ${danger ? "bg-red-500/15 text-red-400" : "bg-night text-white"}`}>{icon}<span className="flex-1">{l}</span>{crown && <Crown className="size-4 text-[#fbbf24]" />}</button>;
+}
+
 
 function PeerPhoto({ id }: { id: string }) {
   const src = usePhoto(id === "demo" ? null : id);

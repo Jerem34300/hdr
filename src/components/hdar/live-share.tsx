@@ -7,23 +7,48 @@ import { Wordmark } from "./logo";
 import { PLACE_KINDS } from "./places-layer";
 import { adultConfirmed, confirmAdult } from "@/lib/hdar/session";
 
-/** Bouton « Partager mon live » (dans le Live). Ne compte pour la récompense hebdo que pour son propre lien. */
-export function ShareLiveButton() {
-  const [busy, setBusy] = useState(false);
-  const go = async () => {
-    if (busy) return; setBusy(true);
-    try {
-      const { code } = await liveShareCreate();
-      const url = `https://hdar.chat/live/${code}`;
-      const text = "Je suis en Live sur hdar. 🎥 Viens voir qui est dans le coin !";
-      let shared = false;
-      if (navigator.share) shared = await navigator.share({ title: "hdar. — mon live", text, url }).then(() => true, () => false);
-      else { await navigator.clipboard.writeText(url); toast("Lien copié 📋"); shared = true; }
-      if (shared) { const r = await liveShareDone(code).catch(() => null); if (r) { void usePremium.getState().refresh(); toast(`Merci du partage 🎁 ${r.label}`); } }
-    } catch (e) { toast(e instanceof Error ? e.message.replace(/^.*?: /, "") : "Partage impossible"); }
-    finally { setBusy(false); }
+/** Lien de partage préparé À L'AVANCE : navigator.share doit partir dans le geste (Chrome Android refuse après un await réseau). */
+let shareCache: Promise<string> | null = null;
+const shareCode = () => (shareCache ??= liveShareCreate().then((r) => r.code).catch((e) => { shareCache = null; throw e; }));
+const shareUrl = (code: string) => `https://hdar.chat/live/${code}`;
+
+async function copyText(t: string): Promise<boolean> {
+  try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(t); return true; } } catch { /* repli */ }
+  try { const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch { return false; }
+}
+
+/**
+ * Bouton « Partager mon live » (1:1, diffusion, spectateur). Cause du bug Android : on attendait la création du lien
+ * (appel réseau) AVANT navigator.share ; le geste était « consommé », share() rejetait (NotAllowedError) et l'erreur
+ * était avalée : rien ne se passait. Désormais le lien est préchargé au montage, share() part tout de suite dans le clic,
+ * et sinon on copie le lien (toast « Lien copié »). AbortError (l'utilisateur ferme la feuille) : silencieux.
+ */
+export function ShareLiveButton({ compact }: { compact?: boolean }) {
+  const [code, setCode] = useState<string | null>(null);
+  const busy = useRef(false);
+  useEffect(() => { let on = true; void shareCode().then((c) => on && setCode(c)).catch(() => undefined); return () => { on = false; }; }, []);
+  const done = async (c: string) => { const r = await liveShareDone(c).catch(() => null); if (r) { void usePremium.getState().refresh(); toast(`Merci du partage 🎁 ${r.label}`); } };
+  const fallback = async (url: string, c: string) => { if (await copyText(url)) { toast("Lien copié 📋"); void done(c); } else toast(`Copie impossible : ${url}`); };
+  const go = () => {
+    if (busy.current) return;
+    const text = "Je suis en Live sur hdar. 🎥 Viens voir qui est dans le coin !";
+    if (!code) { // lien pas encore prêt : on le crée puis on copie (le presse-papiers tolère mieux l'attente que share)
+      busy.current = true;
+      void shareCode().then((c) => { setCode(c); return fallback(shareUrl(c), c); }).catch((e) => toast(e instanceof Error ? e.message.replace(/^.*?: /, "") : "Partage impossible")).finally(() => (busy.current = false));
+      return;
+    }
+    const url = shareUrl(code); const data = { title: "hdar. — mon live", text, url };
+    if (typeof navigator.share === "function" && (!navigator.canShare || navigator.canShare(data))) {
+      busy.current = true;
+      navigator.share(data).then(() => void done(code), (e: unknown) => {
+        const n = (e as { name?: string })?.name;
+        if (n === "AbortError") return; // fermé par l'utilisateur
+        void fallback(url, code); // NotAllowedError (geste perdu), feuille indisponible…
+      }).finally(() => (busy.current = false));
+    } else void fallback(url, code);
   };
-  return <button type="button" aria-label="Partager mon live" onClick={() => void go()} className="flex h-10 items-center gap-1.5 rounded-full bg-black/50 px-3 text-xs font-bold"><Share2 className="size-4" /> Partager</button>;
+  return <button type="button" data-testid="share" aria-label="Partager mon live" onClick={go} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+    className={`flex h-9 items-center gap-1 rounded-full bg-black/50 text-xs font-bold backdrop-blur ${compact ? "w-9 justify-center" : "px-3"}`}><Share2 className="size-4" />{!compact && " Partager"}</button>;
 }
 
 const TILE = 256;

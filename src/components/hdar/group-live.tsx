@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Room, RoomEvent, Track, type LocalTrack, type LocalTrackPublication, type RemoteParticipant, type RemoteTrack, type RemoteTrackPublication } from "livekit-client";
-import { ChevronUp, Eye, EyeOff, Flag, MessageCircle, MessageCircleOff, Mic, MicOff, Video, VideoOff, X } from "lucide-react";
+import { ChevronUp, Flag, MessageCircle, MessageCircleOff, Mic, MicOff, MoreHorizontal, Radio, Video, VideoOff, X } from "lucide-react";
+import { ShareLiveButton } from "./live-share";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { myHearts, roomLeave, roomOpen, roomReportMsg, roomSay, roomStage, roomState, roomToken, rouletteReport, type RoomMsg, type RoomState } from "@/lib/hdar/live";
 import { usePhoto } from "@/lib/hdar/photos";
@@ -298,13 +299,39 @@ export function ViewerStrip({ viewers, onOpen }: { viewers: GridViewer[]; onOpen
   );
 }
 
-/** Bouton de la barre du bas : icône + texte dessous, pour que tout le monde comprenne. */
+/** Bouton de la barre du bas : rond compact (libellé en aria-label) ; « wide » = pilule avec texte (Arrêter la diffusion). */
 export function BarBtn({ label, on, danger, wide, onClick, children, testid }: { label: string; on?: boolean; danger?: boolean; wide?: boolean; onClick: () => void; children: React.ReactNode; testid?: string }) {
+  if (wide) return <button type="button" data-testid={testid} aria-label={label} onClick={onClick} className={`flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-bold ${danger ? "bg-red-600 text-white" : "bg-white/15 text-white"}`}>{children}{label}</button>;
+  return <button type="button" data-testid={testid} aria-label={label} title={label} onClick={onClick} className={`relative flex size-11 shrink-0 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-600 text-white" : on ? "bg-white text-night" : "bg-black/35 text-white"}`}>{children}</button>;
+}
+
+/** Petite flèche « suivant » sur le bord droit (accessibilité) : hors de la zone de glissement centrale. */
+export function NextChevron({ onClick, testid }: { onClick: () => void; testid?: string }) {
+  return <button type="button" data-testid={testid ?? "next"} aria-label="Live suivant" onClick={onClick} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+    className="absolute top-1/2 right-1.5 z-[9] flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/80 backdrop-blur"><ChevronUp className="size-4" /></button>;
+}
+
+/** Indice « ↑ glisse pour la suite » : les 3 premières fois seulement, s'efface tout seul. */
+const HINT_KEY = "hdar-live-swipehint";
+export function SwipeHint() {
+  const [show, setShow] = useState(() => { try { const n = Number(localStorage.getItem(HINT_KEY) ?? 0); if (n >= 3 && !location.search.includes("hint")) return false; localStorage.setItem(HINT_KEY, String(n + 1)); return true; } catch { return false; } });
+  useEffect(() => { if (!show || location.search.includes("hint")) return; const t = setTimeout(() => setShow(false), 4000); return () => clearTimeout(t); }, [show]);
+  if (!show) return null;
+  return <span data-testid="swipe-hint" className="pointer-events-none absolute left-1/2 z-[9] -translate-x-1/2 animate-[pulse_2s_ease-in-out_infinite] rounded-full bg-black/40 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur" style={{ bottom: "calc(var(--live-bb, 5rem) + 0.75rem)" }}>↑ glisse pour la suite</span>;
+}
+
+/** Confirmation avant d'ouvrir sa caméra au fil : pas de diffusion lancée par erreur. */
+export function ConfirmBroadcast({ onOk, onCancel }: { onOk: () => void; onCancel: () => void }) {
   return (
-    <button type="button" data-testid={testid} aria-label={label} onClick={onClick} className={`flex ${wide ? "min-w-[5.5rem]" : "w-14"} shrink-0 flex-col items-center gap-1 text-[10px] leading-tight font-semibold`}>
-      <span className={`flex size-11 items-center justify-center rounded-full backdrop-blur ${danger ? "bg-red-600 text-white" : on ? "bg-white text-night" : "bg-white/15 text-white"}`}>{children}</span>
-      <span className={danger ? "text-red-300" : ""}>{label}</span>
-    </button>
+    <div data-testid="confirm-bc" className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={onCancel} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+      <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
+        <p className="flex items-center gap-2 font-display text-lg font-bold"><Radio className="size-5 text-[#FA6F6C]" /> Ouvrir ta caméra aux gens qui font défiler ?</p>
+        <p className="text-sm text-ink/75">Jusqu'à 6 personnes pourront te voir et t'entendre en même temps. Ton partenaire en face à face reste privé : il n'est jamais montré. Tu arrêtes quand tu veux.</p>
+        <p className="text-[11px] text-ink/55">{FULL_RULES}</p>
+        <button type="button" data-testid="confirm-bc-ok" onClick={onOk} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">Diffuser</button>
+        <button type="button" onClick={onCancel} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Annuler</button>
+      </div>
+    </div>
   );
 }
 
@@ -312,8 +339,8 @@ export function BarBtn({ label, on, danger, wide, onClick, children, testid }: {
  * Surcouche du diffuseur (dans son 1:1) : le partenaire reste en plein écran, UN seul petit aperçu de soi (celui du 1:1),
  * un badge « En diffusion », le bandeau des spectateurs, le chat et UNE barre de boutons nommés.
  */
-export function BroadcastOverlay({ room, cam, onCam, mic, onMic, blurred, onBlur, onStop, lk, reserve, p2p }: {
-  room: string; cam: boolean; onCam: () => void; mic: boolean; onMic: () => void; blurred: boolean; onBlur: () => void; onStop: () => void; lk: Room | null; reserve?: "l" | "r";
+export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, reserve, p2p }: {
+  room: string; cam: boolean; onCam: () => void; mic: boolean; onMic: () => void; onStop: () => void; lk: Room | null; reserve?: "l" | "r";
   p2p?: { lines: ChatLine[]; send: (b: string, echo: boolean) => void };
 }) {
   const { st, msgs, pops, refresh } = useRoomState(room === "demo" ? null : room, () => { toast("Ta diffusion s'est arrêtée"); onStop(); });
@@ -343,13 +370,12 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, blurred, onBlur
       <ViewerStrip viewers={viewers} onOpen={(id) => setList(id)} />
       <SoundToast show={needTap} onTap={() => { void lk?.startAudio(); setNeedTap(false); }} />
       <Chat room={room} lines={lines} pops={pops} show={chat} canReport reserve={reserve} onP2P={p2p?.send} onSent={refresh} />
-      <div ref={bar} data-testid="bc-bar" className="absolute inset-x-0 bottom-0 z-[12] bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-        <div className="flex items-end justify-between gap-1">
-          <BarBtn testid="bc-cam" label={cam ? "Caméra" : "Caméra coupée"} on={cam} onClick={onCam}>{cam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</BarBtn>
-          <BarBtn testid="bc-mic" label={mic ? "Micro" : "Micro coupé"} on={mic} onClick={onMic}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</BarBtn>
-          <BarBtn testid="bc-blur" label={blurred ? "Flouté" : "Visible"} on={!blurred} onClick={onBlur}>{blurred ? <EyeOff className="size-5" /> : <Eye className="size-5" />}</BarBtn>
-          <BarBtn testid="bc-chat" label={chat ? "Chat" : "Chat caché"} on={chat} onClick={() => setChat(!chat)}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</BarBtn>
-          <BarBtn testid="bc-stop" label="Arrêter la diffusion" danger wide onClick={onStop}><X className="size-5" /></BarBtn>
+      <div ref={bar} data-testid="bc-bar" className="absolute inset-x-0 bottom-0 z-[12] bg-gradient-to-t from-black/60 to-transparent px-4 pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center gap-3">
+          <BarBtn testid="bc-cam" label={cam ? "Couper ma caméra pour les spectateurs" : "Rallumer ma caméra pour les spectateurs"} on={!cam} onClick={onCam}>{cam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-mic" label={mic ? "Couper le micro" : "Activer le micro"} on={!mic} onClick={onMic}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-chat" label={chat ? "Masquer le chat" : "Afficher le chat"} on={!chat} onClick={() => setChat(!chat)}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</BarBtn>
+          <BarBtn testid="bc-stop" label="Arrêter la diffusion" danger wide onClick={onStop}><X className="size-4" /></BarBtn>
         </div>
       </div>
       {list !== false && (
@@ -384,6 +410,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
   const [needTap, setNeedTap] = useState(false);
   const [chat, setChat] = useState(true);
   const [reporting, setReporting] = useState(false);
+  const [more, setMore] = useState(false);
   const bottomBar = useBottomBar<HTMLDivElement>();
   const lk = useRef<Room | null>(null);
   const hostId = useRef<string | null>(null);
@@ -500,23 +527,32 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           <span className="mt-1 inline-block rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80">{RULES}</span>
         </div>
         <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE · 👁 {st?.viewers ?? 0}/{st?.cap ?? 6}</span>
-        <button type="button" aria-label="Signaler" onClick={() => setReporting(true)} className="flex size-10 items-center justify-center rounded-full bg-red-500/80"><Flag className="size-5" /></button>
-        <button type="button" aria-label="Quitter" onClick={() => { leave(); onExit(); }} className="flex size-10 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
+        <ShareLiveButton compact />
+        <button type="button" aria-label="Quitter" onClick={() => { leave(); onExit(); }} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
       </div>
       <Chat room={room} lines={lines} pops={pops} show={chat} canReport onSent={refresh} />
-      <div ref={bottomBar} data-testid="watch-bar" className="absolute inset-x-0 bottom-0 z-[12] bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-        <div className="flex items-end justify-between gap-1">
-          <BarBtn testid="w-cam" label={myCam ? "Ma caméra" : "Caméra"} on={myCam} onClick={() => myCam ? void setMine("cam", false) : setAsked("cam")}>{myCam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</BarBtn>
-          <BarBtn testid="w-mic" label={myMic ? "Mon micro" : "Micro"} on={myMic} onClick={() => myMic ? void setMine("mic", false) : setAsked("mic")}>{myMic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</BarBtn>
-          <BarBtn testid="w-chat" label={chat ? "Chat" : "Chat caché"} on={chat} onClick={() => setChat(!chat)}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</BarBtn>
-          <BarBtn testid="w-next" label="Suivant" wide onClick={() => { leave(); onNext(); }}><ChevronUp className="size-5" /></BarBtn>
+      <div ref={bottomBar} data-testid="watch-bar" className="absolute inset-x-0 bottom-0 z-[12] bg-gradient-to-t from-black/60 to-transparent px-4 pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center gap-4">
+          <BarBtn testid="w-cam" label={myCam ? "Couper ma caméra" : "Allumer ma caméra (vue par la personne qui diffuse seulement)"} on={myCam} onClick={() => myCam ? void setMine("cam", false) : setAsked("cam")}>{myCam ? <Video className="size-5" /> : <VideoOff className="size-5" />}</BarBtn>
+          <BarBtn testid="w-mic" label={myMic ? "Couper mon micro" : "Allumer mon micro"} on={myMic} onClick={() => myMic ? void setMine("mic", false) : setAsked("mic")}>{myMic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</BarBtn>
+          <BarBtn testid="w-chat" label={chat ? "Masquer le chat" : "Afficher le chat"} on={!chat} onClick={() => setChat(!chat)}>{chat ? <MessageCircle className="size-5" /> : <MessageCircleOff className="size-5" />}</BarBtn>
+          <BarBtn testid="w-more" label="Plus d'options" on={more} onClick={() => setMore(true)}><MoreHorizontal className="size-5" /></BarBtn>
         </div>
       </div>
-      {preview && (
-        <div className="absolute top-28 right-3 z-20 h-36 w-24 overflow-hidden rounded-2xl border-2 border-[#A1E3C3]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-          <TrackVideo track={preview} mirror />
-          <button type="button" onClick={() => void toggleBlur()} className={`absolute inset-x-1 bottom-1 rounded-full px-1 text-[9px] font-bold ${myBlur ? "bg-black/60" : "bg-[#A1E3C3] text-night"}`}>{myBlur ? "Flouté · me montrer" : "Visible · me flouter"}</button>
+      <NextChevron testid="w-next" onClick={() => { leave(); onNext(); }} />
+      <SwipeHint />
+      {more && (
+        <div data-testid="w-more-sheet" className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setMore(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => { setMore(false); setReporting(true); }} className="flex w-full items-center gap-3 rounded-xl bg-red-500/15 px-4 py-3 text-left text-sm font-semibold text-red-400"><Flag className="size-5" /> Signaler {st?.host_pseudo ?? ""}</button>
+          </div>
         </div>
+      )}
+      {preview && (
+        <button type="button" data-testid="w-self" aria-label={myBlur ? "Me montrer" : "Me flouter"} onClick={() => void toggleBlur()} className="absolute top-28 left-3 z-20 h-36 w-24 overflow-hidden rounded-2xl border-2 border-[#A1E3C3]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <TrackVideo track={preview} mirror />
+          <span className={`absolute inset-x-1 bottom-1 rounded-full py-0.5 text-[9px] font-bold ${myBlur ? "bg-black/70" : "bg-[#A1E3C3] text-night"}`}>{myBlur ? "Flouté · toucher" : "Visible"}</span>
+        </button>
       )}
       {asked && (
         <div className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={() => setAsked(null)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
@@ -549,7 +585,7 @@ export function CoachMark({ group }: { group: boolean }) {
   const items: [string, string][] = [
     ["👆", "Glisse vers le haut pour passer au Live suivant, à l'infini."],
     ...(group ? [
-      ["📣", "« Inviter » ouvre ta caméra aux gens qui font défiler le Live (6 places). Ton partenaire en 1:1 reste en privé : il n'est jamais montré."],
+      ["📡", "« Diffuser » (en haut) ouvre ta caméra aux gens qui font défiler le Live (6 places). Ton partenaire en 1:1 reste en privé : il n'est jamais montré."],
       ["👁", "Quand tu tombes sur quelqu'un qui diffuse, tu le vois, tu l'entends et tu chattes. Personne ne te voit, sauf si tu acceptes d'allumer ta caméra ou ton micro : seule la personne qui diffuse te voit alors, jamais les autres."],
     ] as [string, string][] : []),
     ["📷", "Coupe ou rallume ta caméra 📷, ton micro 🎤 et le chat 💬 quand tu veux."],
