@@ -1,6 +1,6 @@
 // hdar service worker: makes the web app installable and shows a page offline.
 // Never caches API traffic (Supabase) or private data.
-const CACHE = "hdar-v4";
+const CACHE = "hdar-v5";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/badge-96.png", "/favicon.svg"];
 
 self.addEventListener("install", (e) => {
@@ -37,7 +37,7 @@ self.addEventListener("fetch", (e) => {
   }
 });
 
-// Web Push: new private message / favorite on the map.
+// Web Push: private messages only (one notification per conversation, collapsed by tag).
 self.addEventListener("push", (e) => {
   let d = {};
   try {
@@ -48,14 +48,14 @@ self.addEventListener("push", (e) => {
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
       // App open and visible: it already plays its own sound + toast.
-      if (wins.some((w) => w.visibilityState === "visible")) return;
+      if (wins.some((w) => w.visibilityState === "visible" || w.focused)) return;
       return self.registration.showNotification(d.title || "hdar.", {
         body: d.body || "",
         tag: d.tag || "hdar",
-        renotify: true,
+        renotify: false,
         icon: "/icon-192.png",
         badge: "/badge-96.png",
-        vibrate: d.type === "favorite" ? [40, 30, 40, 30, 90] : [60, 40, 60],
+        vibrate: [60, 40, 60],
         data: { url: d.url || "/" },
       });
     }),

@@ -187,6 +187,8 @@ export async function sendLive({ data }: { data: { self: string; to: string; bod
     .slice(0, 500);
   if (!body) return;
   await rpc("hdar_send", { p_self: selfId(data.self), p_to: otherId(data.to), p_body: body });
+  // Propose push notifications only after a real conversation gesture, never on load.
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("hdar-ask-push"));
 }
 
 export async function sendMedia({
