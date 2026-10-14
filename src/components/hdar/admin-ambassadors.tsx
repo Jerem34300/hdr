@@ -129,7 +129,7 @@ export function demoAdminAmbs(): AdminAmb[] {
 }
 
 function BudgetBox({ adminKey, demo }: { adminKey: string; demo: boolean }) {
-  const [b, setB] = useState<AmbBudget | null>(demo ? { signup_cap_cents: 10000, global_budget_cents: 50000, month_requested_cents: 12350, month_used_cents: 12350, factor: 1 } : null);
+  const [b, setB] = useState<AmbBudget | null>(demo ? { signup_cap_cents: 5000, global_budget_cents: 35000, month_requested_cents: 12350, month_used_cents: 12350, factor: 1 } : null);
   const [cap, setCap] = useState(""); const [bud, setBud] = useState("");
   useEffect(() => { if (!demo) void adminAmbBudget(adminKey).then(setB).catch(() => undefined); }, [adminKey, demo]);
   if (!b) return null;

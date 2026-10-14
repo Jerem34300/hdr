@@ -26,10 +26,10 @@ const EARN = [
 ] as const;
 
 
-// Simulateur — règles réelles du programme (0,50 €/validé, +20 € à 50/mois, plafond 100 €/mois,
+// Simulateur — règles réelles du programme (0,50 €/validé, +20 € à 50/mois, plafond 50 €/mois (hdar.amb_settings),
 // 20 % du net des inscrits pendant 6 mois, 25 % de l'abonnement lieu 1 mois = 49 € pendant 3 mois).
 // Hypothèse affichée : 5 % des inscrits paient en moyenne 6,99 €/mois (pack 50 cœurs).
-const SIM = { perSignup: 0.5, bonus: 20, bonusAt: 50, cap: 100, userPct: 0.2, userMonths: 6, payRate: 0.05, avgSpend: 6.99, partnerPct: 0.25, partnerPrice: 49, partnerMonths: 3 };
+const SIM = { perSignup: 0.5, bonus: 20, bonusAt: 50, cap: 50, userPct: 0.2, userMonths: 6, payRate: 0.05, avgSpend: 6.99, partnerPct: 0.25, partnerPrice: 49, partnerMonths: 3 };
 const fmt = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 function simulate(n: number, p: number) {
   const signup = Math.min(SIM.cap, n * SIM.perSignup + (n >= SIM.bonusAt ? SIM.bonus : 0));
@@ -63,7 +63,7 @@ function Simulator() {
           </button>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted">Estimation, pas une promesse. Calculée une fois ton rythme installé (après 6 mois au même rythme, car tu touches 20 % de chaque inscrit pendant 6 mois, et 25 % de chaque lieu pendant 3 mois). Hypothèse : 5 % de tes inscrits dépensent en moyenne 6,99 € par mois ; lieu à l'abonnement mensuel de 49 €. Montants avant frais de paiement et cotisations. Primes d'inscription plafonnées à 100 € par mois.</p>
+      <p className="mt-3 text-xs text-muted">Estimation, pas une promesse. Calculée une fois ton rythme installé (après 6 mois au même rythme, car tu touches 20 % de chaque inscrit pendant 6 mois, et 25 % de chaque lieu pendant 3 mois). Hypothèse : 5 % de tes inscrits dépensent en moyenne 6,99 € par mois ; lieu à l'abonnement mensuel de 49 €. Montants avant frais de paiement et cotisations. Primes d'inscription plafonnées à 50 € par mois.</p>
     </section>
   );
 }
@@ -77,7 +77,7 @@ const STEPS = [
 
 const FAQ = [
   ["Combien je vais gagner ?", "Ça dépend uniquement de toi et des gens que tu fais venir : on ne promet aucun revenu. Les commissions ne portent que sur l'argent réellement encaissé par hdar ; un remboursement annule la commission liée."],
-  ["Il y a un plafond ?", "Les primes d'inscription (0,50 € + bonus) sont plafonnées à 100 € par mois et par ambassadeur, avec un budget global du programme de 500 € par mois. Les pourcentages sur les paiements encaissés ne sont pas plafonnés."],
+  ["Il y a un plafond ?", "Les primes d'inscription (0,50 € + bonus) sont plafonnées à 50 € par mois et par ambassadeur, avec un budget global du programme de 350 € par mois. Les pourcentages sur les paiements encaissés ne sont pas plafonnés."],
   ["Comment je suis payé ?", "Par virement Stripe, automatiquement le 1er du mois dès 20 € dus. Il te faut un statut d'auto-entrepreneur (SIRET) et déclarer ces revenus."],
   ["Je vois qui s'inscrit avec mon lien ?", "Non. Tu ne vois que des compteurs (inscrits, validés, commissions), jamais l'identité ni la position des membres."],
   ["Qu'est-ce qui est interdit ?", "Le spam, l'affichage sauvage, les faux comptes, insister auprès des gens ou démarcher des mineurs. Toute fraude annule les commissions et met fin au programme."],
@@ -137,7 +137,7 @@ export function AmbLanding({ onApply, status }: { onApply: () => void; status: A
         </div>
         <ul className="mt-4 space-y-1.5 text-sm text-muted">
           <li>• Les commissions portent <b className="text-ink">uniquement sur l'argent réellement encaissé</b> (après remboursements et frais).</li>
-          <li>• Primes d'inscription (bonus inclus) plafonnées à <b className="text-ink">100 € par mois</b> ; budget global du programme : 500 € par mois.</li>
+          <li>• Primes d'inscription (bonus inclus) plafonnées à <b className="text-ink">50 € par mois</b> ; budget global du programme : 350 € par mois.</li>
           <li>• Virement Stripe automatique le 1er du mois dès 20 € dus (statut auto-entrepreneur requis).</li>
           <li>• Aucun revenu n'est garanti : ça dépend de toi.</li>
         </ul>
