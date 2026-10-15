@@ -513,7 +513,6 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           Personne d'autre en ligne pour l'instant
         </p>
       )}
-      {!visible && <ConnectHint />}
       {nearest && nearestHidden && !finding && (
         <button
           type="button"
@@ -706,7 +705,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       >
         <LocateFixed className="size-5" />
       </button>
-      <div className="absolute top-16 left-3 z-30">
+      {layersOpen && (
+        <button type="button" aria-label="Fermer les calques" className="absolute inset-0 z-[34] cursor-default bg-transparent" onClick={() => setLayersOpen(false)} />
+      )}
+      <div className={`absolute top-16 left-3 ${layersOpen ? "z-[35]" : "z-30"}`}>
         <button
           type="button"
           aria-label="Calques de la carte"
@@ -777,7 +779,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       )}
       <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
         <MapGiftButton />
-        <Link to="/live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
+        <Link to="/live" data-tip="live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
           <Video className="size-5" />
           <LiveBadge />
         </Link>
@@ -828,26 +830,5 @@ function LiveBadge() {
     </span>
   ) : (
     <span className="absolute -top-1 -right-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]/70">LIVE</span>
-  );
-}
-
-
-const HINT_KEY = "hdar_connect_hint_closed";
-const HINT_GAP = 2 * 60 * 60 * 1000;
-function ConnectHint() {
-  const [open, setOpen] = useState(() => {
-    try { return Date.now() - Number(localStorage.getItem(HINT_KEY) || 0) > HINT_GAP; } catch { return true; }
-  });
-  if (!open) return null;
-  const close = () => { try { localStorage.setItem(HINT_KEY, String(Date.now())); } catch { /* */ } setOpen(false); };
-  return (
-    <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center animate-bounce">
-      <div className="pointer-events-auto relative whitespace-nowrap rounded-2xl bg-[#FA6F6C] py-2 pl-4 pr-8 text-center font-display text-sm font-bold text-night shadow-[0_0_24px_rgba(250,111,108,0.7)]">
-        Montre aux autres que tu es là
-        <span className="block text-xs font-semibold">Connecte-toi ↓</span>
-        <button type="button" aria-label="Fermer" onClick={close} className="absolute right-1 top-1 grid size-6 place-items-center rounded-full text-night/70 hover:bg-black/10">✕</button>
-      </div>
-      <span className="-mt-1 size-0 border-x-[10px] border-t-[12px] border-x-transparent border-t-[#FA6F6C]" />
-    </div>
   );
 }

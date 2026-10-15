@@ -27,6 +27,7 @@ export function Around() {
         <button
           type="button"
           data-act="pocket"
+          data-tip="pocket"
           {...bindTap(openPocket)}
           aria-label={areaUnread ? `Chat du quartier, ${areaUnread} nouveaux messages` : "Chat du quartier"}
           className="relative h-11 shrink-0 rounded-full bg-signal px-4 text-sm text-night"

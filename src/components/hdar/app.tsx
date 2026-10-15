@@ -11,6 +11,7 @@ import { logClientError } from "@/lib/hdar/media";
 import { isExpired, remainingLabel } from "@/lib/hdar/rules";
 import { useHdar, type Tab } from "@/lib/hdar/store";
 import { Around } from "./around";
+import { MapTips } from "./map-tips";
 import { Chat } from "./chat";
 import { Cover } from "./cover";
 import { Inbox } from "./inbox";
@@ -105,7 +106,7 @@ export function App() {
           </div>
           <p className="text-xs text-muted">Distances arrondies · position exacte jamais publiée</p>
         </aside>
-        <section className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-night">
+        <section data-tip-root className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-night">
           {view.name === "chat" ? (
             <Chat />
           ) : view.name === "live" ? (
@@ -122,10 +123,11 @@ export function App() {
               {tab === "spots" && <Spots />}
               {tab === "inbox" && <Inbox />}
               {tab === "me" && <Me />}
+              {tab === "around" && <MapTips />}
               <nav className="dock relative z-20 grid shrink-0 grid-cols-5 items-end border-t border-line bg-night px-1 pt-1">
                 <DockButton id="around" label="Carte" current={tab} icon={<Radar className="size-5" />} onClick={setTab} />
-                <DockButton id="spots" label="Lieux" current={tab} badge={act.unread.size + act.fresh.size + act.places.size > 0} icon={<MapPin className="size-5" />} onClick={setTab} />
-                <button type="button" data-act="tonight" {...bindTap(openTonight)} className="hit relative -mt-5 flex flex-col items-center pb-1">
+                <DockButton id="spots" label="Lieux" tip="spots" current={tab} badge={act.unread.size + act.fresh.size + act.places.size > 0} icon={<MapPin className="size-5" />} onClick={setTab} />
+                <button type="button" data-act="tonight" data-tip="connect" {...bindTap(openTonight)} className="hit relative -mt-5 flex flex-col items-center pb-1">
                   <span className="relative flex size-14 items-center justify-center rounded-full bg-signal text-night">
                     {tonight ? (
                       <span className="font-display text-sm font-bold">{remainingLabel(tonight.expiresAt, now).replace(" ", "")}</span>
@@ -144,7 +146,7 @@ export function App() {
                   icon={<MessageCircle className="size-5" />}
                   onClick={setTab}
                 />
-                <DockButton id="me" label="Profil" current={tab} icon={<UserRound className="size-5" />} onClick={setTab} />
+                <DockButton id="me" label="Profil" tip="me" current={tab} icon={<UserRound className="size-5" />} onClick={setTab} />
               </nav>
             </>
           )}
@@ -162,6 +164,7 @@ function DockButton({
   current,
   icon,
   badge,
+  tip,
   onClick,
 }: {
   id: Tab;
@@ -169,6 +172,7 @@ function DockButton({
   current: Tab;
   icon: ReactNode;
   badge?: boolean;
+  tip?: string;
   onClick: (tab: Tab) => void;
 }) {
   const on = current === id;
@@ -178,6 +182,7 @@ function DockButton({
       aria-current={on ? "page" : undefined}
       data-act="tab"
       data-id={id}
+      {...(tip ? { "data-tip": tip } : {})}
       {...bindTap(() => onClick(id))}
       className={cn("hit relative flex h-14 flex-col items-center justify-center gap-1 text-xs", on ? "text-ink" : "text-muted")}
     >
