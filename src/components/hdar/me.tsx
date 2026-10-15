@@ -24,7 +24,6 @@ import { fmtLeft, useActiveBoost, useNow } from "./boost";
 import { GENDERS, getProfile, identityLine, setIdentity } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { Link } from "@tanstack/react-router";
-import { Crown } from "lucide-react";
 import { PremiumBadge } from "./premium";
 
 const MAX_VOICE_SEC = 10;
@@ -127,14 +126,14 @@ export function Me() {
           <p className={"mt-0.5 text-sm break-words " + (me.note ? "italic" : "text-muted")}>{me.note ? `💬 « ${me.note} »` : "Ajoute ta phrase du moment ci-dessous"}</p>
           <button type="button" disabled={!me.onboarded} onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
             className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-bold text-night disabled:opacity-40">
-            <Eye className="size-3.5" /> Voir comme les autres
+            <Eye className="size-3.5" /> Voir mon profil
           </button>
         </div>
       </div>
+      <BoostButton />
       <ProSpaceCard />
       <ProfileAmb where="top" />
       <AmbNudge />
-      <BoostButton />
       <PremiumCard />
       <InviteCard />
       <RedeemCode />
@@ -535,16 +534,6 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         </button>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Paramètres</h1>
       </div>
-      <ProSpaceCard />
-      <Link to="/premium" className="mt-5 flex items-center gap-3 rounded-3xl border border-[#fbbf24]/50 bg-surface p-4">
-        <span className="premium-ring flex size-11 shrink-0 items-center justify-center rounded-full"><Crown className="size-5 text-[#fbbf24]" /></span>
-        <span className="min-w-0 flex-1">
-          <b className="block font-display">hdar<span className="premium-text">+</span></b>
-          <span className="text-xs text-muted">Filtres, qui t'a vu, recherche, 20 photos, Live+</span>
-        </span>
-        <span className="text-sm font-bold text-[#fbbf24]">Voir ›</span>
-      </Link>
-      <InviteCard />
       <RedeemCode />
       <NotifySettings />
       <ProSettings />

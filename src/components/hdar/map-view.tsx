@@ -211,7 +211,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           lat,
           lng,
           pseudo: st.me.pseudo || "Anonyme",
-          desires: [...tonight.desires, tonight.place].filter(Boolean).join(","),
+          desires: [...tonight.desires, ...(tonight.places ?? [])].filter(Boolean).join(","),
           hours: 3,
           note: tonight.note,
         },

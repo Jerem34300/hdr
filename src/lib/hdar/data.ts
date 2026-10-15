@@ -31,7 +31,7 @@ export const LENGTHS: { id: TonightLen; label: string; hours: number }[] = [
 
 export type Tonight = {
   desires: Desire[];
-  place: PlaceKind;
+  places: PlaceKind[];
   note: string;
   hours: number;
 };
@@ -66,7 +66,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: true,
     tags: ["verre", "discuter"],
     bio: "Dernier verre, pas un plan de carrière.",
-    tonight: { desires: ["verre", "discuter"], place: "dehors", note: "Au comptoir, pas pressé.", hours: 3 },
+    tonight: { desires: ["verre", "discuter"], places: ["dehors"], note: "Au comptoir, pas pressé.", hours: 3 },
     openTo: ["verre", "discuter"],
     sharesPrecise: true,
     replies: [
@@ -86,7 +86,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: false,
     tags: ["discuter", "balade"],
     bio: "Je marche plus volontiers que je ne m'assois.",
-    tonight: { desires: ["discuter", "balade"], place: "dehors", note: "Balade si la pluie s'arrête.", hours: 3 },
+    tonight: { desires: ["discuter", "balade"], places: ["dehors"], note: "Balade si la pluie s'arrête.", hours: 3 },
     openTo: ["discuter"],
     sharesPrecise: false,
     replies: [
@@ -106,7 +106,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: true,
     tags: ["plan", "sortir"],
     bio: "Dispo tard. Je n'aime pas les groupes.",
-    tonight: { desires: ["plan", "sortir"], place: "dehors", note: "Dispo après 22 h.", hours: 8 },
+    tonight: { desires: ["plan", "sortir"], places: ["dehors"], note: "Dispo après 22 h.", hours: 8 },
     openTo: ["plan"],
     sharesPrecise: false,
     replies: ["Après 22 h je suis libre.", "Dehors, pas chez moi.", "Envoie juste l'heure."],
@@ -142,7 +142,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: false,
     tags: ["discuter", "balade"],
     bio: "Sorti du boulot. Je peux faire un détour.",
-    tonight: { desires: ["discuter", "balade"], place: "dehors", note: "Je marche, détour possible.", hours: 1 },
+    tonight: { desires: ["discuter", "balade"], places: ["dehors"], note: "Je marche, détour possible.", hours: 1 },
     openTo: ["discuter"],
     sharesPrecise: true,
     replies: [
@@ -162,7 +162,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: true,
     tags: ["sortir", "verre"],
     bio: "Mobile ce soir. Pas un plan compliqué.",
-    tonight: { desires: ["sortir", "verre"], place: "dehors", note: "Je sors, pas chez moi.", hours: 3 },
+    tonight: { desires: ["sortir", "verre"], places: ["dehors"], note: "Je sors, pas chez moi.", hours: 3 },
     openTo: ["verre"],
     sharesPrecise: false,
     replies: ["Je sors, je suis mobile.", "Un verre oui. Rien de compliqué.", "Je te dis quand je pars."],
@@ -194,7 +194,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: true,
     tags: ["verre"],
     bio: "Encore assis. Je ne reste pas longtemps.",
-    tonight: { desires: ["verre"], place: "chez-toi", note: "Un verre, puis on voit.", hours: 1 },
+    tonight: { desires: ["verre"], places: ["chez-toi"], note: "Un verre, puis on voit.", hours: 1 },
     openTo: ["verre"],
     sharesPrecise: false,
     replies: ["Un verre, puis on avise.", "Je suis encore assis, pas longtemps.", "On se parle d'abord."],
@@ -226,7 +226,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: true,
     tags: ["plan", "balade"],
     bio: "Pas un bar bruyant. Un coin, une heure.",
-    tonight: { desires: ["plan", "balade"], place: "dehors", note: "Pas un bar bruyant.", hours: 3 },
+    tonight: { desires: ["plan", "balade"], places: ["dehors"], note: "Pas un bar bruyant.", hours: 3 },
     openTo: ["plan"],
     sharesPrecise: false,
     replies: ["Pas un bar bruyant, plutôt un coin.", "Je peux me déplacer un peu.", "On se dit une heure et on s'y tient."],
@@ -258,7 +258,7 @@ const DEMO_PEOPLE: Person[] = [
     voice: true,
     tags: ["verre", "discuter"],
     bio: "Dernier service. Conversation normale.",
-    tonight: { desires: ["verre", "discuter"], place: "dehors", note: "Dernier service, encore là.", hours: 1 },
+    tonight: { desires: ["verre", "discuter"], places: ["dehors"], note: "Dernier service, encore là.", hours: 1 },
     openTo: ["verre"],
     sharesPrecise: true,
     replies: ["Dernier service. Je suis encore là.", "Un verre, conversation normale.", "Si tu es loin, on remet ça."],

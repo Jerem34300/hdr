@@ -150,7 +150,12 @@ function Tonight() {
   const patchMe = useHdar((s) => s.patchMe);
   const active = me.tonight && !isExpired(me.tonight.expiresAt, now) ? me.tonight : null;
   const [len, setLen] = useState<TonightLen>(active?.len ?? "3h");
-  const [place, setPlace] = useState<PlaceKind>(active?.place ?? "dehors");
+  const [places, setPlaces] = useState<PlaceKind[]>(() => {
+    const t = active as (typeof active & { place?: PlaceKind }) | null;
+    if (t?.places?.length) return t.places;
+    if (t?.place) return [t.place];
+    return ["dehors"];
+  });
   const [tags, setTags] = useState<Desire[]>(active?.desires ?? me.tags.slice(0, 3));
   const [note, setNote] = useState(active?.note || me.note || "");
 
@@ -167,7 +172,7 @@ function Tonight() {
           patchMe({ note: note.trim().slice(0, 60) });
           void setProfileNote(note).catch(() => undefined);
         }
-        setTonight({ desires: tags, place, note, len });
+        setTonight({ desires: tags, places, note, len });
       }}
     >
       <Close />
@@ -203,16 +208,19 @@ function Tonight() {
         })}
       </div>
       <div className="flex gap-2">
-        {PLACES.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => setPlace(p.id)}
-            className={"h-11 flex-1 rounded-full text-sm " + (place === p.id ? "bg-ink text-night" : "border border-line")}
-          >
-            {p.label}
-          </button>
-        ))}
+        {PLACES.map((p) => {
+          const on = places.includes(p.id);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPlaces((cur) => (on ? cur.filter((x) => x !== p.id) : [...cur, p.id]))}
+              className={"h-11 flex-1 rounded-full text-sm " + (on ? "bg-ink text-night" : "border border-line")}
+            >
+              {p.label}
+            </button>
+          );
+        })}
       </div>
       <label className="block text-sm">
         Ta phrase du moment <span className="text-xs text-muted">(facultatif)</span>
@@ -396,7 +404,7 @@ function Person({ id }: { id: string }) {
         </div>
         {person.tonightOn && person.tonight && (
           <p className="rounded-2xl border border-signal/40 bg-night px-4 py-3 text-sm">
-            Ce soir · {person.tonight.note} · {PLACES.find((p) => p.id === person.tonight?.place)?.label}
+            Ce soir · {person.tonight.note} · {(person.tonight.places ?? []).map((id) => PLACES.find((p) => p.id === id)?.label).filter(Boolean).join(" · ")}
           </p>
         )}
         <p className="text-xs text-muted">

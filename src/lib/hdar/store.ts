@@ -18,7 +18,7 @@ import { conversationExpiry, isExpired } from "./rules";
 
 export type MeTonight = {
   desires: Desire[];
-  place: PlaceKind;
+  places: PlaceKind[];
   note: string;
   len: TonightLen;
   expiresAt: number;
@@ -201,7 +201,7 @@ type State = {
   openCity: () => void;
   closeSheet: () => void;
   completeGate: (me: Pick<Me, "pseudo" | "age" | "adult" | "tags" | "photo">) => void;
-  setTonight: (input: { desires: Desire[]; place: PlaceKind; note: string; len: TonightLen }) => void;
+  setTonight: (input: { desires: Desire[]; places: PlaceKind[]; note: string; len: TonightLen }) => void;
   clearTonight: () => void;
   signal: (id: string, kind: SignalKind) => void;
   enterLine: (id: string) => void;
@@ -359,11 +359,11 @@ export const useHdar = create<State>()(
         else if (intent && intent.type === "line") get().enterLine(intent.id);
         else if (intent && intent.type === "join") get().joinSpot(intent.id);
       },
-      setTonight: ({ desires, place, note, len }) => {
+      setTonight: ({ desires, places, note, len }) => {
         const hours = LENGTHS.find((l) => l.id === len)?.hours ?? 3;
         const tonight: MeTonight = {
           desires,
-          place,
+          places,
           note: note.slice(0, 60),
           len,
           expiresAt: Date.now() + hours * 3_600_000,
@@ -666,6 +666,20 @@ export const useHdar = create<State>()(
     {
       name: "hdar-v1",
       skipHydration: true,
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<typeof current> & { me?: Me & { tonight?: (MeTonight & { place?: PlaceKind }) | null } };
+        const me = p.me ? { ...current.me, ...p.me } : current.me;
+        if (me.tonight) {
+          const t = me.tonight as MeTonight & { place?: PlaceKind };
+          const places = Array.isArray(t.places) && t.places.length
+            ? t.places
+            : t.place
+              ? [t.place]
+              : [];
+          me.tonight = { desires: t.desires ?? [], places, note: t.note ?? "", len: t.len ?? "3h", expiresAt: t.expiresAt ?? 0 };
+        }
+        return { ...current, ...p, me };
+      },
       partialize: (s) => ({
         me: s.me,
         signals: s.signals,
