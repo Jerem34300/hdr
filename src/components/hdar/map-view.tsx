@@ -508,10 +508,19 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           style={{ left: tile.left, top: tile.top, width: tilePx, height: tilePx }}
         />
       ))}
-      {pins.length === 0 && !finding && (
+      {visible && pins.length === 0 && !finding && (
         <p className="pointer-events-none absolute top-4 left-1/2 z-20 max-w-[70%] -translate-x-1/2 rounded-full bg-night/85 px-4 py-2 text-center text-xs text-muted">
-          {visible ? "Personne d'autre en ligne pour l'instant" : "Touche Connexion pour apparaître sur la carte"}
+          Personne d'autre en ligne pour l'instant
         </p>
+      )}
+      {!visible && (
+        <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center animate-bounce">
+          <p className="whitespace-nowrap rounded-2xl bg-[#FA6F6C] px-4 py-2 text-center font-display text-sm font-bold text-night shadow-[0_0_24px_rgba(250,111,108,0.7)]">
+            Montre aux autres que tu es là
+            <span className="block text-xs font-semibold">Connecte-toi ↓</span>
+          </p>
+          <span className="-mt-1 size-0 border-x-[10px] border-t-[12px] border-x-transparent border-t-[#FA6F6C]" />
+        </div>
       )}
       {nearest && nearestHidden && !finding && (
         <button
