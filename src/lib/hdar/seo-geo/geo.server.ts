@@ -62,7 +62,7 @@ export function allUrls() {
   const regs = new Set(D.cities.map((c) => D.regs[D.deps[c.d].r].s));
   return {
     cities: D.cities.map((c) => `/rencontre/${c.s}`),
-    themes: D.cities.slice(0, 30).flatMap((c) => [`/rencontre/${c.s}/tchat-gay`, `/rencontre/${c.s}/sortir-ce-soir`]),
+    themes: D.cities.slice(0, 30).flatMap((c) => [`/rencontre/${c.s}/tchat-gay`, `/rencontre/${c.s}/sortir-ce-soir`, `/rencontre/${c.s}/live-coquin`]),
     lists: ["/rencontre", ...[...regs].map((s) => `/rencontre/region/${s}`), ...[...deps].map((s) => `/rencontre/departement/${s}`)],
   };
 }

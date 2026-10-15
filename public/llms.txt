@@ -13,6 +13,8 @@
 
 ## Pages
 - [Toutes les villes](https://hdar.chat/rencontre) : une page par commune française (ex. https://hdar.chat/rencontre/montpellier), plus pages région et département.
+- [Live entre adultes](https://hdar.chat/live-coquin) : Live vidéo au hasard, mode Diffuser (jusqu'à 6 ou 12 spectateurs), cam à 3, version par ville (ex. https://hdar.chat/rencontre/paris/live-coquin).
+- Pages Live : [webcam gay live](https://hdar.chat/webcam-gay-live), [alternative à Chatroulette](https://hdar.chat/alternative-chatroulette), [alternative à Omegle](https://hdar.chat/alternative-omegle) (Omegle a fermé en novembre 2023), [tchat webcam aléatoire](https://hdar.chat/tchat-webcam-aleatoire), [cam to cam](https://hdar.chat/cam-to-cam).
 - [Espace pro](https://hdar.chat/pro)
 - [Devenir ambassadeur](https://hdar.chat/ambassadeur)
 - [CGU](https://hdar.chat/cgu), [Confidentialité](https://hdar.chat/confidentialite), [Contact](https://hdar.chat/contact)

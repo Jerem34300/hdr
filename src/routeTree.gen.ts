@@ -11,17 +11,23 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AlternativeChatrouletteRouteImport } from './routes/alternative-chatroulette'
+import { Route as AlternativeOmegleRouteImport } from './routes/alternative-omegle'
 import { Route as AmbassadeurRouteImport } from './routes/ambassadeur'
 import { Route as BoostRouteImport } from './routes/boost'
+import { Route as CamToCamRouteImport } from './routes/cam-to-cam'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as LiveCoquinRouteImport } from './routes/live-coquin'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TchatWebcamAleatoireRouteImport } from './routes/tchat-webcam-aleatoire'
+import { Route as WebcamGayLiveRouteImport } from './routes/webcam-gay-live'
 import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
 import { Route as FrSortirRencontrerChar123villeChar125RouteImport } from './routes/fr/sortir-rencontrer-{$ville}'
 import { Route as LiveCodeRouteImport } from './routes/live_.$code'
@@ -43,6 +49,16 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlternativeChatrouletteRoute = AlternativeChatrouletteRouteImport.update({
+  id: '/alternative-chatroulette',
+  path: '/alternative-chatroulette',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlternativeOmegleRoute = AlternativeOmegleRouteImport.update({
+  id: '/alternative-omegle',
+  path: '/alternative-omegle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AmbassadeurRoute = AmbassadeurRouteImport.update({
   id: '/ambassadeur',
   path: '/ambassadeur',
@@ -51,6 +67,11 @@ const AmbassadeurRoute = AmbassadeurRouteImport.update({
 const BoostRoute = BoostRouteImport.update({
   id: '/boost',
   path: '/boost',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CamToCamRoute = CamToCamRouteImport.update({
+  id: '/cam-to-cam',
+  path: '/cam-to-cam',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CguRoute = CguRouteImport.update({
@@ -71,6 +92,11 @@ const ContactRoute = ContactRouteImport.update({
 const LiveRoute = LiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveCoquinRoute = LiveCoquinRouteImport.update({
+  id: '/live-coquin',
+  path: '/live-coquin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -96,6 +122,16 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TchatWebcamAleatoireRoute = TchatWebcamAleatoireRouteImport.update({
+  id: '/tchat-webcam-aleatoire',
+  path: '/tchat-webcam-aleatoire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebcamGayLiveRoute = WebcamGayLiveRouteImport.update({
+  id: '/webcam-gay-live',
+  path: '/webcam-gay-live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AmbassadeurGuideRoute = AmbassadeurGuideRouteImport.update({
@@ -154,17 +190,23 @@ const RencontreRegionSlugRoute = RencontreRegionSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/alternative-chatroulette': typeof AlternativeChatrouletteRoute
+  '/alternative-omegle': typeof AlternativeOmegleRoute
   '/ambassadeur': typeof AmbassadeurRoute
   '/boost': typeof BoostRoute
+  '/cam-to-cam': typeof CamToCamRoute
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/live': typeof LiveRoute
+  '/live-coquin': typeof LiveCoquinRoute
   '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
+  '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
@@ -179,17 +221,23 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/alternative-chatroulette': typeof AlternativeChatrouletteRoute
+  '/alternative-omegle': typeof AlternativeOmegleRoute
   '/ambassadeur': typeof AmbassadeurRoute
   '/boost': typeof BoostRoute
+  '/cam-to-cam': typeof CamToCamRoute
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/live': typeof LiveRoute
+  '/live-coquin': typeof LiveCoquinRoute
   '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
+  '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
@@ -205,17 +253,23 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/alternative-chatroulette': typeof AlternativeChatrouletteRoute
+  '/alternative-omegle': typeof AlternativeOmegleRoute
   '/ambassadeur': typeof AmbassadeurRoute
   '/boost': typeof BoostRoute
+  '/cam-to-cam': typeof CamToCamRoute
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/live': typeof LiveRoute
+  '/live-coquin': typeof LiveCoquinRoute
   '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/pro': typeof ProRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
+  '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live_/$code': typeof LiveCodeRoute
@@ -232,17 +286,23 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/alternative-chatroulette'
+    | '/alternative-omegle'
     | '/ambassadeur'
     | '/boost'
+    | '/cam-to-cam'
     | '/cgu'
     | '/confidentialite'
     | '/contact'
     | '/live'
+    | '/live-coquin'
     | '/login'
     | '/premium'
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/tchat-webcam-aleatoire'
+    | '/webcam-gay-live'
     | '/ambassadeur/guide'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
@@ -257,17 +317,23 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/alternative-chatroulette'
+    | '/alternative-omegle'
     | '/ambassadeur'
     | '/boost'
+    | '/cam-to-cam'
     | '/cgu'
     | '/confidentialite'
     | '/contact'
     | '/live'
+    | '/live-coquin'
     | '/login'
     | '/premium'
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/tchat-webcam-aleatoire'
+    | '/webcam-gay-live'
     | '/ambassadeur/guide'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
@@ -282,17 +348,23 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/alternative-chatroulette'
+    | '/alternative-omegle'
     | '/ambassadeur'
     | '/boost'
+    | '/cam-to-cam'
     | '/cgu'
     | '/confidentialite'
     | '/contact'
     | '/live'
+    | '/live-coquin'
     | '/login'
     | '/premium'
     | '/pro'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/tchat-webcam-aleatoire'
+    | '/webcam-gay-live'
     | '/ambassadeur_/guide'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live_/$code'
@@ -308,17 +380,23 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AlternativeChatrouletteRoute: typeof AlternativeChatrouletteRoute
+  AlternativeOmegleRoute: typeof AlternativeOmegleRoute
   AmbassadeurRoute: typeof AmbassadeurRoute
   BoostRoute: typeof BoostRoute
+  CamToCamRoute: typeof CamToCamRoute
   CguRoute: typeof CguRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   LiveRoute: typeof LiveRoute
+  LiveCoquinRoute: typeof LiveCoquinRoute
   LoginRoute: typeof LoginRoute
   PremiumRoute: typeof PremiumRoute
   ProRoute: typeof ProRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TchatWebcamAleatoireRoute: typeof TchatWebcamAleatoireRoute
+  WebcamGayLiveRoute: typeof WebcamGayLiveRoute
   AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
   FrSortirRencontrerChar123villeChar125Route: typeof FrSortirRencontrerChar123villeChar125Route
   LiveCodeRoute: typeof LiveCodeRoute
@@ -347,6 +425,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/alternative-chatroulette': {
+      id: '/alternative-chatroulette'
+      path: '/alternative-chatroulette'
+      fullPath: '/alternative-chatroulette'
+      preLoaderRoute: typeof AlternativeChatrouletteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alternative-omegle': {
+      id: '/alternative-omegle'
+      path: '/alternative-omegle'
+      fullPath: '/alternative-omegle'
+      preLoaderRoute: typeof AlternativeOmegleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ambassadeur': {
       id: '/ambassadeur'
       path: '/ambassadeur'
@@ -359,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/boost'
       fullPath: '/boost'
       preLoaderRoute: typeof BoostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cam-to-cam': {
+      id: '/cam-to-cam'
+      path: '/cam-to-cam'
+      fullPath: '/cam-to-cam'
+      preLoaderRoute: typeof CamToCamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cgu': {
@@ -387,6 +486,13 @@ declare module '@tanstack/react-router' {
       path: '/live'
       fullPath: '/live'
       preLoaderRoute: typeof LiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-coquin': {
+      id: '/live-coquin'
+      path: '/live-coquin'
+      fullPath: '/live-coquin'
+      preLoaderRoute: typeof LiveCoquinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -422,6 +528,20 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tchat-webcam-aleatoire': {
+      id: '/tchat-webcam-aleatoire'
+      path: '/tchat-webcam-aleatoire'
+      fullPath: '/tchat-webcam-aleatoire'
+      preLoaderRoute: typeof TchatWebcamAleatoireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/webcam-gay-live': {
+      id: '/webcam-gay-live'
+      path: '/webcam-gay-live'
+      fullPath: '/webcam-gay-live'
+      preLoaderRoute: typeof WebcamGayLiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ambassadeur_/guide': {
@@ -500,17 +620,23 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AlternativeChatrouletteRoute: AlternativeChatrouletteRoute,
+  AlternativeOmegleRoute: AlternativeOmegleRoute,
   AmbassadeurRoute: AmbassadeurRoute,
   BoostRoute: BoostRoute,
+  CamToCamRoute: CamToCamRoute,
   CguRoute: CguRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   LiveRoute: LiveRoute,
+  LiveCoquinRoute: LiveCoquinRoute,
   LoginRoute: LoginRoute,
   PremiumRoute: PremiumRoute,
   ProRoute: ProRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TchatWebcamAleatoireRoute: TchatWebcamAleatoireRoute,
+  WebcamGayLiveRoute: WebcamGayLiveRoute,
   AmbassadeurGuideRoute: AmbassadeurGuideRoute,
   FrSortirRencontrerChar123villeChar125Route:
     FrSortirRencontrerChar123villeChar125Route,

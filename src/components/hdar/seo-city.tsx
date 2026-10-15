@@ -93,7 +93,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
           <h2 className="font-display text-2xl font-bold">{c.isHub ? `Villes voisines de ${c.n}` : `Autour de ${c.n}`}</h2>
           <CityChips list={c.nearby} showKm />
           {!c.isHub && <p className="mt-4 text-sm">Grande ville la plus proche : <a className="text-[#FA6F6C] underline" href={`/rencontre/${c.hub.s}`}>rencontres à {c.hub.n}</a> ({c.hubKm} km).</p>}
-          {c.top && <p className="mt-4 flex flex-wrap gap-2 text-sm">{theme !== null && <a className="underline" href={path(c, null)}>Rencontres {a(c.n)}</a>}{theme !== "tchat-gay" && <a className="underline" href={path(c, "tchat-gay")}>Tchat gay {c.n}</a>}{theme !== "sortir-ce-soir" && <a className="underline" href={path(c, "sortir-ce-soir")}>Sortir ce soir {a(c.n)}</a>}</p>}
+          {c.top && <p className="mt-4 flex flex-wrap gap-2 text-sm">{theme !== null && <a className="underline" href={path(c, null)}>Rencontres {a(c.n)}</a>}{theme !== "tchat-gay" && <a className="underline" href={path(c, "tchat-gay")}>Tchat gay {c.n}</a>}{theme !== "sortir-ce-soir" && <a className="underline" href={path(c, "sortir-ce-soir")}>Sortir ce soir {a(c.n)}</a>}<a className="underline" href={`/rencontre/${c.s}/live-coquin`}>Live coquin {c.n}</a></p>}
         </section>
         <Faq items={faq} />
         <div className="seo-reveal my-12 text-center"><Cta label={`Voir qui est autour ${a(c.n)}`} /></div>

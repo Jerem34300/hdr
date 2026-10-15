@@ -9,7 +9,7 @@ export const Route = createFileRoute("/sitemaps/$part")({
         const u = allUrls();
         const m = /^villes-(\d+)\.xml$/.exec(params.part);
         let urls: string[];
-        if (params.part === "core.xml") urls = ["/", "/pro", "/ambassadeur", "/fr/sortir-rencontrer-cap-d-agde", ...u.lists, ...u.themes];
+        if (params.part === "core.xml") urls = ["/", "/pro", "/ambassadeur", "/live-coquin", "/webcam-gay-live", "/alternative-chatroulette", "/alternative-omegle", "/tchat-webcam-aleatoire", "/cam-to-cam", "/fr/sortir-rencontrer-cap-d-agde", ...u.lists, ...u.themes];
         else if (m) urls = u.cities.slice((+m[1] - 1) * 10000, +m[1] * 10000);
         else urls = [];
         if (!urls.length) return new Response("Not found", { status: 404 });
