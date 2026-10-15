@@ -2,13 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { Crumbs, Faq, Feature, Hero, SeoShell, seoHead } from "./seo-pages";
 
 type L = { title: string; desc: string; kicker: string; h1: [string, string]; lead: string; why: string; faq: { q: string; a: string }[] };
-const RULES = { q: "Quelles sont les règles ?", a: "Réservé aux 18 ans et plus, consentement obligatoire, enregistrement interdit, nudité interdite (voir les CGU). Bloque et signale à tout moment." };
+const RULES = { q: "Quelles sont les règles ?", a: "Réservé aux 18 ans et plus. Nudité et contenus sexuels interdits, consentement obligatoire, enregistrement interdit (voir les CGU). Bloque et signale à tout moment." };
 const FREE = { q: "C'est gratuit et anonyme ?", a: "Oui. Pas d'e-mail, un pseudo suffit. Le Live est gratuit ; les réactions 🔥 🥵 😛 ❤️ coûtent 1 cœur chacune." };
 
 export const CAM: Record<string, L> = {
   "webcam-gay-live": {
     title: "Webcam gay live : chat vidéo en direct, anonyme — hdar.", desc: "Webcam gay en live : face-à-face vidéo au hasard, diffuse ta cam aux curieux, chat en direct. Pour tout le monde et LGBT-friendly, anonyme, gratuit, 18+.",
-    kicker: "Webcam · LGBT-friendly", h1: ["Webcam gay ", "en live"], lead: "Allume ta cam, tombe sur un mec au hasard ou fais-toi mater par ceux qui défilent. Anonyme, en direct, entre adultes.",
+    kicker: "Webcam · LGBT-friendly", h1: ["Webcam gay ", "en live"], lead: "Allume ta cam, tombe sur un mec au hasard ou diffuse-toi à ceux qui défilent. Anonyme, en direct, entre adultes.",
     why: "hdar est ouvert à tout le monde et LGBT-friendly : gays, bis, curieux, chacun trouve sa place. Si le feeling passe, continuez en privé, en messages ou en appel vidéo.",
     faq: [{ q: "Le Live est-il réservé aux gays ?", a: "Non, hdar est pour tout le monde et LGBT-friendly. Tu croiseras des gens de toutes orientations." }, FREE, RULES],
   },
@@ -31,8 +31,8 @@ export const CAM: Record<string, L> = {
     faq: [{ q: "Faut-il s'inscrire ?", a: "Non. Tu confirmes avoir 18 ans, tu choisis un pseudo et tu entres dans le Live." }, FREE, RULES],
   },
   "cam-to-cam": {
-    title: "Cam to cam en direct entre adultes, anonyme — hdar.", desc: "Cam to cam : face-à-face vidéo avec un inconnu, ou fais-toi mater par plusieurs spectateurs. Consentement pour chaque cam, anonyme, gratuit, 18+.",
-    kicker: "Cam to cam · 18+", h1: ["Cam to cam, ", "en direct"], lead: "Toi, ta cam, et quelqu'un en face. Ou plusieurs, si tu aimes être regardé.",
+    title: "Cam to cam en direct entre adultes, anonyme — hdar.", desc: "Cam to cam : face-à-face vidéo avec un inconnu, ou diffuse ta cam à plusieurs spectateurs. Consentement pour chaque cam, anonyme, gratuit, 18+.",
+    kicker: "Cam to cam · 18+", h1: ["Cam to cam, ", "en direct"], lead: "Toi, ta cam, et quelqu'un en face. Ou plusieurs, si tu aimes discuter à plusieurs.",
     why: "En face-à-face, vous vous voyez tous les deux. En mode Diffuser, les spectateurs te voient, et un spectateur peut allumer sa cam ou son micro seulement si vous êtes d'accord tous les deux.",
     faq: [{ q: "Un spectateur peut-il se montrer aussi ?", a: "Oui, si tu le lui proposes ou s'il te le propose, et seulement avec ton accord." }, FREE, RULES],
   },
@@ -52,7 +52,7 @@ export function CamPage({ k }: { k: string }) {
       <Hero seed={k} kicker={l.kicker} title={<>{l.h1[0]}<span className="text-[#FA6F6C]">{l.h1[1]}</span></>}>
         <p className="mt-4 text-lg leading-snug text-ink/85">{l.lead}</p>
         {cta("Lancer un Live")}
-        <p className="mt-3 text-xs text-muted">Anonyme · sans compte · entre adultes · 18+</p>
+        <p className="mt-3 text-xs text-muted">Anonyme · sans compte · 18+ · sans nudité</p>
       </Hero>
       <article className="mx-auto max-w-2xl px-5">
         <Crumbs items={[{ name: "hdar.", to: "/" }, { name: "Live", to: "/live-coquin" }, { name: l.h1.join("") }]} />
@@ -60,7 +60,7 @@ export function CamPage({ k }: { k: string }) {
           <Feature icon="🎲" title="Face-à-face au hasard">Un inconnu en vidéo, suivant quand tu veux.</Feature>
           <Feature icon="📡" title="Diffuser">Jusqu'à 6 spectateurs te regardent, 12 avec hdar+.</Feature>
           <Feature icon="👀" title="Cam à 3">Ton partenaire peut diffuser avec toi.</Feature>
-          <Feature icon="🔥" title="Réactions 🔥 🥵 😛">1 cœur par réaction.</Feature>
+          <Feature icon="❤️" title="Réactions 🔥 😛 ❤️">1 cœur par réaction.</Feature>
         </ul>
         <h2 className="seo-reveal mt-12 font-display text-2xl font-bold">Pourquoi hdar</h2>
         <p className="seo-reveal mt-3 text-sm leading-relaxed text-ink/85">{l.why}</p>
