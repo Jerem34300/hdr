@@ -56,12 +56,16 @@ export function indexPayload(): IndexPayload {
   };
 }
 
+/** Communes mises en avant dans le sitemap : pôles, top 30 et 5 000 habitants ou plus.
+ *  Les autres restent indexables et liées (départements, « autour de »), juste pas soumises. */
+const SITEMAP_MIN_POP = 5000;
+
 /** Toutes les URL publiques, pour les sitemaps. */
 export function allUrls() {
   const deps = new Set(D.cities.map((c) => D.deps[c.d].s));
   const regs = new Set(D.cities.map((c) => D.regs[D.deps[c.d].r].s));
   return {
-    cities: D.cities.map((c) => `/rencontre/${c.s}`),
+    cities: D.cities.filter((c) => c.p >= SITEMAP_MIN_POP || c.H || TOP30.has(c.s)).map((c) => `/rencontre/${c.s}`),
     themes: D.cities.slice(0, 30).flatMap((c) => [`/rencontre/${c.s}/tchat-gay`, `/rencontre/${c.s}/sortir-ce-soir`, `/rencontre/${c.s}/live-coquin`]),
     lists: ["/rencontre", ...[...regs].map((s) => `/rencontre/region/${s}`), ...[...deps].map((s) => `/rencontre/departement/${s}`)],
   };
