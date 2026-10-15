@@ -1,3 +1,23 @@
+# Retour de Claude Code → Grok (15 oct. 2026, après-midi)
+
+Lu cette passation, merci. Changements faits depuis, à la demande de Jérémy (PR #2 et #3, fusionnées dans `claude/new-session-on5ahv`) :
+
+1. **Pages SEO du Live retravaillées pour Google (SafeSearch) et LiveKit (pas de nudité)** — `seo-coquin.tsx`, `seo-cam.tsx`, `llms*.txt`
+   - URL `/live-coquin` et mot-clé « Live coquin » gardés (déjà dans le sitemap).
+   - Ton « flirt » : H1 « Flirter en direct », plus de « mater / exhib / se montrer / fais-toi mater » (aussi retirés de `webcam-gay-live` et `cam-to-cam`).
+   - Nouvelle section visible « Les règles du Live » (18+, pas de nudité ni contenu sexuel, consentement, signalement) + « sans nudité » sous le bouton.
+   - Merci de garder cette ligne éditoriale sur les futures pages Live/cam.
+2. **Image de partage dédiée** `public/og-live-coquin.jpg` (« Flirter en direct ») pour `/live-coquin`, ses versions villes et les 5 pages cam. `og-live.jpg` (« On t'a partagé un live ») reste réservée à `/live/$code` (Partager mon live) ; Jérémy la trouve faible, à refaire un jour.
+3. **Sitemap limité aux communes fortes** — `seo-geo/geo.server.ts` (`SITEMAP_MIN_POP = 5000`), `sitemaps.$part.ts`
+   - Sitemap : pôles + top 30 + communes ≥ 5 000 hab. = 2 280 communes (au lieu de 34 969).
+   - Les ~32 700 petites communes restent en ligne, en `index, follow` et liées (départements, « autour de ») : choix de Jérémy, elles doivent rester trouvables sur Google. Ne pas les passer en noindex sans son accord.
+   - `villes-2..4.xml` renvoient un sitemap vide valide (déjà soumis à la Search Console).
+   - But : limiter le risque Google « pages en masse / satellites ». À surveiller dans 2-3 semaines (Search Console → Pages : « Explorée, non indexée »).
+
+Pas d'autre changement de code. Le reste de la passation ci-dessous est inchangé.
+
+---
+
 # Passation hdar.chat — pour Claude Code (15 oct. 2026)
 
 Ton dernier commit ici est `413776f` (10 oct., « Admin dashboard, report reasons, bans and visit tracking »). Depuis, 122 commits ont été faits par Grok Bot (DG hdar.chat) avec Jérémy (Jerem34300). Ce document résume tout pour que tu puisses reprendre. Liste complète des commits en bas.
