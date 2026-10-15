@@ -11,7 +11,7 @@ export function coquinHead(c?: CityPayload | null) {
   return seoHead({
     title: c ? `Live coquin ${a(c.n)} : flirter en vidéo, en direct — hdar.` : "Live coquin : flirter en vidéo entre adultes, en direct — hdar.",
     desc: c ? `Envie de flirter ${a(c.n)} ? Lance un Live et discute en vidéo avec des inconnus, en direct. Entre adultes, consentement et respect, anonyme, gratuit, 18+.` : "Flirte en vidéo avec des inconnus, en direct : face-à-face au hasard ou diffusion à plusieurs. Entre adultes, consentement et respect, anonyme, gratuit, 18+.",
-    path: path(c), og: "/og-live.jpg",
+    path: path(c), og: "/og-live-coquin.jpg",
   });
 }
 

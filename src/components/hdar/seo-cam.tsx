@@ -39,7 +39,7 @@ export const CAM: Record<string, L> = {
 };
 export const CAM_LINKS = [["live-coquin", "Live coquin"], ["webcam-gay-live", "Webcam gay live"], ["alternative-chatroulette", "Alternative à Chatroulette"], ["alternative-omegle", "Alternative à Omegle"], ["tchat-webcam-aleatoire", "Tchat webcam aléatoire"], ["cam-to-cam", "Cam to cam"]];
 
-export const camHead = (k: string) => seoHead({ title: CAM[k].title, desc: CAM[k].desc, path: "/" + k, og: "/og-live.jpg" });
+export const camHead = (k: string) => seoHead({ title: CAM[k].title, desc: CAM[k].desc, path: "/" + k, og: "/og-live-coquin.jpg" });
 export const CamLinks = ({ not }: { not: string }) => (
   <nav className="seo-reveal mt-10 flex flex-wrap gap-2 text-sm">{CAM_LINKS.filter(([s]) => s !== not).map(([s, n]) => <a key={s} href={"/" + s} className="rounded-full border border-line px-3 py-1.5">{n}</a>)}</nav>
 );
