@@ -25,7 +25,13 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
 import { Route as FrSortirRencontrerChar123villeChar125RouteImport } from './routes/fr/sortir-rencontrer-{$ville}'
 import { Route as LiveCodeRouteImport } from './routes/live_.$code'
+import { Route as RencontreIndexRouteImport } from './routes/rencontre/index'
+import { Route as RencontreSlugRouteImport } from './routes/rencontre/$slug'
+import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as RencontreSlugThemeRouteImport } from './routes/rencontre/$slug_.$theme'
+import { Route as RencontreDepartementSlugRouteImport } from './routes/rencontre/departement.$slug'
+import { Route as RencontreRegionSlugRouteImport } from './routes/rencontre/region.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -108,9 +114,40 @@ const LiveCodeRoute = LiveCodeRouteImport.update({
   path: '/live/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RencontreIndexRoute = RencontreIndexRouteImport.update({
+  id: '/rencontre/',
+  path: '/rencontre/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RencontreSlugRoute = RencontreSlugRouteImport.update({
+  id: '/rencontre/$slug',
+  path: '/rencontre/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapsPartRoute = SitemapsPartRouteImport.update({
+  id: '/sitemaps/$part',
+  path: '/sitemaps/$part',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RencontreSlugThemeRoute = RencontreSlugThemeRouteImport.update({
+  id: '/rencontre/$slug_/$theme',
+  path: '/rencontre/$slug/$theme',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RencontreDepartementSlugRoute =
+  RencontreDepartementSlugRouteImport.update({
+    id: '/rencontre/departement/$slug',
+    path: '/rencontre/departement/$slug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const RencontreRegionSlugRoute = RencontreRegionSlugRouteImport.update({
+  id: '/rencontre/region/$slug',
+  path: '/rencontre/region/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -131,7 +168,13 @@ export interface FileRoutesByFullPath {
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
+  '/rencontre/$slug': typeof RencontreSlugRoute
+  '/sitemaps/$part': typeof SitemapsPartRoute
+  '/rencontre/': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
+  '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
+  '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,7 +193,13 @@ export interface FileRoutesByTo {
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
+  '/rencontre/$slug': typeof RencontreSlugRoute
+  '/sitemaps/$part': typeof SitemapsPartRoute
+  '/rencontre': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
+  '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
+  '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,7 +219,13 @@ export interface FileRoutesById {
   '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live_/$code': typeof LiveCodeRoute
+  '/rencontre/$slug': typeof RencontreSlugRoute
+  '/sitemaps/$part': typeof SitemapsPartRoute
+  '/rencontre/': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/rencontre/$slug_/$theme': typeof RencontreSlugThemeRoute
+  '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
+  '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,7 +246,13 @@ export interface FileRouteTypes {
     | '/ambassadeur/guide'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
+    | '/rencontre/$slug'
+    | '/sitemaps/$part'
+    | '/rencontre/'
     | '/api/auth/$'
+    | '/rencontre/$slug/$theme'
+    | '/rencontre/departement/$slug'
+    | '/rencontre/region/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,7 +271,13 @@ export interface FileRouteTypes {
     | '/ambassadeur/guide'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
+    | '/rencontre/$slug'
+    | '/sitemaps/$part'
+    | '/rencontre'
     | '/api/auth/$'
+    | '/rencontre/$slug/$theme'
+    | '/rencontre/departement/$slug'
+    | '/rencontre/region/$slug'
   id:
     | '__root__'
     | '/'
@@ -229,7 +296,13 @@ export interface FileRouteTypes {
     | '/ambassadeur_/guide'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live_/$code'
+    | '/rencontre/$slug'
+    | '/sitemaps/$part'
+    | '/rencontre/'
     | '/api/auth/$'
+    | '/rencontre/$slug_/$theme'
+    | '/rencontre/departement/$slug'
+    | '/rencontre/region/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,7 +322,13 @@ export interface RootRouteChildren {
   AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
   FrSortirRencontrerChar123villeChar125Route: typeof FrSortirRencontrerChar123villeChar125Route
   LiveCodeRoute: typeof LiveCodeRoute
+  RencontreSlugRoute: typeof RencontreSlugRoute
+  SitemapsPartRoute: typeof SitemapsPartRoute
+  RencontreIndexRoute: typeof RencontreIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  RencontreSlugThemeRoute: typeof RencontreSlugThemeRoute
+  RencontreDepartementSlugRoute: typeof RencontreDepartementSlugRoute
+  RencontreRegionSlugRoute: typeof RencontreRegionSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -366,11 +445,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rencontre/': {
+      id: '/rencontre/'
+      path: '/rencontre'
+      fullPath: '/rencontre/'
+      preLoaderRoute: typeof RencontreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rencontre/$slug': {
+      id: '/rencontre/$slug'
+      path: '/rencontre/$slug'
+      fullPath: '/rencontre/$slug'
+      preLoaderRoute: typeof RencontreSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemaps/$part': {
+      id: '/sitemaps/$part'
+      path: '/sitemaps/$part'
+      fullPath: '/sitemaps/$part'
+      preLoaderRoute: typeof SitemapsPartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rencontre/$slug_/$theme': {
+      id: '/rencontre/$slug_/$theme'
+      path: '/rencontre/$slug/$theme'
+      fullPath: '/rencontre/$slug/$theme'
+      preLoaderRoute: typeof RencontreSlugThemeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rencontre/departement/$slug': {
+      id: '/rencontre/departement/$slug'
+      path: '/rencontre/departement/$slug'
+      fullPath: '/rencontre/departement/$slug'
+      preLoaderRoute: typeof RencontreDepartementSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rencontre/region/$slug': {
+      id: '/rencontre/region/$slug'
+      path: '/rencontre/region/$slug'
+      fullPath: '/rencontre/region/$slug'
+      preLoaderRoute: typeof RencontreRegionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -394,7 +515,13 @@ const rootRouteChildren: RootRouteChildren = {
   FrSortirRencontrerChar123villeChar125Route:
     FrSortirRencontrerChar123villeChar125Route,
   LiveCodeRoute: LiveCodeRoute,
+  RencontreSlugRoute: RencontreSlugRoute,
+  SitemapsPartRoute: SitemapsPartRoute,
+  RencontreIndexRoute: RencontreIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  RencontreSlugThemeRoute: RencontreSlugThemeRoute,
+  RencontreDepartementSlugRoute: RencontreDepartementSlugRoute,
+  RencontreRegionSlugRoute: RencontreRegionSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

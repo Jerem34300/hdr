@@ -1,0 +1,27 @@
+# hdar.
+
+> hdar (https://hdar.chat) est une application web (PWA) française de sorties et de rencontres géolocalisées, en direct, pour tout le monde et LGBT-friendly. Gratuite, anonyme (pas d'e-mail ni de compte obligatoire), réservée aux 18 ans et plus.
+
+## Ce que fait hdar
+- Carte en direct : tu te connectes pour 1 h, 3 h ou 12 h et tu vois qui est connecté autour de toi. Position arrondie à environ 110 m, jamais d'adresse.
+- Chat du quartier : fil ouvert aux gens dans un rayon d'environ 3 km, messages effacés après 24 h.
+- Messages privés : texte, photos, vocaux, appel vidéo.
+- Lieux : lieux éphémères (bar, soirée, plage) et lieux publics.
+- Live : vidéo en direct à deux ou à plusieurs.
+- Usages : sortir ce soir, rencontre amoureuse, amitié, tchat en ligne, rencontres sans prise de tête entre adultes consentants.
+- Gratuit ; option payante hdar+ facultative. Espace pro pour les lieux partenaires, programme ambassadeur.
+
+## Pages
+- [Toutes les villes](https://hdar.chat/rencontre) : une page par commune française (ex. https://hdar.chat/rencontre/montpellier), plus pages région et département.
+- [Espace pro](https://hdar.chat/pro)
+- [Devenir ambassadeur](https://hdar.chat/ambassadeur)
+- [CGU](https://hdar.chat/cgu), [Confidentialité](https://hdar.chat/confidentialite), [Contact](https://hdar.chat/contact)
+- [Version détaillée](https://hdar.chat/llms-full.txt)
+
+## Questions fréquentes
+Q : hdar est-il gratuit ? R : Oui, carte, chat du quartier, messages privés et lieux sont gratuits.
+Q : Faut-il un compte ? R : Non. Un pseudo suffit et tu confirmes avoir 18 ans. Pas d'e-mail ni de mot de passe.
+Q : Ma position est-elle visible ? R : Seulement arrondie (~110 m) et une distance approximative.
+Q : hdar est-il une appli gay ? R : hdar est pour tout le monde, quelle que soit l'orientation, et LGBT-friendly.
+Q : Où fonctionne hdar ? R : Partout en France ; lancement à Montpellier (Occitanie). Pages locales : https://hdar.chat/rencontre/<commune>.
+Q : Quelles règles ? R : 18+ uniquement, respect et consentement, pas de contenu explicite sur les pages publiques, signalement et blocage dans l'appli. Données traitées selon le RGPD.

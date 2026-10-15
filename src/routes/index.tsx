@@ -67,11 +67,13 @@ function Splash() {
       </p>
       <h1 className="mt-3 text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.</h1>
       <nav aria-label="Villes" className="absolute inset-x-6 bottom-6 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
-        {SEO_CITIES.map((c) => (
-          <Link key={c.slug} to="/fr/sortir-rencontrer-{$ville}" params={{ ville: c.slug }}>
-            {c.name}
-          </Link>
+        {SEO_CITIES.filter((c) => c.slug !== "cap-d-agde").map((c) => (
+          <a key={c.slug} href={`/rencontre/${c.slug}`}>{c.name}</a>
         ))}
+        <a href="/rencontre/region/occitanie">Occitanie</a>
+        <a href="/rencontre/region/ile-de-france">Île-de-France</a>
+        <a href="/rencontre/region/provence-alpes-cote-d-azur">PACA</a>
+        <a href="/rencontre">Toutes les villes</a>
       </nav>
     </main>
   );

@@ -264,3 +264,27 @@
 /* Live à plusieurs : cases du diffuseur */
 @keyframes tilein { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes tileout { from { transform: scale(1); opacity: 1; } to { transform: scale(.2); opacity: 0; } }
+
+/* ---- Pages SEO /rencontre : motion design léger ---- */
+.seo-hero { position: relative; overflow: hidden; isolation: isolate; }
+.seo-flare { position: absolute; border-radius: 9999px; filter: blur(60px); opacity: .55; z-index: -1; animation: seo-drift 18s ease-in-out infinite alternate; }
+.seo-dot { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 9999px; background: #FA6F6C; box-shadow: 0 0 14px 3px rgba(250,111,108,.7); opacity: 0; animation: seo-pop .7s ease-out forwards, seo-float 6s ease-in-out infinite alternate; }
+.seo-dot.g { background: #3ee08f; box-shadow: 0 0 14px 3px rgba(62,224,143,.6); }
+.seo-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2px solid currentColor; color: inherit; animation: seo-ring 2.8s ease-out infinite; animation-delay: inherit; }
+.seo-dot.c::after { color: #FA6F6C; } .seo-dot.g::after { color: #3ee08f; }
+.seo-grid { position: absolute; inset: 0; z-index: -1; opacity: .18; background-image: linear-gradient(#ffffff14 1px, transparent 1px), linear-gradient(90deg, #ffffff14 1px, transparent 1px); background-size: 34px 34px; mask-image: radial-gradient(circle at 50% 45%, #000 0, transparent 70%); }
+.seo-cta { background: linear-gradient(120deg, #FA6F6C, #ff9a6b 50%, #FA6F6C); background-size: 200% 100%; animation: seo-shine 4s linear infinite; box-shadow: 0 8px 30px -6px rgba(250,111,108,.6); }
+.seo-card { border: 1px solid #262630; background: linear-gradient(160deg, #17171f, #101016); border-radius: 1.25rem; }
+@keyframes seo-drift { from { transform: translate(-6%, -4%) scale(1); } to { transform: translate(8%, 6%) scale(1.15); } }
+@keyframes seo-pop { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+@keyframes seo-float { from { translate: 0 0; } to { translate: 0 -6px; } }
+@keyframes seo-ring { from { transform: scale(1); opacity: .8; } to { transform: scale(4); opacity: 0; } }
+@keyframes seo-shine { to { background-position: -200% 0; } }
+@supports (animation-timeline: view()) {
+  .seo-reveal { animation: seo-in linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+  @keyframes seo-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seo-flare, .seo-dot, .seo-dot::after, .seo-cta, .seo-reveal { animation: none !important; opacity: 1; }
+  .seo-flare { opacity: .5; }
+}
