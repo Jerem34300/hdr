@@ -19,7 +19,7 @@ function Terms() {
         Le service est anonyme et gratuit dans sa version de base. Tu restes responsable de ce que tu publies et partages, y
         compris ta position exacte lorsque tu choisis de l'envoyer.
       </p>
-      <h2>3. Ce qui est interdit</h2>
+      <h2 id="interdits">3. Ce qui est interdit (politique d'utilisation acceptable)</h2>
       <ul>
         <li>
           <strong>Toute présence ou tout contenu impliquant un mineur</strong> : signalé aux
@@ -55,6 +55,38 @@ function Terms() {
         contenu concerné et pourquoi il est illicite ; nous agissons rapidement et t'informons de
         la décision.
       </p>
+      <h2 id="autorites">4 bis. Demandes des autorités</h2>
+      <p>
+        Les autorités judiciaires et les forces de l'ordre adressent leurs demandes via le{" "}
+        <ContactLink /> (sujet « Signalement »), en joignant la réquisition ou la décision
+        concernée et un moyen de les recontacter.
+      </p>
+      <ul>
+        <li>
+          Nous vérifions l'origine et la validité de chaque demande. Nous ne communiquons de données
+          que sur réquisition ou décision émanant d'une autorité compétente, conformément au droit
+          français et européen (notamment la LCEN et le règlement sur les services numériques).
+        </li>
+        <li>
+          Nous ne transmettons que les données strictement nécessaires dont nous disposons au moment
+          de la demande, dans la limite de nos durées de conservation (voir la politique de
+          confidentialité) : données du profil, dates d'activité, contenus signalés, historique de
+          modération et, le cas échéant, données de paiement détenues par Stripe.
+        </li>
+        <li>
+          Les demandes urgentes (danger immédiat pour une personne, implication d'un mineur) sont
+          traitées en priorité. Tout contenu impliquant un mineur est signalé spontanément aux
+          autorités (Pharos), et le compte est banni.
+        </li>
+        <li>
+          À la réception d'une demande valable, nous pouvons conserver les données concernées au-delà
+          des durées habituelles, le temps nécessaire à l'enquête.
+        </li>
+        <li>
+          Sauf interdiction légale ou demande contraire de l'autorité, la personne concernée peut
+          être informée de la demande.
+        </li>
+      </ul>
       <h2>5. Sécurité lors des rencontres</h2>
       <p>
         Rencontre de préférence dans un lieu public, préviens un proche, protège-toi. hdar. ne
