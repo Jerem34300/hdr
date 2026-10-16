@@ -11,6 +11,7 @@
 
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
 import { track } from "./track";
+import { deviceId } from "./device";
 
 export type LivePin = {
   id: string;
@@ -940,7 +941,7 @@ export function identityLine(iam: string, seeking: string[]) {
 
 export type RoomMediaRow = { id: string; kind: "image" | "video" | "audio"; media: string; duration: number | null };
 const roomMediaCache = new Map<string, Promise<RoomMediaRow | null>>();
-export function roomMedia(scope: "area" | "place" | "spot", id: string): Promise<RoomMediaRow | null> {
+export function roomMedia(scope: "area" | "place" | "spot" | "salon", id: string): Promise<RoomMediaRow | null> {
   const key = `${scope}:${id}`;
   let hit = roomMediaCache.get(key);
   if (!hit) {
@@ -956,7 +957,7 @@ export const spotSendMedia = (id: string, pseudo: string, kind: string, path: st
   rpc("hdar_spot_send_media", { p_id: id, p_pseudo: pseudo, p_kind: kind, p_path: path, p_duration: duration });
 export const placeSendMedia = (id: string, kind: string, path: string, duration: number | null, lat: number, lng: number) =>
   rpc("hdar_place_send_media", { p_id: id, p_kind: kind, p_path: path, p_duration: duration, p_lat: lat, p_lng: lng });
-export const mediaReport = (scope: "area" | "place" | "spot", id: string) => rpc("hdar_media_report", { p_scope: scope, p_id: id });
+export const mediaReport = (scope: "area" | "place" | "spot" | "salon", id: string) => rpc("hdar_media_report", { p_scope: scope, p_id: id });
 
 // Live roulette (v32) -------------------------------------------------------------
 export type LiveCard = { pro?: { place: string; name: string; kind: string } | null; id: string; pseudo: string; age: number | null; iam: string | null; seeking: string | null; note: string | null; premium: boolean; role: "offer" | "answer" };
@@ -1207,16 +1208,79 @@ export type AdminAmbContract = { user_id: string; pseudo: string; name: string; 
 export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });
 
 // Salons (v58) : discussions ouvertes à tous, sans limite de distance ---------------------------
-export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; mine: boolean; last_at: string; recent: number; people: number };
-export type SalonLine = { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean };
+export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; mine: boolean; last_at: string; recent: number; people: number };
+/** Une ligne de discussion de groupe (salon ou chat du quartier). */
+export type GroupLine = {
+  id: string;
+  fromId: string;
+  pseudo: string;
+  body: string;
+  kind: "text" | "image" | "video" | "audio";
+  at: number;
+  mine: boolean;
+  replyTo: string | null;
+  reply: { pseudo: string; body: string } | null;
+  lat?: number;
+  lng?: number;
+};
+type GroupRow = {
+  id: string; from_id: string; pseudo: string; body: string; kind?: string | null; at: string; mine: boolean;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; lat?: number; lng?: number;
+};
+const toLine = (r: GroupRow): GroupLine => ({
+  id: r.id,
+  fromId: r.from_id,
+  pseudo: r.pseudo,
+  body: r.body,
+  kind: (r.kind || (r.body ? "text" : "image")) as GroupLine["kind"],
+  at: r.at.includes("T") ? Date.parse(r.at) : pgTime(r.at),
+  mine: r.mine,
+  replyTo: r.reply_to ?? null,
+  reply: r.reply ?? null,
+  lat: r.lat == null ? undefined : Number(r.lat),
+  lng: r.lng == null ? undefined : Number(r.lng),
+});
+/** Fonction SQL absente (base pas encore à jour) : on retombe sur l'ancienne. */
+const missingFn = (e: unknown) => e instanceof Error && /could not find the function|schema cache/i.test(e.message);
+
 export const listSalons = () => rpc<Salon[]>("hdar_salons", {});
 export const getSalon = (id: string) => rpc<Salon | null>("hdar_salon_get", { p_id: id });
 export const createSalon = (name: string, description: string, emoji: string) =>
   rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
-export const salonMessages = (id: string) => rpc<SalonLine[]>("hdar_salon_messages", { p_id: id });
-export async function salonSend(id: string, body: string) {
-  await rpc("hdar_salon_send", { p_id: id, p_body: body.trim().slice(0, 500) });
+export const salonMessages = async (id: string) => (await rpc<GroupRow[]>("hdar_salon_messages", { p_id: id })).map(toLine);
+export async function salonSend(id: string, body: string, replyTo: string | null = null) {
+  const b = body.trim().slice(0, 1000);
+  try {
+    await rpc("hdar_salon_send2", { p_id: id, p_body: b, p_reply: replyTo });
+  } catch (e) {
+    if (!missingFn(e)) throw e;
+    await rpc("hdar_salon_send", { p_id: id, p_body: b.slice(0, 500) });
+  }
   track("msg_salon");
+}
+export async function salonSendMedia(id: string, kind: string, path: string, duration: number | null, replyTo: string | null) {
+  await rpc("hdar_salon_send_media", { p_id: id, p_kind: kind, p_path: path, p_duration: duration, p_reply: replyTo });
+  track("msg_salon");
+}
+
+/** Chat du quartier avec réponses citées (v59), repli sur l'ancien flux sinon. */
+export async function areaFeed2(lat: number, lng: number): Promise<GroupLine[]> {
+  try {
+    return (await rpc<GroupRow[]>("hdar_area_feed2", { p_lat: lat, p_lng: lng })).map(toLine);
+  } catch (e) {
+    if (!missingFn(e)) throw e;
+    const rows = await areaFeed(deviceId(), lat, lng);
+    return rows.map((r) => toLine({ id: r.id, from_id: r.fromId, pseudo: r.pseudo, body: r.body, at: r.at, mine: r.mine, lat: r.lat, lng: r.lng }));
+  }
+}
+export async function areaSend2(lat: number, lng: number, pseudo: string, body: string, replyTo: string | null) {
+  try {
+    await rpc("hdar_area_send2", { p_lat: lat, p_lng: lng, p_pseudo: pseudo, p_body: body, p_reply: replyTo });
+    track("msg_area");
+  } catch (e) {
+    if (!missingFn(e)) throw e;
+    await areaSend(deviceId(), lat, lng, pseudo, body);
+  }
 }
 export const salonHide = (msg: string) => rpc("hdar_salon_hide", { p_msg: msg });
 export const salonClose = (id: string) => rpc("hdar_salon_close", { p_id: id });
