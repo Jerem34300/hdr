@@ -247,6 +247,14 @@ function Privacy() {
         lien avec ton profil. Ces statistiques sont gardées <strong>400 jours</strong>. Aucun
         outil d'analyse tiers, aucun traceur publicitaire.
       </p>
+      <p>
+        <strong>Ville approximative</strong> : à l'ouverture de l'appli, notre hébergeur (Netlify)
+        déduit de ta connexion le nom de ta ville approximative (par exemple « Montpellier »). Nous
+        enregistrons uniquement ce nom sur ton profil, <strong>jamais ton adresse IP</strong> ni ta
+        position. Il n'est visible que par l'équipe hdar (administration et modération) et sert à
+        savoir dans quelles villes l'appli est utilisée (intérêt légitime). Il est effacé avec ton
+        profil.
+      </p>
 
       <h2>Programme ambassadeur</h2>
       <p>Quand tu t'inscris via le lien ou QR code d'un ambassadeur, nous enregistrons ce rattachement pour calculer sa commission. L'ambassadeur ne voit <b>que des compteurs agrégés</b> (nombre d'inscrits, de profils validés, de codes utilisés, chiffre d'affaires global) : jamais ton pseudo, ta photo, ta position ni tes achats. Pour les ambassadeurs, l'identité, l'IBAN et le SIRET sont collectés et conservés par <b>Stripe</b> (Stripe Connect), pas par hdar ; nous gardons seulement l'identifiant du compte Stripe, son statut et l'historique des versements (pièces comptables conservées 10 ans).</p>
