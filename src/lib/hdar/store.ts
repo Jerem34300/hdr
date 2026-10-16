@@ -210,6 +210,12 @@ type State = {
   enterLine: (id: string) => void;
   openPocket: () => void;
   openSalon: (id: string, title: string) => void;
+  /** Salons suivis sur cet appareil (ouverts ou écrits) et date de dernière lecture. */
+  followedSalons: string[];
+  salonSeen: Record<string, number>;
+  followSalon: (id: string) => void;
+  unfollowSalon: (id: string) => void;
+  markSalonSeen: (id: string) => void;
   sendPocket: (text: string) => void;
   openChat: (personId: string) => void;
   closeView: () => void;
@@ -453,6 +459,14 @@ export const useHdar = create<State>()(
       },
       openPocket: () => set({ view: { name: "pocket" }, sheet: null }),
       openSalon: (id, title) => set({ view: { name: "salon", id, title }, sheet: null }),
+      followedSalons: [],
+      salonSeen: {},
+      followSalon: (id) => {
+        const f = get().followedSalons;
+        if (!f.includes(id)) set({ followedSalons: [...f, id].slice(-50) });
+      },
+      unfollowSalon: (id) => set({ followedSalons: get().followedSalons.filter((x) => x !== id) }),
+      markSalonSeen: (id) => set({ salonSeen: { ...get().salonSeen, [id]: Date.now() } }),
       sendPocket: (text) => {
         const value = text.trim();
         if (!value) return;
@@ -716,6 +730,8 @@ export const useHdar = create<State>()(
         joined: s.joined,
         safetyCode: s.safetyCode,
         seenAt: s.seenAt,
+        followedSalons: s.followedSalons,
+        salonSeen: s.salonSeen,
       }),
     },
   ),
