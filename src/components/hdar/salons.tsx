@@ -5,15 +5,17 @@ import { askConfirm } from "@/lib/hdar/confirm";
 import {
   createSalon,
   getSalon,
-  listSalons,
+  pgTime,
   salonClose,
   salonHide,
   salonMessages,
   salonSend,
   salonSendMedia,
   type GroupLine,
+  type InboxSalon,
   type Salon,
 } from "@/lib/hdar/live";
+import { refreshSalonInbox, useSalonInbox } from "@/lib/hdar/salon-inbox";
 import { regionAt } from "@/lib/hdar/regions";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
@@ -32,71 +34,51 @@ function useMyRegion() {
   return regionAt(at.lat, at.lng);
 }
 
-function activity(s: Salon) {
-  return s.recent > 0 ? `${s.people} pers. · ${s.recent} msg` : "Calme en ce moment";
-}
-
-/** Salons (partout en France, par région) + chat du quartier, en tête de l'onglet Messages. */
-export function SalonsStrip() {
+/** Découvrir : chat du quartier, ta région, salons thématiques et régions (onglet Messages). */
+export function SalonDiscover() {
   const openPocket = useHdar((s) => s.openPocket);
   const openSalon = useHdar((s) => s.openSalon);
   const setTab = useHdar((s) => s.setTab);
   const onboarded = useHdar((s) => s.me.onboarded);
+  const followed = useHdar((s) => s.followedSalons);
   const myRegion = useMyRegion();
-  const { area } = useActivity();
-  const [salons, setSalons] = useState<Salon[] | null>(null);
+  const { salons } = useSalonInbox();
   const [creating, setCreating] = useState(false);
-
-  const load = useCallback(() => {
-    void listSalons()
-      .then(setSalons)
-      .catch(() => setSalons([]));
-  }, []);
-  useEffect(() => {
-    load();
-    const id = window.setInterval(load, 30_000);
-    return () => window.clearInterval(id);
-  }, [load]);
+  const [allRegions, setAllRegions] = useState(false);
 
   const regions = (salons ?? []).filter((s) => s.region);
   const mine = regions.find((s) => s.region === myRegion);
-  const others = regions.filter((s) => s !== mine).sort((a, b) => b.recent - a.recent || a.name.localeCompare(b.name, "fr"));
-  const topics = (salons ?? []).filter((s) => !s.region);
+  const others = regions.filter((s) => s !== mine).sort((x, y) => y.recent - x.recent || x.name.localeCompare(y.name, "fr"));
+  // Salons à découvrir : ceux qu'on ne suit pas encore (les suivis sont dans la liste des discussions).
+  const topics = (salons ?? []).filter((s) => !s.region && !followed.includes(s.id));
 
-  const chip = "flex w-36 shrink-0 flex-col items-start gap-1 rounded-2xl border border-line bg-surface p-3 text-left";
-  const small = "flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-sm";
+  const chip = "flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-sm whitespace-nowrap";
+  const count = (s: Salon) =>
+    s.recent > 0 ? <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-muted">{s.recent > 99 ? "99+" : s.recent}</span> : null;
   return (
-    <section className="mt-5">
+    <section className="mt-4">
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-lg font-bold">Salons</h2>
         <p className="text-xs text-muted">Ouverts à tous · effacés après 24 h</p>
       </div>
       <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
-        <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " relative border-signal/60"}>
-          <span className="text-xl">📍</span>
-          <span className="font-display text-sm font-bold">Chat du quartier</span>
-          <span className="text-xs text-muted">Les gens à ~3 km</span>
-          {area > 0 && (
-            <span className="absolute top-2 right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">
-              {area > 9 ? "9+" : area}
-            </span>
-          )}
+        <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " border-signal/60"}>
+          📍 Quartier
         </button>
-        {mine && (
+        {mine && !followed.includes(mine.id) && (
           <button type="button" data-act="salon" data-id={mine.id} {...bindTap(() => openSalon(mine.id, mine.name))} className={chip + " border-signal/60"}>
-            <span className="text-xl">{mine.emoji || "🗺️"}</span>
-            <span className="w-full truncate font-display text-sm font-bold">{mine.name}</span>
-            <span className="text-xs text-muted">Ta région · {activity(mine)}</span>
+            {mine.emoji} {mine.name} {count(mine)}
           </button>
         )}
-        {salons === null && [0, 1, 2].map((i) => <span key={i} className={chip + " h-[88px] animate-pulse opacity-50"} />)}
+        {salons === null && [0, 1, 2].map((i) => <span key={i} className={chip + " w-24 animate-pulse opacity-50"} />)}
         {topics.map((s) => (
           <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={chip}>
-            <span className="text-xl">{s.emoji || "💬"}</span>
-            <span className="w-full truncate font-display text-sm font-bold">{s.name}</span>
-            <span className="text-xs text-muted">{s.recent > 0 ? activity(s) : s.official ? "Salon officiel" : "Calme en ce moment"}</span>
+            {s.emoji || "💬"} {s.name} {count(s)}
           </button>
         ))}
+        <button type="button" aria-expanded={allRegions} onClick={() => setAllRegions((v) => !v)} className={chip}>
+          🗺️ Régions {allRegions ? "▴" : "▾"}
+        </button>
         <button
           type="button"
           data-act="salon-create"
@@ -107,37 +89,137 @@ export function SalonsStrip() {
             }
             setCreating(true);
           })}
-          className={chip + " items-center justify-center border-dashed text-muted"}
+          className={chip + " border-dashed text-muted"}
         >
-          <Plus className="size-6" />
-          <span className="text-sm">Créer un salon</span>
+          <Plus className="size-4" /> Créer
         </button>
       </div>
-      {others.length > 0 && (
-        <>
-          <p className="mt-3 text-xs tracking-wide text-muted uppercase">Régions</p>
-          <div className="-mx-4 mt-1.5 flex gap-2 overflow-x-auto px-4 pb-1">
-            {others.map((s) => (
-              <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={small}>
-                <span>{s.emoji || "🗺️"}</span>
-                <span className="whitespace-nowrap">{s.name}</span>
-                {s.recent > 0 && <span className="rounded-full bg-signal px-1.5 text-[11px] font-bold text-night">{s.recent > 99 ? "99+" : s.recent}</span>}
-              </button>
-            ))}
-          </div>
-        </>
+      {allRegions && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {[...(mine ? [mine] : []), ...others].map((s) => (
+            <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={chip}>
+              {s.emoji || "🗺️"} {s.name} {count(s)}
+            </button>
+          ))}
+        </div>
       )}
       {creating && (
         <CreateSalon
           onClose={() => setCreating(false)}
           onCreated={(id, name) => {
             setCreating(false);
-            load();
+            refreshSalonInbox();
             openSalon(id, name);
           }}
         />
       )}
     </section>
+  );
+}
+
+function when(ms: number) {
+  const min = Math.max(0, Math.round((Date.now() - ms) / 60000));
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} h`;
+  return `${Math.round(h / 24)} j`;
+}
+
+/** Une ligne « salon » dans la liste des discussions (même gabarit que les discussions privées). */
+export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean }) {
+  const openSalon = useHdar((st) => st.openSalon);
+  const unfollow = useHdar((st) => st.unfollowSalon);
+  const unread = s.unread ?? 0;
+  const at = s.last ? pgTime(s.last.at) : null;
+  return (
+    <li className="flex items-stretch gap-2">
+      <button
+        type="button"
+        data-act="salon"
+        data-id={s.id}
+        {...bindTap(() => openSalon(s.id, s.name))}
+        className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
+      >
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">{s.emoji || "💬"}</span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>{s.name}</span>
+            <span className="shrink-0 text-xs text-muted">{at ? when(at) : ""}</span>
+          </span>
+          <span className="flex items-center gap-2">
+            <span className={"min-w-0 flex-1 truncate text-sm " + (unread ? "text-ink" : "text-muted")}>
+              {s.last ? `${s.last.mine ? "Toi" : s.last.pseudo} : ${s.last.body}` : "Pas de message ces dernières 24 h"}
+            </span>
+            {(s.replies ?? 0) > 0 && (
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[11px] font-bold text-night" aria-label="On t'a répondu">
+                ↩
+              </span>
+            )}
+            {unread > 0 && (
+              <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-signal px-1.5 text-[11px] font-bold text-night" aria-label={`${unread} non lus`}>
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
+      {editing && (
+        <button
+          type="button"
+          aria-label={`Quitter ${s.name}`}
+          className="flex w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-signal text-xs text-night"
+          onClick={() => {
+            unfollow(s.id);
+            refreshSalonInbox();
+          }}
+        >
+          <X className="size-5" />
+          Quitter
+        </button>
+      )}
+    </li>
+  );
+}
+
+/** Chat du quartier dans la liste des discussions (si on l'utilise ou s'il y a du nouveau). */
+export function AreaInboxRow() {
+  const openPocket = useHdar((s) => s.openPocket);
+  const { area } = useActivity();
+  let seen = 0;
+  try {
+    seen = Date.parse(localStorage.getItem("hdar-area-seen") || "") || 0;
+  } catch {
+    /* rien */
+  }
+  if (!area && Date.now() - seen > 24 * 3600 * 1000) return null;
+  return (
+    <li>
+      <button
+        type="button"
+        data-act="pocket"
+        {...bindTap(openPocket)}
+        className="flex h-20 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
+      >
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">📍</span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className={"truncate font-display " + (area ? "font-extrabold" : "font-bold")}>Chat du quartier</span>
+            <span className="shrink-0 text-xs text-muted">{seen ? when(seen) : ""}</span>
+          </span>
+          <span className="flex items-center gap-2">
+            <span className={"min-w-0 flex-1 truncate text-sm " + (area ? "text-ink" : "text-muted")}>
+              {area ? "Nouveaux messages autour de toi" : "Les gens à ~3 km"}
+            </span>
+            {area > 0 && (
+              <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-signal px-1.5 text-[11px] font-bold text-night">
+                {area > 9 ? "9+" : area}
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
+    </li>
   );
 }
 
@@ -242,8 +324,20 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
       })
       .catch(() => undefined);
     refresh();
-    const t = window.setInterval(() => document.visibilityState === "visible" && refresh(), 3000);
-    return () => window.clearInterval(t);
+    // Ouvrir un salon le suit (il apparaît dans les discussions) et le marque lu, en entrant et en sortant.
+    const st = useHdar.getState();
+    st.followSalon(id);
+    st.markSalonSeen(id);
+    const t = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      refresh();
+      useHdar.getState().markSalonSeen(id);
+    }, 3000);
+    return () => {
+      window.clearInterval(t);
+      useHdar.getState().markSalonSeen(id);
+      refreshSalonInbox();
+    };
   }, [id, setTab, refresh]);
 
   const owner = info?.mine ?? false;

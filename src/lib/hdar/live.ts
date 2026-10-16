@@ -1244,6 +1244,21 @@ const toLine = (r: GroupRow): GroupLine => ({
 const missingFn = (e: unknown) => e instanceof Error && /could not find the function|schema cache/i.test(e.message);
 
 export const listSalons = () => rpc<Salon[]>("hdar_salons", {});
+export type InboxSalon = Salon & {
+  wrote?: boolean;
+  unread?: number;
+  replies?: number;
+  last?: { pseudo: string; body: string; at: string; mine: boolean } | null;
+};
+/** Salons + non lus / réponses à moi pour ceux suivis (v60), repli sur la simple liste sinon. */
+export async function salonsInbox(seen: Record<string, string>): Promise<InboxSalon[]> {
+  try {
+    return await rpc<InboxSalon[]>("hdar_salons_inbox", { p_seen: seen });
+  } catch (e) {
+    if (!missingFn(e)) throw e;
+    return listSalons();
+  }
+}
 export const getSalon = (id: string) => rpc<Salon | null>("hdar_salon_get", { p_id: id });
 export const createSalon = (name: string, description: string, emoji: string) =>
   rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
@@ -1257,6 +1272,8 @@ export async function salonSend(id: string, body: string, replyTo: string | null
     await rpc("hdar_salon_send", { p_id: id, p_body: b.slice(0, 500) });
   }
   track("msg_salon");
+  // Propose les notifications après un vrai geste de conversation (réponses à mes messages).
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("hdar-ask-push"));
 }
 export async function salonSendMedia(id: string, kind: string, path: string, duration: number | null, replyTo: string | null) {
   await rpc("hdar_salon_send_media", { p_id: id, p_kind: kind, p_path: path, p_duration: duration, p_reply: replyTo });

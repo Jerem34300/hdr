@@ -31,6 +31,7 @@ import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
 import { track } from "@/lib/hdar/track";
 import { SalonRoom } from "./salons";
+import { useSalonInbox, useSalonInboxPolling } from "@/lib/hdar/salon-inbox";
 
 export function App() {
   const cover = useHdar((s) => s.cover);
@@ -44,7 +45,9 @@ export function App() {
   const now = useHdar((s) => s.now);
   const liveConvos = useHdar((s) => s.liveConvos);
   const seenAt = useHdar((s) => s.seenAt);
-  const unread = liveConvos.filter((c) => !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0)).length;
+  useSalonInboxPolling();
+  const salonUnread = useSalonInbox().unread;
+  const unread = liveConvos.filter((c) => !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0)).length + salonUnread;
   const tonight = me.tonight && !isExpired(me.tonight.expiresAt, now) ? me.tonight : null;
   useLiveSpotsSync();
   useProfileSync();
@@ -161,7 +164,7 @@ export function App() {
                   id="inbox"
                   label="Messages"
                   current={tab}
-                  badge={unread > 0}
+                  badge={unread}
                   icon={<MessageCircle className="size-5" />}
                   onClick={setTab}
                 />
@@ -190,7 +193,7 @@ function DockButton({
   label: string;
   current: Tab;
   icon: ReactNode;
-  badge?: boolean;
+  badge?: boolean | number;
   tip?: string;
   onClick: (tab: Tab) => void;
 }) {
@@ -207,7 +210,15 @@ function DockButton({
     >
       {icon}
       {label}
-      {badge && <span className="absolute top-2 right-5 size-2 rounded-full bg-signal" />}
+      {typeof badge === "number" ? (
+        badge > 0 && (
+          <span className="absolute top-1 right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )
+      ) : (
+        badge && <span className="absolute top-2 right-5 size-2 rounded-full bg-signal" />
+      )}
     </button>
   );
 }

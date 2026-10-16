@@ -10,6 +10,7 @@ import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth"
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
 import { GroupChatDemo } from "./group-chat";
+import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import {
   TURNSTILE_SITE_KEY,
@@ -176,6 +177,18 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
   if (location.search.includes("groupchat")) return <GroupChatDemo />;
+  if (location.search.includes("salonrows")) {
+    const iso = (m: number) => new Date(Date.now() - m * 60000).toISOString();
+    const base = { description: null, official: true, mine: false, last_at: iso(2), recent: 12, people: 4 };
+    return (
+      <main className="min-h-dvh bg-night px-4 pt-6 text-ink">
+        <ul className="space-y-2">
+          <SalonInboxRow editing={false} s={{ ...base, id: "a", name: "Occitanie", emoji: "☀️", unread: 5, replies: 1, last: { pseudo: "Lucas34", body: "On se retrouve où ?", at: iso(2), mine: false } }} />
+          <SalonInboxRow editing={false} s={{ ...base, id: "b", name: "LGBT+", emoji: "🏳️‍🌈", unread: 0, replies: 0, last: { pseudo: "Toi", body: "📷 Photo", at: iso(95), mine: true } }} />
+        </ul>
+      </main>
+    );
+  }
   if (location.search.includes("amblanding")) return <main className="h-dvh overflow-y-auto bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><a href="/" className="text-sm text-muted underline">← Retour</a><AmbLanding status={null} onApply={() => undefined} /></div></main>;
   if (location.search.includes("ambquiz")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><ApplyQuiz demo start={Number(new URLSearchParams(location.search).get("step") ?? 0)} onBack={() => undefined} onDone={() => undefined} /></div></main>;
   if (location.search.includes("profilcards")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="font-display text-xl font-extrabold">Profil (aperçu cartes)</p><ProSpaceCard demo /><PremiumCard /><InviteCard demo="X7K2Q9" /><a className="mt-6 block px-1 text-center text-[13px] text-muted">💸 Gagne de l'argent : <span className="font-bold text-[#3EE08F]">deviens ambassadeur ›</span></a></main>;
