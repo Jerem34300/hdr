@@ -934,15 +934,16 @@ function UsersTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string)
       {err && <p className="text-signal">{err}</p>}
       <div className="overflow-x-auto rounded-2xl border border-line">
         <table className="w-full text-left text-xs">
-          <thead className="bg-surface text-muted"><tr>{["Pseudo", "Âge", "Genre", "Inscrit", "Actif", "Région", "hdar+", "Boosts", "❤️ solde/reçus", "Dépensé", "Signal.", "Statut"].map((h) => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
+          <thead className="bg-surface text-muted"><tr>{["Pseudo", "Ville", "Âge", "Genre", "Inscrit", "Actif", "hdar+", "Boosts", "❤️ solde/reçus", "Dépensé", "Signal.", "Statut"].map((h) => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
           <tbody>
             {(data?.rows ?? []).map((r) => (
               <tr key={r.id} className="cursor-pointer border-t border-line hover:bg-surface" onClick={() => onOpen(r.id)}>
                 <td className="flex items-center gap-2 px-2 py-2 font-bold"><span className="size-7 shrink-0 overflow-hidden rounded-full border border-line"><Avatar src="" name={r.pseudo} className="size-full" /></span>{r.pseudo}{!r.has_photo ? "" : r.photo_status === "approved" ? " 📷" : " ⏳"}</td>
+                <td className="px-2">{r.city ?? r.region ?? "—"}</td>
                 <td className="px-2">{r.age ?? "—"}</td><td className="px-2">{r.iam ?? "—"}</td>
                 <td className="px-2">{r.created ? new Date(r.created).toLocaleDateString("fr-FR") : "—"}</td>
                 <td className="px-2">{r.last ? new Date(r.last).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
-                <td className="px-2">{r.region ?? "—"}</td><td className="px-2">{r.premium ? "👑" : ""}</td><td className="px-2">{r.boosts || ""}</td>
+                <td className="px-2">{r.premium ? "👑" : ""}</td><td className="px-2">{r.boosts || ""}</td>
                 <td className="px-2">{r.hearts ? `${r.hearts.balance} / ${r.hearts.received}` : "—"}</td><td className="px-2">{r.spent ? eur(r.spent) : "—"}</td>
                 <td className="px-2">{r.reports || ""}</td><td className="px-2">{r.banned ? "🚫 banni" : ""}</td>
               </tr>

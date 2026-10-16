@@ -29,6 +29,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TchatWebcamAleatoireRouteImport } from './routes/tchat-webcam-aleatoire'
 import { Route as WebcamGayLiveRouteImport } from './routes/webcam-gay-live'
 import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
+import { Route as ApiGeoRouteImport } from './routes/api/geo'
 import { Route as FrSortirRencontrerChar123villeChar125RouteImport } from './routes/fr/sortir-rencontrer-{$ville}'
 import { Route as LiveCodeRouteImport } from './routes/live_.$code'
 import { Route as RencontreIndexRouteImport } from './routes/rencontre/index'
@@ -139,6 +140,11 @@ const AmbassadeurGuideRoute = AmbassadeurGuideRouteImport.update({
   path: '/ambassadeur/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGeoRoute = ApiGeoRouteImport.update({
+  id: '/api/geo',
+  path: '/api/geo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FrSortirRencontrerChar123villeChar125Route =
   FrSortirRencontrerChar123villeChar125RouteImport.update({
     id: '/fr/sortir-rencontrer-{$ville}',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
+  '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
   '/rencontre/$slug': typeof RencontreSlugRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
+  '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
   '/rencontre/$slug': typeof RencontreSlugRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
+  '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live_/$code': typeof LiveCodeRoute
   '/rencontre/$slug': typeof RencontreSlugRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
     | '/ambassadeur/guide'
+    | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
     | '/rencontre/$slug'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
     | '/ambassadeur/guide'
+    | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
     | '/rencontre/$slug'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
     | '/ambassadeur_/guide'
+    | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live_/$code'
     | '/rencontre/$slug'
@@ -398,6 +410,7 @@ export interface RootRouteChildren {
   TchatWebcamAleatoireRoute: typeof TchatWebcamAleatoireRoute
   WebcamGayLiveRoute: typeof WebcamGayLiveRoute
   AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
+  ApiGeoRoute: typeof ApiGeoRoute
   FrSortirRencontrerChar123villeChar125Route: typeof FrSortirRencontrerChar123villeChar125Route
   LiveCodeRoute: typeof LiveCodeRoute
   RencontreSlugRoute: typeof RencontreSlugRoute
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AmbassadeurGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/geo': {
+      id: '/api/geo'
+      path: '/api/geo'
+      fullPath: '/api/geo'
+      preLoaderRoute: typeof ApiGeoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fr/sortir-rencontrer-{$ville}': {
       id: '/fr/sortir-rencontrer-{$ville}'
       path: '/fr/sortir-rencontrer-{$ville}'
@@ -638,6 +658,7 @@ const rootRouteChildren: RootRouteChildren = {
   TchatWebcamAleatoireRoute: TchatWebcamAleatoireRoute,
   WebcamGayLiveRoute: WebcamGayLiveRoute,
   AmbassadeurGuideRoute: AmbassadeurGuideRoute,
+  ApiGeoRoute: ApiGeoRoute,
   FrSortirRencontrerChar123villeChar125Route:
     FrSortirRencontrerChar123villeChar125Route,
   LiveCodeRoute: LiveCodeRoute,

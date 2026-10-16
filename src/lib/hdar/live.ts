@@ -508,6 +508,21 @@ export async function hideConversation(self: string, other: string) {
 /** Marks this device as active (app open). Throws "Compte suspendu" for a banned device. */
 export async function hit(self: string) {
   await rpc("hdar_hit", { p_self: selfId(self) });
+  void recordCity();
+}
+
+/** Ville approximative (géolocalisation Netlify, sans IP) rattachée au profil, au plus une fois toutes les 12 h. */
+async function recordCity() {
+  const KEY = "hdar-city-at";
+  try {
+    if (Date.now() - Number(localStorage.getItem(KEY) || 0) < 12 * 3600 * 1000) return;
+    localStorage.setItem(KEY, String(Date.now()));
+    const r = await fetch("/api/geo", { cache: "no-store" });
+    const { city } = (await r.json()) as { city: string | null };
+    if (city) await rpc("hdar_set_city", { p_city: city });
+  } catch {
+    /* statistique facultative */
+  }
 }
 
 /** Reports someone with a reason; also blocks them both ways. */
@@ -1004,7 +1019,7 @@ export const myHearts = () => rpc<{ balance: number; received: number; unlimited
 export const heartsReceived = (id: string) => rpc<number>("hdar_hearts_received", { p_id: id });
 export const heartSend = () => rpc<{ balance: number; unlimited?: boolean }>("hdar_heart_send", {});
 
-export type AdminUserRow = { id: string; pseudo: string; age: number | null; iam: string | null; has_photo: boolean; photo_status: string | null; created: string | null; last: string | null; region: string | null; premium: boolean; boosts: number; hearts: { balance: number; received: number } | null; spent: number; reports: number; banned: boolean };
+export type AdminUserRow = { id: string; pseudo: string; age: number | null; iam: string | null; has_photo: boolean; photo_status: string | null; created: string | null; last: string | null; region: string | null; city: string | null; premium: boolean; boosts: number; hearts: { balance: number; received: number } | null; spent: number; reports: number; banned: boolean };
 export type AdminUserExtra = { region: string | null; iam: string | null; seeking: string | null; created: string | null; bio: string | null; note: string | null; premium_until: string | null;
   hearts: { balance: number; received: number; bought: number } | null;
   activity: Record<string, number>; payments: { at: string; product: string; kind: string; cents: number; ref: string }[]; gifts: { at: string; detail: { kind: string; amount: number; msg: string | null } }[] };
