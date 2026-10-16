@@ -11,6 +11,7 @@ import {
   type SignalKind,
   type TonightLen,
 } from "./data";
+import { track } from "./track";
 import { deviceId } from "./device";
 import { closeSpot, createSpot as createLiveSpot, hideConversation, type Conversation, type SpotRow } from "./live";
 import { playPop, uid } from "./media";
@@ -107,6 +108,7 @@ export type View =
   | { name: "chat"; personId: string }
   | { name: "spot"; id: string }
   | { name: "pocket" }
+  | { name: "salon"; id: string; title: string }
   | { name: "live"; userId: string; pseudo: string }
   | { name: "profile"; userId: string; pseudo: string };
 
@@ -206,6 +208,7 @@ type State = {
   signal: (id: string, kind: SignalKind) => void;
   enterLine: (id: string) => void;
   openPocket: () => void;
+  openSalon: (id: string, title: string) => void;
   sendPocket: (text: string) => void;
   openChat: (personId: string) => void;
   closeView: () => void;
@@ -322,8 +325,12 @@ export const useHdar = create<State>()(
               sheet: null,
             });
             toast("Autour de toi · position arrondie");
+            track("geo_ok");
           },
-          () => toast("Position refusée. On reste sur le quartier."),
+          () => {
+            track("geo_no");
+            toast("Position refusée. On reste sur le quartier.");
+          },
           { enableHighAccuracy: false, maximumAge: 600_000, timeout: 8000 },
         );
       },
@@ -434,6 +441,7 @@ export const useHdar = create<State>()(
         });
       },
       openPocket: () => set({ view: { name: "pocket" }, sheet: null }),
+      openSalon: (id, title) => set({ view: { name: "salon", id, title }, sheet: null }),
       sendPocket: (text) => {
         const value = text.trim();
         if (!value) return;

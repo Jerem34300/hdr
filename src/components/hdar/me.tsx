@@ -8,6 +8,7 @@ import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
 import { wipeLocalSession } from "@/lib/hdar/session";
+import { track } from "@/lib/hdar/track";
 import { useFavorites } from "@/lib/hdar/favorites";
 import { useEffect, useRef, useState } from "react";
 import { Eye, Mic, Plus, Square, Trash2, X } from "lucide-react";
@@ -81,6 +82,7 @@ export function Me() {
       await setProfileNote(cleanNote);
       if (dirty) await saveIdentity();
       setSavedAt(Date.now());
+      track("profile_saved");
       toast("Profil enregistré ✓");
     } catch (e) { toast(`Échec de l'enregistrement : ${(e as Error).message}`); }
     finally { setSavingAll(false); }

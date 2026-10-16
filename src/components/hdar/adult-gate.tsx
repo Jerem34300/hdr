@@ -9,6 +9,7 @@ import { ProLanding } from "./pro-landing";
 import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
+import { trackGate } from "@/lib/hdar/track";
 import {
   TURNSTILE_SITE_KEY,
   adultConfirmed,
@@ -84,6 +85,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (state !== "ask") return;
+    trackGate("gate_view");
     let alive = true;
     void loadTurnstile().then((ts) => {
       if (!alive) return;
@@ -133,8 +135,12 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           setCaptchaToken(token || undefined);
           if (needsAdult) confirmAdult();
           ensureSession()
-            .then(() => setState("ok"))
+            .then(() => {
+              trackGate("gate_enter");
+              setState("ok");
+            })
             .catch((err: unknown) => {
+              trackGate("gate_error");
               setError(err instanceof Error ? err.message : "Connexion impossible, réessaie");
               setToken("");
               if (widget.current) window.turnstile?.reset(widget.current);

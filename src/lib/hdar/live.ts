@@ -10,6 +10,7 @@
  */
 
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
+import { track } from "./track";
 
 export type LivePin = {
   id: string;
@@ -187,6 +188,7 @@ export async function sendLive({ data }: { data: { self: string; to: string; bod
     .slice(0, 500);
   if (!body) return;
   await rpc("hdar_send", { p_self: selfId(data.self), p_to: otherId(data.to), p_body: body });
+  track("msg_pm");
   // Propose push notifications only after a real conversation gesture, never on load.
   if (typeof window !== "undefined") window.dispatchEvent(new Event("hdar-ask-push"));
 }
@@ -308,6 +310,7 @@ export async function spotMessages(self: string, id: string): Promise<SpotLine[]
 
 export async function sendSpotMessage(self: string, id: string, pseudo: string, body: string) {
   await rpc("hdar_spot_send", { p_self: selfId(self), p_id: id, p_pseudo: pseudo, p_body: body });
+  track("msg_spot");
 }
 
 export async function hideSpotMessage(self: string, id: string) {
@@ -460,6 +463,7 @@ export async function areaSend(
     p_pseudo: pseudo,
     p_body: body,
   });
+  track("msg_area");
 }
 
 export async function areaHide(self: string, id: string) {
@@ -713,8 +717,9 @@ export type PlaceLine = { id: string; from_id: string; pseudo: string; body: str
 export function placeMessages(id: string) {
   return rpc<PlaceLine[]>("hdar_place_messages", { p_id: id });
 }
-export function placeSend(id: string, body: string, lat: number | null, lng: number | null) {
-  return rpc("hdar_place_send", { p_id: id, p_body: body, p_lat: lat, p_lng: lng });
+export async function placeSend(id: string, body: string, lat: number | null, lng: number | null) {
+  await rpc("hdar_place_send", { p_id: id, p_body: body, p_lat: lat, p_lng: lng });
+  track("msg_place");
 }
 export function placeHide(msg: string) {
   return rpc("hdar_place_hide", { p_msg: msg });
@@ -1200,3 +1205,46 @@ export const adminAmbDecide = async (key: string, id: number, accept: boolean, n
 };
 export type AdminAmbContract = { user_id: string; pseudo: string; name: string; version: string; at: string; code: string | null };
 export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });
+
+// Salons (v58) : discussions ouvertes à tous, sans limite de distance ---------------------------
+export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; mine: boolean; last_at: string; recent: number; people: number };
+export type SalonLine = { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean };
+export const listSalons = () => rpc<Salon[]>("hdar_salons", {});
+export const getSalon = (id: string) => rpc<Salon | null>("hdar_salon_get", { p_id: id });
+export const createSalon = (name: string, description: string, emoji: string) =>
+  rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
+export const salonMessages = (id: string) => rpc<SalonLine[]>("hdar_salon_messages", { p_id: id });
+export async function salonSend(id: string, body: string) {
+  await rpc("hdar_salon_send", { p_id: id, p_body: body.trim().slice(0, 500) });
+  track("msg_salon");
+}
+export const salonHide = (msg: string) => rpc("hdar_salon_hide", { p_msg: msg });
+export const salonClose = (id: string) => rpc("hdar_salon_close", { p_id: id });
+
+// Admin v58 : visiteurs, chats de lieux, notes, salons ------------------------------------------
+export type VisitorRow = {
+  id: string; first: string; last: string; sessions: number; days: number; city: string | null; source: string | null;
+  landing: string | null; platform: string | null; pwa: boolean | null; profile: boolean; pseudo: string | null;
+  pm: number; area: number; place: number; steps: string[];
+};
+export type Breakdown = { k: string; n: number; p: number };
+export type AdminVisitors = {
+  tracked_since: string | null; total: number; with_profile: number; bounce: number; returning: number;
+  gate: Record<string, number>; steps: Record<string, number>;
+  sources: Breakdown[]; landings: Breakdown[]; platforms: Breakdown[]; rows: VisitorRow[];
+};
+export type AdminPlaceMsg = { id: string; scope: "place" | "spot"; from_id: string; pseudo: string; body: string; kind: string; at: string; removed: boolean; where: string; where_id: string };
+export type AdminRating = { id: string; name: string; kind: string; partner: boolean; avg: number | null; n: number; dist: Record<string, number> | null; comments: number; last: string | null };
+export type AdminSalon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; removed: boolean; created_at: string; last_at: string; creator_id: string | null; creator: string | null; messages: number; people: number };
+export type AdminSalonMsg = { id: string; from_id: string; pseudo: string; body: string; at: string; removed: boolean };
+export const admin58 = {
+  visitors: (key: string, days: number) => rpc<AdminVisitors>("hdar_admin_visitors", { p_key: key, p_days: days }),
+  placeMsgs: (key: string) => rpc<AdminPlaceMsg[]>("hdar_admin_place_msgs", { p_key: key }),
+  hideMsg: (key: string, scope: "place" | "spot" | "salon" | "area", id: string) => rpc("hdar_admin_hide_msg", { p_key: key, p_scope: scope, p_id: id }),
+  ratings: (key: string) => rpc<AdminRating[]>("hdar_admin_ratings", { p_key: key }),
+  salons: (key: string) => rpc<AdminSalon[]>("hdar_admin_salons", { p_key: key }),
+  salonMessages: (key: string, id: string) => rpc<AdminSalonMsg[]>("hdar_admin_salon_messages", { p_key: key, p_id: id }),
+  salonSet: (key: string, id: string, removed: boolean) => rpc("hdar_admin_salon_set", { p_key: key, p_id: id, p_removed: removed }),
+  salonCreate: (key: string, name: string, description: string, emoji: string) =>
+    rpc<string>("hdar_admin_salon_create", { p_key: key, p_name: name, p_description: description, p_emoji: emoji }),
+};

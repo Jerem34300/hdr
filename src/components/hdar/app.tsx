@@ -29,6 +29,8 @@ import { InstallPrompt } from "./install-prompt";
 import { ProfileView } from "./profile-view";
 import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
+import { track } from "@/lib/hdar/track";
+import { SalonRoom } from "./salons";
 
 export function App() {
   const cover = useHdar((s) => s.cover);
@@ -58,6 +60,21 @@ export function App() {
       window.clearInterval(id);
       window.removeEventListener("error", onError);
     };
+  }, []);
+
+  // Parcours anonyme (admin « Visiteurs ») : onglets, écrans et fenêtres ouverts.
+  useEffect(() => {
+    track("app");
+    if (useHdar.getState().me.onboarded) track("has_profile");
+    const note = (st: ReturnType<typeof useHdar.getState>) => {
+      if (st.view.name === "tabs") track(`tab:${st.tab}`);
+      else track(`view:${st.view.name}`);
+      if (st.sheet) track(`sheet:${typeof st.sheet === "string" ? st.sheet : st.sheet.type}`);
+    };
+    note(useHdar.getState());
+    return useHdar.subscribe((st, prev) => {
+      if (st.tab !== prev.tab || st.view !== prev.view || st.sheet !== prev.sheet) note(st);
+    });
   }, []);
 
   useEffect(() => { void resyncProfileFromServer().then((reload) => { if (reload) window.location.reload(); }); }, []);
@@ -117,6 +134,8 @@ export function App() {
             <PocketChat />
           ) : view.name === "spot" ? (
             <SpotRoom />
+          ) : view.name === "salon" ? (
+            <SalonRoom id={view.id} name={view.title} />
           ) : (
             <>
               {tab === "around" && <Around />}

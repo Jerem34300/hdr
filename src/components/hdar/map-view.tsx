@@ -15,6 +15,7 @@ import { listBoosted, liveCount, liveMap, pulse, goDark, type LivePin } from "@/
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
+import { track } from "@/lib/hdar/track";
 import { usePhoto } from "@/lib/hdar/photos";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
@@ -177,8 +178,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     follow.current = true;
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => applyFix(pos.coords.latitude, pos.coords.longitude, true),
-      () => setLocated(false),
+      (pos) => {
+        track("geo_ok");
+        applyFix(pos.coords.latitude, pos.coords.longitude, true);
+      },
+      () => {
+        track("geo_no");
+        setLocated(false);
+      },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 },
     );
   }
@@ -221,14 +228,19 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   }
 
   useEffect(() => {
+    track("map");
     const giveUp = window.setTimeout(() => setFinding(false), 7000);
     if (!navigator.geolocation) {
       setFinding(false);
       return () => window.clearTimeout(giveUp);
     }
     const id = navigator.geolocation.watchPosition(
-      (pos) => applyFix(pos.coords.latitude, pos.coords.longitude, follow.current),
-      () => {
+      (pos) => {
+        track("geo_ok");
+        applyFix(pos.coords.latitude, pos.coords.longitude, follow.current);
+      },
+      (err) => {
+        track(err.code === 1 ? "geo_no" : "geo_timeout");
         setLocated(false);
         setFinding(false);
       },

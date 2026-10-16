@@ -1,7 +1,15 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { useEffect } from "react";
+import { rememberLanding } from "@/lib/hdar/track";
 import appCss from "../styles.css?url";
+
+/** Mémorise la page d'arrivée et la provenance (statistique anonyme, admin « Visiteurs »). */
+function LandingMemo() {
+  useEffect(() => rememberLanding(), []);
+  return null;
+}
 
 export const Route = createRootRoute({
   head: () => ({
@@ -31,6 +39,7 @@ export const Route = createRootRoute({
       </head>
       <body>
         <PreviewHostBridge />
+        <LandingMemo />
         <AuthProvider>
           <Outlet />
         </AuthProvider>
