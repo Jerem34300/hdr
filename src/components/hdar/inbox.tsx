@@ -5,6 +5,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
 import { useFavorites } from "@/lib/hdar/favorites";
 import { bindTap } from "./tap";
+import { SalonsStrip } from "./salons";
 
 function when(ms: number) {
   const min = Math.max(0, Math.round((Date.now() - ms) / 60000));
@@ -23,7 +24,6 @@ export function Inbox() {
   const convos = [...rawConvos.filter((c) => favIds.has(c.otherId)), ...rawConvos.filter((c) => !favIds.has(c.otherId))];
   const seenAt = useHdar((s) => s.seenAt);
   const openLive = useHdar((s) => s.openLive);
-  const openPocket = useHdar((s) => s.openPocket);
   const deleteConversation = useHdar((s) => s.deleteConversation);
   const [editing, setEditing] = useState(false);
 
@@ -37,17 +37,15 @@ export function Inbox() {
           </button>
         )}
       </div>
-      <p className="mt-1 text-sm text-muted">Tes discussions privées.</p>
+      <SalonsStrip />
+      <h2 className="mt-6 font-display text-lg font-bold">Discussions privées</h2>
       {convos.length === 0 && (
-        <div className="py-16 text-center text-sm text-muted">
+        <div className="py-10 text-center text-sm text-muted">
           <p>Aucune discussion pour l'instant.</p>
-          <p className="mt-1">Touche un profil sur la carte, ou écris dans le chat du quartier.</p>
-          <button type="button" className="mt-4 h-11 rounded-full bg-signal px-5 text-night" onClick={openPocket}>
-            Chat du quartier
-          </button>
+          <p className="mt-1">Touche un profil sur la carte, ou écris dans un salon.</p>
         </div>
       )}
-      <ul className="mt-5 space-y-2">
+      <ul className="mt-3 space-y-2">
         {convos.map((c) => {
           const unread = !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0);
           const preview =

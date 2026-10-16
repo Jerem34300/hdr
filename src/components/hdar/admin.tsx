@@ -15,7 +15,6 @@ import { ChevronLeft, LogOut, RefreshCw } from "lucide-react";
 import {
   admin,
   pgTime,
-  type AdminAreaRow,
   type AdminBanRow,
   type AdminPhotoRow,
   type AdminContactRow, type AdminPlaceRow, adminPlaces,
@@ -26,10 +25,11 @@ import {
 import { Avatar } from "./avatar";
 import { Heat, Influencers, Monetization, Overview, TopPlaces, Week } from "./admin-analytics";
 import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
+import { ConversationsTab, RatingsSummary, VisitorsTab } from "./admin-insights";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "area" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live" | "visitors" | "convos";
 
 function readKey() {
   try {
@@ -167,50 +167,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
             <LogOut className="size-4" /> Quitter
           </button>
         </div>
-        <nav className="mx-auto mt-3 flex max-w-5xl gap-1 overflow-x-auto">
-          {(
-            [
-              ["overview", "Vue d'ensemble"],
-              ["users", "Utilisateurs"],
-              ["emails", "Emails"],
-              ["progifts", "Cadeaux pro"],
-              ["codes", "Codes cadeaux"],
-              ["partners", "Partenaires"],
-              ["revenus", "Revenus"],
-              ["live", "Live (qualité)"],
-              ["ambassadeurs", "Ambassadeurs"],
-              ["heat", "Carte de chaleur"],
-              ["week", "Horaires"],
-              ["top", "Top lieux"],
-              ["roi", "ROI lieux"],
-              ["growth", "Croissance & revenus"],
-              ["influencers", "Influenceurs"],
-              ["money", "Boosts & partenaires"],
-              ["pricing", "Tarifs"],
-              ["comments", "Avis"],
-              ["stats", "Temps réel"],
-              ["reports", `Signalements${openReports ? ` (${openReports})` : ""}`],
-              ["area", "Chat du quartier"],
-              ["support", "Support · rattacher"],
-              ["photos", "Photos"],
-              ["contacts", "Messages"],
-              ["places", "Lieux proposés"],
-              ["bans", "Bannis"],
-            ] as [Tab, string][]
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTab(id)}
-              className={
-                "shrink-0 border-b-2 px-3 pb-2 text-sm " +
-                (tab === id ? "border-signal text-ink" : "border-transparent text-muted")
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
+        <AdminNav tab={tab} setTab={setTab} openReports={openReports} />
       </header>
       <div className="mx-auto max-w-5xl px-4 py-5">
         {tab === "overview" && <Overview adminKey={adminKey} />}
@@ -220,7 +177,15 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "roi" && <RoiTab adminKey={adminKey} />}
         {tab === "growth" && <GrowthTab adminKey={adminKey} />}
         {tab === "pricing" && <PricingTab adminKey={adminKey} />}
-        {tab === "comments" && <CommentsTab adminKey={adminKey} />}
+        {tab === "comments" && (
+          <>
+            <RatingsSummary adminKey={adminKey} />
+            <h3 className="mb-2 font-display text-lg font-bold">Avis écrits</h3>
+            <CommentsTab adminKey={adminKey} />
+          </>
+        )}
+        {tab === "visitors" && <VisitorsTab adminKey={adminKey} />}
+        {tab === "convos" && <ConversationsTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "influencers" && (
           <Influencers
             adminKey={adminKey}
@@ -234,7 +199,6 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "money" && <Monetization key={boostFor?.user_id ?? ""} adminKey={adminKey} prefill={boostFor} onOpen={setUserId} />}
         {tab === "stats" && <Stats adminKey={adminKey} onReports={setOpenReports} />}
         {tab === "reports" && <Reports adminKey={adminKey} onOpen={setUserId} />}
-        {tab === "area" && <Area adminKey={adminKey} onOpen={setUserId} />}
         {tab === "support" && <SupportTab adminKey={adminKey} />}
         {tab === "emails" && <EmailsTab adminKey={adminKey} />}
         {tab === "progifts" && <ProGiftsTab adminKey={adminKey} />}
@@ -250,6 +214,72 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "bans" && <Bans adminKey={adminKey} onOpen={setUserId} />}
       </div>
     </main>
+  );
+}
+
+const NAV_GROUPS: [string, [Tab, string][]][] = [
+  ["Audience", [["overview", "Vue d'ensemble"], ["visitors", "Visiteurs"], ["users", "Utilisateurs"], ["stats", "Temps réel"], ["heat", "Carte de chaleur"], ["week", "Horaires"], ["influencers", "Influenceurs"]]],
+  ["Conversations & lieux", [["convos", "Conversations"], ["comments", "Avis & notes"], ["top", "Top lieux"], ["roi", "ROI lieux"], ["places", "Lieux proposés"]]],
+  ["Modération", [["reports", "Signalements"], ["photos", "Photos"], ["bans", "Bannis"], ["contacts", "Messages"], ["support", "Support · rattacher"]]],
+  ["Business", [["revenus", "Revenus"], ["growth", "Croissance & revenus"], ["money", "Boosts & partenaires"], ["partners", "Partenaires"], ["pricing", "Tarifs"], ["codes", "Codes cadeaux"], ["progifts", "Cadeaux pro"], ["emails", "Emails"], ["ambassadeurs", "Ambassadeurs"], ["live", "Live (qualité)"]]],
+];
+const NAV_QUICK: Tab[] = ["overview", "visitors", "convos", "comments", "users", "reports"];
+
+/** Onglets rapides en ligne + menu « Tout » groupé (tient sur un téléphone). */
+function AdminNav({ tab, setTab, openReports }: { tab: Tab; setTab: (t: Tab) => void; openReports: number }) {
+  const [all, setAll] = useState(false);
+  const label = (id: Tab, l: string) => (id === "reports" && openReports ? `${l} (${openReports})` : l);
+  const labels = new Map(NAV_GROUPS.flatMap(([, items]) => items));
+  const quick: Tab[] = NAV_QUICK.includes(tab) ? NAV_QUICK : [...NAV_QUICK, tab];
+  return (
+    <>
+      <nav className="mx-auto mt-3 flex max-w-5xl gap-1 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setAll((v) => !v)}
+          className={"shrink-0 border-b-2 px-3 pb-2 text-sm " + (all ? "border-signal text-ink" : "border-transparent text-muted")}
+        >
+          ☰ Tout
+        </button>
+        {quick.map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => {
+              setTab(id);
+              setAll(false);
+            }}
+            className={"shrink-0 border-b-2 px-3 pb-2 text-sm " + (tab === id ? "border-signal text-ink" : "border-transparent text-muted")}
+          >
+            {label(id, labels.get(id) ?? id)}
+          </button>
+        ))}
+      </nav>
+      {all && (
+        <div className="mx-auto grid max-w-5xl gap-4 border-t border-line py-4 sm:grid-cols-2 lg:grid-cols-4">
+          {NAV_GROUPS.map(([group, items]) => (
+            <div key={group}>
+              <p className="mb-2 text-xs tracking-wide text-muted uppercase">{group}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {items.map(([id, l]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setTab(id);
+                      setAll(false);
+                    }}
+                    className={"h-9 rounded-full border px-3 text-sm " + (tab === id ? "border-signal bg-signal text-night" : "border-line")}
+                  >
+                    {label(id, l)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -451,56 +481,6 @@ function Reports({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) 
                 <span className="text-[10px] text-muted">{when(r.last_at)}</span>
               </span>
             </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function Area({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) => void }) {
-  const load = useCallback(() => admin.area(adminKey), [adminKey]);
-  const { data, error, reload } = useLoad<AdminAreaRow[]>(load, 20_000);
-  return (
-    <div>
-      <p className="mb-3 text-sm text-muted">
-        Les 100 derniers messages du chat du quartier, toutes villes confondues.
-      </p>
-      {error && <p className="text-signal">{error}</p>}
-      {data && data.length === 0 && (
-        <p className="py-12 text-center text-muted">Aucun message pour l'instant.</p>
-      )}
-      <ul className="space-y-2">
-        {data?.map((m) => (
-          <li
-            key={m.id}
-            className={
-              "rounded-2xl border border-line bg-surface px-4 py-3 " +
-              (m.removed ? "opacity-40" : "")
-            }
-          >
-            <div className="flex items-center justify-between gap-2 text-xs text-muted">
-              <button
-                type="button"
-                className="font-bold text-ink underline"
-                onClick={() => onOpen(m.from_id)}
-              >
-                {m.pseudo}
-              </button>
-              <span>{when(m.at)}</span>
-            </div>
-            <p className="mt-1 text-sm break-words">{m.body}</p>
-            {!m.removed ? (
-              <button
-                type="button"
-                className="mt-2 text-xs text-signal"
-                onClick={() => void admin.hideArea(adminKey, m.id).then(reload)}
-              >
-                Supprimer ce message
-              </button>
-            ) : (
-              <p className="mt-2 text-xs">Supprimé</p>
-            )}
           </li>
         ))}
       </ul>
