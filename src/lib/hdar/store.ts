@@ -187,6 +187,7 @@ type State = {
   safetyCode: string;
   sheet: Sheet;
   view: View;
+  returnTo: View | null;
   intent: Intent;
   celebrate: string | null;
   pocket: PocketMsg[];
@@ -297,17 +298,27 @@ const base = () => {
     safetyCode: code(),
     sheet: null as Sheet,
     view: { name: "tabs" } as View,
+    /** Salon ou chat du quartier à retrouver en fermant un profil / une discussion privée ouverts depuis lui. */
+    returnTo: null as View | null,
     intent: null as Intent,
     celebrate: null as string | null,
     pocket: [] as PocketMsg[],
   };
 };
 
+/** Vue à rouvrir au retour : le salon / chat du quartier d'où l'on vient (même via profil → message privé). */
+function returnFrom(st: { view: View; returnTo: View | null }): View | null {
+  const v = st.view;
+  if (v.name === "salon" || v.name === "pocket") return v;
+  if (v.name === "profile" || v.name === "live") return st.returnTo;
+  return null;
+}
+
 export const useHdar = create<State>()(
   persist(
     (set, get) => ({
       ...base(),
-      setTab: (tab) => set({ tab, view: { name: "tabs" } }),
+      setTab: (tab) => set({ tab, view: { name: "tabs" }, returnTo: null }),
       setMode: (mode) => set({ mode }),
       setFilter: (filter) => set({ filter }),
       setCity: (cityId) => set({ cityId, customCenter: null, sheet: null }),
@@ -456,12 +467,12 @@ export const useHdar = create<State>()(
           celebrate: null,
           matches: get().matches.map((m) => (m.personId === personId ? { ...m, unread: 0 } : m)),
         }),
-      closeView: () => set({ view: { name: "tabs" } }),
+      closeView: () => set({ view: get().returnTo ?? { name: "tabs" }, returnTo: null }),
       openLive: (userId, pseudo) => {
         get().markSeen(userId);
-        set({ view: { name: "live", userId, pseudo }, sheet: null });
+        set({ view: { name: "live", userId, pseudo }, sheet: null, returnTo: returnFrom(get()) });
       },
-      openProfile: (userId, pseudo) => set({ view: { name: "profile", userId, pseudo }, sheet: null }),
+      openProfile: (userId, pseudo) => set({ view: { name: "profile", userId, pseudo }, sheet: null, returnTo: returnFrom(get()) }),
       markSeen: (userId) => set({ seenAt: { ...get().seenAt, [userId]: Date.now() } }),
       deleteConversation: (userId) => {
         const previous = get().liveConvos;

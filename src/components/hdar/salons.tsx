@@ -1,40 +1,48 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, Plus, Send, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { ChevronLeft, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { askConfirm } from "@/lib/hdar/confirm";
 import {
   createSalon,
   getSalon,
   listSalons,
-  pgTime,
   salonClose,
   salonHide,
   salonMessages,
   salonSend,
+  salonSendMedia,
+  type GroupLine,
   type Salon,
-  type SalonLine,
 } from "@/lib/hdar/live";
-import { reportUser } from "@/lib/hdar/report";
+import { regionAt } from "@/lib/hdar/regions";
+import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
 import { useActivity } from "@/lib/hdar/activity";
-import { UserAvatar } from "./avatar";
+import { GroupChat } from "./group-chat";
 import { bindTap } from "./tap";
 
-function ago(at: string) {
-  const min = Math.max(0, Math.round((Date.now() - pgTime(at)) / 60000));
-  if (min < 1) return "à l'instant";
-  if (min < 60) return `il y a ${min} min`;
-  const h = Math.round(min / 60);
-  if (h < 24) return `il y a ${h} h`;
-  return `il y a ${Math.round(h / 24)} j`;
+function useMyRegion() {
+  const here = useHdar((s) => s.here);
+  const cityId = useHdar((s) => s.cityId);
+  const customCenter = useHdar((s) => s.customCenter);
+  const at = here ?? (() => {
+    const p = resolvePlace(cityId, customCenter);
+    return { lat: p.lat, lng: p.lng };
+  })();
+  return regionAt(at.lat, at.lng);
 }
 
-/** Salons (partout en France) + chat du quartier, en tête de l'onglet Messages. */
+function activity(s: Salon) {
+  return s.recent > 0 ? `${s.people} pers. · ${s.recent} msg` : "Calme en ce moment";
+}
+
+/** Salons (partout en France, par région) + chat du quartier, en tête de l'onglet Messages. */
 export function SalonsStrip() {
   const openPocket = useHdar((s) => s.openPocket);
   const openSalon = useHdar((s) => s.openSalon);
   const setTab = useHdar((s) => s.setTab);
   const onboarded = useHdar((s) => s.me.onboarded);
+  const myRegion = useMyRegion();
   const { area } = useActivity();
   const [salons, setSalons] = useState<Salon[] | null>(null);
   const [creating, setCreating] = useState(false);
@@ -50,12 +58,18 @@ export function SalonsStrip() {
     return () => window.clearInterval(id);
   }, [load]);
 
+  const regions = (salons ?? []).filter((s) => s.region);
+  const mine = regions.find((s) => s.region === myRegion);
+  const others = regions.filter((s) => s !== mine).sort((a, b) => b.recent - a.recent || a.name.localeCompare(b.name, "fr"));
+  const topics = (salons ?? []).filter((s) => !s.region);
+
   const chip = "flex w-36 shrink-0 flex-col items-start gap-1 rounded-2xl border border-line bg-surface p-3 text-left";
+  const small = "flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-sm";
   return (
     <section className="mt-5">
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-lg font-bold">Salons</h2>
-        <p className="text-xs text-muted">Ouverts à tous, partout</p>
+        <p className="text-xs text-muted">Ouverts à tous · effacés après 24 h</p>
       </div>
       <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
         <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " relative border-signal/60"}>
@@ -68,15 +82,19 @@ export function SalonsStrip() {
             </span>
           )}
         </button>
-        {salons === null &&
-          [0, 1, 2].map((i) => <span key={i} className={chip + " h-[88px] animate-pulse opacity-50"} />)}
-        {salons?.map((s) => (
+        {mine && (
+          <button type="button" data-act="salon" data-id={mine.id} {...bindTap(() => openSalon(mine.id, mine.name))} className={chip + " border-signal/60"}>
+            <span className="text-xl">{mine.emoji || "🗺️"}</span>
+            <span className="w-full truncate font-display text-sm font-bold">{mine.name}</span>
+            <span className="text-xs text-muted">Ta région · {activity(mine)}</span>
+          </button>
+        )}
+        {salons === null && [0, 1, 2].map((i) => <span key={i} className={chip + " h-[88px] animate-pulse opacity-50"} />)}
+        {topics.map((s) => (
           <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={chip}>
             <span className="text-xl">{s.emoji || "💬"}</span>
             <span className="w-full truncate font-display text-sm font-bold">{s.name}</span>
-            <span className="text-xs text-muted">
-              {s.recent > 0 ? `${s.people} pers. · ${s.recent} msg / 24 h` : s.official ? "Salon officiel" : "Calme en ce moment"}
-            </span>
+            <span className="text-xs text-muted">{s.recent > 0 ? activity(s) : s.official ? "Salon officiel" : "Calme en ce moment"}</span>
           </button>
         ))}
         <button
@@ -95,6 +113,20 @@ export function SalonsStrip() {
           <span className="text-sm">Créer un salon</span>
         </button>
       </div>
+      {others.length > 0 && (
+        <>
+          <p className="mt-3 text-xs tracking-wide text-muted uppercase">Régions</p>
+          <div className="-mx-4 mt-1.5 flex gap-2 overflow-x-auto px-4 pb-1">
+            {others.map((s) => (
+              <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={small}>
+                <span>{s.emoji || "🗺️"}</span>
+                <span className="whitespace-nowrap">{s.name}</span>
+                {s.recent > 0 && <span className="rounded-full bg-signal px-1.5 text-[11px] font-bold text-night">{s.recent > 99 ? "99+" : s.recent}</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       {creating && (
         <CreateSalon
           onClose={() => setCreating(false)}
@@ -173,7 +205,7 @@ function CreateSalon({ onClose, onCreated }: { onClose: () => void; onCreated: (
           />
         </label>
         <p className="mt-3 text-xs text-muted">
-          Respecte les règles d'hdar : pas de contenu sexuel explicite, pas de haine ni d'arnaque. Un salon sans message pendant 14 jours se ferme tout seul.
+          Respecte les règles d'hdar : pas de contenu sexuel explicite, pas de haine ni d'arnaque. Les messages s'effacent après 24 h, et un salon sans message pendant 48 h se ferme tout seul.
         </p>
         <button type="submit" disabled={busy} className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night disabled:opacity-50">
           {busy ? "Création…" : "Ouvrir le salon"}
@@ -183,24 +215,22 @@ function CreateSalon({ onClose, onCreated }: { onClose: () => void; onCreated: (
   );
 }
 
-/** Une discussion de salon : messages des 7 derniers jours, ouverte à tous. */
+/** Une discussion de salon : messages des dernières 24 h, ouverte à tous. */
 export function SalonRoom({ id, name }: { id: string; name: string }) {
-  const openProfile = useHdar((s) => s.openProfile);
   const setTab = useHdar((s) => s.setTab);
+  const onboarded = useHdar((s) => s.me.onboarded);
   const [info, setInfo] = useState<Salon | null>(null);
-  const [lines, setLines] = useState<SalonLine[]>([]);
+  const [lines, setLines] = useState<GroupLine[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [text, setText] = useState("");
-  const end = useRef<HTMLDivElement>(null);
 
-  const refresh = useCallback(
-    () =>
-      salonMessages(id).then((rows) => {
+  const refresh = useCallback(() => {
+    void salonMessages(id)
+      .then((rows) => {
         setLines(rows);
         setLoaded(true);
-      }),
-    [id],
-  );
+      })
+      .catch(() => setLoaded(true));
+  }, [id]);
 
   useEffect(() => {
     void getSalon(id)
@@ -211,140 +241,66 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
         } else setInfo(s);
       })
       .catch(() => undefined);
-    let stop = false;
-    const load = () => {
-      if (document.visibilityState !== "visible") return;
-      void salonMessages(id)
-        .then((rows) => {
-          if (stop) return;
-          setLines(rows);
-          setLoaded(true);
-        })
-        .catch(() => !stop && setLoaded(true));
-    };
-    load();
-    const t = window.setInterval(load, 4000);
-    return () => {
-      stop = true;
-      window.clearInterval(t);
-    };
-  }, [id, setTab]);
+    refresh();
+    const t = window.setInterval(() => document.visibilityState === "visible" && refresh(), 3000);
+    return () => window.clearInterval(t);
+  }, [id, setTab, refresh]);
 
-  const lastId = lines[lines.length - 1]?.id;
-  useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
-  }, [lastId]);
-
-  const mine = info?.mine ?? false;
+  const owner = info?.mine ?? false;
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center gap-2 border-b border-line px-2 py-2">
-        <button type="button" className="flex size-11 items-center justify-center" aria-label="Retour" data-act="close-view" onClick={() => setTab("inbox")}>
-          <ChevronLeft />
-        </button>
-        <span className="text-2xl">{info?.emoji || "💬"}</span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display font-bold">{info?.name ?? name}</p>
-          <p className="truncate text-xs text-muted">{info?.description || "Salon ouvert à tous · partout en France"}</p>
-        </div>
-        {mine && (
-          <button
-            type="button"
-            className="h-9 shrink-0 rounded-full border border-line px-3 text-xs text-muted"
-            onClick={() =>
-              void askConfirm({ title: "Fermer ce salon ?", body: "Il disparaît pour tout le monde.", confirm: "Fermer", danger: true }).then((ok) => {
-                if (!ok) return;
-                salonClose(id)
-                  .then(() => {
-                    toast("Salon fermé");
-                    setTab("inbox");
-                  })
-                  .catch((e: Error) => toast(e.message));
-              })
-            }
-          >
-            Fermer
+    <GroupChat
+      scope="salon"
+      lines={lines}
+      loaded={loaded}
+      maxLength={1000}
+      placeholder="Message"
+      empty={
+        <>
+          Personne n'a écrit ces dernières 24 h.
+          <br />
+          Lance la conversation.
+        </>
+      }
+      canHide={(m) => m.mine || owner}
+      onHide={(m) => salonHide(m.id)}
+      onSend={(text, replyTo) => salonSend(id, text, replyTo)}
+      onSendMedia={onboarded ? (k, path, d, replyTo) => salonSendMedia(id, k, path, d, replyTo) : undefined}
+      mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
+      onChanged={refresh}
+      header={
+        <header className="flex items-center gap-2 border-b border-line px-2 py-2">
+          <button type="button" className="flex size-11 items-center justify-center" aria-label="Retour" data-act="close-view" onClick={() => setTab("inbox")}>
+            <ChevronLeft />
           </button>
-        )}
-      </header>
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        {loaded && lines.length === 0 && (
-          <p className="py-12 text-center text-sm text-muted">
-            Personne n'a encore écrit ici.
-            <br />
-            Lance la conversation.
-          </p>
-        )}
-        {lines.map((m) => (
-          <div key={m.id} className={m.mine ? "text-right" : "flex items-start gap-2 text-left"}>
-            {!m.mine && (
-              <button type="button" className="mt-4 shrink-0" aria-label={`Voir le profil de ${m.pseudo}`} onClick={() => openProfile(m.from_id, m.pseudo)}>
-                <UserAvatar id={m.from_id} name={m.pseudo} className="size-9 rounded-full" />
-              </button>
-            )}
-            <div className="min-w-0">
-              <p className="text-xs text-muted">
-                {m.mine ? (
-                  "Toi"
-                ) : (
-                  <button type="button" className="font-bold text-ink underline-offset-2 hover:underline" onClick={() => openProfile(m.from_id, m.pseudo)}>
-                    {m.pseudo}
-                  </button>
-                )}
-                {" · "}
-                {ago(m.at)}
-              </p>
-              <p
-                className={
-                  "mt-1 inline-block max-w-[85%] rounded-2xl px-3 py-2 text-left text-sm break-words whitespace-pre-wrap " +
-                  (m.mine ? "bg-signal text-night" : "bg-surface")
-                }
-              >
-                {m.body}
-              </p>
-              <div className={"mt-1 flex gap-3 text-xs text-muted " + (m.mine ? "justify-end" : "")}>
-                {(m.mine || mine) && (
-                  <button type="button" onClick={() => void salonHide(m.id).then(refresh).catch(() => toast("Impossible de retirer ce message"))}>
-                    Retirer
-                  </button>
-                )}
-                {!m.mine && (
-                  <button type="button" onClick={() => void reportUser(m.from_id, m.pseudo, m.body).then((sent) => sent && void refresh())}>
-                    Signaler
-                  </button>
-                )}
-              </div>
-            </div>
+          <span className="text-2xl">{info?.emoji || "💬"}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display font-bold">{info?.name ?? name}</p>
+            <p className="truncate text-xs text-muted">
+              {info && info.people > 0 ? `${info.people} personne${info.people > 1 ? "s" : ""} aujourd'hui · ` : ""}
+              {info?.description || "Ouvert à tous · messages effacés après 24 h"}
+            </p>
           </div>
-        ))}
-        <div ref={end} />
-      </div>
-      <form
-        className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const body = text.trim();
-          if (!body) return;
-          setText("");
-          salonSend(id, body)
-            .then(refresh)
-            .catch((err: unknown) => {
-              setText((t) => t || body);
-              toast(err instanceof Error ? err.message : "Message non envoyé");
-            });
-        }}
-      >
-        <input
-          className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none focus-visible:border-signal"
-          value={text}
-          maxLength={500}
-          placeholder={`Écrire dans ${info?.name ?? name}`}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button type="submit" className="flex size-11 items-center justify-center rounded-full bg-signal text-night" aria-label="Envoyer">
-          <Send className="size-5" />
-        </button>
-      </form>
-    </div>
+          {owner && (
+            <button
+              type="button"
+              className="h-9 shrink-0 rounded-full border border-line px-3 text-xs text-muted"
+              onClick={() =>
+                void askConfirm({ title: "Fermer ce salon ?", body: "Il disparaît pour tout le monde.", confirm: "Fermer", danger: true }).then((ok) => {
+                  if (!ok) return;
+                  salonClose(id)
+                    .then(() => {
+                      toast("Salon fermé");
+                      setTab("inbox");
+                    })
+                    .catch((e: Error) => toast(e.message));
+                })
+              }
+            >
+              Fermer
+            </button>
+          )}
+        </header>
+      }
+    />
   );
 }

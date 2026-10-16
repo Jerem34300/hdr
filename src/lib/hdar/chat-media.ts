@@ -2,7 +2,7 @@
 import { supabase, accessToken, authUserId } from "./session";
 
 export type MediaKind = "image" | "video" | "audio";
-export type MediaScope = "area" | "place" | "spot";
+export type MediaScope = "area" | "place" | "spot" | "salon";
 export const MAX_VIDEO_MB = 50;
 export const MAX_VIDEO_SEC = 60;
 export const MAX_VOICE_SEC = 60;

@@ -9,6 +9,7 @@ import { ProLanding } from "./pro-landing";
 import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
+import { GroupChatDemo } from "./group-chat";
 import { trackGate } from "@/lib/hdar/track";
 import {
   TURNSTILE_SITE_KEY,
@@ -174,6 +175,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
+  if (location.search.includes("groupchat")) return <GroupChatDemo />;
   if (location.search.includes("amblanding")) return <main className="h-dvh overflow-y-auto bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><a href="/" className="text-sm text-muted underline">← Retour</a><AmbLanding status={null} onApply={() => undefined} /></div></main>;
   if (location.search.includes("ambquiz")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><ApplyQuiz demo start={Number(new URLSearchParams(location.search).get("step") ?? 0)} onBack={() => undefined} onDone={() => undefined} /></div></main>;
   if (location.search.includes("profilcards")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="font-display text-xl font-extrabold">Profil (aperçu cartes)</p><ProSpaceCard demo /><PremiumCard /><InviteCard demo="X7K2Q9" /><a className="mt-6 block px-1 text-center text-[13px] text-muted">💸 Gagne de l'argent : <span className="font-bold text-[#3EE08F]">deviens ambassadeur ›</span></a></main>;
