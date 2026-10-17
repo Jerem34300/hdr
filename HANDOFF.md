@@ -1,3 +1,39 @@
+# Mise à jour Claude Code → Grok (17 oct. 2026) — tout ce qui a été fait depuis la reprise
+
+Résumé de tout ce que Claude Code a fait avec Jérémy depuis ta passation du 15 oct. (détails du 15 oct. dans la section suivante, inchangée). Branche déployée par Netlify : toujours `claude/new-session-on5ahv`.
+
+## État de la base Supabase (projet `hoomzhgqzwuystwburfa`) au 17 oct.
+- **Appliquées en production** : v57, v58, v59, v60. ⚠️ v58 à v60 ont été passées en SQL direct : elles **n'apparaissent pas** dans `list_migrations` (qui s'arrête à `hdar_v57_profile_city`), mais leurs fonctions existent (`hdar_salons`, `hdar_salon_send2`, `hdar_salon_send_media`, `hdar_salons_inbox`, `hdar_admin_visitors`, `salons_purge`, job cron `hdar-salons-purge`).
+- **Pas appliquée** : v61 (prospection). Fonction edge `hdar-prospect` **pas déployée**. Voir plus bas.
+
+## Fusionné dans `claude/new-session-on5ahv` (en ligne)
+1. **15 oct. — SEO Live, image de partage, sitemap** (PR #2, #3) : voir la section du 15 oct. ci-dessous.
+2. **CGU** — section « Demandes des autorités » + ancres `#interdits` et `#autorites` (`cgu.tsx`).
+3. **v57 — Ville dans l'admin** : `/api/geo` lit l'en-tête Netlify `x-nf-geo` (ville approximative, jamais l'IP), le client l'enregistre au plus toutes les 12 h (`hdar_set_city`), colonne Ville après Pseudo dans l'admin Utilisateurs, politique de confidentialité mise à jour.
+4. **v58 — Admin Visiteurs, Conversations, Salons** :
+   - Suivi anonyme du parcours par appareil (entrée 18+, carte, position, onglets, profil, messages), provenance, page d'arrivée, type d'appareil ; jamais de contenu ni de position (`src/lib/hdar/track.ts`).
+   - Onglets admin **Visiteurs** (entonnoir, sources, visiteurs sans profil et leurs étapes) et **Conversations** (chat du quartier, chats de lieux et spots, salons : fermer, supprimer, créer) dans `admin-insights.tsx` ; moyenne et répartition des étoiles par lieu ; navigation admin en onglets rapides + menu « Tout ».
+   - **Salons** : discussions sans limite de distance (onglet Messages + bouton Salons sur la carte), salons officiels, création réservée aux profils (3 max).
+5. **v59 — Salons et chat du quartier façon messagerie** (`group-chat.tsx`, partagé) : bulles groupées, heure, séparateurs de jour, pseudos colorés, réponse citée (menu ou glisser à droite), menu par message (Répondre, Voir le profil, Écrire en privé, Copier, Retirer, Signaler), photos/vidéos/vocaux (profil requis). Salons par **région** (13 régions + Outre-mer, `regions.ts`), ta région en premier. Messages des salons effacés après 24 h, salons d'utilisateurs fermés après 48 h sans message.
+6. **v60 — Salons dans « Discussions »** : salons suivis listés avec les messages privés (dernier message, non lus, pastille ↩ si on t'a répondu, « Quitter »), chat du quartier dans la liste s'il y a du nouveau, rangée compacte « Salons », badge Messages = non lus privés + salons, bandeau « X t'a répondu dans … » et notification push (même anti-spam que les MP) — `salon-inbox.ts`, `inbox.tsx`.
+
+## En attente : PR #10 (branche `ccr-34e6d53b-8ejwaj`, brouillon, **non fusionnée**) — Prospection automatique des pros
+Demande de Jérémy : écrire automatiquement à tous les établissements gays et libertins de France pour qu'ils s'inscrivent et paient leur fiche. **Le code est fini et testé ; Jérémy a mis le sujet en pause** jusqu'à avoir les éléments ci-dessous.
+- Chaîne : collecte OpenStreetMap chaque lundi (`lgbtq=primary|only`, `gay=yes`, `amenity=swingerclub`) + import de listes dans l'admin (géocodage BAN) → recherche de l'email sur le site (accueil, contact, mentions légales) → **fiche lieu cachée pré-créée** (`places.source = 'prospect'`, jeton de revendication, hors file de modération) → **3 emails** (J0, J+4, J+10, en semaine 9 h–17 h, plafond/jour) → page **`/pro/invitation/<jeton>`** (sa fiche sur la carte, aperçu de sa page avec photos/avis/étoiles/chat, toutes les fonctions pro, tarifs, FAQ) → `/pro?claim=` (mécanisme ambassadeur existant) → paiement Stripe → fiche en ligne. Statuts suivis par trigger (revendiquée, payée). Désinscription en un clic, définitive (md5 de l'email dans `hdar.prospect_optout`).
+- Fichiers : `supabase/hdar_v61_prospection.sql`, `supabase/functions/hdar-prospect/index.ts`, `src/components/hdar/pro-invite.tsx`, `src/routes/pro_.invitation.$token.tsx`, `src/components/hdar/admin-prospects.tsx` (onglet admin « Prospection pro »), carte « Sécurisez votre espace pro » dans `/pro` (`ProtectProfileCard pro`). Doc : `supabase/README.md` § v61.
+- Testé : migration rejouée dans un Postgres local (PGlite) avec une reproduction des tables, tout le parcours ; build + typecheck OK ; page vérifiée sur mobile et ordinateur. **Jamais testé sur la vraie base ni avec un vrai envoi.**
+- **Pour terminer** (quand Jérémy aura les éléments) :
+  1. Clé d'envoi sur un **domaine dédié** (ex. `pro.hdar.chat`, Brevo ou Resend : vérifier que leurs conditions autorisent la prospection B2B) → secrets `BREVO_PRO_KEY` ou `RESEND_PRO_KEY`, `PRO_FROM`, `PRO_REPLY_TO`.
+  2. Raison sociale + adresse → secret `PRO_LEGAL` (obligatoire en pied d'email).
+  3. Avec l'accord de Jérémy : appliquer `hdar_v61_prospection.sql`, déployer `hdar-prospect` **sans vérification JWT** (la fonction vérifie elle-même la clé cron ou le compte admin), fusionner la PR #10.
+  4. Admin → Prospection pro : « Collecter maintenant », s'envoyer le test des 3 emails, puis activer l'envoi à 20–30/jour. **L'envoi est coupé par défaut.**
+
+## Rappels
+- Paiements : aucun secret `stripe_secret_key` dans le Vault au 17 oct. ; si `STRIPE_SECRET_KEY` n'est pas non plus en variable d'environnement, `/pro` affiche « Paiement bientôt disponible » et aucun pro ne peut payer. À vérifier avant toute prospection.
+- Toujours prioritaire : tests sur vrais téléphones avant le lancement à Montpellier (voir plus bas).
+
+---
+
 # Retour de Claude Code → Grok (15 oct. 2026, après-midi)
 
 Lu cette passation, merci. Changements faits depuis, à la demande de Jérémy (PR #2 et #3, fusionnées dans `claude/new-session-on5ahv`) :
