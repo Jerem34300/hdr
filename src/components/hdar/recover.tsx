@@ -7,7 +7,8 @@ import { linkedEmail, linkEmailStart, linkEmailVerify, recoverStart, recoverVeri
 const input = "h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal";
 
 /** Fin de la page profil : lier un email (facultatif) pour retrouver son profil. */
-export function ProtectProfileCard() {
+/** `pro` : textes au vouvoiement pour l'espace pro, sans la case « nouveautés ». */
+export function ProtectProfileCard({ pro = false }: { pro?: boolean }) {
   const [state, setState] = useState<{ email: string | null; pending: string | null } | null>(null);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -29,19 +30,19 @@ export function ProtectProfileCard() {
       <section className="mt-8 rounded-3xl border border-[#A1E3C3]/50 bg-[#A1E3C3]/10 p-4">
         <div className="flex items-center gap-3">
           <ShieldCheck className="size-6 shrink-0 text-[#A1E3C3]" />
-          <p className="text-sm"><b>Profil protégé.</b> <span className="text-muted">Tu peux le retrouver avec {state.email}. Jamais visible par les autres.</span></p>
+          <p className="text-sm"><b>{pro ? "Espace pro sécurisé." : "Profil protégé."}</b> <span className="text-muted">{pro ? `Vous le retrouvez avec ${state.email}, sur n'importe quel téléphone.` : `Tu peux le retrouver avec ${state.email}. Jamais visible par les autres.`}</span></p>
         </div>
-        {newsBox(true)}
+        {!pro && newsBox(true)}
       </section>
     );
   }
   return (
     <section className="mt-8 rounded-3xl border-2 border-[#FA6F6C]/60 bg-gradient-to-br from-[#FA6F6C]/15 to-[#fbbf24]/10 p-5">
-      <h2 className="flex items-center gap-2 font-display text-xl font-extrabold"><ShieldCheck className="size-5 text-[#FA6F6C]" /> Protège ton profil</h2>
-      <p className="mt-1 text-sm text-muted">Retrouve-le facilement si tu le supprimes ou si tu nettoies ton téléphone. Facultatif, jamais affiché.</p>
+      <h2 className="flex items-center gap-2 font-display text-xl font-extrabold"><ShieldCheck className="size-5 text-[#FA6F6C]" /> {pro ? "Sécurisez votre espace pro" : "Protège ton profil"}</h2>
+      <p className="mt-1 text-sm text-muted">{pro ? "Retrouvez votre fiche et votre abonnement sur un autre téléphone ou après avoir vidé votre navigateur. Email jamais affiché." : "Retrouve-le facilement si tu le supprimes ou si tu nettoies ton téléphone. Facultatif, jamais affiché."}</p>
       {step === "email" ? (
         <div className="mt-3 flex gap-2">
-          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="ton@email.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder={pro ? "votre@email.fr" : "ton@email.fr"} value={email} onChange={(e) => setEmail(e.target.value)} />
           <button type="button" disabled={busy || !/^\S+@\S+\.\S+$/.test(email)} onClick={() => void run(async () => { await linkEmailStart(email); setStep("code"); toast("Code envoyé par email"); })}
             className="h-11 shrink-0 rounded-full bg-[#FA6F6C] px-4 text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Recevoir le code"}</button>
         </div>
@@ -56,7 +57,7 @@ export function ProtectProfileCard() {
           <button type="button" className="text-xs text-muted underline" onClick={() => { setStep("email"); setCode(""); }}>Changer d'email</button>
         </div>
       )}
-      {newsBox(false)}
+      {!pro && newsBox(false)}
     </section>
   );
 }

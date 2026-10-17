@@ -36,6 +36,7 @@ import { Route as RencontreIndexRouteImport } from './routes/rencontre/index'
 import { Route as RencontreSlugRouteImport } from './routes/rencontre/$slug'
 import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ProInvitationTokenRouteImport } from './routes/pro_.invitation.$token'
 import { Route as RencontreSlugThemeRouteImport } from './routes/rencontre/$slug_.$theme'
 import { Route as RencontreDepartementSlugRouteImport } from './routes/rencontre/departement.$slug'
 import { Route as RencontreRegionSlugRouteImport } from './routes/rencontre/region.$slug'
@@ -176,6 +177,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProInvitationTokenRoute = ProInvitationTokenRouteImport.update({
+  id: '/pro_/invitation/$token',
+  path: '/pro/invitation/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RencontreSlugThemeRoute = RencontreSlugThemeRouteImport.update({
   id: '/rencontre/$slug_/$theme',
   path: '/rencontre/$slug/$theme',
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/sitemaps/$part': typeof SitemapsPartRoute
   '/rencontre/': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pro/invitation/$token': typeof ProInvitationTokenRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
   '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/sitemaps/$part': typeof SitemapsPartRoute
   '/rencontre': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pro/invitation/$token': typeof ProInvitationTokenRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
   '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/sitemaps/$part': typeof SitemapsPartRoute
   '/rencontre/': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pro_/invitation/$token': typeof ProInvitationTokenRoute
   '/rencontre/$slug_/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
   '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/sitemaps/$part'
     | '/rencontre/'
     | '/api/auth/$'
+    | '/pro/invitation/$token'
     | '/rencontre/$slug/$theme'
     | '/rencontre/departement/$slug'
     | '/rencontre/region/$slug'
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
     | '/sitemaps/$part'
     | '/rencontre'
     | '/api/auth/$'
+    | '/pro/invitation/$token'
     | '/rencontre/$slug/$theme'
     | '/rencontre/departement/$slug'
     | '/rencontre/region/$slug'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/sitemaps/$part'
     | '/rencontre/'
     | '/api/auth/$'
+    | '/pro_/invitation/$token'
     | '/rencontre/$slug_/$theme'
     | '/rencontre/departement/$slug'
     | '/rencontre/region/$slug'
@@ -417,6 +429,7 @@ export interface RootRouteChildren {
   SitemapsPartRoute: typeof SitemapsPartRoute
   RencontreIndexRoute: typeof RencontreIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ProInvitationTokenRoute: typeof ProInvitationTokenRoute
   RencontreSlugThemeRoute: typeof RencontreSlugThemeRoute
   RencontreDepartementSlugRoute: typeof RencontreDepartementSlugRoute
   RencontreRegionSlugRoute: typeof RencontreRegionSlugRoute
@@ -613,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pro_/invitation/$token': {
+      id: '/pro_/invitation/$token'
+      path: '/pro/invitation/$token'
+      fullPath: '/pro/invitation/$token'
+      preLoaderRoute: typeof ProInvitationTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rencontre/$slug_/$theme': {
       id: '/rencontre/$slug_/$theme'
       path: '/rencontre/$slug/$theme'
@@ -666,6 +686,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapsPartRoute: SitemapsPartRoute,
   RencontreIndexRoute: RencontreIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ProInvitationTokenRoute: ProInvitationTokenRoute,
   RencontreSlugThemeRoute: RencontreSlugThemeRoute,
   RencontreDepartementSlugRoute: RencontreDepartementSlugRoute,
   RencontreRegionSlugRoute: RencontreRegionSlugRoute,

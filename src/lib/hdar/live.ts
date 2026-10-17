@@ -1329,3 +1329,26 @@ export const admin58 = {
   salonCreate: (key: string, name: string, description: string, emoji: string) =>
     rpc<string>("hdar_admin_salon_create", { p_key: key, p_name: name, p_description: description, p_emoji: emoji }),
 };
+
+// v61 — prospection automatique des établissements (fonction edge hdar-prospect)
+export type ProspectPreview = { name: string; kind: "bar" | "club" | "sauna" | "other"; segment: "gay" | "libertin"; city: string | null; lat: number; lng: number;
+  description: string; website: string | null; contact: string | null; claimable: boolean; claimed: boolean; active: boolean; optout: boolean;
+  prices: { label: string; price_cents: number }[]; boost_from: number | null };
+/** Page publique d'invitation : appelée sans session (clé publique), avant le contrôle d'âge. */
+export async function prospectPreview(token: string, track = true): Promise<ProspectPreview | null> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_prospect_preview`, { method: "POST",
+    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ p_token: token, p_track: track }) });
+  if (!res.ok) throw new Error(`Serveur indisponible (${res.status})`);
+  const t = await res.text();
+  return t ? (JSON.parse(t) as ProspectPreview | null) : null;
+}
+export type ProspectStatus = "new" | "ready" | "contacted" | "clicked" | "claimed" | "paid" | "done" | "optout" | "bounced" | "skip";
+export type AdminProspect = { id: string; name: string; kind: string; segment: "gay" | "libertin"; city: string | null; email: string | null; website: string | null; phone: string | null;
+  status: ProspectStatus; step: number; next_at: string | null; last_sent_at: string | null; clicked_at: string | null; priority: number; token: string; source: string; note: string | null; created_at: string };
+export type AdminProspects = { settings: { enabled: boolean; daily_cap: number }; sent_today: number; counts: Partial<Record<ProspectStatus, number>>; segments: Record<string, number>;
+  funnel: { total: number; with_email: number; contacted: number; clicked: number; claimed: number; paid: number }; rows: AdminProspect[] };
+export const adminProspects = (key: string, status: string | null, q: string | null) => rpc<AdminProspects>("hdar_admin_prospects", { p_key: key, p_status: status, p_q: q });
+export const adminProspectSettings = (key: string, enabled: boolean | null, cap: number | null) => rpc("hdar_admin_prospect_settings", { p_key: key, p_enabled: enabled, p_cap: cap });
+export const adminProspectEdit = (key: string, id: string, o: { email?: string; status?: ProspectStatus; priority?: number; note?: string }) =>
+  rpc("hdar_admin_prospect_edit", { p_key: key, p_id: id, p_email: o.email ?? null, p_status: o.status ?? null, p_priority: o.priority ?? null, p_note: o.note ?? null });
+export const prospectAction = <T = Record<string, unknown>>(body: { action: "source" | "enrich" | "tick" | "test" | "preview" | "import"; [k: string]: unknown }) => lkFn<T>("hdar-prospect", body);

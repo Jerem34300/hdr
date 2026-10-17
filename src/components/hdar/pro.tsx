@@ -11,6 +11,7 @@ import {
 import { readImage } from "@/lib/hdar/media";
 import { PLACE_KINDS } from "./places-layer";
 import { ProLanding } from "./pro-landing";
+import { ProtectProfileCard } from "./recover";
 
 const KINDS: PlaceKind[] = ["bar", "club", "sauna", "other"];
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
@@ -139,6 +140,7 @@ function Places({ prices, boostPrices, payOk }: { prices: PriceRow[]; boostPrice
       >
         + Créer une fiche lieu
       </button>
+      <ProtectProfileCard pro />
       <details className="rounded-3xl border border-line p-4">
         <summary className="cursor-pointer text-sm font-bold">Voir la présentation hdar pro</summary>
         <ProLanding prices={prices} boostPrices={boostPrices} onCreate={() => setEdit(blank())} />
