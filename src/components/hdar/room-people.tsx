@@ -38,6 +38,9 @@ export function OnlineCount({ n, className = "" }: { n: number | undefined; clas
   );
 }
 
+/** « là maintenant » ou « il y a 3 min » (présence gardée 5 min après être passé). */
+const seen = (ago?: number) => (ago == null ? "" : ago < 60 ? "Là maintenant" : `Il y a ${Math.round(ago / 60)} min`);
+
 function PeopleSheet({ presence, onClose }: { presence: RoomPresence; onClose: () => void }) {
   const openProfile = useHdar((s) => s.openProfile);
   const openLive = useHdar((s) => s.openLive);
@@ -84,11 +87,11 @@ function PeopleSheet({ presence, onClose }: { presence: RoomPresence; onClose: (
               >
                 <span className="relative shrink-0">
                   <UserAvatar id={p.id} name={p.pseudo} className="size-11 rounded-full" />
-                  <span className="absolute right-0 bottom-0 size-3 rounded-full border-2 border-night bg-online" />
+                  <span className={"absolute right-0 bottom-0 size-3 rounded-full border-2 border-night " + ((p.ago ?? 0) < 60 || p.mine ? "bg-online" : "bg-amber-400")} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold">{p.mine ? "Toi" : p.pseudo}</span>
-                  <span className="block truncate text-xs text-muted">{p.mine ? "C'est toi" : p.profile ? "Voir le profil" : "Sans profil"}</span>
+                  <span className="block truncate text-xs text-muted">{p.mine ? "C'est toi" : [seen(p.ago), p.profile ? "Voir le profil" : "Sans profil"].filter(Boolean).join(" · ")}</span>
                 </span>
               </button>
               {!p.mine && p.profile && (

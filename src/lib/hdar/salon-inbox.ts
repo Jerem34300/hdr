@@ -30,8 +30,11 @@ async function poll() {
       const open = st.view.name === "salon" ? st.view.id : null;
       if (open) st.markSalonSeen(open);
       const rows = await salonsInbox(seenMap());
-      // Les salons où j'ai écrit dans les dernières 24 h sont suivis automatiquement.
-      for (const r of rows) if ((r.wrote || r.mine) && !useHdar.getState().followedSalons.includes(r.id)) useHdar.getState().followSalon(r.id);
+      // Les salons où j'ai écrit dans les dernières 24 h sont suivis automatiquement, sauf ceux quittés à la main.
+      for (const r of rows) {
+        const now = useHdar.getState();
+        if ((r.wrote || r.mine) && !now.followedSalons.includes(r.id) && !now.leftSalons.includes(r.id)) now.followSalon(r.id);
+      }
       const followed = new Set(useHdar.getState().followedSalons);
       let unread = 0;
       for (const r of rows) {

@@ -1303,7 +1303,7 @@ export const salonHide = (msg: string) => rpc("hdar_salon_hide", { p_msg: msg })
 export const salonClose = (id: string) => rpc("hdar_salon_close", { p_id: id });
 
 // Présence (v61) : qui a le salon ou le chat du quartier ouvert en ce moment ---------------------
-export type RoomPerson = { id: string; pseudo: string; profile: boolean; mine: boolean; photo: boolean };
+export type RoomPerson = { id: string; pseudo: string; profile: boolean; mine: boolean; photo: boolean; /** Secondes depuis le dernier passage. */ ago?: number };
 /** Signale que j'ai la pièce ouverte et renvoie les présents (null = base pas encore à jour). */
 export async function roomHere(room: string, pseudo: string, lat: number | null = null, lng: number | null = null) {
   try {
@@ -1313,11 +1313,10 @@ export async function roomHere(room: string, pseudo: string, lat: number | null 
     throw e;
   }
 }
-export const roomGone = (room: string) => rpc("hdar_room_away", { p_room: room }).catch(() => undefined);
 /** Nombre de présents (hors moi) : chat du quartier autour de la position et chaque salon. */
 export async function roomsOnline(lat: number | null, lng: number | null) {
   try {
-    return await rpc<{ area: number; salons: Record<string, number> }>("hdar_rooms_online", { p_lat: lat, p_lng: lng });
+    return await rpc<{ area: number; area_last?: string | null; salons: Record<string, number> }>("hdar_rooms_online", { p_lat: lat, p_lng: lng });
   } catch (e) {
     if (missingFn(e)) return null;
     throw e;
@@ -1351,3 +1350,14 @@ export const admin58 = {
   salonCreate: (key: string, name: string, description: string, emoji: string) =>
     rpc<string>("hdar_admin_salon_create", { p_key: key, p_name: name, p_description: description, p_emoji: emoji }),
 };
+
+// Admin v62 : en direct (connectés, salons, messages privés des dernières 24 h) ----------------
+export type AdminOnline = {
+  id: string; pseudo: string; profile: boolean; photo: boolean; city: string | null; platform: string | null; pwa: boolean | null;
+  last: string; first: string; sessions: number; on_map: boolean; banned: boolean; rooms: string[];
+  pm_24h: number; salon_24h: number; area_24h: number;
+};
+export type AdminRoomNow = { room: string; name: string; emoji: string | null; people: { id: string; pseudo: string; at: string }[] };
+export type AdminPmPair = { a: string; b: string; a_pseudo: string; b_pseudo: string; n: number; a_n: number; last: string; first: string };
+export type AdminLive = { online: AdminOnline[]; rooms: AdminRoomNow[]; pm: AdminPmPair[] };
+export const adminLive = (key: string) => rpc<AdminLive>("hdar_admin_live", { p_key: key });

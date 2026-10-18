@@ -3,7 +3,9 @@ import { toast } from "sonner";
 import {
   admin,
   admin58,
+  adminLive,
   pgTime,
+  type AdminLive,
   type AdminAreaRow,
   type AdminPlaceMsg,
   type AdminRating,
@@ -460,6 +462,114 @@ export function RatingsSummary({ adminKey }: { adminKey: string }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** En direct : qui a l'appli ouverte, où il est (salons, quartier), et qui écrit en privé à qui (24 h, sans le contenu). */
+export function LiveNowTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) => void }) {
+  const load = useCallback(() => adminLive(adminKey), [adminKey]);
+  const { data, error } = useLoad<AdminLive>(load, 15_000);
+  const [view, setView] = useState<"online" | "rooms" | "pm">("online");
+  const [q, setQ] = useState("");
+  const match = (...names: string[]) => !q || names.some((n) => n.toLowerCase().includes(q.toLowerCase()));
+  const ago = (v: string) => {
+    const s = Math.max(0, Math.round((Date.now() - (v.includes("T") ? Date.parse(v) : pgTime(v))) / 1000));
+    return s < 60 ? "à l'instant" : s < 3600 ? `il y a ${Math.round(s / 60)} min` : `il y a ${Math.round(s / 3600)} h`;
+  };
+  const Name = ({ id, pseudo }: { id: string; pseudo: string }) => (
+    <button type="button" className="font-bold text-ink underline" onClick={() => onOpen(id)}>
+      {pseudo}
+    </button>
+  );
+  const online = (data?.online ?? []).filter((u) => match(u.pseudo, u.city ?? ""));
+  const pm = (data?.pm ?? []).filter((p) => match(p.a_pseudo, p.b_pseudo));
+  return (
+    <div className="space-y-4">
+      <ErrorNote error={error} />
+      <div className="grid grid-cols-3 gap-2">
+        <Tile label="Connectés" value={data?.online.length ?? 0} hint="appli ouverte (5 min)" />
+        <Tile label="Dans les salons" value={(data?.rooms ?? []).reduce((n, r) => n + r.people.length, 0)} hint="5 dernières min" />
+        <Tile label="Conversations privées" value={data?.pm.length ?? 0} hint="actives sur 24 h" />
+      </div>
+      <Seg value={view} onChange={setView} options={[["online", "Connectés"], ["rooms", "Salons"], ["pm", "Privés"]]} />
+      {view !== "rooms" && (
+        <input
+          className="h-10 w-full rounded-full border border-line bg-surface px-4 text-sm outline-none focus-visible:border-signal"
+          placeholder="Chercher un pseudo ou une ville"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      )}
+      {view === "online" && (
+        <ul className="space-y-2">
+          {data && online.length === 0 && <p className="py-8 text-center text-sm text-muted">Personne en ce moment.</p>}
+          {online.map((u) => (
+            <li key={u.id} className={"rounded-2xl border border-line bg-surface px-4 py-3 text-sm " + (u.banned ? "opacity-50" : "")}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate">
+                  <span className="mr-1.5 inline-block size-2 rounded-full bg-online" />
+                  <Name id={u.id} pseudo={u.pseudo} />
+                  {!u.profile && <span className="ml-1 text-xs text-muted">(sans profil)</span>}
+                  {u.banned && <span className="ml-1 text-xs text-signal">banni</span>}
+                </span>
+                <span className="shrink-0 text-xs text-muted">{ago(u.last)}</span>
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                {[u.city, u.platform, u.pwa ? "appli installée" : null, u.on_map ? "visible sur la carte" : null, `${u.sessions} visite${u.sessions > 1 ? "s" : ""}`]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              {u.rooms.length > 0 && <p className="mt-1 text-xs">📍 Dans : <b>{u.rooms.join(", ")}</b></p>}
+              {(u.pm_24h > 0 || u.salon_24h > 0 || u.area_24h > 0) && (
+                <p className="mt-1 text-xs text-muted">
+                  24 h : {u.pm_24h} msg privés · {u.salon_24h} en salons · {u.area_24h} au quartier
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {view === "rooms" && (
+        <ul className="space-y-2">
+          {data && data.rooms.length === 0 && <p className="py-8 text-center text-sm text-muted">Personne dans les salons ces 5 dernières minutes.</p>}
+          {(data?.rooms ?? []).map((r) => (
+            <li key={r.room} className="rounded-2xl border border-line bg-surface px-4 py-3 text-sm">
+              <p className="font-bold">
+                {r.emoji || "💬"} {r.name} <span className="font-normal text-muted">· {r.people.length}</span>
+              </p>
+              <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {r.people.map((p) => (
+                  <span key={p.id}>
+                    <Name id={p.id} pseudo={p.pseudo} /> <span className="text-muted">{ago(p.at)}</span>
+                  </span>
+                ))}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {view === "pm" && (
+        <div>
+          <p className="mb-3 text-sm text-muted">Qui écrit à qui ces dernières 24 h (nombre de messages, pas leur contenu).</p>
+          <ul className="space-y-2">
+            {data && pm.length === 0 && <p className="py-8 text-center text-sm text-muted">Aucun message privé.</p>}
+            {pm.map((p) => (
+              <li key={p.a + p.b} className="rounded-2xl border border-line bg-surface px-4 py-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate">
+                    <Name id={p.a} pseudo={p.a_pseudo} /> ↔ <Name id={p.b} pseudo={p.b_pseudo} />
+                  </span>
+                  <span className="shrink-0 text-xs text-muted">{ago(p.last)}</span>
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {p.n} message{p.n > 1 ? "s" : ""} ({p.a_pseudo} : {p.a_n}, {p.b_pseudo} : {p.n - p.a_n}) · depuis {when(p.first)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

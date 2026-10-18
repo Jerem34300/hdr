@@ -1,10 +1,10 @@
 /**
  * Qui est là dans un salon ou dans le chat du quartier. L'écran de discussion ouvert signale sa
- * présence toutes les 15 s (en ligne = vu dans la dernière minute) ; la liste des discussions lit
+ * présence toutes les 15 s (en ligne = passé dans le salon ces 5 dernières minutes) ; la liste des discussions lit
  * les compteurs toutes les 20 s.
  */
 import { useEffect, useState } from "react";
-import { roomGone, roomHere, roomsOnline, type RoomPerson } from "./live";
+import { roomHere, roomsOnline, type RoomPerson } from "./live";
 
 export type RoomPresence = { n: number; people: RoomPerson[] };
 
@@ -23,20 +23,20 @@ export function useRoomPresence(room: string, pseudo: string, lat: number | null
       }
       timer = window.setTimeout(tick, 15000);
     };
-    const onVis = () => (document.visibilityState === "visible" ? tick() : void roomGone(room));
+    // On reste compté « dans le salon » 5 min après l'avoir quitté (comme « vu récemment »).
+    const onVis = () => document.visibilityState === "visible" && tick();
     tick();
     document.addEventListener("visibilitychange", onVis);
     return () => {
       alive = false;
       window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVis);
-      void roomGone(room);
     };
   }, [room, pseudo, lat, lng]);
   return state;
 }
 
-type Online = { area: number; salons: Record<string, number> } | null;
+type Online = { area: number; area_last?: string | null; salons: Record<string, number> } | null;
 let online: Online = null;
 const listeners = new Set<() => void>();
 let users = 0;

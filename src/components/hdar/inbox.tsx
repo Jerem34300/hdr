@@ -5,7 +5,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
 import { useFavorites } from "@/lib/hdar/favorites";
 import { bindTap } from "./tap";
-import { AreaInboxRow, SalonDiscover, SalonInboxRow } from "./salons";
+import { AreaInboxRow, SalonDiscover, SalonInboxRow, useAreaInbox } from "./salons";
 import { useSalonInbox } from "@/lib/hdar/salon-inbox";
 import { pgTime, type Conversation, type InboxSalon } from "@/lib/hdar/live";
 
@@ -22,8 +22,7 @@ export function Inbox() {
   const rawConvos = useHdar((s) => s.liveConvos);
   const favs = useFavorites();
   const favIds = new Set(favs.map((f) => f.id));
-  // Favorites pinned on top, each group keeps its most-recent-first order.
-  const convos = [...rawConvos.filter((c) => favIds.has(c.otherId)), ...rawConvos.filter((c) => !favIds.has(c.otherId))];
+  const convos = rawConvos;
   const seenAt = useHdar((s) => s.seenAt);
   const openLive = useHdar((s) => s.openLive);
   const deleteConversation = useHdar((s) => s.deleteConversation);
@@ -31,13 +30,14 @@ export function Inbox() {
   const followed = useHdar((s) => s.followedSalons);
   const { salons } = useSalonInbox();
   const mySalons = (salons ?? []).filter((s) => followed.includes(s.id));
-  // Une seule liste, la plus récente en haut (favoris épinglés en tête), comme une messagerie.
-  type Item = { kind: "pm"; c: Conversation; at: number } | { kind: "salon"; s: InboxSalon; at: number };
+  const area = useAreaInbox();
+  // Une seule liste, le dernier message en haut (privés, salons et quartier mêlés), comme une messagerie.
+  type Item = { kind: "pm"; c: Conversation; at: number } | { kind: "salon"; s: InboxSalon; at: number } | { kind: "area"; at: number };
   const items: Item[] = [
-    ...convos.filter((c) => !favIds.has(c.otherId)).map((c) => ({ kind: "pm" as const, c, at: c.lastAt })),
+    ...convos.map((c) => ({ kind: "pm" as const, c, at: c.lastAt })),
     ...mySalons.map((s) => ({ kind: "salon" as const, s, at: s.last ? pgTime(s.last.at) : 0 })),
+    ...(area.show ? [{ kind: "area" as const, at: area.at }] : []),
   ].sort((a, b) => b.at - a.at);
-  const pinned = convos.filter((c) => favIds.has(c.otherId));
 
   const pmRow = (c: Conversation) => {
     const unread = !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0);
@@ -111,9 +111,9 @@ export function Inbox() {
         </div>
       )}
       <ul className="mt-3 space-y-2">
-        {pinned.map(pmRow)}
-        <AreaInboxRow />
-        {items.map((it) => (it.kind === "pm" ? pmRow(it.c) : <SalonInboxRow key={it.s.id} s={it.s} editing={editing} />))}
+        {items.map((it) =>
+          it.kind === "pm" ? pmRow(it.c) : it.kind === "area" ? <AreaInboxRow key="area" a={area} /> : <SalonInboxRow key={it.s.id} s={it.s} editing={editing} />,
+        )}
       </ul>
     </div>
   );
