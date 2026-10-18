@@ -98,7 +98,10 @@ function Privacy() {
           service tiers pour cela.
         </li>
         <li>
-          Les modérateurs peuvent consulter les contenus signalés pour traiter le signalement.
+          Les modérateurs peuvent consulter les contenus signalés pour traiter le signalement. Quand
+          tu signales quelqu'un (ou qu'il te signale), votre <strong>conversation privée</strong>,
+          médias compris, peut être lue par un administrateur pour traiter ce signalement ; chaque
+          lecture est enregistrée. Les autres conversations privées ne sont jamais lues.
         </li>
       </ul>
 
@@ -196,7 +199,8 @@ function Privacy() {
           Les administrateurs de hdar peuvent consulter, pour la modération et le support, les
           informations de ton compte : profil et photos, région générale (jamais ta position
           précise), statistiques d'activité (nombre de sessions, de messages envoyés, de lieux
-          créés — <strong>jamais le contenu de tes messages privés</strong>), achats et signalements.
+          créés — <strong>jamais le contenu de tes messages privés</strong>, sauf une conversation
+          signalée), achats et signalements.
           Les cadeaux offerts et les rattachements de profil sont journalisés.
         </li>
       </ul>
@@ -275,6 +279,11 @@ function Privacy() {
         <li>Profil, favoris, notes : jusqu'à suppression de tes données.</li>
         <li>Données de paiement et factures : 10 ans (obligation comptable).</li>
         <li>Messages du formulaire de contact : 1 an maximum.</li>
+        <li>
+          Données de connexion (adresse IP, navigateur, dates de connexion) : <strong>1 an</strong>,
+          obligation légale des hébergeurs (LCEN, décret n° 2021-1362). Elles sont gardées même si tu
+          supprimes tes données, et ne sont transmises qu'aux autorités sur réquisition judiciaire.
+        </li>
         <li>Une purge automatique tourne en continu (toutes les 10 minutes à 1 heure).</li>
       </ul>
 
