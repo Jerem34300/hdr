@@ -5,6 +5,7 @@ import { areaFeed2, areaHide, areaSend2, areaSendMedia, type GroupLine } from "@
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
+import { useAmAdmin } from "@/lib/hdar/admin-mode";
 import { useRoomPresence } from "@/lib/hdar/presence";
 import { GroupChat } from "./group-chat";
 import { OnlineButton } from "./room-people";
@@ -27,6 +28,7 @@ export function PocketChat() {
   const lat = Number(center.lat.toFixed(3));
   const lng = Number(center.lng.toFixed(3));
   const presence = useRoomPresence("area", pseudo, lat, lng);
+  const isAdmin = useAmAdmin();
 
   const refresh = useCallback(() => {
     void areaFeed2(lat, lng)
@@ -58,7 +60,7 @@ export function PocketChat() {
         </>
       }
       meta={(m) => (!m.mine && here && m.lat != null && m.lng != null ? bucketDistance(haversine(here, { lat: m.lat, lng: m.lng })) : null)}
-      canHide={(m) => m.mine}
+      canHide={(m) => m.mine || isAdmin}
       onHide={(m) => areaHide(deviceId(), m.id)}
       onSend={(text, replyTo) => areaSend2(center.lat, center.lng, pseudo || "Anonyme", text, replyTo)}
       onSendMedia={onboarded ? (k, path, d) => areaSendMedia(center.lat, center.lng, pseudo || "Anonyme", k, path, d) : undefined}

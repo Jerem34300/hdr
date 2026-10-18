@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { MediaView } from "./media-composer";
 import {
   admin,
   admin58,
   adminLive,
+  adminMedia,
+  type AdminMediaRow,
   pgTime,
   type AdminLive,
   type AdminAreaRow,
@@ -272,6 +275,7 @@ function Msg({
   body,
   removed,
   where,
+  media,
   onOpen,
   onHide,
 }: {
@@ -280,6 +284,8 @@ function Msg({
   body: string;
   removed: boolean;
   where?: string;
+  /** Pour afficher la photo / vidéo / le vocal d'un message sans texte. */
+  media?: { adminKey: string; scope: "area" | "place" | "spot" | "salon"; id: string };
   onOpen: () => void;
   onHide: () => void;
 }) {
@@ -294,7 +300,7 @@ function Msg({
         </span>
         <span>{when(at)}</span>
       </div>
-      <p className="mt-1 text-sm break-words">{body || "📎 média"}</p>
+      {body ? <p className="mt-1 text-sm break-words">{body}</p> : media ? <AdminMedia {...media} /> : <p className="mt-1 text-sm">📎 média</p>}
       {removed ? (
         <p className="mt-2 text-xs">Supprimé</p>
       ) : (
@@ -303,6 +309,28 @@ function Msg({
         </button>
       )}
     </li>
+  );
+}
+
+/** Photo, vidéo ou vocal d'un message (visible par l'admin même après retrait). */
+function AdminMedia({ adminKey, scope, id }: { adminKey: string; scope: "area" | "place" | "spot" | "salon"; id: string }) {
+  const [row, setRow] = useState<AdminMediaRow | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    adminMedia(adminKey, scope, id)
+      .then((r) => alive && setRow(r))
+      .catch(() => alive && setRow(null));
+    return () => {
+      alive = false;
+    };
+  }, [adminKey, scope, id]);
+  if (row === undefined) return <p className="mt-1 text-sm text-muted">Chargement du média…</p>;
+  if (!row) return <p className="mt-1 text-sm text-muted">📎 Média indisponible (effacé ou base pas à jour)</p>;
+  return (
+    <div className="mt-2 max-w-xs">
+      <MediaView kind={row.kind} path={row.media} duration={row.duration} />
+      {row.removed && <p className="mt-1 text-xs text-muted">Retiré : visible seulement par l'admin</p>}
+    </div>
   );
 }
 
@@ -316,7 +344,7 @@ function AreaMsgs({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string)
       {data?.length === 0 && <p className="py-10 text-center text-muted">Aucun message ces dernières 24 h.</p>}
       <ul className="space-y-2">
         {data?.map((m) => (
-          <Msg key={m.id} pseudo={m.pseudo} at={m.at} body={m.body} removed={m.removed} onOpen={() => onOpen(m.from_id)} onHide={() => void admin.hideArea(adminKey, m.id).then(reload)} />
+          <Msg key={m.id} pseudo={m.pseudo} at={m.at} body={m.body} removed={m.removed} media={{ adminKey, scope: "area", id: m.id }} onOpen={() => onOpen(m.from_id)} onHide={() => void admin.hideArea(adminKey, m.id).then(reload)} />
         ))}
       </ul>
     </div>
@@ -340,6 +368,7 @@ function PlaceMsgs({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string
             body={m.body}
             removed={m.removed}
             where={`${m.scope === "spot" ? "🎯 " : "📍 "}${m.where}`}
+            media={{ adminKey, scope: m.scope, id: m.id }}
             onOpen={() => onOpen(m.from_id)}
             onHide={() => void admin58.hideMsg(adminKey, m.scope, m.id).then(reload)}
           />
@@ -426,7 +455,7 @@ function SalonMsgs({ adminKey, salon, onBack, onOpen }: { adminKey: string; salo
       {data?.length === 0 && <p className="py-10 text-center text-muted">Aucun message.</p>}
       <ul className="space-y-2">
         {data?.map((m) => (
-          <Msg key={m.id} pseudo={m.pseudo} at={m.at} body={m.body} removed={m.removed} onOpen={() => onOpen(m.from_id)} onHide={() => void admin58.hideMsg(adminKey, "salon", m.id).then(reload)} />
+          <Msg key={m.id} pseudo={m.pseudo} at={m.at} body={m.body} removed={m.removed} media={{ adminKey, scope: "salon", id: m.id }} onOpen={() => onOpen(m.from_id)} onHide={() => void admin58.hideMsg(adminKey, "salon", m.id).then(reload)} />
         ))}
       </ul>
     </div>

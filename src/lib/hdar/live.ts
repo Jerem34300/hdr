@@ -1361,3 +1361,14 @@ export type AdminRoomNow = { room: string; name: string; emoji: string | null; p
 export type AdminPmPair = { a: string; b: string; a_pseudo: string; b_pseudo: string; n: number; a_n: number; last: string; first: string };
 export type AdminLive = { online: AdminOnline[]; rooms: AdminRoomNow[]; pm: AdminPmPair[] };
 export const adminLive = (key: string) => rpc<AdminLive>("hdar_admin_live", { p_key: key });
+
+// Modération dans l'appli (v63) : les comptes admin retirent tout message et écrivent partout -----
+let amAdminP: Promise<boolean> | null = null;
+/** Ce compte est-il admin ? (une fois par session ; faux si la base n'est pas à jour). */
+export function amAdmin(): Promise<boolean> {
+  if (!amAdminP) amAdminP = rpc<boolean>("hdar_am_admin", {}).then(Boolean).catch(() => false);
+  return amAdminP;
+}
+export type AdminMediaRow = RoomMediaRow & { removed: boolean };
+export const adminMedia = (key: string, scope: "area" | "place" | "spot" | "salon", id: string) =>
+  rpc<AdminMediaRow[]>("hdar_admin_media", { p_key: key, p_scope: scope, p_id: id }).then((r) => r[0] ?? null);
