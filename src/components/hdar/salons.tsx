@@ -20,18 +20,29 @@ import { regionAt } from "@/lib/hdar/regions";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
 import { useActivity } from "@/lib/hdar/activity";
+import { useRoomPresence, useRoomsOnline } from "@/lib/hdar/presence";
 import { GroupChat } from "./group-chat";
+import { OnlineButton, OnlineCount } from "./room-people";
 import { bindTap } from "./tap";
 
-function useMyRegion() {
+function useMyPos() {
   const here = useHdar((s) => s.here);
   const cityId = useHdar((s) => s.cityId);
   const customCenter = useHdar((s) => s.customCenter);
-  const at = here ?? (() => {
-    const p = resolvePlace(cityId, customCenter);
-    return { lat: p.lat, lng: p.lng };
-  })();
+  if (here) return here;
+  const p = resolvePlace(cityId, customCenter);
+  return { lat: p.lat, lng: p.lng };
+}
+
+function useMyRegion() {
+  const at = useMyPos();
   return regionAt(at.lat, at.lng);
+}
+
+/** Nombre de personnes dans chaque salon et dans le chat du quartier (hors moi). */
+function useOnline() {
+  const at = useMyPos();
+  return useRoomsOnline(at.lat, at.lng);
 }
 
 /** Découvrir : chat du quartier, ta région, salons thématiques et régions (onglet Messages). */
@@ -43,6 +54,7 @@ export function SalonDiscover() {
   const followed = useHdar((s) => s.followedSalons);
   const myRegion = useMyRegion();
   const { salons } = useSalonInbox();
+  const online = useOnline();
   const [creating, setCreating] = useState(false);
   const [allRegions, setAllRegions] = useState(false);
 
@@ -53,8 +65,13 @@ export function SalonDiscover() {
   const topics = (salons ?? []).filter((s) => !s.region && !followed.includes(s.id));
 
   const chip = "flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-sm whitespace-nowrap";
+  // Pastille verte = en ligne maintenant, sinon grise = messages des dernières 24 h.
   const count = (s: Salon) =>
-    s.recent > 0 ? <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-muted">{s.recent > 99 ? "99+" : s.recent}</span> : null;
+    online?.salons[s.id] ? (
+      <OnlineCount n={online.salons[s.id]} />
+    ) : s.recent > 0 ? (
+      <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-muted">{s.recent > 99 ? "99+" : s.recent}</span>
+    ) : null;
   return (
     <section className="mt-4">
       <div className="flex items-baseline justify-between">
@@ -63,7 +80,7 @@ export function SalonDiscover() {
       </div>
       <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
         <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " border-signal/60"}>
-          📍 Quartier
+          📍 Quartier <OnlineCount n={online?.area} />
         </button>
         {mine && !followed.includes(mine.id) && (
           <button type="button" data-act="salon" data-id={mine.id} {...bindTap(() => openSalon(mine.id, mine.name))} className={chip + " border-signal/60"}>
@@ -130,6 +147,7 @@ function when(ms: number) {
 export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean }) {
   const openSalon = useHdar((st) => st.openSalon);
   const unfollow = useHdar((st) => st.unfollowSalon);
+  const online = useOnline();
   const unread = s.unread ?? 0;
   const at = s.last ? pgTime(s.last.at) : null;
   return (
@@ -144,7 +162,10 @@ export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean 
         <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">{s.emoji || "💬"}</span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
-            <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>{s.name}</span>
+            <span className="flex min-w-0 items-center gap-2">
+              <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>{s.name}</span>
+              <OnlineCount n={online?.salons[s.id]} />
+            </span>
             <span className="shrink-0 text-xs text-muted">{at ? when(at) : ""}</span>
           </span>
           <span className="flex items-center gap-2">
@@ -186,13 +207,14 @@ export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean 
 export function AreaInboxRow() {
   const openPocket = useHdar((s) => s.openPocket);
   const { area } = useActivity();
+  const online = useOnline();
   let seen = 0;
   try {
     seen = Date.parse(localStorage.getItem("hdar-area-seen") || "") || 0;
   } catch {
     /* rien */
   }
-  if (!area && Date.now() - seen > 24 * 3600 * 1000) return null;
+  if (!area && !online?.area && Date.now() - seen > 24 * 3600 * 1000) return null;
   return (
     <li>
       <button
@@ -204,7 +226,10 @@ export function AreaInboxRow() {
         <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">📍</span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
-            <span className={"truncate font-display " + (area ? "font-extrabold" : "font-bold")}>Chat du quartier</span>
+            <span className="flex min-w-0 items-center gap-2">
+              <span className={"truncate font-display " + (area ? "font-extrabold" : "font-bold")}>Chat du quartier</span>
+              <OnlineCount n={online?.area} />
+            </span>
             <span className="shrink-0 text-xs text-muted">{seen ? when(seen) : ""}</span>
           </span>
           <span className="flex items-center gap-2">
@@ -301,6 +326,8 @@ function CreateSalon({ onClose, onCreated }: { onClose: () => void; onCreated: (
 export function SalonRoom({ id, name }: { id: string; name: string }) {
   const setTab = useHdar((s) => s.setTab);
   const onboarded = useHdar((s) => s.me.onboarded);
+  const pseudo = useHdar((s) => s.me.pseudo);
+  const presence = useRoomPresence(`salon:${id}`, pseudo);
   const [info, setInfo] = useState<Salon | null>(null);
   const [lines, setLines] = useState<GroupLine[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -374,6 +401,7 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
               {info?.description || "Ouvert à tous · messages effacés après 24 h"}
             </p>
           </div>
+          <OnlineButton presence={presence} />
           {owner && (
             <button
               type="button"
