@@ -1302,6 +1302,28 @@ export async function areaSend2(lat: number, lng: number, pseudo: string, body: 
 export const salonHide = (msg: string) => rpc("hdar_salon_hide", { p_msg: msg });
 export const salonClose = (id: string) => rpc("hdar_salon_close", { p_id: id });
 
+// Présence (v61) : qui a le salon ou le chat du quartier ouvert en ce moment ---------------------
+export type RoomPerson = { id: string; pseudo: string; profile: boolean; mine: boolean; photo: boolean };
+/** Signale que j'ai la pièce ouverte et renvoie les présents (null = base pas encore à jour). */
+export async function roomHere(room: string, pseudo: string, lat: number | null = null, lng: number | null = null) {
+  try {
+    return await rpc<{ n: number; people: RoomPerson[] }>("hdar_room_here", { p_room: room, p_pseudo: pseudo, p_lat: lat, p_lng: lng });
+  } catch (e) {
+    if (missingFn(e)) return null;
+    throw e;
+  }
+}
+export const roomGone = (room: string) => rpc("hdar_room_leave", { p_room: room }).catch(() => undefined);
+/** Nombre de présents (hors moi) : chat du quartier autour de la position et chaque salon. */
+export async function roomsOnline(lat: number | null, lng: number | null) {
+  try {
+    return await rpc<{ area: number; salons: Record<string, number> }>("hdar_rooms_online", { p_lat: lat, p_lng: lng });
+  } catch (e) {
+    if (missingFn(e)) return null;
+    throw e;
+  }
+}
+
 // Admin v58 : visiteurs, chats de lieux, notes, salons ------------------------------------------
 export type VisitorRow = {
   id: string; first: string; last: string; sessions: number; days: number; city: string | null; source: string | null;

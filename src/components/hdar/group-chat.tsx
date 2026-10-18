@@ -7,6 +7,7 @@ import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
 import { RoomAttach, RoomMedia } from "./media-composer";
+import { OnlineButton } from "./room-people";
 
 /** Couleur stable du pseudo (comme Telegram), lisible sur fond sombre. */
 const NAME_COLORS = ["#FA6F6C", "#60a5fa", "#34d399", "#fbbf24", "#c084fc", "#f472b6", "#22d3ee", "#a3e635"];
@@ -472,6 +473,17 @@ export function GroupChatDemo() {
               <p className="font-display font-bold">Occitanie</p>
               <p className="text-xs text-muted">3 personnes aujourd'hui · Montpellier, Toulouse, Nîmes…</p>
             </div>
+            <OnlineButton
+              presence={{
+                n: 4,
+                people: [
+                  { id: "me", pseudo: "Toi", profile: true, mine: true, photo: false },
+                  { id: "7f3a", pseudo: "Lucas34", profile: true, mine: false, photo: false },
+                  { id: "c90e", pseudo: "Sam", profile: true, mine: false, photo: false },
+                  { id: "b21c", pseudo: "Anonyme", profile: false, mine: false, photo: false },
+                ],
+              }}
+            />
           </header>
         }
       />

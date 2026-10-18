@@ -5,7 +5,9 @@ import { areaFeed2, areaHide, areaSend2, areaSendMedia, type GroupLine } from "@
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
+import { useRoomPresence } from "@/lib/hdar/presence";
 import { GroupChat } from "./group-chat";
+import { OnlineButton } from "./room-people";
 
 /** Neighbourhood chat: messages from people within ~3 km, last 24 h. */
 export function PocketChat() {
@@ -24,6 +26,7 @@ export function PocketChat() {
   // Re-centre only when the position moves by ~100 m, not on every GPS tick.
   const lat = Number(center.lat.toFixed(3));
   const lng = Number(center.lng.toFixed(3));
+  const presence = useRoomPresence("area", pseudo, lat, lng);
 
   const refresh = useCallback(() => {
     void areaFeed2(lat, lng)
@@ -71,6 +74,7 @@ export function PocketChat() {
             <p className="font-display font-bold">Chat du quartier</p>
             <p className="truncate text-xs text-muted">{here ? "Les gens à ~3 km de toi · 24 h" : `Autour de ${fallback.name} · active ta position`}</p>
           </div>
+          <OnlineButton presence={presence} />
           {!here && (
             <button type="button" className="flex size-11 items-center justify-center" aria-label="Utiliser ma position" onClick={locate}>
               <LocateFixed className="size-5" />
