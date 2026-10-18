@@ -213,6 +213,8 @@ type State = {
   /** Salons suivis sur cet appareil (ouverts ou écrits) et date de dernière lecture. */
   followedSalons: string[];
   salonSeen: Record<string, number>;
+  /** Salons quittés à la main : plus suivis automatiquement (jusqu'à ce qu'on les rouvre). */
+  leftSalons: string[];
   followSalon: (id: string) => void;
   unfollowSalon: (id: string) => void;
   markSalonSeen: (id: string) => void;
@@ -461,11 +463,15 @@ export const useHdar = create<State>()(
       openSalon: (id, title) => set({ view: { name: "salon", id, title }, sheet: null }),
       followedSalons: [],
       salonSeen: {},
+      leftSalons: [],
       followSalon: (id) => {
         const f = get().followedSalons;
+        const left = get().leftSalons;
         if (!f.includes(id)) set({ followedSalons: [...f, id].slice(-50) });
+        if (left.includes(id)) set({ leftSalons: left.filter((x) => x !== id) });
       },
-      unfollowSalon: (id) => set({ followedSalons: get().followedSalons.filter((x) => x !== id) }),
+      unfollowSalon: (id) =>
+        set({ followedSalons: get().followedSalons.filter((x) => x !== id), leftSalons: [...get().leftSalons.filter((x) => x !== id), id].slice(-100) }),
       markSalonSeen: (id) => set({ salonSeen: { ...get().salonSeen, [id]: Date.now() } }),
       sendPocket: (text) => {
         const value = text.trim();
@@ -731,6 +737,7 @@ export const useHdar = create<State>()(
         safetyCode: s.safetyCode,
         seenAt: s.seenAt,
         followedSalons: s.followedSalons,
+        leftSalons: s.leftSalons,
         salonSeen: s.salonSeen,
       }),
     },

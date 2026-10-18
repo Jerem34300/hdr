@@ -70,7 +70,9 @@ export function SalonDiscover() {
     online?.salons[s.id] ? (
       <OnlineCount n={online.salons[s.id]} />
     ) : s.recent > 0 ? (
-      <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-muted">{s.recent > 99 ? "99+" : s.recent}</span>
+      <span className={"rounded-full px-1.5 text-[11px] " + (Date.now() - pgTime(s.last_at) < 15 * 60_000 ? "bg-online/20 font-bold text-online" : "bg-white/10 text-muted")}>
+        {s.recent > 99 ? "99+" : s.recent}
+      </span>
     ) : null;
   return (
     <section className="mt-4">
@@ -159,7 +161,10 @@ export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean 
         {...bindTap(() => openSalon(s.id, s.name))}
         className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
       >
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">{s.emoji || "💬"}</span>
+        <span className="relative flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">
+          {s.emoji || "💬"}
+          <ActiveDot at={at ?? 0} />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
@@ -203,9 +208,8 @@ export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean 
   );
 }
 
-/** Chat du quartier dans la liste des discussions (si on l'utilise ou s'il y a du nouveau). */
-export function AreaInboxRow() {
-  const openPocket = useHdar((s) => s.openPocket);
+/** Chat du quartier dans la liste : visible si on l'utilise ou s'il y a du monde / du nouveau. `at` = dernier message. */
+export function useAreaInbox() {
   const { area } = useActivity();
   const online = useOnline();
   let seen = 0;
@@ -214,7 +218,14 @@ export function AreaInboxRow() {
   } catch {
     /* rien */
   }
-  if (!area && !online?.area && Date.now() - seen > 24 * 3600 * 1000) return null;
+  const last = online?.area_last ? pgTime(online.area_last) : 0;
+  const show = area > 0 || (online?.area ?? 0) > 0 || last > 0 || Date.now() - seen < 24 * 3600 * 1000;
+  return { show, at: last || seen, unread: area, online: online?.area ?? 0, hasLast: last > 0 };
+}
+
+export function AreaInboxRow({ a }: { a: ReturnType<typeof useAreaInbox> }) {
+  const openPocket = useHdar((s) => s.openPocket);
+  const area = a.unread;
   return (
     <li>
       <button
@@ -223,14 +234,17 @@ export function AreaInboxRow() {
         {...bindTap(openPocket)}
         className="flex h-20 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
       >
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">📍</span>
+        <span className="relative flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">
+          📍
+          <ActiveDot at={a.hasLast ? a.at : 0} />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
               <span className={"truncate font-display " + (area ? "font-extrabold" : "font-bold")}>Chat du quartier</span>
-              <OnlineCount n={online?.area} />
+              <OnlineCount n={a.online} />
             </span>
-            <span className="shrink-0 text-xs text-muted">{seen ? when(seen) : ""}</span>
+            <span className="shrink-0 text-xs text-muted">{a.at ? when(a.at) : ""}</span>
           </span>
           <span className="flex items-center gap-2">
             <span className={"min-w-0 flex-1 truncate text-sm " + (area ? "text-ink" : "text-muted")}>
@@ -245,6 +259,17 @@ export function AreaInboxRow() {
         </span>
       </button>
     </li>
+  );
+}
+
+/** Point vert qui pulse sur l'icône quand ça parle (dernier message il y a moins de 15 min). */
+function ActiveDot({ at }: { at: number }) {
+  if (!at || Date.now() - at > 15 * 60_000) return null;
+  return (
+    <span className="absolute -top-0.5 -right-0.5 flex size-3.5" aria-label="Ça parle en ce moment">
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-online opacity-60" />
+      <span className="relative inline-flex size-3.5 rounded-full border-2 border-surface bg-online" />
+    </span>
   );
 }
 
