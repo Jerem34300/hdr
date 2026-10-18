@@ -1313,7 +1313,7 @@ export async function roomHere(room: string, pseudo: string, lat: number | null 
     throw e;
   }
 }
-export const roomGone = (room: string) => rpc("hdar_room_leave", { p_room: room }).catch(() => undefined);
+export const roomGone = (room: string) => rpc("hdar_room_away", { p_room: room }).catch(() => undefined);
 /** Nombre de présents (hors moi) : chat du quartier autour de la position et chaque salon. */
 export async function roomsOnline(lat: number | null, lng: number | null) {
   try {

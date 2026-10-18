@@ -59,7 +59,7 @@ begin
   return jsonb_build_object('n', jsonb_array_length(people), 'people', people);
 end $$;
 
-create or replace function public.hdar_room_leave(p_room text) returns void
+create or replace function public.hdar_room_away(p_room text) returns void
 language plpgsql security definer set search_path = '' as $$
 declare s text := hdar.self_id();
 begin
@@ -96,7 +96,7 @@ revoke execute on function hdar.room_ok(text), hdar.room_people(text, text, doub
 do $$
 declare f text;
 begin
-  foreach f in array array['hdar_room_here(text, text, double precision, double precision)', 'hdar_room_leave(text)',
+  foreach f in array array['hdar_room_here(text, text, double precision, double precision)', 'hdar_room_away(text)',
     'hdar_rooms_online(double precision, double precision)'] loop
     execute format('revoke all on function public.%s from public, anon', f);
     execute format('grant execute on function public.%s to authenticated', f);
