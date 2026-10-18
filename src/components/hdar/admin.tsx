@@ -25,7 +25,7 @@ import {
 import { Avatar } from "./avatar";
 import { Heat, Influencers, Monetization, Overview, TopPlaces, Week } from "./admin-analytics";
 import { CommentsTab, GrowthTab, PricingTab, RoiTab } from "./admin-business";
-import { ConversationsTab, LiveNowTab, RatingsSummary, VisitorsTab } from "./admin-insights";
+import { ConversationsTab, LiveNowTab, RatingsSummary, UserReportsAndIps, VisitorsTab } from "./admin-insights";
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
@@ -614,6 +614,8 @@ function UserDetail({
                 </li>
               ))}
             </ul>
+
+            <UserReportsAndIps adminKey={adminKey} id={id} pseudo={u.profile?.pseudo ?? "cet utilisateur"} />
 
             <h2 className="mt-6 font-display text-lg font-bold">
               Messages envoyés à ceux qui l'ont signalé

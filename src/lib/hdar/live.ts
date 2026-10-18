@@ -1372,3 +1372,13 @@ export function amAdmin(): Promise<boolean> {
 export type AdminMediaRow = RoomMediaRow & { removed: boolean };
 export const adminMedia = (key: string, scope: "area" | "place" | "spot" | "salon", id: string) =>
   rpc<AdminMediaRow[]>("hdar_admin_media", { p_key: key, p_scope: scope, p_id: id }).then((r) => r[0] ?? null);
+
+// Admin v64 : conversations signalées (lecture journalisée) et journal des connexions (IP, 1 an) --
+export type AdminReportedThread = { other: string; pseudo: string; reported_by_other: boolean; reported_other: boolean; n: number; last: string | null };
+export type AdminThreadMsg = { id: string; from_id: string; pseudo: string; kind: string; body: string; media: string | null; duration: number | null; at: string };
+export type AdminIp = { ip: string; ua: string | null; first: string; last: string; hits: number; others: number };
+export const adminReports = {
+  threads: (key: string, id: string) => rpc<AdminReportedThread[]>("hdar_admin_reported_threads", { p_key: key, p_id: id }),
+  thread: (key: string, a: string, b: string) => rpc<AdminThreadMsg[]>("hdar_admin_thread", { p_key: key, p_a: a, p_b: b }),
+  ips: (key: string, id: string) => rpc<AdminIp[]>("hdar_admin_user_ips", { p_key: key, p_id: id }),
+};

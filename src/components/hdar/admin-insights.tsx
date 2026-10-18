@@ -6,7 +6,11 @@ import {
   admin58,
   adminLive,
   adminMedia,
+  adminReports,
+  type AdminIp,
   type AdminMediaRow,
+  type AdminReportedThread,
+  type AdminThreadMsg,
   pgTime,
   type AdminLive,
   type AdminAreaRow,
@@ -599,6 +603,88 @@ export function LiveNowTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Fiche utilisateur : conversations privées signalées (lisibles en entier) et adresses IP (1 an). */
+export function UserReportsAndIps({ adminKey, id, pseudo }: { adminKey: string; id: string; pseudo: string }) {
+  const loadThreads = useCallback(() => adminReports.threads(adminKey, id), [adminKey, id]);
+  const loadIps = useCallback(() => adminReports.ips(adminKey, id), [adminKey, id]);
+  const threads = useLoad<AdminReportedThread[]>(loadThreads);
+  const ips = useLoad<AdminIp[]>(loadIps);
+  const [open, setOpen] = useState<AdminReportedThread | null>(null);
+  return (
+    <>
+      <h2 className="mt-6 font-display text-lg font-bold">Conversations privées signalées</h2>
+      <p className="mt-1 text-xs text-muted">
+        Lisibles seulement entre {pseudo} et une personne qu'il a signalée ou qui l'a signalé. Chaque lecture est enregistrée.
+      </p>
+      <ErrorNote error={threads.error} />
+      <ul className="mt-2 space-y-2">
+        {threads.data?.length === 0 && <li className="text-sm text-muted">Aucune conversation signalée.</li>}
+        {threads.data?.map((t) => (
+          <li key={t.other}>
+            <button type="button" className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-left text-sm" onClick={() => setOpen(open?.other === t.other ? null : t)}>
+              <span className="font-bold">{t.pseudo}</span>
+              <span className="text-muted">
+                {" "}· {t.reported_by_other && t.reported_other ? "signalements croisés" : t.reported_by_other ? `a signalé ${pseudo}` : `signalé par ${pseudo}`} · {t.n} message{t.n > 1 ? "s" : ""}
+                {t.last ? ` · dernier ${when(t.last)}` : ""}
+              </span>
+              <span className="float-right text-signal">{open?.other === t.other ? "Fermer" : "Lire"}</span>
+            </button>
+            {open?.other === t.other && <AdminThread adminKey={adminKey} a={id} b={t.other} />}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="mt-6 font-display text-lg font-bold">Connexions (adresses IP, 1 an)</h2>
+      <p className="mt-1 text-xs text-muted">Conservées 1 an (obligation légale). À transmettre uniquement sur réquisition judiciaire.</p>
+      <ErrorNote error={ips.error} />
+      <ul className="mt-2 space-y-2">
+        {ips.data?.length === 0 && <li className="text-sm text-muted">Aucune connexion enregistrée pour l'instant.</li>}
+        {ips.data?.map((c) => (
+          <li key={c.ip} className="rounded-2xl border border-line px-4 py-3 text-sm">
+            <p className="font-mono font-bold">
+              {c.ip}
+              {c.others > 0 && <span className="ml-2 font-sans text-xs text-amber-400">partagée avec {c.others} autre{c.others > 1 ? "s" : ""} compte{c.others > 1 ? "s" : ""}</span>}
+            </p>
+            <p className="text-xs text-muted">
+              du {when(c.first)} au {when(c.last)} · {c.hits} fois
+            </p>
+            {c.ua && <p className="mt-1 truncate text-xs text-muted">{c.ua}</p>}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function AdminThread({ adminKey, a, b }: { adminKey: string; a: string; b: string }) {
+  const load = useCallback(() => adminReports.thread(adminKey, a, b), [adminKey, a, b]);
+  const { data, error } = useLoad<AdminThreadMsg[]>(load);
+  return (
+    <div className="mt-2 space-y-1.5 rounded-2xl bg-night p-3">
+      <ErrorNote error={error} />
+      {data?.length === 0 && <p className="text-center text-xs text-muted">Aucun message (effacés après 30 jours ou par les deux personnes).</p>}
+      {data?.map((m) => (
+        <div key={m.id} className={"flex " + (m.from_id === a ? "justify-start" : "justify-end")}>
+          <div className={"max-w-[85%] rounded-2xl px-3 py-2 text-sm " + (m.from_id === a ? "bg-surface" : "bg-signal/20")}>
+            <p className="text-[11px] text-muted">
+              <b className="text-ink">{m.pseudo}</b> · {when(m.at)}
+            </p>
+            {m.kind === "text" || m.kind === "location" ? (
+              <p className="break-words whitespace-pre-wrap">{m.kind === "location" ? `📍 ${m.body || "Position"}` : m.body}</p>
+            ) : m.media?.startsWith("sb:") ? (
+              <div className="mt-1"><MediaView kind={m.kind} path={m.media.slice(3)} duration={m.duration} /></div>
+            ) : m.media && m.kind === "image" ? (
+              <img src={m.media} alt="" className="mt-1 max-h-60 rounded-xl" />
+            ) : (
+              <p className="text-muted">📎 {m.kind === "audio" ? "Vocal" : m.kind === "video" ? "Vidéo" : "Photo"} (effacé)</p>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
