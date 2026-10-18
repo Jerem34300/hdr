@@ -20,6 +20,7 @@ import { regionAt } from "@/lib/hdar/regions";
 import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
 import { useActivity } from "@/lib/hdar/activity";
+import { useAmAdmin } from "@/lib/hdar/admin-mode";
 import { useRoomPresence, useRoomsOnline } from "@/lib/hdar/presence";
 import { GroupChat } from "./group-chat";
 import { OnlineButton, OnlineCount } from "./room-people";
@@ -393,6 +394,7 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
   }, [id, setTab, refresh]);
 
   const owner = info?.mine ?? false;
+  const isAdmin = useAmAdmin();
   return (
     <GroupChat
       scope="salon"
@@ -407,7 +409,7 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
           Lance la conversation.
         </>
       }
-      canHide={(m) => m.mine || owner}
+      canHide={(m) => m.mine || owner || isAdmin}
       onHide={(m) => salonHide(m.id)}
       onSend={(text, replyTo) => salonSend(id, text, replyTo)}
       onSendMedia={onboarded ? (k, path, d, replyTo) => salonSendMedia(id, k, path, d, replyTo) : undefined}

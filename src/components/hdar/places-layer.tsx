@@ -6,6 +6,7 @@ import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
 import { RoomAttach, RoomMedia } from "./media-composer";
 import { useHdar } from "@/lib/hdar/store";
+import { useAmAdmin } from "@/lib/hdar/admin-mode";
 
 export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color: string }> = {
   cruising: { label: "Lieu de rencontre", icon: "🌲", color: "#34d399" },
@@ -209,12 +210,15 @@ export function ProposePlaceSheet({ at, onClose }: { at: { lat: number; lng: num
 
 function PlaceChat({ place }: { place: PlaceDetail }) {
   const here = useHdar((s) => s.here);
+  const isAdmin = useAmAdmin();
   const [lines, setLines] = useState<PlaceLine[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const distKm = here ? haversine(here, { lat: place.lat, lng: place.lng }) / 1000 : null;
-  const canPost = distKm != null && distKm <= 2;
+  // Les admins écrivent partout (modération, annonces), sans limite de distance.
+  const canPost = isAdmin || (distKm != null && distKm <= 2);
+  const at = here ?? { lat: place.lat, lng: place.lng };
   useEffect(() => {
     let stop = false;
     const load = () => {
@@ -239,9 +243,9 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
   }, [lines.length]);
   const send = () => {
     const b = text.trim();
-    if (!b || !here) return;
+    if (!b || !canPost) return;
     setBusy(true);
-    placeSend(place.id, b, here.lat, here.lng)
+    placeSend(place.id, b, at.lat, at.lng)
       .then(() => placeMessages(place.id))
       .then((r) => {
         setLines(r);
@@ -260,7 +264,7 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
           <p key={l.id} className={l.mine ? "text-right" : ""}>
             <span className="text-xs font-bold text-muted">{l.mine ? "Toi" : l.pseudo}</span>{" "}
             {l.body ? <span className="break-words">{l.body}</span> : <span className="mt-1 block"><RoomMedia scope="place" id={l.id} mine={l.mine} /></span>}
-            {l.mine && (
+            {(l.mine || isAdmin) && (
               <button
                 type="button"
                 aria-label="Supprimer"
@@ -284,9 +288,7 @@ function PlaceChat({ place }: { place: PlaceDetail }) {
         >
           <RoomAttach
             send={(k, path, d) =>
-              here
-                ? placeSendMedia(place.id, k, path, d, here.lat, here.lng).then(() => placeMessages(place.id)).then(setLines)
-                : Promise.reject(new Error("Active ta position"))
+              placeSendMedia(place.id, k, path, d, at.lat, at.lng).then(() => placeMessages(place.id)).then(setLines)
             }
           />
           <input
