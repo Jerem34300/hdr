@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { onlineCount } from "@/lib/hdar/recent";
 import { useScene } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
 import { bindTap } from "./tap";
@@ -31,6 +32,7 @@ export function Around() {
           </button>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <OnlinePill />
           <button
             type="button"
             data-act="salons"
@@ -70,5 +72,24 @@ export function Around() {
         />
       </div>
     </div>
+  );
+}
+
+/** « ● 3 en ligne » : tout le monde avec l'appli ouverte (5 min), pas seulement les gens visibles sur la carte. */
+function OnlinePill() {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let stop = false;
+    const run = () => { if (document.visibilityState === "visible") void onlineCount().then((v) => !stop && setN(v)); };
+    run();
+    const id = window.setInterval(run, 60_000);
+    return () => { stop = true; window.clearInterval(id); };
+  }, []);
+  if (n <= 0) return null;
+  return (
+    <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#3EE08F]/10 px-2.5 text-xs font-bold whitespace-nowrap text-[#3EE08F]" aria-label={`${n} en ligne`}>
+      <span className="size-2 animate-pulse rounded-full bg-[#3EE08F]" />
+      {n}<span className="max-[400px]:hidden"> en ligne</span>
+    </span>
   );
 }

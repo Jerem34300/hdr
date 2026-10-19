@@ -33,3 +33,17 @@ export function approxGeo(): Promise<ApproxGeo | null> {
 
 /** Libellé « il y a 3 h » pour un carreau. */
 export const agoLabel = (h: number) => (h <= 0 ? "il y a moins d'1 h" : `il y a ${h} h`);
+
+/** Nombre total de personnes avec l'appli ouverte (5 dernières minutes). Anonyme. */
+export async function onlineCount(): Promise<number> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_online_count`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}`, "content-type": "application/json" },
+      body: "{}",
+    });
+    return res.ok ? Number(await res.json()) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}

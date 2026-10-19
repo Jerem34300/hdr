@@ -570,7 +570,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         })}
       {pins.length === 0 && !finding && (
         <div
-          className="absolute top-4 left-1/2 z-30 w-[min(22rem,88%)] -translate-x-1/2 rounded-3xl border border-line bg-night/90 px-4 py-3 text-center shadow-xl backdrop-blur"
+          className="absolute top-3 right-3 left-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-3xl border border-line bg-night/90 px-3 py-2.5 text-center shadow-xl backdrop-blur"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <p className="font-display text-sm font-bold">
@@ -581,7 +581,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 : "Sois le premier à t'afficher ici ce soir"}
           </p>
           <p className="mt-0.5 text-xs text-muted">
-            {approx ? `📍 Position approximative : ${approx}. ` : ""}Personne en ligne pile maintenant, connecte-toi pour être vu en premier.
+            {approx ? `📍 Position approximative : ${approx}. ` : ""}Personne en ligne maintenant, connecte-toi pour être vu en premier.
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
             {recent?.nearest && !(recent.near > 0) && (
