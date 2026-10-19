@@ -24,6 +24,7 @@ const TIPS: TipDef[] = [
 
 const SNOOZE = 2 * 60 * 60 * 1000;
 const EVERY = 10 * 60 * 1000;
+const EVERY_KEY = 4 * 60 * 1000;
 const DELAY = 3500;
 const AUTO = 12_000;
 const LAST_KEY = "hdar_tip_last";
@@ -92,7 +93,8 @@ export function MapTips() {
     let hideTimer = 0;
     const pick = () => {
       if (stop) return;
-      if (Date.now() - readTs(LAST_KEY) < EVERY) return;
+      // Pas encore connecté ou sans photo : les deux bulles clés reviennent plus souvent.
+      if (Date.now() - readTs(LAST_KEY) < (!visible || !hasPhoto ? EVERY_KEY : EVERY)) return;
 
       const eligible = TIPS.filter((t) => {
         if (!notSnoozed(t.id)) return false;
@@ -105,13 +107,16 @@ export function MapTips() {
       let chosen: TipDef | null = null;
       if (!visible) {
         chosen = eligible.find((t) => t.id === "connect") ?? null;
+        chosen ??= eligible.find((t) => t.id === "photo") ?? null;
         if (!chosen) {
           const rest = eligible.filter((t) => t.id !== "connect");
           if (rest.length) chosen = rest[Math.floor(Math.random() * rest.length)]!;
         }
       } else {
+        // Connecté sans photo : une fois sur deux, la bulle photo.
+        if (!hasPhoto && Math.random() < 0.5) chosen = eligible.find((t) => t.id === "photo") ?? null;
         const rest = eligible.filter((t) => t.id !== "connect");
-        if (rest.length) chosen = rest[Math.floor(Math.random() * rest.length)]!;
+        if (!chosen && rest.length) chosen = rest[Math.floor(Math.random() * rest.length)]!;
       }
       if (!chosen) return;
       if (!document.querySelector(`[data-tip="${chosen.target}"]`)) return;

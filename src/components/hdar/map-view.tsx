@@ -19,6 +19,7 @@ import { track } from "@/lib/hdar/track";
 import { usePhoto } from "@/lib/hdar/photos";
 import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { useHdar } from "@/lib/hdar/store";
+import { agoLabel, approxGeo, recentActivity, type Recent } from "@/lib/hdar/recent";
 import type { Zone } from "@/lib/hdar/data";
 import type { LivePerson, LiveSpot, Place } from "@/lib/hdar/scene";
 
@@ -127,6 +128,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const gesture = useRef<{ zoom: number; dist: number; lat: number; lng: number; x: number; y: number } | null>(null);
   const anim = useRef(0);
   const [live, setLive] = useState<LivePin[]>([]);
+  // Activité anonyme des dernières 24 h (carreaux ~5 km) : la carte n'est jamais vide.
+  const [recent, setRecent] = useState<Recent | null>(null);
+  const [approx, setApprox] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(() => { try { const v = sessionStorage.getItem("hdar-open-filters"); sessionStorage.removeItem("hdar-open-filters"); return !!v; } catch { return false; } });
   const mapFilters = usePremium((s) => (s.premium ? s.filters : null));
   const filterKey = JSON.stringify(mapFilters);
@@ -185,6 +189,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       () => {
         track("geo_no");
         setLocated(false);
+        centerOnApproxCity();
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 },
     );
@@ -243,6 +248,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         track(err.code === 1 ? "geo_no" : "geo_timeout");
         setLocated(false);
         setFinding(false);
+        centerOnApproxCity();
       },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 12000 },
     );
@@ -252,6 +258,32 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** Position refusée et aucune position enregistrée : on centre sur la ville approximative (réseau). */
+  function centerOnApproxCity() {
+    if (locked.current || useHdar.getState().cityId === "ici") return;
+    void approxGeo().then((g) => {
+      if (!g || locked.current) return;
+      track("geo_approx");
+      setApprox(g.city);
+      follow.current = false;
+      setView((v) => ({ ...v, lat: g.lat, lng: g.lng, zoom: 12 }));
+    });
+  }
+
+  const rLat = (located ? you.lat : view.lat).toFixed(1);
+  const rLng = (located ? you.lng : view.lng).toFixed(1);
+  useEffect(() => {
+    let stop = false;
+    const run = () => void recentActivity(Number(rLat), Number(rLng)).then((r) => !stop && setRecent(r));
+    const t = window.setTimeout(run, 400);
+    const id = window.setInterval(run, 120_000);
+    return () => {
+      stop = true;
+      window.clearTimeout(t);
+      window.clearInterval(id);
+    };
+  }, [rLat, rLng]);
 
   const zoom = Math.min(17, Math.max(4, view.zoom));
   const z = Math.round(zoom);
@@ -520,10 +552,53 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           style={{ left: tile.left, top: tile.top, width: tilePx, height: tilePx }}
         />
       ))}
-      {visible && pins.length === 0 && !finding && (
-        <p className="pointer-events-none absolute top-4 left-1/2 z-20 max-w-[70%] -translate-x-1/2 rounded-full bg-night/85 px-4 py-2 text-center text-xs text-muted">
-          Personne d'autre en ligne pour l'instant
-        </p>
+      {pins.length < 3 &&
+        (recent?.cells ?? []).map((c) => {
+          const pt = project(c.lat, c.lng);
+          if (pt.x < -60 || pt.y < -60 || pt.x > size.w + 60 || pt.y > size.h + 60) return null;
+          const d = Math.max(28, Math.min(140, (5000 / ((156543.03392 * Math.cos((c.lat * Math.PI) / 180)) / 2 ** zoom)) * 0.6));
+          return (
+            <span key={`r${c.lat}-${c.lng}`} className="pointer-events-none absolute z-[5] -translate-x-1/2 -translate-y-1/2" style={{ left: pt.x, top: pt.y }}>
+              <span className="block animate-pulse rounded-full bg-[#FA6F6C]/25 shadow-[0_0_28px_rgba(250,111,108,.55)]" style={{ width: d, height: d, opacity: Math.max(0.35, 1 - c.h / 24) }} />
+              {zoom >= 9 && (
+                <span className="absolute top-full left-1/2 mt-1 -translate-x-1/2 rounded-full bg-night/80 px-2 py-0.5 text-[10px] whitespace-nowrap text-muted">
+                  {c.n} {c.n > 1 ? "actifs" : "actif"} · {agoLabel(c.h)}
+                </span>
+              )}
+            </span>
+          );
+        })}
+      {pins.length === 0 && !finding && (
+        <div
+          className="absolute top-4 left-1/2 z-30 w-[min(22rem,88%)] -translate-x-1/2 rounded-3xl border border-line bg-night/90 px-4 py-3 text-center shadow-xl backdrop-blur"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <p className="font-display text-sm font-bold">
+            {recent && recent.near > 0
+              ? `🔥 ${recent.near} ${recent.near > 1 ? "personnes actives" : "personne active"} ces dernières 24 h dans le coin`
+              : recent?.nearest
+                ? `🔥 De l'activité à ${recent.nearest.km} km ces dernières 24 h`
+                : "Sois le premier à t'afficher ici ce soir"}
+          </p>
+          <p className="mt-0.5 text-xs text-muted">
+            {approx ? `📍 Position approximative : ${approx}. ` : ""}Personne en ligne pile maintenant, connecte-toi pour être vu en premier.
+          </p>
+          <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
+            {recent?.nearest && !(recent.near > 0) && (
+              <button type="button" className="rounded-full bg-signal px-3 py-1.5 font-bold text-night" onClick={() => { follow.current = false; setView((v) => ({ ...v, lat: recent.nearest!.lat, lng: recent.nearest!.lng })); animateTo(11); }}>
+                Voir
+              </button>
+            )}
+            {!located && (
+              <button type="button" className="rounded-full border border-line px-3 py-1.5" onClick={askLocation}>
+                Activer ma position
+              </button>
+            )}
+            <button type="button" className="rounded-full border border-line px-3 py-1.5" onClick={() => useHdar.getState().openCity()}>
+              Changer de ville
+            </button>
+          </div>
+        </div>
       )}
       {nearest && nearestHidden && !finding && (
         <button

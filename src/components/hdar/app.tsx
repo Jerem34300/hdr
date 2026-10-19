@@ -12,6 +12,7 @@ import { isExpired, remainingLabel } from "@/lib/hdar/rules";
 import { useHdar, type Tab } from "@/lib/hdar/store";
 import { Around } from "./around";
 import { MapTips } from "./map-tips";
+import { ProfileReminder } from "./profile-reminder";
 import { Chat } from "./chat";
 import { Cover } from "./cover";
 import { Inbox } from "./inbox";
@@ -103,6 +104,7 @@ export function App() {
       <ConfirmSheet />
       <ReportSheet />
       <PushPrompt />
+      <ProfileReminder />
       <InstallPrompt />
       <IntroVideo />
       {cover && <Cover />}
@@ -150,15 +152,15 @@ export function App() {
                 <DockButton id="around" label="Carte" current={tab} icon={<Radar className="size-5" />} onClick={setTab} />
                 <DockButton id="spots" label="Lieux" tip="spots" current={tab} badge={act.unread.size + act.fresh.size + act.places.size > 0} icon={<MapPin className="size-5" />} onClick={setTab} />
                 <button type="button" data-act="tonight" data-tip="connect" {...bindTap(openTonight)} className="hit relative -mt-5 flex flex-col items-center pb-1">
-                  <span className="relative flex size-14 items-center justify-center rounded-full bg-signal text-night">
+                  <span className={cn("relative flex size-14 items-center justify-center rounded-full bg-signal text-night", !tonight && "shadow-[0_0_22px_rgba(250,111,108,.75)]")}>
                     {tonight ? (
                       <span className="font-display text-sm font-bold">{remainingLabel(tonight.expiresAt, now).replace(" ", "")}</span>
                     ) : (
                       <span className="size-3 rounded-full bg-night" />
                     )}
-                    {tonight && <span className="ping-ring rounded-full" />}
+                    <span className="ping-ring rounded-full" />
                   </span>
-                  <span className="mt-1 text-xs">{tonight ? "En ligne" : "Connexion"}</span>
+                  <span className={cn("mt-1 text-xs", !tonight && "font-bold text-signal")}>{tonight ? "En ligne" : "Connexion"}</span>
                 </button>
                 <DockButton
                   id="inbox"

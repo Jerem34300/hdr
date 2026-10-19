@@ -290,6 +290,16 @@ const Z = {
 
 export const CITIES: City[] = [
   {
+    slug: "montpellier",
+    name: "Montpellier",
+    area: "L'Écusson",
+    lat: 43.6109,
+    lng: 3.8772,
+    line: "Ça commence place de la Comédie et ça finit tard.",
+    quartiers: ["L'Écusson", "Comédie", "Antigone", "Beaux-Arts"],
+    zones: [Z.close("Écusson"), Z.mid("Antigone"), Z.far("Beaux-Arts")],
+  },
+  {
     slug: "paris",
     name: "Paris",
     area: "Le Marais",
@@ -410,6 +420,7 @@ const SPOT_TITLES: Record<string, [string, string, string]> = {
   bordeaux: ["Saint-Pierre", "Quais, sans foule", "Après le vin"],
   lille: ["Vieux-Lille", "Un verre, Grand Place", "Avant la pluie"],
   nantes: ["Graslin", "Île, à pied", "Dernier tram"],
+  montpellier: ["Place de la Comédie", "Écusson, sans plan", "Dernier tram"],
   nice: ["Vieux-Nice", "Promenade courte", "Après la terrasse"],
 };
 

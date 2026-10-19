@@ -12,6 +12,7 @@ import { RecoverLink } from "./recover";
 import { GroupChatDemo } from "./group-chat";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
+import { GateTeaser } from "./gate-teaser";
 import {
   TURNSTILE_SITE_KEY,
   adultConfirmed,
@@ -67,6 +68,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   const [widgetFailed, setWidgetFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [teaser, setTeaser] = useState<{ city: string | null; near: number; total: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
 
@@ -125,9 +127,23 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   const ready = (!needsAdult || checked) && (token || widgetFailed) && !busy;
 
   return (
-    <main className="grid min-h-screen place-items-center bg-night p-6 text-ink">
+    <main className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-night text-ink sm:items-center sm:justify-center">
+      <GateTeaser onCity={(city, r) => setTeaser({ city, near: r?.near ?? 0, total: r?.total ?? 0 })} />
+      <div className="relative z-10 px-6 pt-10 text-center sm:hidden" aria-live="polite">
+        {teaser && (
+          <p className="mx-auto inline-flex items-center gap-2 rounded-full bg-night/85 px-4 py-2 text-sm font-bold shadow-lg">
+            <span className="size-2 animate-pulse rounded-full bg-[#3EE08F]" />
+            {teaser.near > 0
+              ? `${teaser.near} ${teaser.near > 1 ? "personnes actives" : "personne active"} ces dernières 24 h${teaser.city ? ` près de ${teaser.city}` : ""}`
+              : teaser.total > 0
+                ? `${teaser.total} personnes actives ces dernières 24 h en France`
+                : `Sois parmi les premiers${teaser.city ? ` à ${teaser.city}` : ""}`}
+          </p>
+        )}
+      </div>
+      <div className="flex-1 sm:hidden" />
       <form
-        className="w-full max-w-sm space-y-4"
+        className="relative z-10 w-full space-y-4 rounded-t-[2rem] border-t border-line bg-night/90 p-6 pb-8 backdrop-blur-md sm:max-w-sm sm:rounded-[2rem] sm:border"
         onSubmit={(e) => {
           e.preventDefault();
           if (needsAdult && !checked) return setError("Hdar est réservé aux 18 ans et plus.");
@@ -153,6 +169,11 @@ function AdultGateInner({ children }: { children: ReactNode }) {
         <h1 className="font-display text-3xl font-extrabold">hdar.</h1>
         <p className="text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.</p>
         <p className="text-xs text-muted">Sans inscription. Ouvert à toutes et tous, LGBT-friendly 🏳️‍🌈</p>
+        <ul className="grid grid-cols-3 gap-2 text-center text-[11px] text-muted">
+          <li className="rounded-2xl border border-line px-2 py-2">🗺️<br />Qui est là</li>
+          <li className="rounded-2xl border border-line px-2 py-2">💬<br />Chat du quartier</li>
+          <li className="rounded-2xl border border-line px-2 py-2">🎥<br />Live vidéo</li>
+        </ul>
         {needsAdult && (
           <label className="flex items-center gap-3 text-sm">
             <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} />
