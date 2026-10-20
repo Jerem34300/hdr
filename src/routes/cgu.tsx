@@ -19,6 +19,12 @@ function Terms() {
         Le service est anonyme et gratuit dans sa version de base. Tu restes responsable de ce que tu publies et partages, y
         compris ta position exacte lorsque tu choisis de l'envoyer.
       </p>
+      <p>
+        Carte : après ta dernière connexion, ton pin peut rester affiché estompé (« vu il y a … », position arrondie à ~400 m)
+        pendant 48 h, sauf si tu actives « Me cacher de la carte quand je suis hors ligne ». Sans profil et avec la
+        géolocalisation acceptée, une bulle anonyme (~1 km, sans pseudo ni photo) peut apparaître pendant 48 h ; tu peux la
+        désactiver. Détails dans la <a href="/confidentialite">politique de confidentialité</a>.
+      </p>
       <h2 id="interdits">3. Ce qui est interdit (politique d'utilisation acceptable)</h2>
       <ul>
         <li>

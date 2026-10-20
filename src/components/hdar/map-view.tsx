@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+import { MapPrivacyToggle } from "./notify-settings";
 import { MapGiftButton } from "./growth";
 import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
@@ -12,7 +14,7 @@ import { BoostNudge } from "./boost-nudge";
 import { useActiveBoost } from "./boost";
 import { liveIds } from "@/lib/hdar/live";
 import { useMapFocus } from "@/lib/hdar/map-focus";
-import { listBoosted, liveCount, liveMap, pulse, goDark, type LivePin } from "@/lib/hdar/live";
+import { listBoosted, liveCount, liveMap, mapRecent, pulse, goDark, visitorPing, type LivePin, type RecentPin, type VisitorBubble } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
@@ -218,6 +220,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       }
     }
     const st = useHdar.getState();
+    if (!st.me.onboarded) visitorPing(lat, lng);
     const tonight = st.me.tonight;
     if (tonight && tonight.expiresAt > Date.now()) {
       void pulse({
@@ -314,6 +317,29 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     y: worldY(lat, z) * scale - top,
   });
   frame.current = { left, top, z, scale };
+  // Vus récemment (< 48 h, hors ligne) + visiteurs anonymes, pour la fenêtre visible (clé arrondie, sondage 90 s).
+  const vb = { s: latFromY((top + size.h) / scale, z), n: latFromY(top / scale, z), w: lngFromX(left / scale, z), e: lngFromX((left + size.w) / scale, z) };
+  const q = (v: number) => (Math.round(v * 50) / 50).toFixed(2);
+  const vbKey = zoom >= 9 ? [q(vb.s - 0.02), q(vb.w - 0.02), q(vb.n + 0.02), q(vb.e + 0.02)].join(",") : "";
+  const onboardedMe = useHdar((s) => s.me.onboarded);
+  const [past, setPast] = useState<{ people: RecentPin[]; visitors: VisitorBubble[] }>({ people: [], visitors: [] });
+  useEffect(() => {
+    if (!vbKey) { setPast({ people: [], visitors: [] }); return; }
+    const [bs, bw, bn, be] = vbKey.split(",").map(Number);
+    if (import.meta.env.DEV && location.search.includes("recentdemo")) {
+      const c = { lat: (bs + bn) / 2, lng: (bw + be) / 2 };
+      setPast({
+        people: [{ id: "demo-r1", pseudo: "Max", lat: c.lat + 0.004, lng: c.lng - 0.008, h: 3 }, { id: "demo-r2", pseudo: "Lou", lat: c.lat - 0.012, lng: c.lng + 0.004, h: 11 }, { id: "demo-r3", pseudo: "Sam", lat: c.lat + 0.016, lng: c.lng + 0.012, h: 26 }],
+        visitors: [{ lat: c.lat - 0.02, lng: c.lng - 0.01, n: 1, h: 2 }, { lat: c.lat + 0.03, lng: c.lng - 0.02, n: 2, h: 7 }],
+      });
+      return;
+    }
+    let stop = false;
+    const run = () => void mapRecent({ s: bs, w: bw, n: bn, e: be }).then((r) => !stop && setPast(r)).catch(() => undefined);
+    const t = window.setTimeout(run, 600);
+    const id = window.setInterval(() => document.visibilityState === "visible" && run(), 90_000);
+    return () => { stop = true; window.clearTimeout(t); window.clearInterval(id); };
+  }, [vbKey]);
   const basePlaces = usePlaces(placesOn);
   const toilets = useToilets(
     toiletsOn,
@@ -576,6 +602,39 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             </span>
           );
         })}
+      {past.visitors.map((v) => {
+        const pt = project(v.lat, v.lng);
+        if (pt.x < -40 || pt.y < -40 || pt.x > size.w + 40 || pt.y > size.h + 40) return null;
+        return (
+          <button key={`v${v.lat},${v.lng}`} type="button" aria-label="Quelqu'un traîne par ici (visiteur anonyme)"
+            className="absolute z-[8] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: pt.x, top: pt.y, opacity: Math.max(0.45, 1 - v.h / 60) }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              if (useHdar.getState().me.onboarded) toast("Visiteur anonyme, sans profil 👀");
+              else { toast("Crée ton profil pour qu'on te voie aussi 👋"); useHdar.setState({ sheet: "gate" }); }
+            }}>
+            <span className="grid size-7 place-items-center rounded-full border border-dashed border-[#8b7cff]/70 bg-[#8b7cff]/20 text-[13px] shadow-[0_0_14px_rgba(139,124,255,.45)]">👤</span>
+            {zoom >= 12 && <span className="mt-0.5 rounded-full bg-night/80 px-1.5 py-px text-[9px] whitespace-nowrap text-[#c4b5fd]">Quelqu'un traîne par ici{v.n > 1 ? ` (${v.n})` : ""}</span>}
+          </button>
+        );
+      })}
+      {past.people.filter((p) => !live.some((l) => l.id === p.id)).map((p) => {
+        const pt = project(p.lat, p.lng);
+        if (pt.x < -40 || pt.y < -40 || pt.x > size.w + 40 || pt.y > size.h + 40) return null;
+        const d = Math.round(face * 0.8);
+        return (
+          <span key={`p${p.id}`} className="contents">
+            <button type="button" data-act="recent" aria-label={`${p.pseudo}, vu ${agoLabel(p.h)}`}
+              className="absolute z-[9] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 border-[#4a4a58] bg-surface opacity-70 grayscale"
+              style={{ left: pt.x, top: pt.y, width: d, height: d }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => useHdar.getState().openProfile(p.id, p.pseudo)}>
+              <PinFace id={p.id} pseudo={p.pseudo} />
+            </button>
+            {zoom >= 11 && <span className="pointer-events-none absolute z-[9] -translate-x-1/2 rounded-full bg-night/85 px-1.5 py-px text-[9px] whitespace-nowrap text-muted" style={{ left: pt.x, top: pt.y + d / 2 + 1 }}>vu {agoLabel(p.h)}</span>}
+          </span>
+        );
+      })}
       {pins.length === 0 && !finding && (
         <div
           className="absolute top-3 right-3 left-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-3xl border border-line bg-night/90 px-3 py-2.5 text-center shadow-xl backdrop-blur"
@@ -606,6 +665,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               Changer de ville
             </button>
           </div>
+          {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
         </div>
       )}
       {nearest && nearestHidden && !finding && (

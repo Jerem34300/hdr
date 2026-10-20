@@ -2,7 +2,7 @@ import { AmbNudge, ProfileAmb } from "./profile-card";
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { openIntro } from "./intro-video";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
-import { NotifySettings } from "./notify-settings";
+import { MapPrivacyToggle, NotifySettings } from "./notify-settings";
 import { ProtectProfileCard } from "./recover";
 import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
@@ -538,6 +538,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
       </div>
       <RedeemCode />
       <NotifySettings />
+      <section className="mt-6"><p className="mb-1 text-xs font-bold tracking-[0.2em] text-muted uppercase">Carte</p><MapPrivacyToggle /></section>
       <ProSettings />
       <p className="mt-6 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>
       <section className="mt-8 border-t border-line pt-6">

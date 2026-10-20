@@ -1382,3 +1382,29 @@ export const adminReports = {
   thread: (key: string, a: string, b: string) => rpc<AdminThreadMsg[]>("hdar_admin_thread", { p_key: key, p_a: a, p_b: b }),
   ips: (key: string, id: string) => rpc<AdminIp[]>("hdar_admin_user_ips", { p_key: key, p_id: id }),
 };
+
+// Carte jamais vide (v73) : profils vus < 48 h (estompés) + visiteurs anonymes (bulles ~1 km) -------------
+export type RecentPin = { id: string; pseudo: string; lat: number; lng: number; h: number };
+export type VisitorBubble = { lat: number; lng: number; n: number; h: number };
+export async function mapRecent(b: { s: number; w: number; n: number; e: number }) {
+  const r = await rpc<{ people: RecentPin[]; visitors: VisitorBubble[] }>("hdar_map_recent", { p_s: b.s, p_w: b.w, p_n: b.n, p_e: b.e });
+  return {
+    people: (r?.people ?? []).map((p) => ({ ...p, lat: Number(p.lat), lng: Number(p.lng), h: Number(p.h) || 0 })),
+    visitors: (r?.visitors ?? []).map((v) => ({ lat: Number(v.lat), lng: Number(v.lng), n: Number(v.n) || 1, h: Number(v.h) || 0 })),
+  };
+}
+const VISITOR_HIDDEN = "hdar-visitor-hidden";
+export const visitorHidden = () => { try { return localStorage.getItem(VISITOR_HIDDEN) === "1"; } catch { return false; } };
+export function setVisitorHidden(on: boolean) {
+  try { localStorage.setItem(VISITOR_HIDDEN, on ? "1" : "0"); } catch { /* rien */ }
+  if (on) void rpc("hdar_visitor_forget", {}).catch(() => undefined);
+}
+let lastPing = 0;
+/** Visiteur sans profil, position acceptée : le serveur n'enregistre qu'un carreau ~1 km (48 h max). */
+export function visitorPing(lat: number, lng: number) {
+  if (visitorHidden() || Date.now() - lastPing < 10 * 60_000) return;
+  lastPing = Date.now();
+  void rpc("hdar_visitor_ping", { p_lat: Math.round(lat * 100) / 100, p_lng: Math.round(lng * 100) / 100 }).catch(() => undefined);
+}
+export const hideOfflineGet = () => rpc<boolean>("hdar_map_hide_offline_get", {});
+export const hideOfflineSet = (on: boolean) => rpc("hdar_map_hide_offline_set", { p_on: on });

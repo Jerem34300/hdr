@@ -43,7 +43,19 @@ function Privacy() {
         <li>
           Tu n'apparais sur la carte que lorsque tu le décides, pour{" "}
           <strong>1 h, 3 h ou 12 h</strong>. À la fin de cette durée, ta position est{" "}
-          <strong>effacée automatiquement</strong> de nos serveurs.
+          <strong>retirée de la carte « en ligne »</strong>.
+        </li>
+        <li>
+          Pendant les <strong>48 h</strong> qui suivent, ton pin peut rester visible <strong>estompé</strong> avec
+          « vu il y a … », à une position <strong>arrondie à environ 400 m</strong> (jamais ta position exacte).
+          Les personnes que tu as bloquées ne le voient pas. Tu peux le désactiver dans Paramètres :{" "}
+          <strong>« Me cacher de la carte quand je suis hors ligne »</strong>.
+        </li>
+        <li>
+          Sans profil, si tu acceptes la géolocalisation, nous enregistrons seulement un{" "}
+          <strong>carreau d'environ 1 km</strong> (jamais ta position exacte, aucun pseudo, aucune photo), affiché
+          comme une bulle anonyme « Quelqu'un traîne par ici » et <strong>effacé après 48 h</strong> ou dès que tu
+          crées un profil. Tu peux le refuser avec l'option « Ne pas m'afficher en bulle anonyme ».
         </li>
         <li>
           Les autres ne voient qu'une position <strong>arrondie à environ 110 m</strong>, jamais ton

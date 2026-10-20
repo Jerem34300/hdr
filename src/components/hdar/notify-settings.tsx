@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { disablePush, enablePush, pushActive, pushSupported } from "@/lib/hdar/push";
+import { useHdar } from "@/lib/hdar/store";
+import { hideOfflineGet, hideOfflineSet, setVisitorHidden, visitorHidden } from "@/lib/hdar/live";
 import { playMessageSound, playSoftSound, setSoftEnabled, setSoundEnabled, softEnabled, soundEnabled, type SoftKind } from "@/lib/hdar/sounds";
 
 export function NotifySettings() {
@@ -78,4 +80,27 @@ function SoftToggle({ kind, label }: { kind: SoftKind; label: string }) {
       />
     </label>
   );
+}
+
+/** Confidentialité carte : profil → « Me cacher quand je suis hors ligne » ; visiteur → bulle anonyme. */
+export function MapPrivacyToggle({ compact }: { compact?: boolean }) {
+  const onboarded = useHdar((s) => s.me.onboarded);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (onboarded) void hideOfflineGet().then((v) => setOn(!!v)).catch(() => undefined);
+    else setOn(visitorHidden());
+  }, [onboarded]);
+  const label = onboarded ? "Me cacher de la carte quand je suis hors ligne" : "Ne pas m'afficher en bulle anonyme sur la carte";
+  return (
+    <label className={compact ? "flex items-center justify-center gap-2 text-[11px] text-muted" : "flex min-h-11 items-center justify-between gap-3 text-sm"}>
+      {compact && <input type="checkbox" checked={on} onChange={(e) => change(e.target.checked)} />}
+      <span>{label}{!compact && <span className="block text-xs text-muted">{onboarded ? "Sinon, ton pin estompé « vu il y a … » reste visible 48 h, à ~400 m près." : "Sinon, une bulle sans pseudo ni photo, à ~1 km près, pendant 48 h."}</span>}</span>
+      {!compact && <input type="checkbox" checked={on} onChange={(e) => change(e.target.checked)} />}
+    </label>
+  );
+  function change(v: boolean) {
+    setOn(v);
+    if (onboarded) void hideOfflineSet(v).catch(() => setOn(!v));
+    else setVisitorHidden(v);
+  }
 }
