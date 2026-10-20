@@ -69,15 +69,27 @@ export type Ad = {
   id: string; user_id: string; pseudo: string; title: string; body: string; category: AdCategory;
   region: string; city: string; city_slug: string; photos: string[]; created_at: string; expires_at: string;
   mine: boolean; boost_scope: BoostScope | null; boost_until: string | null; hidden?: boolean; replies?: number;
-  premium?: boolean; lat?: number | null; lng?: number | null; km?: number | null;
+  premium?: boolean; lat?: number | null; lng?: number | null; km?: number | null; tags?: string[];
 };
 export type AdminAd = Ad & { status: "active" | "expired" | "hidden"; reports: number; open_reports: number; reasons: string[] | null };
 
-export const listAds = (region: string, city: string, category: string, offset = 0, near?: { lat: number; lng: number } | null) =>
+export const listAds = (region: string, city: string, category: string, offset = 0, near?: { lat: number; lng: number } | null, tag?: string) =>
   rpc<Ad[]>("hdar_ads_list", {
     p_region: region || null, p_city: city || null, p_category: category || null, p_offset: offset,
-    p_lat: near?.lat ?? null, p_lng: near?.lng ?? null, p_near: !!near,
+    p_lat: near?.lat ?? null, p_lng: near?.lng ?? null, p_near: !!near, p_tag: tag || null,
   });
+export const topTags = (region: string) => rpc<{ tag: string; n: number }[]>("hdar_ads_top_tags", { p_region: region || null });
+
+/** Tags proposés (ton doux, entre adultes). L'auteur peut aussi écrire les siens, nettoyés ici puis côté serveur. */
+export const SUGGESTED_TAGS = [
+  "ce soir", "ce week-end", "maintenant", "discret", "sans prise de tête", "sérieux", "amitié", "apéro", "resto", "ciné",
+  "balade", "sport", "rando", "plage", "soirée", "danse", "jeux", "voyage", "kink", "fétiche", "cuir", "exhib", "voyeur",
+  "naturiste", "chez moi", "chez toi", "dehors", "bi", "trans friendly", "curieux",
+];
+export const MAX_TAGS = 5;
+export function cleanTag(v: string): string {
+  return v.toLowerCase().replace(/[^a-z0-9àâäçéèêëîïôöùûüÿœæ -]/g, "").replace(/\s+/g, " ").trim().slice(0, 20);
+}
 export type AdPin = { id: string; lat: number; lng: number; category: AdCategory; title: string; boosted: boolean };
 export const adPins = (b: { s: number; w: number; n: number; e: number }) => rpc<AdPin[]>("hdar_ads_pins", { p_s: b.s, p_w: b.w, p_n: b.n, p_e: b.e });
 export type AdsStatus = { premium: boolean; limit: number; active: number; free_boost: boolean };
@@ -90,11 +102,11 @@ export const adsLayerOn = () => typeof localStorage !== "undefined" && localStor
 export const setAdsLayer = (on: boolean) => localStorage.setItem(ADS_LAYER, on ? "on" : "off");
 export const getAd = (id: string) => rpc<Ad | null>("hdar_ad_get", { p_id: id });
 export const myAds = () => rpc<Ad[]>("hdar_ads_mine", {});
-export const createAd = (a: { title: string; body: string; category: AdCategory; region: string; city: string; hours: number; photos: string[]; pos?: { lat: number; lng: number } | null }) =>
+export const createAd = (a: { title: string; body: string; category: AdCategory; region: string; city: string; hours: number; photos: string[]; pos?: { lat: number; lng: number } | null; tags?: string[] }) =>
   rpc<string>("hdar_ad_create", {
     p_title: a.title.trim(), p_body: a.body.trim(), p_category: a.category, p_region: a.region, p_city: a.city.trim(),
     p_city_slug: slugify(a.city) || "ville", p_hours: a.hours, p_photos: a.photos,
-    p_lat: a.pos?.lat ?? null, p_lng: a.pos?.lng ?? null,
+    p_lat: a.pos?.lat ?? null, p_lng: a.pos?.lng ?? null, p_tags: a.tags ?? [],
   });
 export const deleteAd = (id: string) => rpc("hdar_ad_delete", { p_id: id });
 export const reportAd = (id: string, reason: string) => rpc("hdar_ad_report", { p_id: id, p_reason: reason });
@@ -102,8 +114,9 @@ export const reportAd = (id: string, reason: string) => rpc("hdar_ad_report", { 
 export const replyAd = (id: string, body: string) => rpc<string>("hdar_ad_reply", { p_id: id, p_body: body });
 
 export const adminAds = {
-  list: (key: string, status: string, city: string, category: string) =>
-    rpc<AdminAd[]>("hdar_admin_ads", { p_key: key, p_status: status || null, p_city: city || null, p_category: category || null }),
+  list: (key: string, status: string, city: string, category: string, tag = "") =>
+    rpc<AdminAd[]>("hdar_admin_ads", { p_key: key, p_status: status || null, p_city: city || null, p_category: category || null, p_tag: tag || null }),
+  untag: (key: string, id: string, tag: string) => rpc("hdar_admin_ad_untag", { p_key: key, p_id: id, p_tag: tag }),
   setHidden: (key: string, id: string, hidden: boolean) => rpc("hdar_admin_ad_set", { p_key: key, p_id: id, p_hidden: hidden }),
   remove: (key: string, id: string) => rpc("hdar_admin_ad_delete", { p_key: key, p_id: id }),
 };

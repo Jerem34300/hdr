@@ -6,7 +6,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { startCheckout } from "@/lib/hdar/live";
 import { signedMediaUrl, uploadChatMedia } from "@/lib/hdar/chat-media";
 import {
-  AD_BOOSTS, AD_CATEGORIES, AD_DURATIONS, AD_REGIONS, MAX_ACTIVE_ADS, MAX_ACTIVE_ADS_PLUS, adsStatus, createAd, freeBoost, kmLabel, type AdsStatus, deleteAd, euros, getAd, listAds, myAds,
+  AD_BOOSTS, AD_CATEGORIES, AD_DURATIONS, AD_REGIONS, MAX_ACTIVE_ADS, MAX_ACTIVE_ADS_PLUS, adsStatus, cleanTag, createAd, freeBoost, kmLabel, MAX_TAGS, SUGGESTED_TAGS, topTags, type AdsStatus, deleteAd, euros, getAd, listAds, myAds,
   regionFromPos, regionName, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
 } from "@/lib/hdar/ads";
 import { pgTime } from "@/lib/hdar/live";
@@ -63,6 +63,9 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
   const [region, setRegion] = useState("");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
+  const [tag, setTag] = useState("");
+  const [tagQuery, setTagQuery] = useState("");
+  const [popular, setPopular] = useState<{ tag: string; n: number }[]>([]);
   const [ads, setAds] = useState<Ad[] | null>(null);
   const [mine, setMine] = useState<Ad[] | null>(null);
   const [error, setError] = useState("");
@@ -82,8 +85,10 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
   const load = useCallback(() => {
     if (demo) { setAds(demo); return; }
     setError("");
-    listAds(region, slugify(city), category, 0, near).then(setAds).catch((e: Error) => { setAds([]); setError(e.message); });
-  }, [region, city, category, near, demo]);
+    listAds(region, slugify(city), category, 0, near, tag).then(setAds).catch((e: Error) => { setAds([]); setError(e.message); });
+  }, [region, city, category, near, tag, demo]);
+  useEffect(() => { if (!demo) topTags(region).then(setPopular).catch(() => setPopular([])); }, [region, demo]);
+  const pickTag = (t: string) => { setTab("all"); setTag((cur) => (cur === t ? "" : t)); setTagQuery(""); };
   useEffect(() => { const t = window.setTimeout(load, city ? 350 : 0); return () => window.clearTimeout(t); }, [load, city]);
   const loadMine = useCallback(() => {
     if (!onboarded) return;
@@ -115,7 +120,7 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
 
   const list = tab === "all" ? ads : mine;
   const card = (a: Ad) => (
-    <AdCard key={a.id} ad={a} onReply={() => onReply(a)} onBoost={() => setSheet({ t: "boost", ad: a })} near={!!near} onReport={() => setSheet({ t: "report", ad: a })}
+    <AdCard key={a.id} ad={a} onReply={() => onReply(a)} onBoost={() => setSheet({ t: "boost", ad: a })} near={!!near} onTag={pickTag} activeTag={tag} onReport={() => setSheet({ t: "report", ad: a })}
       onDelete={() => { if (window.confirm("Supprimer cette annonce ?")) void deleteAd(a.id).then(() => { toast("Annonce supprimée"); load(); loadMine(); }); }} />
   );
 
@@ -152,6 +157,18 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
               </select>
               <input aria-label="Ville" value={city} onChange={(e) => setCity(e.target.value)} placeholder={approx.city ? `Ville (ex. ${approx.city})` : "Ville"} className="h-10 w-[42%] rounded-full border border-line bg-surface px-3 text-sm outline-none focus-visible:border-signal" />
             </div>
+            <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = cleanTag(tagQuery); if (t.length >= 2) pickTag(t); }}>
+              <input aria-label="Chercher un tag" value={tagQuery} onChange={(e) => setTagQuery(e.target.value)} placeholder="# Chercher un tag (ex. ce soir)" className="h-10 min-w-0 flex-1 rounded-full border border-line bg-surface px-3 text-sm outline-none focus-visible:border-signal" />
+              {tagQuery && <button type="submit" className="h-10 rounded-full bg-ink px-4 text-sm font-bold text-night">OK</button>}
+            </form>
+            {(tag || popular.length > 0 || demo) && (
+              <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4">
+                {tag && <button type="button" onClick={() => setTag("")} className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#8b7cff] px-3 text-xs font-bold text-night">#{tag} <X className="size-3" /></button>}
+                {(popular.length ? popular.map((p) => p.tag) : SUGGESTED_TAGS.slice(0, 10)).filter((t) => t !== tag).slice(0, 12).map((t) => (
+                  <button key={t} type="button" onClick={() => pickTag(t)} className="h-8 shrink-0 rounded-full border border-[#8b7cff]/40 px-3 text-xs text-[#c4b5fd]">#{t}</button>
+                ))}
+              </div>
+            )}
             <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4">
               <Chip on={!!near} onClick={toggleNear}>📍 Près de moi</Chip>
               <Chip on={!category} onClick={() => setCategory("")}>Toutes</Chip>
@@ -192,7 +209,7 @@ function AdPhoto({ path }: { path: string }) {
   );
 }
 
-function AdCard({ ad, onReply, onBoost, onReport, onDelete, near }: { ad: Ad; onReply: () => void; onBoost: () => void; onReport: () => void; onDelete: () => void; near?: boolean }) {
+function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeTag }: { ad: Ad; onReply: () => void; onBoost: () => void; onReport: () => void; onDelete: () => void; near?: boolean; onTag?: (t: string) => void; activeTag?: string }) {
   const openProfile = useHdar((s) => s.openProfile);
   const openLive = useHdar((s) => s.openLive);
   const onboarded = useHdar((s) => s.me.onboarded);
@@ -210,6 +227,11 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near }: { ad: Ad; on
       </div>
       <h2 className="mt-2 font-display text-lg font-bold leading-snug break-words">{ad.title}</h2>
       <p className="mt-1 text-sm break-words whitespace-pre-wrap text-ink/90">{ad.body}</p>
+      {!!ad.tags?.length && (
+        <div className="mt-2 flex flex-wrap gap-1.5">{ad.tags.map((t) => (
+          <button key={t} type="button" onClick={() => onTag?.(t)} aria-pressed={activeTag === t} className={cn("h-7 rounded-full px-2.5 text-xs", activeTag === t ? "bg-[#8b7cff] font-bold text-night" : "bg-[#8b7cff]/15 text-[#c4b5fd]")}>#{t}</button>
+        ))}</div>
+      )}
       {ad.photos.length > 0 && <div className="mt-3 flex gap-2 overflow-x-auto">{ad.photos.map((p) => <AdPhoto key={p} path={p} />)}</div>}
       <p className="mt-3 text-xs text-muted">
         {ad.mine ? "Ton annonce" : <button type="button" className="font-bold text-ink underline" onClick={() => openProfile(ad.user_id, ad.pseudo)}>{ad.pseudo}</button>}
@@ -272,6 +294,10 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
   const [region, setRegion] = useState(approx.region || "ile-de-france");
   const [city, setCity] = useState(approx.city);
   const [hours, setHours] = useState(72);
+  const [tags, setTags] = useState<string[]>([]);
+  const [custom, setCustom] = useState("");
+  const toggleTag = (t: string) => setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : cur.length >= MAX_TAGS ? (toast(`${MAX_TAGS} tags maximum`), cur) : [...cur, t]));
+  const addCustom = () => { const t = cleanTag(custom); if (t.length < 2) return toast("Tag trop court"); if (!tags.includes(t)) toggleTag(t); setCustom(""); };
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (approx.city && !city) setCity(approx.city); if (approx.region) setRegion((r) => r || approx.region); }, [approx]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -286,7 +312,7 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
     try {
       const photos: string[] = [];
       for (const f of files) photos.push((await uploadChatMedia(f, "image")).path);
-      await createAd({ title, body, category, region, city, hours, photos, pos });
+      await createAd({ title, body, category, region, city, hours, photos, pos, tags });
       toast("Annonce en ligne 🎉");
       onDone();
     } catch (e) {
@@ -307,6 +333,15 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
       </label>
       <p className="mt-3 text-xs text-muted">Catégorie</p>
       <div className="mt-1 flex flex-wrap gap-1.5">{AD_CATEGORIES.map((c) => <Chip key={c.id} on={category === c.id} onClick={() => setCategory(c.id)}>{c.icon} {c.label}</Chip>)}</div>
+      <p className="mt-3 text-xs text-muted">Tags · {tags.length}/{MAX_TAGS} · pour qu'on te trouve plus vite</p>
+      {tags.length > 0 && <div className="mt-1 flex flex-wrap gap-1.5">{tags.map((t) => <button key={t} type="button" onClick={() => toggleTag(t)} className="flex h-8 items-center gap-1 rounded-full bg-[#8b7cff] px-3 text-xs font-bold text-night">#{t} <X className="size-3" /></button>)}</div>}
+      <div className="-mx-5 mt-1.5 flex gap-1.5 overflow-x-auto px-5 pb-1">
+        {SUGGESTED_TAGS.filter((t) => !tags.includes(t)).map((t) => <button key={t} type="button" onClick={() => toggleTag(t)} className="h-8 shrink-0 rounded-full border border-[#8b7cff]/40 px-3 text-xs text-[#c4b5fd]">+ {t}</button>)}
+      </div>
+      <form className="mt-1.5 flex gap-2" onSubmit={(e) => { e.preventDefault(); addCustom(); }}>
+        <input value={custom} onChange={(e) => setCustom(e.target.value.slice(0, 20))} placeholder="Ton tag (20 caractères)" className={cn(field, "mt-0 h-10 text-sm")} />
+        <button type="submit" disabled={!custom.trim() || tags.length >= MAX_TAGS} className="h-10 shrink-0 rounded-full border border-line px-4 text-sm disabled:opacity-40">Ajouter</button>
+      </form>
       <div className="mt-3 flex gap-2">
         <label className="block min-w-0 flex-1 text-xs text-muted">Région
           <select className={cn(field, "h-12 px-3")} value={region} onChange={(e) => setRegion(e.target.value)}>{AD_REGIONS.map((r) => <option key={r.s} value={r.s}>{r.n}</option>)}</select>
@@ -418,8 +453,8 @@ export function demoAds(): Ad[] {
   const h = (n: number) => new Date(Date.now() + n * 3600_000).toISOString();
   const base = { user_id: "demo", region: "occitanie", photos: [] as string[], mine: false, boost_scope: null, boost_until: null };
   return [
-    { ...base, id: "00000000-0000-0000-0000-000000000001", pseudo: "Sunny34", title: "Verre en terrasse ce soir vers la Comédie", body: "Envie de discuter autour d'un verre après le boulot, plutôt 20 h. Ambiance tranquille, on voit si le courant passe 😊", category: "sortie", city: "Montpellier", city_slug: "montpellier", created_at: h(-2), expires_at: h(70), boost_scope: "region", boost_until: h(20), km: 1.4, premium: true },
-    { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", title: "Rencontre sérieuse, 30-40 ans", body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
-    { ...base, id: "00000000-0000-0000-0000-000000000003", pseudo: "Leo", title: "Plan kink entre adultes", body: "Curieux et respectueux, on en parle d'abord en privé. Consentement avant tout.", category: "kink", city: "Lattes", city_slug: "lattes", created_at: h(-20), expires_at: h(4), km: 6.8 },
+    { ...base, id: "00000000-0000-0000-0000-000000000001", pseudo: "Sunny34", title: "Verre en terrasse ce soir vers la Comédie", tags: ["ce soir", "apéro", "sans prise de tête"], body: "Envie de discuter autour d'un verre après le boulot, plutôt 20 h. Ambiance tranquille, on voit si le courant passe 😊", category: "sortie", city: "Montpellier", city_slug: "montpellier", created_at: h(-2), expires_at: h(70), boost_scope: "region", boost_until: h(20), km: 1.4, premium: true },
+    { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
+    { ...base, id: "00000000-0000-0000-0000-000000000003", pseudo: "Leo", title: "Plan kink entre adultes", tags: ["kink", "discret", "cuir"], body: "Curieux et respectueux, on en parle d'abord en privé. Consentement avant tout.", category: "kink", city: "Lattes", city_slug: "lattes", created_at: h(-20), expires_at: h(4), km: 6.8 },
   ];
 }

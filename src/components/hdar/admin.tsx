@@ -1176,7 +1176,8 @@ export function AdsTab({ adminKey, onOpen, preview }: { adminKey: string; onOpen
   const [status, setStatus] = useState("");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
-  const load = useCallback(() => (preview ? Promise.resolve(preview) : adminAds.list(adminKey, status, city.trim().toLowerCase(), category)), [adminKey, status, city, category, preview]);
+  const [tag, setTag] = useState("");
+  const load = useCallback(() => (preview ? Promise.resolve(tag ? preview.filter((a) => a.tags?.some((t) => t.includes(tag.trim().toLowerCase()))) : preview) : adminAds.list(adminKey, status, city.trim().toLowerCase(), category, tag.trim().toLowerCase())), [adminKey, status, city, category, tag, preview]);
   const { data, error, reload } = useLoad<AdminAd[]>(load, 60000);
   const [busy, setBusy] = useState("");
   const act = (id: string, p: Promise<unknown>) => { setBusy(id); p.then(reload).catch((e: Error) => alert(e.message)).finally(() => setBusy("")); };
@@ -1192,6 +1193,7 @@ export function AdsTab({ adminKey, onOpen, preview }: { adminKey: string; onOpen
           <option value="">Toutes catégories</option>{AD_CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
         <input aria-label="Ville" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className="h-9 w-36 rounded-full border border-line bg-surface px-3" />
+        <input aria-label="Tag" value={tag} onChange={(e) => setTag(e.target.value)} placeholder="# Tag" className="h-9 w-32 rounded-full border border-line bg-surface px-3" />
       </div>
       {error && <p className="text-signal">{error}</p>}
       {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucune annonce.</p>}
@@ -1208,6 +1210,14 @@ export function AdsTab({ adminKey, onOpen, preview }: { adminKey: string; onOpen
             </div>
             <p className="mt-1 font-bold">{a.title}</p>
             <p className="mt-0.5 whitespace-pre-wrap text-muted">{a.body}</p>
+            {!!a.tags?.length && (
+              <div className="mt-1.5 flex flex-wrap gap-1">{a.tags.map((t) => (
+                <span key={t} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#8b7cff]/15 pl-2.5 text-xs text-[#c4b5fd]">
+                  <button type="button" onClick={() => setTag(t)}>#{t}</button>
+                  <button type="button" aria-label={`Retirer le tag ${t}`} title="Retirer ce tag" disabled={busy === a.id} className="grid size-7 place-items-center rounded-full hover:bg-signal/30" onClick={() => { if (confirm(`Retirer le tag « ${t} » ?`)) act(a.id, adminAds.untag(adminKey, a.id, t)); }}>×</button>
+                </span>
+              ))}</div>
+            )}
             {a.photos.length > 0 && <AdminAdPhotos paths={a.photos} />}
             {a.reasons && a.reasons.length > 0 && <p className="mt-1 text-xs text-signal">Motifs : {a.reasons.join(" · ")}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-2">
