@@ -8,8 +8,27 @@ import { salonsInbox, type InboxSalon } from "./live";
 import { playMessageSound } from "./sounds";
 import { useHdar } from "./store";
 
-type State = { salons: InboxSalon[] | null; unread: number };
-let state: State = { salons: null, unread: 0 };
+/** badge = nouveaux messages depuis la dernière ouverture de « Salons » (bouton du haut). */
+type State = { salons: InboxSalon[] | null; unread: number; badge: number };
+let state: State = { salons: null, unread: 0, badge: 0 };
+const ACK_KEY = "hdar-salons-ack";
+let perSalon: Record<string, number> = {};
+function readAck(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(ACK_KEY) || "{}") as Record<string, number>; } catch { return {}; }
+}
+function badgeFrom(counts: Record<string, number>) {
+  const ack = readAck();
+  let n = 0, changed = false;
+  for (const id of Object.keys(ack)) if (!(id in counts) || counts[id] < ack[id]) { ack[id] = counts[id] ?? 0; changed = true; } // salon lu ou quitté
+  for (const [id, c] of Object.entries(counts)) n += Math.max(0, c - (ack[id] ?? 0));
+  if (changed) localStorage.setItem(ACK_KEY, JSON.stringify(ack));
+  return n;
+}
+/** Ouverture de la section Salons : le badge du bouton repart de zéro (les non-lus par salon restent). */
+export function ackSalonsBadge() {
+  localStorage.setItem(ACK_KEY, JSON.stringify(perSalon));
+  if (state.badge) { state = { ...state, badge: 0 }; emit(); }
+}
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 const knownReplies = new Map<string, number>();
@@ -37,9 +56,11 @@ async function poll() {
       }
       const followed = new Set(useHdar.getState().followedSalons);
       let unread = 0;
+      const counts: Record<string, number> = {};
       for (const r of rows) {
         if (!followed.has(r.id) || r.id === open) continue;
         unread += r.unread ?? 0;
+        counts[r.id] = r.unread ?? 0;
         const replies = r.replies ?? 0;
         const before = knownReplies.get(r.id) ?? 0;
         if (replies > before && state.salons !== null) {
@@ -50,7 +71,10 @@ async function poll() {
         }
         knownReplies.set(r.id, replies);
       }
-      state = { salons: rows, unread };
+      perSalon = counts;
+      const cur = useHdar.getState();
+      if (cur.view.name === "tabs" && cur.tab === "inbox") localStorage.setItem(ACK_KEY, JSON.stringify(counts));
+      state = { salons: rows, unread, badge: badgeFrom(counts) };
       emit();
     } catch {
       /* hors ligne : on garde l'état précédent */

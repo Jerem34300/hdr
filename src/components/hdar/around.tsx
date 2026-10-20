@@ -7,6 +7,7 @@ import { Wordmark } from "./logo";
 import { MapView } from "./map-view";
 import { useActivity } from "@/lib/hdar/activity";
 import { toast } from "sonner";
+import { ackSalonsBadge, useSalonInbox } from "@/lib/hdar/salon-inbox";
 import { playFavoriteSound } from "@/lib/hdar/sounds";
 import { adsCount, alertHits, listAds, regionFromPos, slugify, type Ad } from "@/lib/hdar/ads";
 import { X } from "lucide-react";
@@ -19,7 +20,11 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
   const joinSpot = useHdar((s) => s.joinSpot);
   const { place, people, spots, zones } = useScene();
   const [area, setArea] = useState<string | null>(null);
-  const { area: areaUnread } = useActivity();
+  const { area: activityArea } = useActivity();
+  const demoBadges = import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("badgesdemo");
+  const areaUnread = demoBadges ? 4 : activityArea;
+  const salonInbox = useSalonInbox();
+  const salonBadge = demoBadges ? 3 : salonInbox.badge;
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -38,8 +43,10 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
         <div className="mt-2 grid grid-cols-4 gap-1.5">
           <OnlinePill />
           <AdsButton lat={place.lat} lng={place.lng} />
-          <button type="button" data-act="salons" {...bindTap(() => setTab("inbox"))} className={`${TOP_BTN} bg-[#fbbf24]/10 text-[#f5d27a] ring-[#fbbf24]/35`}>
+          <button type="button" data-act="salons" {...bindTap(() => { ackSalonsBadge(); setTab("inbox"); })}
+            aria-label={salonBadge ? `Salons, ${salonBadge} nouveaux messages` : "Salons"} className={`${TOP_BTN} bg-[#fbbf24]/10 text-[#f5d27a] ring-[#fbbf24]/35`}>
             Salons
+            {salonBadge > 0 && <Badge n={salonBadge} cls="bg-[#fbbf24]" />}
           </button>
           <button
             type="button"
@@ -72,7 +79,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
 
 /** « ● 3 en ligne » : tout le monde avec l'appli ouverte (5 min), pas seulement les gens visibles sur la carte. */
 function OnlinePill() {
-  const [n, setN] = useState(0);
+  const [n, setN] = useState(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("badgesdemo") ? 1 : 0));
   useEffect(() => {
     let stop = false;
     const run = () => { if (document.visibilityState === "visible") void onlineCount().then((v) => !stop && setN(v)); };
