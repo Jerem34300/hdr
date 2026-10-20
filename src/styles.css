@@ -288,3 +288,9 @@
   .seo-flare, .seo-dot, .seo-dot::after, .seo-cta, .seo-reveal { animation: none !important; opacity: 1; }
   .seo-flare { opacity: .5; }
 }
+
+/* Bandeau défilant des annonces (carte) */
+@keyframes hdar-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ad-ticker-track { animation: hdar-ticker var(--ticker-dur, 40s) linear infinite; }
+.ad-ticker:hover .ad-ticker-track, .ad-ticker:focus-within .ad-ticker-track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .ad-ticker-track { animation: none; } }

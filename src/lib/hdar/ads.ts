@@ -138,3 +138,6 @@ export async function shareAd(ad: Ad): Promise<"shared" | "copied" | "none"> {
   }
   try { await navigator.clipboard.writeText(url); return "copied"; } catch { window.prompt("Copie le lien :", url); return "none"; }
 }
+
+/** Nombre d'annonces en ligne dans une région (compteur anonyme). */
+export const adsCount = (region: string) => rpc<number>("hdar_ads_count", { p_region: region || null, p_city: null });
