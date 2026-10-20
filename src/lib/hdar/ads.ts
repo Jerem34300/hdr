@@ -152,3 +152,29 @@ export async function teaserAds(region: string): Promise<TeaserAd[]> {
   if (!r.ok) return [];
   return ((await r.json()) as TeaserAd[]).filter((a) => !TEASER_BLOCK.test(a.title)).slice(0, 15);
 }
+
+/** Alertes annonces (v72). */
+export type AlertScope = "quartier" | "ville" | "region" | "france" | "monde";
+export const ALERT_SCOPES: { id: AlertScope; label: string }[] = [
+  { id: "quartier", label: "📍 Quartier (~5 km)" },
+  { id: "ville", label: "🏙️ Ville" },
+  { id: "region", label: "🗺️ Région" },
+  { id: "france", label: "🇫🇷 France" },
+  { id: "monde", label: "🌍 Monde" },
+];
+export type AdAlert = { id: string; scope: AlertScope; region: string | null; city: string | null; category: AdCategory | null; tags: string[]; created_at: string };
+export type AlertHit = { ad_id: string; title: string; city: string; at: string };
+export const myAlerts = () => rpc<{ limit: number; alerts: AdAlert[] }>("hdar_ad_alerts_mine", {});
+export const saveAlert = (a: { id?: string | null; scope: AlertScope; region: string; city: string; pos?: { lat: number; lng: number } | null; category: string; tags: string[] }) =>
+  rpc<string>("hdar_ad_alert_save", {
+    p_id: a.id ?? null, p_scope: a.scope, p_region: a.region || null, p_city: a.city || null, p_city_slug: slugify(a.city) || null,
+    p_lat: a.pos ? Math.round(a.pos.lat * 100) / 100 : null, p_lng: a.pos ? Math.round(a.pos.lng * 100) / 100 : null,
+    p_category: a.category || null, p_tags: a.tags,
+  });
+export const deleteAlert = (id: string) => rpc("hdar_ad_alert_delete", { p_id: id });
+export const alertHits = (seen = false) => rpc<AlertHit[]>("hdar_ad_alert_hits", { p_seen: seen });
+export function alertLabel(a: Pick<AdAlert, "scope" | "region" | "city" | "category" | "tags">) {
+  const where = a.scope === "ville" ? a.city || "Ville" : a.scope === "region" ? regionName(a.region ?? "") : ALERT_SCOPES.find((s) => s.id === a.scope)!.label.replace(/^\S+\s/, "");
+  const c = a.category ? AD_CATEGORIES.find((x) => x.id === a.category) : null;
+  return [where, c ? `${c.icon} ${c.label}` : "", ...a.tags.map((t) => `#${t}`)].filter(Boolean).join(" · ");
+}

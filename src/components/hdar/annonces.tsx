@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Flag, MessageCircle, Plus, Share2, Sparkles, Trash2, X } from "lucide-react";
+import { Bell, ChevronLeft, Pencil, Flag, MessageCircle, Plus, Share2, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
 import { useHdar } from "@/lib/hdar/store";
@@ -7,7 +7,7 @@ import { startCheckout } from "@/lib/hdar/live";
 import { signedMediaUrl, uploadChatMedia } from "@/lib/hdar/chat-media";
 import {
   AD_BOOSTS, AD_CATEGORIES, AD_DURATIONS, AD_REGIONS, MAX_ACTIVE_ADS, MAX_ACTIVE_ADS_PLUS, adsStatus, cleanTag, createAd, freeBoost, kmLabel, MAX_TAGS, SUGGESTED_TAGS, topTags, type AdsStatus, deleteAd, euros, getAd, listAds, myAds,
-  regionFromPos, regionName, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
+  regionFromPos, regionName, ALERT_SCOPES, alertLabel, deleteAlert, myAlerts, saveAlert, type AdAlert, type AlertScope, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
 } from "@/lib/hdar/ads";
 import { pgTime } from "@/lib/hdar/live";
 
@@ -53,13 +53,15 @@ function getPosition(): Promise<{ lat: number; lng: number }> {
   });
 }
 
-export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; demo?: Ad[]; demoCreate?: boolean }) {
+export function Annonces({ focus, demo, demoCreate, demoAlerts }: { focus?: string | null; demo?: Ad[]; demoCreate?: boolean; demoAlerts?: "sheet" | "list" }) {
   const closeView = useHdar((s) => s.closeView);
   const onboarded = useHdar((s) => s.me.onboarded);
   const adAction = useHdar((s) => s.adAction);
   const setAdAction = useHdar((s) => s.setAdAction);
   const approx = useApproxPlace();
-  const [tab, setTab] = useState<"all" | "mine">("all");
+  const [tab, setTab] = useState<"all" | "mine" | "alerts">(demoAlerts === "list" ? "alerts" : "all");
+  const [alerts, setAlerts] = useState<{ limit: number; alerts: AdAlert[] } | null>(null);
+  const [alertSheet, setAlertSheet] = useState<null | { a: Partial<AdAlert> }>(null);
   const [region, setRegion] = useState("");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
@@ -96,6 +98,20 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
     adsStatus().then(setStatus).catch(() => undefined);
   }, [onboarded]);
   useEffect(loadMine, [loadMine]);
+  const loadAlerts = useCallback(() => {
+    if (demoAlerts) { setAlerts({ limit: 1, alerts: [{ id: "a1", scope: "ville", region: "occitanie", city: "Montpellier", category: "sortie", tags: ["ce soir"], created_at: "" }] }); return; }
+    if (onboarded) myAlerts().then(setAlerts).catch(() => setAlerts({ limit: 1, alerts: [] }));
+  }, [onboarded, demoAlerts]);
+  useEffect(loadAlerts, [loadAlerts]);
+  useEffect(() => { if (demoAlerts === "sheet") setAlertSheet({ a: { scope: "ville", region: "occitanie", city: "Montpellier", category: "sortie", tags: ["ce soir"] } }); }, [demoAlerts]);
+  const onAlert = () => {
+    if (!onboarded && !demoAlerts) { useHdar.setState({ sheet: "gate" }); return; }
+    if (alerts && alerts.alerts.length >= alerts.limit) {
+      toast(alerts.limit > 1 ? "10 alertes maximum : supprimes-en une" : "1 alerte en gratuit · jusqu'à 10 avec hdar+ 👑", { action: alerts.limit > 1 ? undefined : { label: "Voir", onClick: () => window.location.assign("/premium") } });
+      setTab("alerts"); return;
+    }
+    setAlertSheet({ a: { scope: city ? "ville" : near ? "quartier" : region ? "region" : "ville", region: region || approx.region, city: city || approx.city, category: (category || null) as AdCategory | null, tags: tag ? [tag] : [] } });
+  };
 
   // Lien direct (citation dans un message, retour de paiement) vers une annonce.
   useEffect(() => { if (focus) void getAd(focus).then((a) => setFocused(a)).catch(() => undefined); }, [focus]);
@@ -136,9 +152,9 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-3 pb-8">
         <div className="flex gap-1 rounded-full border border-line p-1 text-sm">
-          {(["all", "mine"] as const).map((t) => (
+          {(["all", "mine", "alerts"] as const).map((t) => (
             <button key={t} type="button" aria-pressed={tab === t} onClick={() => setTab(t)} className={cn("h-9 flex-1 rounded-full", tab === t ? "bg-ink text-night font-bold" : "text-muted")}>
-              {t === "all" ? "Toutes" : `Mes annonces${mine ? ` (${activeMine}/${status?.limit ?? MAX_ACTIVE_ADS})` : ""}`}
+              {t === "all" ? "Toutes" : t === "alerts" ? `🔔 Alertes${alerts?.alerts.length ? ` (${alerts.alerts.length})` : ""}` : `Mes annonces${mine ? ` (${activeMine}/${status?.limit ?? MAX_ACTIVE_ADS})` : ""}`}
             </button>
           ))}
         </div>
@@ -176,8 +192,15 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
             </div>
           </div>
         )}
+        {tab === "all" && (
+          <button type="button" onClick={onAlert} className="mt-2 flex h-10 w-full items-center justify-center gap-1.5 rounded-full border border-[#fbbf24]/40 bg-[#fbbf24]/10 text-sm font-bold text-[#f5d27a]">
+            <Bell className="size-4" /> Créer une alerte{tag || category || city ? " avec ces filtres" : ""}
+          </button>
+        )}
         {error && <p className="mt-4 text-sm text-signal">{error}</p>}
-        {list === null ? <p className="mt-10 text-center text-sm text-muted">Chargement…</p>
+        {tab === "alerts" ? <AlertsList data={alerts} onboarded={onboarded || !!demoAlerts} onNew={onAlert} onEdit={(a) => setAlertSheet({ a })}
+          onDelete={(a) => { if (demoAlerts || window.confirm("Supprimer cette alerte ?")) void deleteAlert(a.id).then(() => { toast("Alerte supprimée"); loadAlerts(); }).catch((e: Error) => toast(e.message)); }} />
+        : list === null ? <p className="mt-10 text-center text-sm text-muted">Chargement…</p>
           : list.length === 0 ? (
             <div className="mt-10 text-center text-sm text-muted">
               <p>{tab === "all" ? "Aucune annonce par ici pour l'instant." : onboarded ? "Tu n'as pas encore d'annonce." : "Crée ton profil pour poster une annonce."}</p>
@@ -186,6 +209,7 @@ export function Annonces({ focus, demo, demoCreate }: { focus?: string | null; d
           ) : <ul className="mt-3 space-y-3">{list.map((a) => <li key={a.id}>{card(a)}</li>)}</ul>}
       </div>
       {sheet?.t === "create" && <CreateSheet approx={approx} active={activeMine} status={status} onClose={() => setSheet(null)} onDone={() => { setSheet(null); setTab("mine"); load(); loadMine(); }} />}
+      {alertSheet && <AlertSheet init={alertSheet.a} approx={approx} onClose={() => setAlertSheet(null)} onDone={() => { setAlertSheet(null); setTab("alerts"); loadAlerts(); }} />}
       {sheet?.t === "reply" && <ReplySheet ad={sheet.ad} onClose={() => setSheet(null)} />}
       {sheet?.t === "boost" && <BoostSheet ad={sheet.ad} free={!!status?.free_boost} onClose={() => setSheet(null)} onFree={() => { setSheet(null); load(); loadMine(); }} />}
       {sheet?.t === "report" && <ReportAdSheet ad={sheet.ad} onClose={() => setSheet(null)} onDone={() => { setSheet(null); load(); }} />}
@@ -457,4 +481,81 @@ export function demoAds(): Ad[] {
     { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", photos: ["demo/photo.jpg"], title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
     { ...base, id: "00000000-0000-0000-0000-000000000003", pseudo: "Leo", title: "Plan kink entre adultes", tags: ["kink", "discret", "cuir"], body: "Curieux et respectueux, on en parle d'abord en privé. Consentement avant tout.", category: "kink", city: "Lattes", city_slug: "lattes", created_at: h(-20), expires_at: h(4), km: 6.8 },
   ];
+}
+
+function AlertsList({ data, onboarded, onNew, onEdit, onDelete }: { data: { limit: number; alerts: AdAlert[] } | null; onboarded: boolean; onNew: () => void; onEdit: (a: AdAlert) => void; onDelete: (a: AdAlert) => void }) {
+  if (!onboarded) return <p className="mt-10 text-center text-sm text-muted">Crée ton profil pour recevoir des alertes.</p>;
+  if (!data) return <p className="mt-10 text-center text-sm text-muted">Chargement…</p>;
+  const plus = data.limit > 1;
+  return (
+    <section className="mt-3">
+      <p className="text-xs text-muted">Tu es prévenu·e dès qu'une nouvelle annonce correspond (10 alertes par jour maximum). {data.alerts.length}/{data.limit} alerte{data.limit > 1 ? "s" : ""}.</p>
+      {data.alerts.length === 0 ? <p className="mt-8 text-center text-sm text-muted">Aucune alerte pour l'instant.</p> : (
+        <ul className="mt-3 space-y-2">{data.alerts.map((a) => (
+          <li key={a.id} className="flex items-center gap-2 rounded-2xl border border-line bg-surface px-3 py-2.5">
+            <Bell className="size-4 shrink-0 text-[#f5d27a]" />
+            <p className="min-w-0 flex-1 text-sm">{alertLabel(a)}</p>
+            <button type="button" aria-label="Modifier l'alerte" onClick={() => onEdit(a)} className="grid size-9 place-items-center rounded-full text-muted"><Pencil className="size-4" /></button>
+            <button type="button" aria-label="Supprimer l'alerte" onClick={() => onDelete(a)} className="grid size-9 place-items-center rounded-full text-signal"><Trash2 className="size-4" /></button>
+          </li>
+        ))}</ul>
+      )}
+      {data.alerts.length < data.limit && <button type="button" onClick={onNew} className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-[#fbbf24]/40 font-bold text-[#f5d27a]"><Bell className="size-4" /> Nouvelle alerte</button>}
+      {!plus && <a href="/premium" className="mt-3 block rounded-2xl border border-[#8b7cff]/50 bg-[#8b7cff]/10 px-3 py-2 text-xs"><b>👑 hdar+</b> : jusqu'à 10 alertes (plusieurs villes, tags ou catégories) ›</a>}
+    </section>
+  );
+}
+
+function AlertSheet({ init, approx, onClose, onDone }: { init: Partial<AdAlert>; approx: { city: string; region: string }; onClose: () => void; onDone: () => void }) {
+  const [scope, setScope] = useState<AlertScope>(init.scope ?? "ville");
+  const [region, setRegion] = useState(init.region || approx.region || "ile-de-france");
+  const [city, setCity] = useState(init.city || approx.city);
+  const [category, setCategory] = useState<string>(init.category ?? "");
+  const [tags, setTags] = useState<string[]>(init.tags ?? []);
+  const [custom, setCustom] = useState("");
+  const [busy, setBusy] = useState(false);
+  const addTag = (t: string) => { const c = cleanTag(t); if (c.length < 2) return; setTags((cur) => cur.includes(c) ? cur.filter((x) => x !== c) : cur.length >= 3 ? (toast("3 tags maximum"), cur) : [...cur, c]); };
+  const save = async () => {
+    setBusy(true);
+    try {
+      const pos = scope === "quartier" ? await getPosition().catch(() => null) : null;
+      await saveAlert({ id: init.id, scope, region, city, pos, category, tags });
+      toast(init.id ? "Alerte modifiée 🔔" : "Alerte créée 🔔 Tu seras prévenu·e des nouvelles annonces");
+      onDone();
+    } catch (e) {
+      const m = (e as Error).message;
+      if (m.startsWith("premium_required")) toast(m.replace(/^premium_required:\s*/, ""), { action: { label: "hdar+", onClick: () => window.location.assign("/premium") } });
+      else toast(m);
+    } finally { setBusy(false); }
+  };
+  return (
+    <Sheet title={init.id ? "Modifier l'alerte" : "🔔 Créer une alerte"} onClose={onClose}>
+      <p className="mt-1 text-xs text-muted">Notification dans l'appli (et sur ton téléphone si activé) quand une nouvelle annonce correspond.</p>
+      <p className="mt-4 text-sm font-bold">Où</p>
+      <div className="mt-1 flex flex-wrap gap-1.5">{ALERT_SCOPES.map((s) => <Chip key={s.id} on={scope === s.id} onClick={() => setScope(s.id)}>{s.label}</Chip>)}</div>
+      {scope === "quartier" && <p className="mt-1 text-xs text-muted">Ta position approximative (~1 km) est enregistrée avec l'alerte.</p>}
+      {(scope === "ville" || scope === "region") && (
+        <select aria-label="Région" value={region} onChange={(e) => setRegion(e.target.value)} className={cn(field, "h-11 text-sm")}>
+          {AD_REGIONS.map((r) => <option key={r.s} value={r.s}>{r.n}</option>)}
+        </select>
+      )}
+      {scope === "ville" && <input aria-label="Ville" value={city} onChange={(e) => setCity(e.target.value.slice(0, 60))} placeholder="Ville" className={cn(field, "h-11 text-sm")} />}
+      <p className="mt-4 text-sm font-bold">Catégorie <span className="font-normal text-muted">(facultatif)</span></p>
+      <div className="mt-1 flex flex-wrap gap-1.5">
+        <Chip on={!category} onClick={() => setCategory("")}>Toutes</Chip>
+        {AD_CATEGORIES.map((c) => <Chip key={c.id} on={category === c.id} onClick={() => setCategory(category === c.id ? "" : c.id)}>{c.icon} {c.label}</Chip>)}
+      </div>
+      <p className="mt-4 text-sm font-bold">Tags <span className="font-normal text-muted">(facultatif, 3 max, l'un ou l'autre)</span></p>
+      <div className="mt-1 flex flex-wrap gap-1.5">
+        {[...new Set([...tags, ...SUGGESTED_TAGS.slice(0, 8)])].map((t) => <Chip key={t} on={tags.includes(t)} onClick={() => addTag(t)}>#{t}</Chip>)}
+      </div>
+      <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); addTag(custom); setCustom(""); }}>
+        <input value={custom} onChange={(e) => setCustom(e.target.value.slice(0, 20))} placeholder="Autre tag" className={cn(field, "mt-0 h-10 text-sm")} />
+        {custom && <button type="submit" className="h-10 rounded-full bg-ink px-4 text-sm font-bold text-night">OK</button>}
+      </form>
+      <button type="button" disabled={busy || (scope === "ville" && !city.trim())} onClick={() => void save()} className="mt-5 h-12 w-full rounded-full bg-signal font-bold text-night disabled:opacity-50">
+        {busy ? "…" : init.id ? "Enregistrer" : "Créer l'alerte"}
+      </button>
+    </Sheet>
+  );
 }

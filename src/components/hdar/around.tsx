@@ -6,7 +6,9 @@ import { bindTap } from "./tap";
 import { Wordmark } from "./logo";
 import { MapView } from "./map-view";
 import { useActivity } from "@/lib/hdar/activity";
-import { adsCount, listAds, regionFromPos, slugify, type Ad } from "@/lib/hdar/ads";
+import { toast } from "sonner";
+import { playFavoriteSound } from "@/lib/hdar/sounds";
+import { adsCount, alertHits, listAds, regionFromPos, slugify, type Ad } from "@/lib/hdar/ads";
 import { X } from "lucide-react";
 
 export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
@@ -106,16 +108,40 @@ function AdsButton({ lat, lng }: { lat: number; lng: number }) {
     const t = window.setTimeout(() => void adsCount(region).then((v) => !stop && setN(Number(v) || 0)).catch(() => undefined), 1500);
     return () => { stop = true; window.clearTimeout(t); };
   }, [region]);
+  // Alertes annonces : hits non lus (badge 🔔 + son + toast à chaque nouveau).
+  const onboarded = useHdar((s) => s.me.onboarded);
+  const [hits, setHits] = useState<string[]>([]);
+  useEffect(() => {
+    if (!onboarded) return;
+    let stop = false; let known: Set<string> | null = null;
+    const poll = () => void alertHits().then((h) => {
+      if (stop) return;
+      const fresh = known ? h.filter((x) => !known!.has(x.ad_id)) : [];
+      known = new Set(h.map((x) => x.ad_id));
+      setHits(h.map((x) => x.ad_id));
+      if (fresh.length) {
+        playFavoriteSound();
+        toast(`🔔 Nouvelle annonce · ${fresh[0].city}`, { description: fresh[0].title, action: { label: "Voir", onClick: () => { void alertHits(true); setHits([]); openAnnonces(fresh[0].ad_id); } } });
+      }
+    }).catch(() => undefined);
+    const first = window.setTimeout(poll, 3000);
+    const iv = window.setInterval(() => { if (document.visibilityState === "visible") poll(); }, 60_000);
+    return () => { stop = true; window.clearTimeout(first); window.clearInterval(iv); };
+  }, [onboarded, openAnnonces]);
+  const open = () => {
+    if (hits.length) { const id = hits[0]; void alertHits(true).catch(() => undefined); setHits([]); openAnnonces(hits.length === 1 ? id : undefined); }
+    else openAnnonces();
+  };
   return (
     <button
       type="button"
       data-act="annonces"
-      aria-label={n ? `Petites annonces, ${n} en ligne dans ta région` : "Petites annonces"}
-      {...bindTap(() => openAnnonces())}
+      aria-label={hits.length ? `Petites annonces, ${hits.length} nouvelle(s) pour tes alertes` : n ? `Petites annonces, ${n} en ligne dans ta région` : "Petites annonces"}
+      {...bindTap(open)}
       className={`${TOP_BTN} bg-spot/15 text-[#b3a8ff] ring-spot/40`}
     >
       📌 Annonces
-      {n > 0 && <Badge n={n} cls="bg-spot" />}
+      {hits.length > 0 ? <Badge n={hits.length} cls="bg-[#fbbf24]" /> : n > 0 && <Badge n={n} cls="bg-spot" />}
     </button>
   );
 }

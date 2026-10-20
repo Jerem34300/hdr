@@ -259,7 +259,7 @@ function AdsDemo() {
     const rows = ads.map((a, i) => ({ ...a, status: (i === 2 ? "hidden" : "active") as "active" | "hidden", replies: [4, 1, 0][i], reports: [0, 0, 3][i], open_reports: [0, 0, 3][i], reasons: i === 2 ? ["Spam", "Arnaque ou argent", "Autre"] : null, hidden: i === 2 }));
     return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Annonces <span className="text-xs text-[#fbbf24]">🧪 exemple</span></p><AdsTab adminKey="" onOpen={() => undefined} preview={rows} /></main>;
   }
-  return <main className="flex h-dvh flex-col bg-night text-ink"><Annonces demo={ads} demoCreate={mode === "create"} /></main>;
+  return <main className="flex h-dvh flex-col bg-night text-ink"><Annonces demo={ads} demoCreate={mode === "create"} demoAlerts={mode === "alerts" ? "sheet" : mode === "alertlist" ? "list" : undefined} /></main>;
 }
 
 const PENDING_AD = "hdar-gate-ad";
