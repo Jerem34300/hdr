@@ -10,6 +10,7 @@ import {
   regionFromPos, regionName, ALERT_SCOPES, alertLabel, deleteAlert, myAlerts, saveAlert, type AdAlert, type AlertScope, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
 } from "@/lib/hdar/ads";
 import { pgTime } from "@/lib/hdar/live";
+import { PhotoViewer } from "./photo-viewer";
 
 const ms = (v: string) => (v.includes("T") ? Date.parse(v) : pgTime(v));
 function left(v: string) {
@@ -221,15 +222,35 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
   return <button type="button" aria-pressed={on} onClick={onClick} className={cn("h-9 shrink-0 rounded-full border px-3 text-sm", on ? "border-signal bg-signal font-bold text-night" : "border-line")}>{children}</button>;
 }
 
-function AdPhoto({ path }: { path: string }) {
-  const [url, setUrl] = useState("");
-  const [shown, setShown] = useState(false);
-  useEffect(() => { void signedMediaUrl(path).then(setUrl).catch(() => setUrl("")); }, [path]);
+const DEMO_PHOTO = (n: number) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${["#ff5a4e", "#8b7cff", "#3ddc97"][n % 3]}"/><stop offset="1" stop-color="#0b0b10"/></linearGradient></defs><rect width="800" height="1000" fill="url(#g)"/><text x="400" y="520" font-size="90" text-anchor="middle" fill="white" font-family="sans-serif">Photo ${n + 1}</text></svg>`)}`;
+const photoUrl = (p: string, k: number) => (import.meta.env.DEV && p.startsWith("demo/") ? Promise.resolve(DEMO_PHOTO(k)) : signedMediaUrl(p));
+
+/** Photos d'une annonce : 1er toucher = déflouter, toucher sur une photo nette = plein écran (swipe entre les photos). */
+function AdPhotos({ photos }: { photos: string[] }) {
+  const [urls, setUrls] = useState<string[]>([]);
+  const [shown, setShown] = useState<Set<number>>(new Set());
+  const [open, setOpen] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void Promise.all(photos.map((p, k) => photoUrl(p, k).catch(() => ""))).then((u) => alive && setUrls(u));
+    return () => { alive = false; };
+  }, [photos]);
+  useEffect(() => { if (import.meta.env.DEV && location.search.includes("photoviewer") && photos[0]?.startsWith("demo/")) { setShown(new Set([0])); setOpen(0); } }, [photos]);
   return (
-    <button type="button" onClick={() => setShown((v) => !v)} aria-label={shown ? "Flouter la photo" : "Voir la photo"} className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-night">
-      {url && <img src={url} alt="" className={cn("size-full object-cover transition", !shown && "scale-110 blur-xl")} />}
-      {!shown && <span className="absolute inset-0 grid place-items-center text-center text-[11px] font-bold text-white drop-shadow">🔞<br />Toucher<br />pour voir</span>}
-    </button>
+    <div className="mt-3 flex gap-2 overflow-x-auto">
+      {photos.map((p, k) => {
+        const on = shown.has(k);
+        return (
+          <button key={p} type="button" onClick={() => (on ? setOpen(k) : setShown((s) => new Set(s).add(k)))}
+            aria-label={on ? "Agrandir la photo" : "Voir la photo"} className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-night">
+            {urls[k] && <img src={urls[k]} alt="" className={cn("size-full object-cover transition", !on && "scale-110 blur-xl")} />}
+            {!on ? <span className="absolute inset-0 grid place-items-center text-center text-[11px] font-bold text-white drop-shadow">🔞<br />Toucher<br />pour voir</span>
+              : <span className="absolute right-1 bottom-1 rounded-full bg-black/60 px-1.5 text-[10px] text-white">⤢</span>}
+          </button>
+        );
+      })}
+      {open !== null && <PhotoViewer urls={urls} start={open} onClose={() => setOpen(null)} />}
+    </div>
   );
 }
 
@@ -256,7 +277,7 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
           <button key={t} type="button" onClick={() => onTag?.(t)} aria-pressed={activeTag === t} className={cn("h-7 rounded-full px-2.5 text-xs", activeTag === t ? "bg-[#8b7cff] font-bold text-night" : "bg-[#8b7cff]/15 text-[#c4b5fd]")}>#{t}</button>
         ))}</div>
       )}
-      {ad.photos.length > 0 && <div className="mt-3 flex gap-2 overflow-x-auto">{ad.photos.map((p) => <AdPhoto key={p} path={p} />)}</div>}
+      {ad.photos.length > 0 && <AdPhotos photos={ad.photos} />}
       <p className="mt-3 text-xs text-muted">
         {ad.mine ? "Ton annonce" : <button type="button" className="font-bold text-ink underline" onClick={() => openProfile(ad.user_id, ad.pseudo)}>{ad.pseudo}</button>}
         {" · "}{ago(ad.created_at)} · {expired ? "expirée" : `expire dans ${left(ad.expires_at)}`}
@@ -478,7 +499,7 @@ export function demoAds(): Ad[] {
   const base = { user_id: "demo", region: "occitanie", photos: [] as string[], mine: false, boost_scope: null, boost_until: null };
   return [
     { ...base, id: "00000000-0000-0000-0000-000000000001", pseudo: "Sunny34", title: "Verre en terrasse ce soir vers la Comédie", tags: ["ce soir", "apéro", "sans prise de tête"], body: "Envie de discuter autour d'un verre après le boulot, plutôt 20 h. Ambiance tranquille, on voit si le courant passe 😊", category: "sortie", city: "Montpellier", city_slug: "montpellier", created_at: h(-2), expires_at: h(70), boost_scope: "region", boost_until: h(20), km: 1.4, premium: true },
-    { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", photos: ["demo/photo.jpg"], title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
+    { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", photos: ["demo/1.jpg", "demo/2.jpg"], title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
     { ...base, id: "00000000-0000-0000-0000-000000000003", pseudo: "Leo", title: "Plan kink entre adultes", tags: ["kink", "discret", "cuir"], body: "Curieux et respectueux, on en parle d'abord en privé. Consentement avant tout.", category: "kink", city: "Lattes", city_slug: "lattes", created_at: h(-20), expires_at: h(4), km: 6.8 },
   ];
 }
