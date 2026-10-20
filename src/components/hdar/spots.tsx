@@ -31,6 +31,11 @@ export function Spots() {
       <button type="button" data-act="create" {...bindTap(openCreate)} className="mt-4 h-12 w-full rounded-full bg-spot text-night">
         Créer un lieu
       </button>
+      <button type="button" data-act="annonces" onClick={() => useHdar.getState().openAnnonces()} className="mt-3 flex w-full items-center gap-3 rounded-3xl border border-line bg-surface px-4 py-3 text-left">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-signal/15 text-xl">📌</span>
+        <span className="min-w-0 flex-1"><b className="block font-display text-lg">Petites annonces</b><span className="text-xs text-muted">Rencontres, sorties, kink… par ville, elles restent en ligne jusqu'à 7 jours</span></span>
+        <span aria-hidden className="text-muted">›</span>
+      </button>
       <a href="/pro" className="mt-3 block overflow-hidden rounded-3xl bg-gradient-to-r from-[#fbbf24] via-[#FA6F6C] to-[#f472b6] p-[2px] shadow-[0_0_24px_rgba(251,191,36,.3)]">
         <div className="rounded-[22px] bg-[#0b0b10]/90 p-4">
           <p className="font-display text-lg font-extrabold">🏷️ Vous êtes un établissement ?</p>

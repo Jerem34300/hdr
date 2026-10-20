@@ -32,6 +32,7 @@ import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
 import { track } from "@/lib/hdar/track";
 import { SalonRoom } from "./salons";
+import { Annonces } from "./annonces";
 import { useSalonInbox, useSalonInboxPolling } from "@/lib/hdar/salon-inbox";
 
 export function App() {
@@ -79,6 +80,12 @@ export function App() {
     return useHdar.subscribe((st, prev) => {
       if (st.tab !== prev.tab || st.view !== prev.view || st.sheet !== prev.sheet) note(st);
     });
+  }, []);
+
+  // Liens directs vers les annonces : /?annonces=1, /?annonce=<id> (citation, retour de paiement).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.has("annonces") || q.get("annonce")) useHdar.getState().openAnnonces(q.get("annonce"));
   }, []);
 
   useEffect(() => { void resyncProfileFromServer().then((reload) => { if (reload) window.location.reload(); }); }, []);
@@ -139,6 +146,8 @@ export function App() {
             <PocketChat />
           ) : view.name === "spot" ? (
             <SpotRoom />
+          ) : view.name === "annonces" ? (
+            <Annonces focus={view.focus} />
           ) : view.name === "salon" ? (
             <SalonRoom id={view.id} name={view.title} />
           ) : (

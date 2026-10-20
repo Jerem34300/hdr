@@ -29,9 +29,13 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TchatWebcamAleatoireRouteImport } from './routes/tchat-webcam-aleatoire'
 import { Route as WebcamGayLiveRouteImport } from './routes/webcam-gay-live'
 import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
+import { Route as AnnoncesIndexRouteImport } from './routes/annonces.index'
+import { Route as AnnoncesIdRouteImport } from './routes/annonces.$id'
 import { Route as ApiGeoRouteImport } from './routes/api/geo'
 import { Route as FrSortirRencontrerChar123villeChar125RouteImport } from './routes/fr/sortir-rencontrer-{$ville}'
 import { Route as LiveCodeRouteImport } from './routes/live_.$code'
+import { Route as PetitesAnnoncesIndexRouteImport } from './routes/petites-annonces/index'
+import { Route as PetitesAnnoncesSlugRouteImport } from './routes/petites-annonces/$slug'
 import { Route as RencontreIndexRouteImport } from './routes/rencontre/index'
 import { Route as RencontreSlugRouteImport } from './routes/rencontre/$slug'
 import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
@@ -140,6 +144,16 @@ const AmbassadeurGuideRoute = AmbassadeurGuideRouteImport.update({
   path: '/ambassadeur/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnnoncesIndexRoute = AnnoncesIndexRouteImport.update({
+  id: '/annonces/',
+  path: '/annonces/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnoncesIdRoute = AnnoncesIdRouteImport.update({
+  id: '/annonces/$id',
+  path: '/annonces/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGeoRoute = ApiGeoRouteImport.update({
   id: '/api/geo',
   path: '/api/geo',
@@ -154,6 +168,16 @@ const FrSortirRencontrerChar123villeChar125Route =
 const LiveCodeRoute = LiveCodeRouteImport.update({
   id: '/live_/$code',
   path: '/live/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PetitesAnnoncesIndexRoute = PetitesAnnoncesIndexRouteImport.update({
+  id: '/petites-annonces/',
+  path: '/petites-annonces/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PetitesAnnoncesSlugRoute = PetitesAnnoncesSlugRouteImport.update({
+  id: '/petites-annonces/$slug',
+  path: '/petites-annonces/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RencontreIndexRoute = RencontreIndexRouteImport.update({
@@ -214,11 +238,15 @@ export interface FileRoutesByFullPath {
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
+  '/annonces/$id': typeof AnnoncesIdRoute
   '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
+  '/petites-annonces/$slug': typeof PetitesAnnoncesSlugRoute
   '/rencontre/$slug': typeof RencontreSlugRoute
   '/sitemaps/$part': typeof SitemapsPartRoute
+  '/annonces/': typeof AnnoncesIndexRoute
+  '/petites-annonces/': typeof PetitesAnnoncesIndexRoute
   '/rencontre/': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
@@ -246,11 +274,15 @@ export interface FileRoutesByTo {
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
+  '/annonces/$id': typeof AnnoncesIdRoute
   '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
+  '/petites-annonces/$slug': typeof PetitesAnnoncesSlugRoute
   '/rencontre/$slug': typeof RencontreSlugRoute
   '/sitemaps/$part': typeof SitemapsPartRoute
+  '/annonces': typeof AnnoncesIndexRoute
+  '/petites-annonces': typeof PetitesAnnoncesIndexRoute
   '/rencontre': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
@@ -279,11 +311,15 @@ export interface FileRoutesById {
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
   '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
+  '/annonces/$id': typeof AnnoncesIdRoute
   '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live_/$code': typeof LiveCodeRoute
+  '/petites-annonces/$slug': typeof PetitesAnnoncesSlugRoute
   '/rencontre/$slug': typeof RencontreSlugRoute
   '/sitemaps/$part': typeof SitemapsPartRoute
+  '/annonces/': typeof AnnoncesIndexRoute
+  '/petites-annonces/': typeof PetitesAnnoncesIndexRoute
   '/rencontre/': typeof RencontreIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/rencontre/$slug_/$theme': typeof RencontreSlugThemeRoute
@@ -313,11 +349,15 @@ export interface FileRouteTypes {
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
     | '/ambassadeur/guide'
+    | '/annonces/$id'
     | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
+    | '/petites-annonces/$slug'
     | '/rencontre/$slug'
     | '/sitemaps/$part'
+    | '/annonces/'
+    | '/petites-annonces/'
     | '/rencontre/'
     | '/api/auth/$'
     | '/rencontre/$slug/$theme'
@@ -345,11 +385,15 @@ export interface FileRouteTypes {
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
     | '/ambassadeur/guide'
+    | '/annonces/$id'
     | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
+    | '/petites-annonces/$slug'
     | '/rencontre/$slug'
     | '/sitemaps/$part'
+    | '/annonces'
+    | '/petites-annonces'
     | '/rencontre'
     | '/api/auth/$'
     | '/rencontre/$slug/$theme'
@@ -377,11 +421,15 @@ export interface FileRouteTypes {
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
     | '/ambassadeur_/guide'
+    | '/annonces/$id'
     | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live_/$code'
+    | '/petites-annonces/$slug'
     | '/rencontre/$slug'
     | '/sitemaps/$part'
+    | '/annonces/'
+    | '/petites-annonces/'
     | '/rencontre/'
     | '/api/auth/$'
     | '/rencontre/$slug_/$theme'
@@ -410,11 +458,15 @@ export interface RootRouteChildren {
   TchatWebcamAleatoireRoute: typeof TchatWebcamAleatoireRoute
   WebcamGayLiveRoute: typeof WebcamGayLiveRoute
   AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
+  AnnoncesIdRoute: typeof AnnoncesIdRoute
   ApiGeoRoute: typeof ApiGeoRoute
   FrSortirRencontrerChar123villeChar125Route: typeof FrSortirRencontrerChar123villeChar125Route
   LiveCodeRoute: typeof LiveCodeRoute
+  PetitesAnnoncesSlugRoute: typeof PetitesAnnoncesSlugRoute
   RencontreSlugRoute: typeof RencontreSlugRoute
   SitemapsPartRoute: typeof SitemapsPartRoute
+  AnnoncesIndexRoute: typeof AnnoncesIndexRoute
+  PetitesAnnoncesIndexRoute: typeof PetitesAnnoncesIndexRoute
   RencontreIndexRoute: typeof RencontreIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   RencontreSlugThemeRoute: typeof RencontreSlugThemeRoute
@@ -564,6 +616,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AmbassadeurGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/annonces/': {
+      id: '/annonces/'
+      path: '/annonces'
+      fullPath: '/annonces/'
+      preLoaderRoute: typeof AnnoncesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/annonces/$id': {
+      id: '/annonces/$id'
+      path: '/annonces/$id'
+      fullPath: '/annonces/$id'
+      preLoaderRoute: typeof AnnoncesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/geo': {
       id: '/api/geo'
       path: '/api/geo'
@@ -583,6 +649,20 @@ declare module '@tanstack/react-router' {
       path: '/live/$code'
       fullPath: '/live/$code'
       preLoaderRoute: typeof LiveCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/petites-annonces/': {
+      id: '/petites-annonces/'
+      path: '/petites-annonces'
+      fullPath: '/petites-annonces/'
+      preLoaderRoute: typeof PetitesAnnoncesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/petites-annonces/$slug': {
+      id: '/petites-annonces/$slug'
+      path: '/petites-annonces/$slug'
+      fullPath: '/petites-annonces/$slug'
+      preLoaderRoute: typeof PetitesAnnoncesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rencontre/': {
@@ -658,12 +738,16 @@ const rootRouteChildren: RootRouteChildren = {
   TchatWebcamAleatoireRoute: TchatWebcamAleatoireRoute,
   WebcamGayLiveRoute: WebcamGayLiveRoute,
   AmbassadeurGuideRoute: AmbassadeurGuideRoute,
+  AnnoncesIdRoute: AnnoncesIdRoute,
   ApiGeoRoute: ApiGeoRoute,
   FrSortirRencontrerChar123villeChar125Route:
     FrSortirRencontrerChar123villeChar125Route,
   LiveCodeRoute: LiveCodeRoute,
+  PetitesAnnoncesSlugRoute: PetitesAnnoncesSlugRoute,
   RencontreSlugRoute: RencontreSlugRoute,
   SitemapsPartRoute: SitemapsPartRoute,
+  AnnoncesIndexRoute: AnnoncesIndexRoute,
+  PetitesAnnoncesIndexRoute: PetitesAnnoncesIndexRoute,
   RencontreIndexRoute: RencontreIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   RencontreSlugThemeRoute: RencontreSlugThemeRoute,

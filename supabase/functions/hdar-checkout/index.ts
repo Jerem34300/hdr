@@ -75,11 +75,11 @@ Deno.serve(async (req) => {
     }
     const p = await rpc("hdar_checkout_prepare", { p_product: body.product, p_place: body.place_id ?? null }, auth);
     const meta: Record<string, string> = { user_id: p.user_id, product: p.product, place_id: p.place_id ?? "" };
-    const isBoost = p.kind === "boost" || p.kind === "place_boost" || p.kind === "pro_boost";
+    const isBoost = p.kind === "boost" || p.kind === "place_boost" || p.kind === "pro_boost" || p.kind === "ad_boost";
     const isPrem = p.kind === "premium";
     const isHearts = p.kind === "hearts";
     const recurring = (p.kind === "listing" || isPrem) && p.interval;
-    const back = isHearts ? "/live" : isPrem ? "/premium" : p.kind === "pro_boost" ? "/pro" : isBoost ? "/boost" : "/pro";
+    const back = p.kind === "ad_boost" ? `/annonces/${p.place_id}` : isHearts ? "/live" : isPrem ? "/premium" : p.kind === "pro_boost" ? "/pro" : isBoost ? "/boost" : "/pro";
     const params: Record<string, string> = {
       mode: recurring ? "subscription" : "payment",
       success_url: `${SITE}${back}?paid=1`,
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       "line_items[0][price_data][currency]": "eur",
       "line_items[0][price_data][unit_amount]": String(p.price_cents),
       "line_items[0][price_data][product_data][name]":
-        isHearts ? `Cœurs du Live · ${p.label}` : isPrem ? `hdar+ · ${p.label}` : p.kind === "boost" ? `Boost hdar · ${p.label}` : p.kind === "pro_boost" ? `Boost Pro « ${p.place_name ?? ""} » · ${p.label}` : p.kind === "place_boost" ? `Boost du lieu « ${p.place_name ?? ""} » · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
+        isHearts ? `Cœurs du Live · ${p.label}` : isPrem ? `hdar+ · ${p.label}` : p.kind === "boost" ? `Boost hdar · ${p.label}` : p.kind === "pro_boost" ? `Boost Pro « ${p.place_name ?? ""} » · ${p.label}`   : p.kind === "ad_boost" ? `Boost d'annonce · ${p.label}` : p.kind === "place_boost" ? `Boost du lieu « ${p.place_name ?? ""} » · ${p.label}` : `Lieu partenaire « ${p.place_name ?? ""} » · ${p.label}`,
       "line_items[0][price_data][product_data][description]":
         isHearts
           ? "Des cœurs à envoyer dans le Live hdar. Sans valeur monétaire, non remboursables."
@@ -98,6 +98,8 @@ Deno.serve(async (req) => {
           ? "20 photos d'album, filtres de la carte, qui t'a vu et mis en favori, recherche par pseudo, badge hdar+. Résiliable à tout moment."
           : p.kind === "pro_boost"
           ? "Pin doré sur la carte, en tête « À la une » des Lieux et priorité dans le Live Pro."
+          : p.kind === "ad_boost"
+          ? "Ton annonce passe en tête des petites annonces de la zone choisie, avec le badge Boostée, et reste en ligne pendant tout le boost."
           : p.kind === "place_boost"
           ? "Ton lieu brille sur la carte hdar, passe en tête de la liste Lieux et reste ouvert pendant tout le boost."
           : p.kind === "boost"

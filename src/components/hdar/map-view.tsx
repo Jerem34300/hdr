@@ -4,6 +4,7 @@ import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
+import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
 import { Layers, LocateFixed, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
@@ -81,6 +82,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   }, []);
   const [placesOn, setPlacesOn] = useState(true);
   const [toiletsOn, setToiletsOn] = useState(true);
+  const [adsOn, setAdsOn] = useState(false);
+  useEffect(() => setAdsOn(adsLayerOn()), []);
   useEffect(() => {
     setPlacesOn(placesLayerOn());
     setToiletsOn(toiletsLayerOn());
@@ -332,6 +335,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     },
     zoom,
   );
+  const adsBox = {
+    s: latFromY((top + size.h) / scale, z), n: latFromY(top / scale, z),
+    w: lngFromX(left / scale, z), e: lngFromX((left + size.w) / scale, z),
+  };
+  const adsPins = useAdPins(adsOn && zoom >= 9, adsBox);
   const places = toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces;
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
@@ -689,6 +697,17 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </button>
         );
       })}
+      {adsPins.map((a) => {
+        const pt = project(a.lat, a.lng);
+        if (pt.x < -30 || pt.y < -30 || pt.x > size.w + 30 || pt.y > size.h + 30) return null;
+        return (
+          <button key={"ad" + a.id} type="button" aria-label={`Annonce : ${a.title}`} onClick={() => useHdar.getState().openAnnonces(a.id)}
+            style={{ left: pt.x, top: pt.y }}
+            className={"absolute z-10 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm " + (a.boosted ? "border-[#fbbf24] shadow-[0_0_14px_rgba(251,191,36,.6)]" : "border-signal")}>
+            {AD_CATEGORIES.find((c) => c.id === a.category)?.icon ?? "📌"}
+          </button>
+        );
+      })}
       {placeClusters.map((c) => {
         if (c.items.length > 1) {
           const d = Math.min(52, 26 + c.items.length * 2);
@@ -831,6 +850,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 }}
               />
             </label>
+            <label className="flex h-10 items-center justify-between px-2">
+              <span>📌 Annonces <span className="text-xs text-muted">(approx.)</span></span>
+              <input type="checkbox" checked={adsOn} onChange={(e) => { setAdsOn(e.target.checked); setAdsLayer(e.target.checked); }} />
+            </label>
             <button
               type="button"
               className="flex h-10 w-full items-center rounded-xl px-2 text-left hover:bg-surface"
@@ -918,4 +941,17 @@ function LiveBadge() {
   ) : (
     <span className="absolute -top-1 -right-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]/70">LIVE</span>
   );
+}
+
+/** Calque « Annonces » : épingles approximatives (~400 m) des annonces en ligne dans la zone visible. */
+function useAdPins(on: boolean, box: { s: number; w: number; n: number; e: number }) {
+  const [pins, setPins] = useState<AdPin[]>([]);
+  const key = on ? [box.s, box.w, box.n, box.e].map((v) => v.toFixed(2)).join(",") : "";
+  useEffect(() => {
+    if (!key) { setPins([]); return; }
+    const [s, w, n, e] = key.split(",").map(Number);
+    const t = window.setTimeout(() => { void adPins({ s, w, n, e }).then(setPins).catch(() => setPins([])); }, 500);
+    return () => window.clearTimeout(t);
+  }, [key]);
+  return pins;
 }

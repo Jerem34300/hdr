@@ -1,3 +1,5 @@
+import { AD_CATEGORIES, adminAds, type AdminAd } from "@/lib/hdar/ads";
+import { signedMediaUrl } from "@/lib/hdar/chat-media";
 import { AmbassadorsTab } from "./admin-ambassadors";
 import { RevenueTab } from "./admin-revenue";
 import { adminPartners, type AdminPartner } from "@/lib/hdar/live";
@@ -29,7 +31,7 @@ import { ConversationsTab, LiveNowTab, RatingsSummary, UserReportsAndIps, Visito
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live" | "visitors" | "convos" | "direct";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live" | "visitors" | "convos" | "direct" | "annonces";
 
 function readKey() {
   try {
@@ -210,6 +212,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "ambassadeurs" && <AmbassadorsTab adminKey={adminKey} />}
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
+        {tab === "annonces" && <AdsTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
         {tab === "places" && <ProposedPlaces adminKey={adminKey} onOpen={setUserId} />}
         {tab === "bans" && <Bans adminKey={adminKey} onOpen={setUserId} />}
@@ -221,10 +224,10 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
 const NAV_GROUPS: [string, [Tab, string][]][] = [
   ["Audience", [["direct", "En direct"], ["overview", "Vue d'ensemble"], ["visitors", "Visiteurs"], ["users", "Utilisateurs"], ["stats", "Temps réel"], ["heat", "Carte de chaleur"], ["week", "Horaires"], ["influencers", "Influenceurs"]]],
   ["Conversations & lieux", [["convos", "Conversations"], ["comments", "Avis & notes"], ["top", "Top lieux"], ["roi", "ROI lieux"], ["places", "Lieux proposés"]]],
-  ["Modération", [["reports", "Signalements"], ["photos", "Photos"], ["bans", "Bannis"], ["contacts", "Messages"], ["support", "Support · rattacher"]]],
+  ["Modération", [["reports", "Signalements"], ["annonces", "Annonces"], ["photos", "Photos"], ["bans", "Bannis"], ["contacts", "Messages"], ["support", "Support · rattacher"]]],
   ["Business", [["revenus", "Revenus"], ["growth", "Croissance & revenus"], ["money", "Boosts & partenaires"], ["partners", "Partenaires"], ["pricing", "Tarifs"], ["codes", "Codes cadeaux"], ["progifts", "Cadeaux pro"], ["emails", "Emails"], ["ambassadeurs", "Ambassadeurs"], ["live", "Live (qualité)"]]],
 ];
-const NAV_QUICK: Tab[] = ["direct", "overview", "visitors", "convos", "comments", "users", "reports"];
+const NAV_QUICK: Tab[] = ["direct", "overview", "visitors", "convos", "comments", "users", "reports", "annonces"];
 
 /** Onglets rapides en ligne + menu « Tout » groupé (tient sur un téléphone). */
 function AdminNav({ tab, setTab, openReports }: { tab: Tab; setTab: (t: Tab) => void; openReports: number }) {
@@ -1166,5 +1169,67 @@ function LiveRoomsPanel({ adminKey }: { adminKey: string }) {
         {d.rooms.map((r) => <li key={r.room} className="flex items-center justify-between gap-2 border-b border-white/5 py-1"><span>{r.host ?? "?"} · depuis {new Date(r.since).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" })} · 👁 {r.viewers}/{r.cap} · {r.msgs} msg</span><button type="button" onClick={() => void kill(r.room)} className="rounded-full bg-red-500/80 px-3 py-1 text-xs font-bold">Couper</button></li>)}
       </ul>
     </div>
+  );
+}
+
+export function AdsTab({ adminKey, onOpen, preview }: { adminKey: string; onOpen: (id: string) => void; preview?: AdminAd[] }) {
+  const [status, setStatus] = useState("");
+  const [city, setCity] = useState("");
+  const [category, setCategory] = useState("");
+  const load = useCallback(() => (preview ? Promise.resolve(preview) : adminAds.list(adminKey, status, city.trim().toLowerCase(), category)), [adminKey, status, city, category, preview]);
+  const { data, error, reload } = useLoad<AdminAd[]>(load, 60000);
+  const [busy, setBusy] = useState("");
+  const act = (id: string, p: Promise<unknown>) => { setBusy(id); p.then(reload).catch((e: Error) => alert(e.message)).finally(() => setBusy("")); };
+  const badge: Record<string, string> = { active: "bg-online text-night", expired: "bg-white/10 text-muted", hidden: "bg-signal text-night" };
+  return (
+    <div>
+      <p className="mb-3 text-sm text-muted">Toutes les petites annonces (en ligne, expirées, masquées). 3 signalements non traités masquent l'annonce automatiquement. Masquer / réafficher marque ses signalements comme traités.</p>
+      <div className="mb-3 flex flex-wrap gap-2 text-sm">
+        <select aria-label="Statut" value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 rounded-full border border-line bg-surface px-3">
+          <option value="">Tous les statuts</option><option value="active">En ligne</option><option value="reported">Signalées</option><option value="hidden">Masquées</option><option value="expired">Expirées</option>
+        </select>
+        <select aria-label="Catégorie" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 rounded-full border border-line bg-surface px-3">
+          <option value="">Toutes catégories</option>{AD_CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+        <input aria-label="Ville" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className="h-9 w-36 rounded-full border border-line bg-surface px-3" />
+      </div>
+      {error && <p className="text-signal">{error}</p>}
+      {data && data.length === 0 && <p className="py-12 text-center text-muted">Aucune annonce.</p>}
+      <ul className="space-y-2">
+        {data?.map((a) => (
+          <li key={a.id} className="rounded-2xl border border-line bg-surface p-3 text-sm">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className={"rounded-full px-2 py-0.5 font-bold " + badge[a.status]}>{a.status === "active" ? "En ligne" : a.status === "hidden" ? "Masquée" : "Expirée"}</span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5">{AD_CATEGORIES.find((c) => c.id === a.category)?.label}</span>
+              {a.boost_scope && <span className="rounded-full bg-[#fbbf24] px-2 py-0.5 font-bold text-night">Boost {a.boost_scope} · fin {when(a.boost_until ?? "")}</span>}
+              <span className="rounded-full bg-white/10 px-2 py-0.5">💬 {a.replies ?? 0} réponse{(a.replies ?? 0) > 1 ? "s" : ""}</span>
+              {a.reports > 0 && <span className="rounded-full bg-signal/20 px-2 py-0.5 text-signal">{a.reports} signalement{a.reports > 1 ? "s" : ""}{a.open_reports ? ` (${a.open_reports} à traiter)` : ""}</span>}
+              <span className="ml-auto text-muted">{a.city} · {when(a.created_at)} → {when(a.expires_at)}</span>
+            </div>
+            <p className="mt-1 font-bold">{a.title}</p>
+            <p className="mt-0.5 whitespace-pre-wrap text-muted">{a.body}</p>
+            {a.photos.length > 0 && <AdminAdPhotos paths={a.photos} />}
+            {a.reasons && a.reasons.length > 0 && <p className="mt-1 text-xs text-signal">Motifs : {a.reasons.join(" · ")}</p>}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button type="button" className="font-bold underline" onClick={() => onOpen(a.user_id)}>{a.pseudo}</button>
+              <a href={`/?chat=${encodeURIComponent(a.user_id)}`} target="_blank" rel="noreferrer" className="h-8 rounded-full border border-line px-3 leading-8">Répondre (MP)</a>
+              <button type="button" disabled={busy === a.id} className="h-8 rounded-full border border-line px-3 disabled:opacity-40" onClick={() => act(a.id, adminAds.setHidden(adminKey, a.id, !a.hidden))}>{a.hidden ? "Réafficher" : "Masquer"}</button>
+              <button type="button" disabled={busy === a.id} className="h-8 rounded-full bg-signal px-3 text-night disabled:opacity-40" onClick={() => { if (confirm("Supprimer définitivement cette annonce ?")) act(a.id, adminAds.remove(adminKey, a.id)); }}>Supprimer</button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AdminAdPhotos({ paths }: { paths: string[] }) {
+  const [urls, setUrls] = useState<string[]>([]);
+  const [shown, setShown] = useState(false);
+  useEffect(() => { void Promise.all(paths.map((p) => signedMediaUrl(p).catch(() => ""))).then(setUrls); }, [paths]);
+  return (
+    <button type="button" onClick={() => setShown((v) => !v)} className="mt-2 flex gap-2">
+      {urls.map((u, i) => u && <img key={i} src={u} alt="" className={"size-20 rounded-lg object-cover " + (shown ? "" : "blur-lg")} />)}
+    </button>
   );
 }

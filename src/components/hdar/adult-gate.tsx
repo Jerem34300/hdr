@@ -1,3 +1,5 @@
+import { Annonces, demoAds } from "./annonces";
+import { AdsTab } from "./admin";
 import { ProSpaceCard } from "./pro-tools";
 import { AmbassadorsTab, demoAdminAmbs } from "./admin-ambassadors";
 import { AmbOnboardPreview, AmbassadorSpace, BecomeAmbCard, demoAmb } from "./ambassador";
@@ -58,6 +60,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("reveal=")) return <SurprisePopup />;
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("prolanding")) return <div className="min-h-dvh bg-night px-4 text-ink"><ProLanding prices={[]} onCreate={() => undefined} /></div>;
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("devpreview")) return <DevPreview />;
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("adsdemo=")) return <AdsDemo />;
   return <AdultGateInner>{children}</AdultGateInner>;
 }
 function AdultGateInner({ children }: { children: ReactNode }) {
@@ -235,4 +238,14 @@ function DevPreview() {
     </div>
   );
   return <div className="min-h-dvh bg-night px-4 pt-6 text-ink"><a href="/boost" className="boost-cta mt-4 mb-3 flex h-14 items-center justify-center rounded-full font-display font-extrabold text-night">✨ Boost actif · 2 h 58</a><PremiumCard /><InviteCard demo="E610477" /></div>;
+}
+
+function AdsDemo() {
+  const mode = new URLSearchParams(location.search).get("adsdemo");
+  const ads = demoAds();
+  if (mode === "admin") {
+    const rows = ads.map((a, i) => ({ ...a, status: (i === 2 ? "hidden" : "active") as "active" | "hidden", replies: [4, 1, 0][i], reports: [0, 0, 3][i], open_reports: [0, 0, 3][i], reasons: i === 2 ? ["Spam", "Arnaque ou argent", "Autre"] : null, hidden: i === 2 }));
+    return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Annonces <span className="text-xs text-[#fbbf24]">🧪 exemple</span></p><AdsTab adminKey="" onOpen={() => undefined} preview={rows} /></main>;
+  }
+  return <main className="flex h-dvh flex-col bg-night text-ink"><Annonces demo={ads} demoCreate={mode === "create"} /></main>;
 }

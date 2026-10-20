@@ -1,3 +1,4 @@
+import { parseAdQuote } from "@/lib/hdar/ads";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { askConfirm } from "@/lib/hdar/confirm";
@@ -42,7 +43,7 @@ export function Inbox() {
   const pmRow = (c: Conversation) => {
     const unread = !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0);
     const preview =
-      c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastKind === "video" ? "🎥 Vidéo" : c.lastKind === "location" ? "📍 Position" : c.lastBody;
+      c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastKind === "video" ? "🎥 Vidéo" : c.lastKind === "location" ? "📍 Position" : (parseAdQuote(c.lastBody) ? "📌 " + parseAdQuote(c.lastBody)!.title + " · " + parseAdQuote(c.lastBody)!.rest : c.lastBody);
     return (
       <li key={c.otherId} className="flex items-stretch gap-2">
         <button

@@ -1,3 +1,4 @@
+import { parseAdQuote } from "@/lib/hdar/ads";
 import { useFavorites } from "@/lib/hdar/favorites";
 import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
 import { useEffect, useRef, useState } from "react";
@@ -364,7 +365,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
               }
             >
               {m.kind === "text" ? (
-                <p className="break-words whitespace-pre-wrap">{m.body}</p>
+                <AdQuoteBody body={m.body} mine={m.mine} />
               ) : m.kind === "location" ? (
                 <LocationBubble msg={m} />
               ) : (
@@ -543,5 +544,20 @@ function LocationBubble({ msg }: { msg: LiveMsg }) {
         </p>
       )}
     </div>
+  );
+}
+
+/** Message privé : citation d'annonce (titre + lien) au-dessus du texte, sinon texte brut. */
+function AdQuoteBody({ body, mine }: { body: string; mine: boolean }) {
+  const q = parseAdQuote(body);
+  if (!q) return <p className="break-words whitespace-pre-wrap">{body}</p>;
+  return (
+    <>
+      <button type="button" onClick={() => useHdar.getState().openAnnonces(q.id)} className={"mb-1 block w-full rounded-xl border-l-4 px-2 py-1 text-left text-xs " + (mine ? "border-night/50 bg-night/10" : "border-signal bg-night/40")}>
+        <span className="opacity-70">📌 Réponse à l'annonce</span>
+        <span className="block font-bold break-words">{q.title || "Annonce"} ›</span>
+      </button>
+      <p className="break-words whitespace-pre-wrap">{q.rest}</p>
+    </>
   );
 }

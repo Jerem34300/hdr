@@ -66,6 +66,8 @@ export function allUrls() {
   const regs = new Set(D.cities.map((c) => D.regs[D.deps[c.d].r].s));
   return {
     cities: D.cities.filter((c) => c.p >= SITEMAP_MIN_POP || c.H || TOP30.has(c.s)).map((c) => `/rencontre/${c.s}`),
+    // Pages publiques des petites annonces (description + compteur, jamais le contenu) : top 30 seulement.
+    annonces: ["/petites-annonces", ...D.cities.slice(0, 30).map((c) => `/petites-annonces/${c.s}`)],
     themes: D.cities.slice(0, 30).flatMap((c) => [`/rencontre/${c.s}/tchat-gay`, `/rencontre/${c.s}/sortir-ce-soir`, `/rencontre/${c.s}/live-coquin`]),
     lists: ["/rencontre", ...[...regs].map((s) => `/rencontre/region/${s}`), ...[...deps].map((s) => `/rencontre/departement/${s}`)],
   };

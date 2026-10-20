@@ -92,7 +92,9 @@ export type Intent =
   | "create-spot"
   | { type: "signal"; id: string; kind: SignalKind }
   | { type: "line"; id: string }
-  | { type: "join"; id: string };
+  | { type: "join"; id: string }
+  | { type: "ad-reply"; id: string }
+  | { type: "ad-create" };
 
 export type Sheet =
   | null
@@ -110,7 +112,8 @@ export type View =
   | { name: "pocket" }
   | { name: "salon"; id: string; title: string }
   | { name: "live"; userId: string; pseudo: string }
-  | { name: "profile"; userId: string; pseudo: string };
+  | { name: "profile"; userId: string; pseudo: string }
+  | { name: "annonces"; focus?: string | null };
 
 export type PocketMsg = { id: string; from: "me" | "Anonyme"; text: string; at: number };
 
@@ -223,6 +226,10 @@ type State = {
   closeView: () => void;
   openLive: (userId: string, pseudo: string) => void;
   openProfile: (userId: string, pseudo: string) => void;
+  /** Petites annonces (vue plein écran, derrière l'écran 18+). `adAction` = réponse/création à reprendre après l'inscription. */
+  openAnnonces: (focus?: string | null) => void;
+  adAction: { type: "reply"; id: string } | { type: "create" } | null;
+  setAdAction: (a: { type: "reply"; id: string } | { type: "create" } | null) => void;
   markSeen: (userId: string) => void;
   deleteConversation: (userId: string) => void;
   sendChat: (personId: string, partial: Omit<ChatMsg, "id" | "from" | "at">) => void;
@@ -317,7 +324,7 @@ const base = () => {
 /** Vue à rouvrir au retour : le salon / chat du quartier d'où l'on vient (même via profil → message privé). */
 function returnFrom(st: { view: View; returnTo: View | null }): View | null {
   const v = st.view;
-  if (v.name === "salon" || v.name === "pocket") return v;
+  if (v.name === "salon" || v.name === "pocket" || v.name === "annonces") return v;
   if (v.name === "profile" || v.name === "live") return st.returnTo;
   return null;
 }
@@ -384,6 +391,8 @@ export const useHdar = create<State>()(
         else if (intent && intent.type === "signal") get().signal(intent.id, intent.kind);
         else if (intent && intent.type === "line") get().enterLine(intent.id);
         else if (intent && intent.type === "join") get().joinSpot(intent.id);
+        else if (intent && intent.type === "ad-create") set({ view: { name: "annonces" }, adAction: { type: "create" } });
+        else if (intent && intent.type === "ad-reply") set({ view: { name: "annonces", focus: intent.id }, adAction: { type: "reply", id: intent.id } });
       },
       setTonight: ({ desires, places, note, len }) => {
         const hours = LENGTHS.find((l) => l.id === len)?.hours ?? 3;
@@ -492,6 +501,9 @@ export const useHdar = create<State>()(
         get().markSeen(userId);
         set({ view: { name: "live", userId, pseudo }, sheet: null, returnTo: returnFrom(get()) });
       },
+      openAnnonces: (focus = null) => set({ view: { name: "annonces", focus }, sheet: null, returnTo: null }),
+      adAction: null,
+      setAdAction: (adAction) => set({ adAction }),
       openProfile: (userId, pseudo) => set({ view: { name: "profile", userId, pseudo }, sheet: null, returnTo: returnFrom(get()) }),
       markSeen: (userId) => set({ seenAt: { ...get().seenAt, [userId]: Date.now() } }),
       deleteConversation: (userId) => {
