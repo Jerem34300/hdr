@@ -269,7 +269,7 @@ function GateAdTicker({ onPick }: { onPick: (id: string) => void }) {
   useEffect(() => {
     let alive = true;
     if (import.meta.env.DEV && location.search.includes("tickerdemo")) {
-      setAds(demoAds().map((a) => ({ id: a.id, title: a.title, city: a.city, boosted: !!a.boost_scope })).filter((a) => !/kink/i.test(a.title)));
+      setAds(demoAds().map((a) => ({ id: a.id, title: a.title, city: a.city, boosted: !!a.boost_scope, has_photos: a.photos.length > 0 })).filter((a) => !/kink/i.test(a.title)));
       return;
     }
     const t = window.setTimeout(() => {
@@ -286,7 +286,7 @@ function GateAdTicker({ onPick }: { onPick: (id: string) => void }) {
   const row = (k: string) => ads.map((a) => (
     <button key={k + a.id} type="button" tabIndex={k === "b" ? -1 : 0} aria-hidden={k === "b" || undefined} onClick={() => onPick(a.id)} className="mx-3 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
       {a.boosted && <span className="rounded-full bg-[#fbbf24] px-1.5 text-[10px] font-bold text-night">Boostée</span>}
-      <span>📌 {a.title}</span><span className="text-muted">· {a.city}</span>
+      <span>📌 {a.title}{a.has_photos ? <span className="ml-1 opacity-80" role="img" aria-label="avec photos" title="Avec photos">📷</span> : null}</span><span className="text-muted">· {a.city}</span>
     </button>
   ));
   return (

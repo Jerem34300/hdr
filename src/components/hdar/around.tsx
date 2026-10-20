@@ -146,7 +146,7 @@ function AdTicker({ lat, lng, city, demo }: { lat: number; lng: number; city: st
   const row = (k: string) => items.map((a) => (
     <button key={k + a.id} type="button" tabIndex={k === "b" ? -1 : 0} aria-hidden={k === "b" || undefined} onClick={() => openAnnonces(a.id)} className="mx-3 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
       {a.boost_scope && <span className="rounded-full bg-[#fbbf24] px-1.5 text-[10px] font-bold text-night">Boostée</span>}
-      <span>📌 {a.title}</span><span className="text-muted">· {a.city}</span>
+      <span>📌 {a.title}{a.photos?.length > 0 ? <span className="ml-1 opacity-80" role="img" aria-label="avec photos" title="Avec photos">📷</span> : null}</span><span className="text-muted">· {a.city}</span>
     </button>
   ));
   return (
