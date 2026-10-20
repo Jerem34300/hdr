@@ -1,5 +1,7 @@
+import { useHdar } from "@/lib/hdar/store";
 import { Around } from "./around";
 import { Annonces, demoAds } from "./annonces";
+import { regionFromPos, teaserAds, type TeaserAd } from "@/lib/hdar/ads";
 import { AdsTab } from "./admin";
 import { ProSpaceCard } from "./pro-tools";
 import { AmbassadorsTab, demoAdminAmbs } from "./admin-ambassadors";
@@ -132,6 +134,10 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
   return (
     <main className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-night text-ink sm:items-center sm:justify-center">
+      <GateAdTicker onPick={(id) => {
+        try { sessionStorage.setItem(PENDING_AD, id); } catch { /* privé */ }
+        setError(needsAdult && !checked ? "Confirme que tu as 18 ans pour ouvrir l'annonce 👇" : "Touche Entrer pour ouvrir l'annonce 👇");
+      }} />
       <GateTeaser onCity={(city, r) => setTeaser({ city, near: r?.near ?? 0, total: r?.total ?? 0 })} />
       <div className="relative z-10 px-6 pt-10 text-center sm:hidden" aria-live="polite">
         {teaser && (
@@ -159,6 +165,10 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           ensureSession()
             .then(() => {
               trackGate("gate_enter");
+              try {
+                const ad = sessionStorage.getItem(PENDING_AD);
+                if (ad) { sessionStorage.removeItem(PENDING_AD); useHdar.getState().openAnnonces(ad); }
+              } catch { /* privé */ }
               setState("ok");
             })
             .catch((err: unknown) => {
@@ -250,4 +260,41 @@ function AdsDemo() {
     return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Annonces <span className="text-xs text-[#fbbf24]">🧪 exemple</span></p><AdsTab adminKey="" onOpen={() => undefined} preview={rows} /></main>;
   }
   return <main className="flex h-dvh flex-col bg-night text-ink"><Annonces demo={ads} demoCreate={mode === "create"} /></main>;
+}
+
+const PENDING_AD = "hdar-gate-ad";
+/** Bandeau des annonces sur l'écran 18+ : chargé après affichage (jamais dans le HTML serveur), titres + ville seulement. */
+function GateAdTicker({ onPick }: { onPick: (id: string) => void }) {
+  const [ads, setAds] = useState<TeaserAd[]>([]);
+  useEffect(() => {
+    let alive = true;
+    if (import.meta.env.DEV && location.search.includes("tickerdemo")) {
+      setAds(demoAds().map((a) => ({ id: a.id, title: a.title, city: a.city, boosted: !!a.boost_scope })).filter((a) => !/kink/i.test(a.title)));
+      return;
+    }
+    const t = window.setTimeout(() => {
+      void fetch("/api/geo", { cache: "no-store" }).then((r) => r.json() as Promise<{ lat: number | null; lng: number | null }>)
+        .then((g) => (g.lat != null && g.lng != null ? regionFromPos(g.lat, g.lng) : ""))
+        .catch(() => "")
+        .then((region) => teaserAds(region))
+        .then((r) => alive && setAds(r))
+        .catch(() => undefined);
+    }, 800);
+    return () => { alive = false; window.clearTimeout(t); };
+  }, []);
+  if (!ads.length) return null;
+  const row = (k: string) => ads.map((a) => (
+    <button key={k + a.id} type="button" tabIndex={k === "b" ? -1 : 0} aria-hidden={k === "b" || undefined} onClick={() => onPick(a.id)} className="mx-3 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+      {a.boosted && <span className="rounded-full bg-[#fbbf24] px-1.5 text-[10px] font-bold text-night">Boostée</span>}
+      <span>📌 {a.title}</span><span className="text-muted">· {a.city}</span>
+    </button>
+  ));
+  return (
+    <div className="ad-ticker absolute inset-x-0 top-0 z-20 flex h-9 items-center overflow-hidden border-b border-line bg-night/90 text-xs backdrop-blur" role="region" aria-label="Petites annonces du moment">
+      <span className="z-10 flex h-full shrink-0 items-center bg-signal px-2 text-[11px] font-extrabold tracking-wide text-night uppercase">Annonces</span>
+      <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]">
+        <div className="ad-ticker-track flex w-max" style={{ ["--ticker-dur" as string]: `${Math.max(20, ads.length * 7)}s` }}>{row("a")}{row("b")}</div>
+      </div>
+    </div>
+  );
 }

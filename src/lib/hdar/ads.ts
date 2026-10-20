@@ -141,3 +141,14 @@ export async function shareAd(ad: Ad): Promise<"shared" | "copied" | "none"> {
 
 /** Nombre d'annonces en ligne dans une région (compteur anonyme). */
 export const adsCount = (region: string) => rpc<number>("hdar_ads_count", { p_region: region || null, p_city: null });
+
+/** Écran 18+ : titres + ville seulement (aucune session), titres explicites exclus ici aussi. */
+export type TeaserAd = { id: string; title: string; city: string; boosted: boolean };
+const TEASER_BLOCK = /(sexe|sexy|\bsex\b|bais|plan cul|\bpc\b|\bnue?s?\b|bite|queue|chatte|\bcul\b|suce|pipe|sodo|anal|porn|soumis|ma[iî]tre|esclave|fist|scato|partouze|orgie|trio|bdsm|f[eé]tich|fetish|kink|exhib|chaude?|coquin|cochon|salope|branl|jouir|[eé]jac|nude|xxx|\bsm\b)/i;
+export async function teaserAds(region: string): Promise<TeaserAd[]> {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_ads_teaser`, {
+    method: "POST", headers: { apikey: SUPABASE_KEY, "content-type": "application/json" }, body: JSON.stringify({ p_region: region || null }),
+  });
+  if (!r.ok) return [];
+  return ((await r.json()) as TeaserAd[]).filter((a) => !TEASER_BLOCK.test(a.title)).slice(0, 15);
+}

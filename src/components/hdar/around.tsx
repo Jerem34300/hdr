@@ -21,27 +21,22 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-4 pb-2">
-        <div className="min-w-0">
+      <header className="shrink-0 px-4 pt-3 pb-2">
+        <div className="flex items-baseline justify-between gap-3">
           <Wordmark />
           <button
             type="button"
             data-act="city"
-            className="mt-1 block truncate text-left text-sm text-muted"
+            className="min-w-0 truncate text-right text-sm text-muted"
             {...bindTap(openCity)}
           >
-            {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
+            📍 {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
           </button>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5 min-[400px]:gap-2">
+        <div className="mt-2 grid grid-cols-4 gap-1.5">
           <OnlinePill />
           <AdsButton lat={place.lat} lng={place.lng} />
-          <button
-            type="button"
-            data-act="salons"
-            {...bindTap(() => setTab("inbox"))}
-            className="h-11 shrink-0 rounded-full border border-line px-3 text-sm max-[400px]:px-2.5"
-          >
+          <button type="button" data-act="salons" {...bindTap(() => setTab("inbox"))} className={`${TOP_BTN} bg-[#fbbf24]/10 text-[#f5d27a] ring-[#fbbf24]/35`}>
             Salons
           </button>
           <button
@@ -49,17 +44,11 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             data-act="pocket"
             data-tip="pocket"
             {...bindTap(openPocket)}
-            aria-label={
-              areaUnread ? `Chat du quartier, ${areaUnread} nouveaux messages` : "Chat du quartier"
-            }
-            className="relative h-11 shrink-0 rounded-full bg-signal px-4 text-sm text-night max-[400px]:px-3"
+            aria-label={areaUnread ? `Chat du quartier, ${areaUnread} nouveaux messages` : "Chat du quartier"}
+            className={`${TOP_BTN} bg-signal/15 text-[#ff8a80] ring-signal/45`}
           >
-            <span className="max-[500px]:hidden">Chat du quartier</span><span className="min-[501px]:hidden">Quartier</span>
-            {areaUnread > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-night bg-ink px-1 text-[11px] font-bold text-night">
-                {areaUnread > 9 ? "9+" : areaUnread}
-              </span>
-            )}
+            Quartier
+            {areaUnread > 0 && <Badge n={areaUnread} cls="bg-signal" />}
           </button>
         </div>
       </header>
@@ -89,11 +78,20 @@ function OnlinePill() {
     const id = window.setInterval(run, 60_000);
     return () => { stop = true; window.clearInterval(id); };
   }, []);
-  if (n <= 0) return null;
   return (
-    <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#3EE08F]/10 px-2.5 text-xs font-bold whitespace-nowrap text-[#3EE08F]" aria-label={`${n} en ligne`}>
-      <span className="size-2 animate-pulse rounded-full bg-[#3EE08F]" />
-      {n}<span className="max-[400px]:hidden"> en ligne</span>
+    <span className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label={`${n} en ligne`}>
+      <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-online" />
+      {n} en ligne
+    </span>
+  );
+}
+
+/** Les 4 boutons du haut de la carte : même taille, même forme, une teinte de la palette chacun. */
+const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[12px] font-semibold whitespace-nowrap ring-1";
+function Badge({ n, cls }: { n: number; cls: string }) {
+  return (
+    <span className={`absolute -top-1.5 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-night px-1 text-[10px] font-bold text-night ${cls}`}>
+      {n > 99 ? "99+" : n}
     </span>
   );
 }
@@ -114,14 +112,10 @@ function AdsButton({ lat, lng }: { lat: number; lng: number }) {
       data-act="annonces"
       aria-label={n ? `Petites annonces, ${n} en ligne dans ta région` : "Petites annonces"}
       {...bindTap(() => openAnnonces())}
-      className="relative h-11 shrink-0 rounded-full border border-line px-3 text-sm max-[400px]:px-2.5"
+      className={`${TOP_BTN} bg-spot/15 text-[#b3a8ff] ring-spot/40`}
     >
-      📌<span className="max-[500px]:hidden"> Annonces</span>
-      {n > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-night bg-[#8b7cff] px-1 text-[11px] font-bold text-night">
-          {n > 99 ? "99+" : n}
-        </span>
-      )}
+      📌 Annonces
+      {n > 0 && <Badge n={n} cls="bg-spot" />}
     </button>
   );
 }
