@@ -76,17 +76,17 @@ function RedeemFirst({ region, onDone }: { region: FirstRegion | null; onDone: (
   );
 }
 
-const PERKS = ["👑 hdar+ à vie : filtres, qui m'a vu, 10 annonces, 20 photos…", "🚀 1 boost profil d'1 h offert chaque jour", "📌 1 boost d'annonce Région 24 h chaque semaine", "❤️ Cœurs rechargés à 100 chaque mois"];
+const PERKS = ["👑 hdar+ à vie : filtres, qui m'a vu, 10 annonces, 20 photos…", "🚀 3 boosts profil d'1 h offerts chaque jour", "📌 1 boost d'annonce France 24 h chaque jour", "❤️ Cœurs rechargés à 100 chaque mois"];
 
 function FounderActions({ me, product, placeId, onClose }: { me: FirstMe; product: string | null; placeId: string | null; onClose: () => void }) {
   const ready = (at?: string | null) => !at || Date.parse(at) <= Date.now();
   const when = (at: string) => new Date(at).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" });
   const p = product ?? "";
   if (p.startsWith("ad_boost") && placeId) return ready(me.ad_boost_at)
-    ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstAdBoost(placeId).then(() => { toast("Annonce boostée en Région pour 24 h 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>📌 Booster mon annonce (Région, 24 h)</button>
+    ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstAdBoost(placeId).then(() => { toast("Annonce boostée en France pour 24 h 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>📌 Booster mon annonce (France, 24 h)</button>
     : <p className="mt-4 text-center text-sm text-muted">Prochain boost d'annonce : {when(me.ad_boost_at!)}</p>;
   if (p.startsWith("boost_")) return ready(me.profile_boost_at)
-    ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstBoost().then(() => { toast("Boost d'1 h activé 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>🚀 Activer mon boost d'1 h</button>
+    ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstBoost().then(() => { toast("Boost d'1 h activé 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>🚀 Activer un boost d'1 h{me.profile_boosts_left != null ? ` (${me.profile_boosts_left}/3 aujourd'hui)` : ""}</button>
     : <p className="mt-4 text-center text-sm text-muted">Prochain boost profil : {when(me.profile_boost_at!)}</p>;
   if (p.startsWith("hearts")) return <p className="mt-4 text-center text-sm text-muted">Tes cœurs sont rechargés à 100 chaque mois ❤️</p>;
   if (/^(listing|place_boost|pro_boost)/.test(p)) return <p className="mt-4 text-center text-sm text-muted">Les offres lieux et partenaires sont gratuites pendant le lancement : <a href="/contact" className="underline">écris-nous</a> et on active ta fiche.</p>;
@@ -219,7 +219,7 @@ export function FounderCard({ className = "mt-4" }: { className?: string }) {
       {me?.founder ? (
         <>
           <p className="font-display text-lg font-extrabold">⭐ Membre FIRST n° {me.rank}{me.city ? ` · ${me.city}` : ""}</p>
-          <p className="mt-1 text-xs text-muted">hdar+ à vie · 1 boost profil d'1 h par jour · 1 boost d'annonce Région par semaine · cœurs rechargés à 100 chaque mois</p>
+          <p className="mt-1 text-xs text-muted">hdar+ à vie · 3 boosts profil d'1 h par jour · 1 boost d'annonce France par jour · cœurs rechargés à 100 chaque mois</p>
         </>
       ) : (
         <>

@@ -29,7 +29,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>, anon = false): 
   }
   return (await res.json()) as T;
 }
-export type FirstMe = { founder: boolean; rank?: number; city?: string | null; region?: string | null; remaining: number; profile_boost_at?: string | null; ad_boost_at?: string | null };
+export type FirstMe = { founder: boolean; rank?: number; city?: string | null; region?: string | null; remaining: number; profile_boost_at?: string | null; profile_boosts_left?: number; ad_boost_at?: string | null };
 export const firstRemaining = () => rpc<number>("hdar_first_remaining", {}, true).then(Number).catch(() => null);
 export const firstMe = () => rpc<FirstMe>("hdar_first_me", {});
 export const firstRedeem = (code: string, region: string) =>
