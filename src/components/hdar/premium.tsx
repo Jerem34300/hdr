@@ -1,3 +1,5 @@
+import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
+import { FounderCard } from "./launch-offer";
 import { useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
@@ -49,7 +51,7 @@ const PERKS = [
 
 const FAQ = [
   ["C'est un abonnement ?", "Oui, renouvelé automatiquement chaque semaine ou chaque mois. Tu résilies en deux clics depuis cette page, et tu gardes hdar+ jusqu'à la fin de la période payée."],
-  ["Mon anonymat ?", "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Stripe gère le paiement, hdar ne voit jamais ta carte."],
+  ["Mon anonymat ?", PAYMENTS_ENABLED ? "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Stripe gère le paiement, hdar ne voit jamais ta carte." : "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Et aucun paiement pendant le lancement."],
   ["La recherche montre où sont les gens ?", "Non. Tu vois le pseudo et s'il est en ligne, jamais sa position. Les profils bloqués, bannis ou inactifs depuis 7 jours n'apparaissent pas."],
   ["Demande à se voir, ça défloute l'autre ?", "Jamais. L'autre reçoit une invitation « … aimerait te voir 👀 » et choisit « Me montrer » ou « Non merci ». Une seule demande par rencontre."],
   ["Le Live est réservé à hdar+ ?", "Non, le Live est gratuit pour tous les profils avec photo validée. hdar+ ajoute le retour en arrière, les filtres, le matching prioritaire et la demande à se voir."],
@@ -189,13 +191,14 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
         </div>
 
         <section className="mt-8 text-center">
-          <p className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>Abonnement</p>
+          <p className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>{PAYMENTS_ENABLED ? "Abonnement" : "Offert pendant le lancement"}</p>
           <h1 className="mt-2 font-display text-5xl font-extrabold leading-tight">hdar<span className="premium-text">+</span></h1>
           <p className="mx-auto mt-3 max-w-sm text-sm text-muted">Filtre la carte et le Live, découvre qui t'a vu et qui t'a mis en favori, retrouve un pseudo. Toujours anonyme.</p>
           <div className="relative mx-auto mt-6 flex size-36 items-center justify-center">
             <span className="absolute inset-0 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(${GOLD}, transparent 70%)` }} />
             <span className="premium-ring relative flex size-24 items-center justify-center rounded-full"><Crown className="size-10" style={{ color: GOLD }} /></span>
           </div>
+          {!PAYMENTS_ENABLED && <FounderCard className="mx-auto mt-6 max-w-sm text-left" />}
           {premium ? (
             <div className="premium-card mx-auto mt-6 max-w-sm rounded-3xl p-5 text-left">
               <p className="text-xs font-bold tracking-widest text-white/80 uppercase">👑 Tu es hdar+</p>
@@ -301,7 +304,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
                     {f && <span className="absolute top-2 right-3 rounded-full bg-night/80 px-3 py-0.5 text-[11px] font-extrabold" style={{ color: GOLD }}>⭐ Meilleur prix</span>}
                     <span>
                       <b className="block font-display text-lg">{p.label}</b>
-                      <span className={"text-xs " + (f ? "text-white/85" : "text-muted")}>{busy === p.product ? "Redirection vers Stripe…" : "Renouvelé automatiquement"}</span>
+                      <span className={"text-xs " + (f ? "text-white/85" : "text-muted")}>{!PAYMENTS_ENABLED ? "Offert avec le code FIRST" : busy === p.product ? "Redirection vers Stripe…" : "Renouvelé automatiquement"}</span>
                     </span>
                     <span className="text-right">
                       <b className="block font-display text-2xl font-extrabold" style={{ color: f ? "#fff" : GOLD }}>{euros(p.price_cents)}</b>
@@ -311,7 +314,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
                 );
               })}
             </div>
-            <p className="mt-3 text-center text-[11px] text-muted">🔒 Paiement sécurisé par Stripe · Carte, Apple Pay, Google Pay</p>
+            <p className="mt-3 text-center text-[11px] text-muted">{PAYMENTS_ENABLED ? "🔒 Paiement sécurisé par Stripe · Carte, Apple Pay, Google Pay" : "🎁 Aucun paiement pendant le lancement"}</p>
           </section>
         )}
 

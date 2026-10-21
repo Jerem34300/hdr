@@ -1,3 +1,4 @@
+import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
 import { useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
@@ -96,7 +97,7 @@ const FAQ = [
   ["Les durées s'additionnent ?", "Oui. Si tu reprends un boost alors qu'un autre est en cours, le temps s'ajoute à la fin."],
   ["C'est un abonnement ?", "Non, chaque boost est un paiement unique, sans renouvellement automatique."],
   ["Mon anonymat ?", "Rien ne change : pas de nom, pas de numéro. Le paiement est géré par Stripe, hdar ne voit jamais ta carte."],
-  ["Comment je paie ?", "Carte bancaire, Apple Pay, Google Pay ou Link, sur la page sécurisée de Stripe."],
+  ["Comment je paie ?", PAYMENTS_ENABLED ? "Carte bancaire, Apple Pay, Google Pay ou Link, sur la page sécurisée de Stripe." : "Tu ne paies rien : pendant le lancement, les boosts sont offerts avec le code FIRST."],
 ] as const;
 
 export function BoostPage() {
@@ -202,7 +203,7 @@ export function BoostPage() {
                   {f && <span className="absolute top-2 right-3 rounded-full bg-night/80 !text-[#fbbf24] px-3 py-0.5 text-[11px] font-extrabold text-night" >⭐ Le plus choisi</span>}
                   <span>
                     <b className="block font-display text-lg">{p.label}</b>
-                    <span className={"text-xs " + (f ? "text-white/85" : "text-muted")}>{busy === p.product ? "Redirection vers Stripe…" : payOk ? "Payer avec Stripe" : "Bientôt disponible"}</span>
+                    <span className={"text-xs " + (f ? "text-white/85" : "text-muted")}>{!PAYMENTS_ENABLED ? "Offert au lancement" : busy === p.product ? "Redirection vers Stripe…" : payOk ? "Payer avec Stripe" : "Bientôt disponible"}</span>
                   </span>
                   <span className="relative z-10 font-display text-2xl font-extrabold" style={{ color: f ? "#fff" : CORAL }}>{euros(p.price_cents)}</span>
                 </button>
@@ -210,7 +211,7 @@ export function BoostPage() {
             })}
           </div>
           {err && !active && <p className="mt-3 text-center text-xs text-muted">{err.includes("profil") ? "Crée ton profil sur la carte pour pouvoir te booster." : ""}</p>}
-          <p className="mt-3 text-center text-[11px] text-muted">🔒 Paiement sécurisé par Stripe · Carte, Apple Pay, Google Pay</p>
+          <p className="mt-3 text-center text-[11px] text-muted">{PAYMENTS_ENABLED ? "🔒 Paiement sécurisé par Stripe · Carte, Apple Pay, Google Pay" : "🎁 Aucun paiement pendant le lancement"}</p>
         </section>
 
         <SpotBoost prices={spotPrices} payOk={payOk} now={now} />

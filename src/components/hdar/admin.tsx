@@ -1,3 +1,4 @@
+import { AdminFirstStats } from "./launch-offer";
 import { AD_CATEGORIES, adminAds, type AdminAd } from "@/lib/hdar/ads";
 import { signedMediaUrl } from "@/lib/hdar/chat-media";
 import { AmbassadorsTab } from "./admin-ambassadors";
@@ -172,6 +173,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         <AdminNav tab={tab} setTab={setTab} openReports={openReports} />
       </header>
       <div className="mx-auto max-w-5xl px-4 py-5">
+        <AdminFirstStats adminKey={adminKey} />
         {tab === "overview" && <Overview adminKey={adminKey} />}
         {tab === "heat" && <Heat adminKey={adminKey} />}
         {tab === "week" && <Week adminKey={adminKey} />}

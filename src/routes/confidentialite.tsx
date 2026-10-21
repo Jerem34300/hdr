@@ -303,7 +303,7 @@ function Privacy() {
       <ul>
         <li><strong>Supabase</strong> : base de données et fichiers, hébergés dans l'UE (Paris).</li>
         <li><strong>Netlify</strong> : hébergement du site.</li>
-        <li><strong>Stripe</strong> : paiements.</li>
+        <li><strong>Stripe</strong> : paiements passés (aucun nouveau paiement pendant le lancement ; données conservées pour les obligations comptables).</li>
         <li><strong>Cloudflare</strong> : contrôle anti-robot Turnstile à l'entrée.</li>
         <li>
           <strong>Esri (ArcGIS Online)</strong> : fonds de carte. Les tuiles passent par notre

@@ -1,3 +1,4 @@
+import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
 import { ProDashboard, demoDash } from "./pro-dashboard";
 import { useCallback, useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
@@ -73,7 +74,7 @@ function PriceButtons({ prices, payOk, onPick }: { prices: PriceRow[]; payOk: bo
         >
           <b className="block">{p.label}</b>
           <span className="text-signal">{euros(p.price_cents)}</span>
-          <span className="block text-[11px] text-muted">{busy === p.product ? "Redirection…" : payOk ? "Payer avec Stripe" : "Bientôt disponible"}</span>
+          <span className="block text-[11px] text-muted">{!PAYMENTS_ENABLED ? "Offert au lancement" : busy === p.product ? "Redirection…" : payOk ? "Payer avec Stripe" : "Bientôt disponible"}</span>
         </button>
       ))}
     </div>

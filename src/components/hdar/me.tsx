@@ -1,3 +1,4 @@
+import { FounderCard } from "./launch-offer";
 import { AmbNudge, ProfileAmb } from "./profile-card";
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { openIntro } from "./intro-video";
@@ -136,6 +137,7 @@ export function Me() {
       <ProSpaceCard />
       <ProfileAmb where="top" />
       <AmbNudge />
+      <FounderCard />
       <PremiumCard />
       <InviteCard />
       <RedeemCode />

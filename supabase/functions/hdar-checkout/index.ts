@@ -54,10 +54,13 @@ async function secret(env: string, name: string): Promise<string | null> {
   } catch { return null; }
 }
 
+// Paiements suspendus (offre de lancement FIRST). Remettre PAYMENTS_ENABLED=true pour rebrancher Stripe.
+const PAYMENTS_ENABLED = Deno.env.get("PAYMENTS_ENABLED") === "true";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const key = await secret("STRIPE_SECRET_KEY", "stripe_secret_key");
-  if (req.method === "GET") return json({ enabled: !!key });
+  if (req.method === "GET") return json({ enabled: PAYMENTS_ENABLED && !!key });
   if (!key) return json({ error: "not_configured", message: "Paiement bientôt disponible" }, 503);
   const auth = req.headers.get("authorization") ?? "";
   let body: { action?: string; product?: string; place_id?: string | null; back?: string };
@@ -67,6 +70,10 @@ Deno.serve(async (req) => {
     return json({ message: "Requête invalide" }, 400);
   }
   try {
+    // Le portail reste ouvert pour que les abonnés existants puissent résilier ; aucun nouvel achat.
+    if (!PAYMENTS_ENABLED && body.action !== "portal") {
+      return json({ error: "payments_disabled", message: "Offert pendant le lancement : entre le code FIRST 🎁" }, 403);
+    }
     if (body.action === "portal") {
       const customer = await rpc("hdar_my_stripe_customer", {}, auth);
       if (!customer) return json({ message: "Aucun abonnement trouvé" }, 404);

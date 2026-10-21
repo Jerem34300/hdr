@@ -108,11 +108,18 @@ function Terms() {
       </p>
       <h2>7. Lieux permanents</h2>
       <p>La couche « Lieux permanents » affiche des lieux publics et gratuits. Une partie provient d'OpenStreetMap (© OpenStreetMap contributors, licence ODbL). Les lieux proposés par les utilisateurs sont vérifiés avant publication. hdar. n'encourage aucune pratique illégale : la loi, le consentement et le respect des autres usagers s'appliquent partout.</p>
-      <h2>8. Services payants</h2>
+      <h2 id="lancement">Offre de lancement (code FIRST)</h2>
+      <ul>
+        <li><strong>Aucun paiement n'est actuellement proposé</strong> sur hdar. : aucun achat, abonnement ni pack ne peut être souscrit. Les clauses ci-dessous sur les services payants ne s'appliquent qu'en cas de réouverture des paiements, annoncée à l'avance.</li>
+        <li>Les <strong>5000 premiers profils</strong> qui entrent le code <strong>FIRST</strong> (une fois par profil) deviennent « Membre FIRST » et reçoivent gratuitement, <strong>à vie</strong> (tant que le service et leur profil existent) : tous les avantages hdar+, <strong>1 boost de profil d'1 h par 24 h</strong>, <strong>1 boost d'annonce Région de 24 h par 7 jours</strong> et un solde de cœurs <strong>porté à 100 chaque mois</strong> (sans cumul au-delà).</li>
+        <li>Les 5000 places sont <strong>réparties par région</strong> au prorata de la population (INSEE) : Île-de-France 908, Auvergne-Rhône-Alpes 603, Nouvelle-Aquitaine 451, Occitanie 451, Hauts-de-France 438, Grand Est 407, Provence-Alpes-Côte d'Azur 379, Pays de la Loire 288, Bretagne 252, Normandie 243, Bourgogne-Franche-Comté 203, Centre-Val de Loire 188, Outre-mer 163, Corse 26. La région est déterminée à partir de ta position approximative. Ces quotas sont indicatifs : une région complète continue de puiser dans les places nationales restantes, dans la limite de 5000 au total.</li>
+        <li>L'offre prend fin pour les nouveaux inscrits une fois les 5000 places attribuées, ou plus tôt sur décision de hdar. Les avantages déjà acquis restent. Ils sont personnels, non cessibles et sans valeur monétaire ; tout abus (comptes multiples, revente, spam de boosts) peut entraîner leur retrait. Supprimer son profil supprime le statut Membre FIRST, sans remise en jeu de la place.</li>
+      </ul>
+      <h2>8. Services payants (suspendus pendant le lancement)</h2>
       <ul>
         <li>
-          Boosts (profil ou lieu), abonnement <strong>hdar+</strong> et fiches partenaires sont
-          payés via Stripe. Les prix TTC sont affichés avant paiement.
+          Lorsque les paiements sont ouverts, boosts (profil ou lieu), abonnement <strong>hdar+</strong> et fiches partenaires sont
+          payés via un prestataire de paiement. Les prix TTC sont affichés avant paiement.
         </li>
         <li>
           hdar+ comprend : filtres de la carte (âge, H/F/X, envies, lieu, en ligne, avec photo), qui
@@ -137,7 +144,7 @@ function Terms() {
         <li>
           hdar+ et les fiches partenaires sont des abonnements à <strong>renouvellement
           automatique</strong> (semaine, mois… selon l'offre choisie). Ils sont résiliables à tout
-          moment via « Gérer mon abonnement » sur /premium ou /pro (portail Stripe) ; l'accès reste
+          moment via « Gérer mon abonnement » sur /premium ou /pro (portail du prestataire de paiement, ouvert aux abonnements existants) ; l'accès reste
           actif jusqu'à la fin de la période payée. Les factures y sont disponibles.
         </li>
       </ul>

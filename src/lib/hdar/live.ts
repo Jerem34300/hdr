@@ -12,6 +12,7 @@
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
 import { track } from "./track";
 import { deviceId } from "./device";
+import { PAYMENTS_ENABLED, showLaunchOffer } from "./payments";
 
 export type LivePin = {
   id: string;
@@ -857,6 +858,7 @@ async function checkoutCall(method: "GET" | "POST", body?: unknown) {
   return b;
 }
 export async function paymentsEnabled() {
+  if (!PAYMENTS_ENABLED) return true; // boutons actifs : ils ouvrent l'offre de lancement
   try {
     return !!(await checkoutCall("GET")).enabled;
   } catch {
@@ -864,6 +866,7 @@ export async function paymentsEnabled() {
   }
 }
 export async function startCheckout(product: string, placeId: string | null) {
+  if (!PAYMENTS_ENABLED) { showLaunchOffer(product, placeId); return; }
   const b = await checkoutCall("POST", { product, place_id: placeId });
   if (b.url) window.location.assign(b.url);
 }

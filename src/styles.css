@@ -294,3 +294,8 @@
 .ad-ticker-track { animation: hdar-ticker var(--ticker-dur, 40s) linear infinite; }
 .ad-ticker:hover .ad-ticker-track, .ad-ticker:focus-within .ad-ticker-track { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .ad-ticker-track { animation: none; } }
+
+/* Confettis fondateur (offre FIRST) */
+.confetti span { position: absolute; top: -20px; border-radius: 2px; opacity: .95; animation-name: hdar-confetti; animation-timing-function: linear; animation-iteration-count: 3; animation-fill-mode: both; }
+@keyframes hdar-confetti { 0% { transform: translate3d(0, -20px, 0) rotate(0deg); } 100% { transform: translate3d(40px, 110vh, 0) rotate(720deg); } }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } }

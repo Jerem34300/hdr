@@ -1,5 +1,7 @@
 import { toast } from "sonner";
 import { MapPrivacyToggle } from "./notify-settings";
+import { RegionTeaser, useFirstRegion } from "./launch-offer";
+function MapCityTeaser() { const c = useFirstRegion(); return <RegionTeaser c={c} className="mt-2 text-xs" />; }
 import { MapGiftButton } from "./growth";
 import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
@@ -666,6 +668,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             </button>
           </div>
           {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
+          {!onboardedMe && <MapCityTeaser />}
         </div>
       )}
       {nearest && nearestHidden && !finding && (

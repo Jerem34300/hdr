@@ -1,3 +1,4 @@
+import { useLaunchOffer } from "@/lib/hdar/payments";
 import { CardHead, glowInner, glowOuter } from "./profile-card";
 import { captureAmb, tryAmbAttach } from "./ambassador";
 import { GiftReveal } from "./gift-reveal";
@@ -150,6 +151,7 @@ export function RedeemCode() {
   const [open, setOpen] = useState(!!code);
   const [msg, setMsg] = useState<{ title: string; body: string } | null>(null);
   const go = async () => {
+    if (code.trim().toUpperCase() === "FIRST") { setOpen(false); useLaunchOffer.setState({ open: true, product: null, placeId: null }); return; }
     try { const r = await codeRedeem(code); setCode(""); setOpen(false); localStorage.removeItem("hdar-code"); void usePremium.getState().refresh(); setMsg(r); }
     catch (e) { toast(e instanceof Error ? e.message : "Code invalide"); }
   };

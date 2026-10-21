@@ -1,5 +1,6 @@
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
 import { startCheckout } from "./live";
+import { PAYMENTS_ENABLED } from "./payments";
 
 async function call<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   const token = await accessToken();
@@ -26,6 +27,7 @@ export const setWaiver = (v: boolean) => { waiverOk = v; subs.forEach((f) => f(v
 export const onWaiver = (f: (v: boolean) => void) => { subs.add(f); return () => { subs.delete(f); }; };
 /** Checkout gardé par la renonciation au droit de rétractation (L221-28). */
 export async function checkoutWithWaiver(product: string, placeId: string | null) {
+  if (!PAYMENTS_ENABLED) return startCheckout(product, placeId); // offre de lancement, pas de paiement
   if (!waiverOk) throw new Error("Coche d'abord la case « exécution immédiate » sous les prix.");
   return startCheckout(product, placeId);
 }
