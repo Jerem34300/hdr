@@ -183,7 +183,7 @@ function Privacy() {
         <li>
           Tu peux lier un email à ton profil (« Protège ton profil ») pour le retrouver si tu
           effaces ton téléphone. C'est facultatif. L'email sert uniquement à t'envoyer un code à
-          6 chiffres de connexion ; il n'est <strong>jamais affiché</strong> aux autres ni utilisé
+          quelques chiffres de connexion ; il n'est <strong>jamais affiché</strong> aux autres ni utilisé
           pour de la publicité. Il est géré par notre prestataire d'authentification (Supabase, UE)
           et supprimé avec ton compte.
         </li>
