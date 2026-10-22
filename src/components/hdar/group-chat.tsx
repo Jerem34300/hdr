@@ -447,8 +447,8 @@ export function GroupChatDemo() {
   const lines = [
     mk(1, "7f3a", "Lucas34", "Quelqu'un sort ce soir vers Comédie ?", 1500),
     mk(2, "b21c", "Nina", "Moi peut-être, plutôt vers 22 h", 1490),
-    mk(3, "me", "Toi", "Je suis chaud 🔥", 30),
-    mk(4, "7f3a", "Lucas34", "Top ! On se retrouve où ?", 12, { replyTo: "d3", reply: { pseudo: "Toi", body: "Je suis chaud 🔥" } }),
+    mk(3, "me", "Toi", "Partant pour un verre 🔥", 30),
+    mk(4, "7f3a", "Lucas34", "Top ! On se retrouve où ?", 12, { replyTo: "d3", reply: { pseudo: "Toi", body: "Partant pour un verre 🔥" } }),
     mk(5, "7f3a", "Lucas34", "Je connais un bar sympa rue de l'Université", 11),
     mk(6, "c90e", "Sam", "Je viens aussi si ça vous dérange pas 😊", 3),
   ];

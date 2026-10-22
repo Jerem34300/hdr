@@ -1,4 +1,3 @@
-import { isStoreApp } from "@/lib/store-app";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -10,7 +9,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { useAmAdmin } from "@/lib/hdar/admin-mode";
 
 export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color: string }> = {
-  cruising: { label: "Lieu de rencontre", icon: "🌲", color: "#34d399" },
+  cruising: { label: "Lieu public", icon: "🌲", color: "#34d399" },
   beach: { label: "Plage naturiste", icon: "🏖️", color: "#38bdf8" },
   park: { label: "Parc / jardin", icon: "🌳", color: "#a3e635" },
   aire: { label: "Aire / parking", icon: "🅿️", color: "#fbbf24" },
@@ -25,7 +24,7 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   club: { label: "Club partenaire", icon: "🪩", color: "#f472b6" },
   sauna: { label: "Sauna partenaire", icon: "♨️", color: "#f472b6" },
 };
-const PROPOSABLE: PlaceKind[] = (["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"] as PlaceKind[]).filter((k) => !(k === "cruising" && isStoreApp()));
+const PROPOSABLE: PlaceKind[] = ["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"];
 const LAYER_KEY = "hdar-places-layer";
 const TOILETS_KEY = "hdar-toilets-layer";
 export function toiletsLayerOn() {
@@ -84,7 +83,7 @@ export function usePlaces(on: boolean) {
       stop = true;
     };
   }, [on]);
-  return on ? (isStoreApp() ? rows.filter((r) => r.kind !== "cruising") : rows) : [];
+  return on ? rows : [];
 }
 
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {
