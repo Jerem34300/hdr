@@ -1,3 +1,4 @@
+import { isStoreApp } from "@/lib/store-app";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -24,7 +25,7 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   club: { label: "Club partenaire", icon: "🪩", color: "#f472b6" },
   sauna: { label: "Sauna partenaire", icon: "♨️", color: "#f472b6" },
 };
-const PROPOSABLE: PlaceKind[] = ["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"];
+const PROPOSABLE: PlaceKind[] = (["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"] as PlaceKind[]).filter((k) => !(k === "cruising" && isStoreApp()));
 const LAYER_KEY = "hdar-places-layer";
 const TOILETS_KEY = "hdar-toilets-layer";
 export function toiletsLayerOn() {
@@ -83,7 +84,7 @@ export function usePlaces(on: boolean) {
       stop = true;
     };
   }, [on]);
-  return on ? rows : [];
+  return on ? (isStoreApp() ? rows.filter((r) => r.kind !== "cruising") : rows) : [];
 }
 
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {

@@ -1,7 +1,7 @@
 // hdar service worker: makes the web app installable and shows a page offline.
 // Never caches API traffic (Supabase) or private data.
-const CACHE = "hdar-v5";
-const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/badge-96.png", "/favicon.svg"];
+const CACHE = "hdar-v6";
+const SHELL = ["/", "/offline.html", "/manifest.webmanifest", "/icon-192.png", "/badge-96.png", "/favicon.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -17,7 +17,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (req.mode === "navigate") {
-    e.respondWith(fetch(req).catch(() => caches.match("/")));
+    e.respondWith(fetch(req).catch(() => caches.match("/offline.html")));
     return;
   }
   if (url.pathname.startsWith("/assets/") || /\.(png|svg|woff2?)$/.test(url.pathname)) {

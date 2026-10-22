@@ -37,5 +37,37 @@
   ],
   "display_override": [
     "standalone"
+  ],
+  "description": "Sorties et rencontres autour de toi : carte, salons, annonces. Anonyme, 18+.",
+  "categories": [
+    "social",
+    "lifestyle"
+  ],
+  "dir": "ltr",
+  "screenshots": [
+    {
+      "src": "/store/screen-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/store/screen-2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/store/screen-3.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/store/screen-4.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
   ]
 }
