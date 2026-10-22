@@ -47,10 +47,10 @@ export function ProtectProfileCard() {
         </div>
       ) : (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-muted">Code à 6 chiffres envoyé à <b className="text-ink">{email}</b></p>
+          <p className="text-xs text-muted">Code envoyé à <b className="text-ink">{email}</b></p>
           <div className="flex gap-2">
-            <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
-            <button type="button" disabled={busy || code.length !== 6} onClick={() => void run(async () => { await linkEmailVerify(email, code); if (news) await newsSet(true).catch(() => undefined); setState({ email, pending: null }); toast("Profil protégé ✅"); })}
+            <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
+            <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(async () => { await linkEmailVerify(email, code); if (news) await newsSet(true).catch(() => undefined); setState({ email, pending: null }); toast("Profil protégé ✅"); })}
               className="h-11 shrink-0 rounded-full bg-[#FA6F6C] px-4 text-sm font-bold text-night disabled:opacity-40">Vérifier</button>
           </div>
           <button type="button" className="text-xs text-muted underline" onClick={() => { setStep("email"); setCode(""); }}>Changer d'email</button>
@@ -61,7 +61,7 @@ export function ProtectProfileCard() {
   );
 }
 
-/** « Déjà un profil ? Le retrouver » — par email + code à 6 chiffres. */
+/** « Déjà un profil ? Le retrouver » — par email + code reçu par mail. */
 export function RecoverLink({ captchaToken, onUsed }: { captchaToken?: string; onUsed?: () => void }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -82,8 +82,8 @@ export function RecoverLink({ captchaToken, onUsed }: { captchaToken?: string; o
         </>
       ) : (
         <>
-          <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
-          <button type="button" disabled={busy || code.length !== 6} onClick={() => void run(() => recoverVerify(email, code))}
+          <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
+          <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(() => recoverVerify(email, code))}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Retrouver mon profil"}</button>
         </>
       )}
