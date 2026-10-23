@@ -7,6 +7,8 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { codeRedeem, myRef, refClaim, shareReward, surprise } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
+import { attachSourceRef } from "@/lib/hdar/source-ref";
+import { useHdar } from "@/lib/hdar/store";
 
 const REF_KEY = "hdar-ref";
 /** Mémorise ?r=CODE à l'arrivée. */
@@ -190,11 +192,15 @@ export function SurprisePopup() {
   useEffect(() => {
     captureRef(); captureAmb();
     const t = setTimeout(() => {
-      void tryRefClaim(); void tryAmbAttach();
+      void tryRefClaim(); void tryAmbAttach(); void attachSourceRef();
       if (usePremium.getState().premium) return;
       void surprise().then((r) => { if (r) { setS(r); void usePremium.getState().refresh(); } }).catch(() => undefined);
     }, 9000);
-    return () => clearTimeout(t);
+    // Profil créé pendant la visite : rattache la provenance ?ref= quelques secondes après.
+    const off = useHdar.subscribe((st, prev) => {
+      if (st.me.onboarded && !prev.me.onboarded) window.setTimeout(() => void attachSourceRef(), 5000);
+    });
+    return () => { clearTimeout(t); off(); };
   }, []);
   const demo = import.meta.env.DEV && typeof location !== "undefined" ? new URLSearchParams(location.search).get("reveal") : null;
   if (demo) return <GiftPopup title="Cadeau de hdar 🎁" body={demo === "premium" ? "Tu reçois 7 jours de hdar+." : demo === "boost" ? "Tu reçois un boost de 24 h." : "Tu reçois 50 cœurs."} nudge={demo === "premium"} onClose={() => undefined} />;

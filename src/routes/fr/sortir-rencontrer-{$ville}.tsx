@@ -12,7 +12,7 @@ export const Route = createFileRoute("/fr/sortir-rencontrer-{$ville}")({
       local?.description ??
       `Sorties et rencontres à ${city.name}, pour tout le monde : vois sur la carte qui est connecté et où sortir autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`;
     const title = `Sortir et rencontrer à ${city.name} : qui est autour, en direct — hdar.`;
-    const og = `${SITE_URL}${local?.og ?? "/og.jpg"}`;
+    const og = `${SITE_URL}${local?.og ?? "/og.jpg?v=discret2"}`;
     return {
       meta: [
         { title },

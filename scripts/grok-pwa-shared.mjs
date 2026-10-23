@@ -260,8 +260,11 @@ export function readOgSite(cwd = process.cwd()) {
 
 /** Public path of an on-disk share card, or "" if neither file exists. */
 export function ogCardPublicPath(cwd = process.cwd()) {
-  if (existsSync(join(cwd, "public/og.jpg"))) return "/og.jpg";
-  if (existsSync(join(cwd, "public/og.png"))) return "/og.png";
+  // site.json "imageVersion" → "/og.jpg?v=…" pour forcer Telegram, X, Facebook à recharger l'image.
+  const v = String(readOgSite(cwd).imageVersion ?? "").trim();
+  const q = /^[\w.-]{1,20}$/.test(v) ? `?v=${v}` : "";
+  if (existsSync(join(cwd, "public/og.jpg"))) return "/og.jpg" + q;
+  if (existsSync(join(cwd, "public/og.png"))) return "/og.png" + q;
   return "";
 }
 

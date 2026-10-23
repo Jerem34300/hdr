@@ -8,7 +8,7 @@ export const hash = (s: string) => { let h = 2166136261; for (const ch of s) h =
 export const pick = <T,>(seed: string, arr: T[]) => arr[hash(seed) % arr.length];
 
 export function seoHead(o: { title: string; desc: string; path: string; og?: string; noindex?: boolean }) {
-  const url = SITE_URL + o.path, og = SITE_URL + (o.og ?? "/og.jpg");
+  const url = SITE_URL + o.path, og = SITE_URL + (o.og ?? "/og.jpg?v=discret2");
   return {
     meta: [
       { title: o.title }, { name: "description", content: o.desc }, { name: "page-own-og", content: "1" },

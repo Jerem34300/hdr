@@ -3,12 +3,16 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { useEffect } from "react";
 import { rememberLanding } from "@/lib/hdar/track";
+import { captureSourceRef } from "@/lib/hdar/source-ref";
 import { FounderCelebration, LaunchOfferSheet, WelcomeFirst } from "@/components/hdar/launch-offer";
 import appCss from "../styles.css?url";
 
 /** Mémorise la page d'arrivée et la provenance (statistique anonyme, admin « Visiteurs »). */
 function LandingMemo() {
-  useEffect(() => rememberLanding(), []);
+  useEffect(() => {
+    rememberLanding();
+    captureSourceRef();
+  }, []);
   return null;
 }
 

@@ -1457,3 +1457,8 @@ export function visitorPing(lat: number, lng: number) {
 }
 export const hideOfflineGet = () => rpc<boolean>("hdar_map_hide_offline_get", {});
 export const hideOfflineSet = (on: boolean) => rpc("hdar_map_hide_offline_set", { p_on: on });
+
+// Provenance des liens partenaires ?ref= (v77) -------------------------------------------------
+export type RefRow = { ref: string; visits: number; profiles: number; conv: number | null };
+export type AdminRefs = { days: number; total: RefRow[]; daily: (RefRow & { day: string })[] };
+export const adminRefs = (key: string, days: number) => rpc<AdminRefs>("hdar_admin_refs", { p_key: key, p_days: days });

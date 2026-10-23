@@ -1,5 +1,6 @@
 {
   "title": "hdar.",
-  "description": "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+. Carte en direct, lieux, chat du quartier, messages et vidéo.",
-  "card": "custom"
+  "description": "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+. Carte en direct, lieux, chat du quartier, messages et vidéo.",
+  "card": "custom",
+  "imageVersion": "discret2"
 }

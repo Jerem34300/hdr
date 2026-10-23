@@ -129,7 +129,7 @@ test("a baked site.image is treated as a custom card", () => {
     cwd: mkdtempSync(join(tmpdir(), "grok-og-image-only-")),
     site: { title: "Wild Race", image: "/og.jpg" },
   });
-  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg(\?v=[\w.-]+)?"/);
   assert.doesNotMatch(out, /og\.grok\.me/);
 });
 
@@ -142,7 +142,7 @@ test("baked identity does not need a workspace filesystem", () => {
   });
   assert.match(out, /property="og:title" content="Pixel Nova"/);
   assert.match(out, /property="og:type" content="x:game"/);
-  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg(\?v=[\w.-]+)?"/);
   assert.doesNotMatch(out, /og\.grok\.me/);
 });
 
@@ -157,7 +157,7 @@ test("a public card file wins over a baked site without card=custom", () => {
     cwd: root,
     site: {},
   });
-  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg(\?v=[\w.-]+)?"/);
   assert.doesNotMatch(out, /og\.grok\.me/);
 });
 
@@ -267,7 +267,7 @@ test("published VITE_PUBLIC_HOSTNAME wins over request Host for og:image", () =>
     });
     assert.match(
       vercelHost,
-      /property="og:image" content="https:\/\/plum-plaza-reef-dream\.grok\.me\/og\.jpg"/,
+      /property="og:image" content="https:\/\/plum-plaza-reef-dream\.grok\.me\/og\.jpg(\?v=[\w.-]+)?"/,
     );
     assert.doesNotMatch(vercelHost, /vercel\.app/);
 
@@ -277,7 +277,7 @@ test("published VITE_PUBLIC_HOSTNAME wins over request Host for og:image", () =>
     });
     assert.match(
       otherPublicHost,
-      /property="og:image" content="https:\/\/plum-plaza-reef-dream\.grok\.me\/og\.jpg"/,
+      /property="og:image" content="https:\/\/plum-plaza-reef-dream\.grok\.me\/og\.jpg(\?v=[\w.-]+)?"/,
     );
     assert.doesNotMatch(otherPublicHost, /custom\.example\.com/);
   } finally {
@@ -319,7 +319,7 @@ test("emits og:image for a public host and prefers a custom card", () => {
     host: "wild-race.grok.me",
     site: { title: "Wild Race", card: "custom", type: "x:game" },
   });
-  assert.match(custom, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(custom, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg(\?v=[\w.-]+)?"/);
   assert.match(custom, /property="og:type" content="x:game"/);
 });
 

@@ -20,8 +20,7 @@ import {
   type AdminSalonMsg,
   type AdminVisitors,
   type Breakdown,
-  type VisitorRow,
-} from "@/lib/hdar/live";
+  type VisitorRow, adminRefs, type AdminRefs, type RefRow } from "@/lib/hdar/live";
 
 function useLoad<T>(load: () => Promise<T>, everyMs = 0) {
   const [data, setData] = useState<T | null>(null);
@@ -685,6 +684,71 @@ function AdminThread({ adminKey, a, b }: { adminKey: string; a: string; b: strin
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Provenance : visites arrivées par un lien ?ref=, profils créés et conversion, au total et par jour. */
+export function RefsTab({ adminKey }: { adminKey: string }) {
+  const [days, setDays] = useState(30);
+  const load = useCallback(() => adminRefs(adminKey, days), [adminKey, days]);
+  const { data, error } = useLoad<AdminRefs>(load, 60_000);
+  const conv = (r: RefRow) => (r.conv == null ? "—" : `${r.conv} %`);
+  const visits = (data?.total ?? []).reduce((n, r) => n + r.visits, 0);
+  const profiles = (data?.total ?? []).reduce((n, r) => n + r.profiles, 0);
+  return (
+    <div className="space-y-4">
+      <Seg value={days} onChange={setDays} options={[[1, "Aujourd'hui"], [7, "7 j"], [30, "30 j"], [90, "90 j"]]} />
+      <ErrorNote error={error} />
+      <p className="text-xs text-muted">
+        Liens du type hdar.chat/?ref=next1 (compatible avec &code=FIRST). 1 visite = 1 appareil arrivé par le lien, au plus 1 fois par jour.
+        Aucune IP ni identifiant d'appareil n'est enregistré ; un profil est rattaché à la 1re ref vue dans les 30 jours.
+      </p>
+      {data && (
+        <>
+          <div className="grid grid-cols-3 gap-2">
+            <Tile label="Visites" value={visits} />
+            <Tile label="Profils créés" value={profiles} />
+            <Tile label="Refs" value={data.total.length} hint={visits ? `${Math.round((1000 * profiles) / visits) / 10} % conversion` : undefined} />
+          </div>
+          <RefTable title="Total par ref" rows={data.total} conv={conv} />
+          <RefTable title="Par jour" rows={data.daily} conv={conv} day />
+        </>
+      )}
+    </div>
+  );
+}
+
+function RefTable({ title, rows, conv, day }: { title: string; rows: (RefRow & { day?: string })[]; conv: (r: RefRow) => string; day?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-4">
+      <h3 className="mb-2 font-display font-bold">{title}</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted">Aucune visite par lien ?ref= sur la période.</p>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="text-left text-xs text-muted">
+            <tr>
+              {day && <th className="py-1">Jour</th>}
+              <th className="py-1">Ref</th>
+              <th className="py-1 text-right">Visites</th>
+              <th className="py-1 text-right">Profils</th>
+              <th className="py-1 text-right">Conv.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={(r.day ?? "") + r.ref} className="border-t border-line/60">
+                {day && <td className="py-1.5 text-muted">{r.day ? new Date(`${r.day}T12:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : ""}</td>}
+                <td className="py-1.5 font-bold">{r.ref}</td>
+                <td className="py-1.5 text-right">{r.visits}</td>
+                <td className="py-1.5 text-right">{r.profiles}</td>
+                <td className="py-1.5 text-right">{conv(r)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

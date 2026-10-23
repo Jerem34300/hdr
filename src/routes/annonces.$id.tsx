@@ -13,7 +13,7 @@ export const Route = createFileRoute("/annonces/$id")({
       meta: [
         { title: `${title} — hdar.` }, { name: "robots", content: "noindex, nofollow, noarchive" }, { name: "description", content: desc },
         { name: "page-own-og", content: "1" }, { property: "og:title", content: title }, { property: "og:description", content: desc },
-        { property: "og:image", content: `${SITE_URL}/og.jpg` }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+        { property: "og:image", content: `${SITE_URL}/og.jpg?v=discret2` }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
       ],
     };
   },

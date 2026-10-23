@@ -12,11 +12,11 @@ export const Route = createFileRoute("/")({
         ? [
             { property: "og:title", content: "Viens sur hdar. : 3 jours hdar+ offerts 🎁" },
             { property: "og:description", content: "La carte des sorties et rencontres en direct, pour tout le monde, 100 % discret. Ton ami t'invite : 3 jours de hdar+ offerts pour vous deux." },
-            { property: "og:image", content: `${SITE_URL}/og-invite.png` },
+            { property: "og:image", content: `${SITE_URL}/og-invite.png?v=discret2` },
             { property: "og:image:width", content: "1200" },
             { property: "og:image:height", content: "630" },
             { name: "twitter:card", content: "summary_large_image" },
-            { name: "twitter:image", content: `${SITE_URL}/og-invite.png` },
+            { name: "twitter:image", content: `${SITE_URL}/og-invite.png?v=discret2` },
           ]
         : []),
       { title: "hdar. — Sorties et rencontres autour de toi, pour tout le monde" },
