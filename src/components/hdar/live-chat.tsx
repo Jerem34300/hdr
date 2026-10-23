@@ -8,6 +8,10 @@ import {
   Mic,
   MoreVertical,
   Send,
+  Copy,
+  CornerUpLeft,
+  Pencil,
+  Smile,
   Square,
   Video,
 } from "lucide-react";
@@ -24,7 +28,12 @@ import {
   sendLocation,
   sendMedia,
   type LiveMsg,
+  type Reaction,
+  canEditMsg,
+  editMessage,
 } from "@/lib/hdar/live";
+import { LongPress, ReactionBar, ReactionChips, ReplyDraft, ReplyQuote, sendReaction } from "./reactions";
+import { Row } from "./group-chat";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
 import { askConfirm } from "@/lib/hdar/confirm";
@@ -46,7 +55,10 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string }) {
+const msgPreview = (m: LiveMsg) =>
+  m.kind === "image" ? "📷 Photo" : m.kind === "video" ? "🎥 Vidéo" : m.kind === "audio" ? "🎤 Vocal" : m.kind === "location" ? "📍 Position" : m.body;
+
+export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: string; /** Aperçu de dev : messages fixes, pas de serveur. */ demo?: LiveMsg[] }) {
   const region = useRegion(userId);
   const onMap = useMapFocus((s) => !!s.pins[userId]);
   const favs = useFavorites();
@@ -61,7 +73,51 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   const [menu, setMenu] = useState(false);
   const [photo, setPhoto] = useState("");
   const [text, setText] = useState("");
-  const [msgs, setMsgs] = useState<LiveMsg[]>([]);
+  const [msgs, setMsgs] = useState<LiveMsg[]>(demo ?? []);
+  const [replyTo, setReplyTo] = useState<LiveMsg | null>(null);
+  const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  // Réactions affichées tout de suite, avant le prochain rafraîchissement du fil.
+  const [over, setOver] = useState<Record<string, Reaction[]>>({});
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<LiveMsg | null>(null);
+  useEffect(() => {
+    setOver({});
+    setEdits({});
+  }, [msgs]);
+  const bodyOf = (m: LiveMsg) => edits[m.id] ?? m.body;
+  const startEdit = (m: LiveMsg) => {
+    setMsgMenu(null);
+    setReplyTo(null);
+    setEditing(m);
+    setText(bodyOf(m));
+    window.setTimeout(() => input.current?.focus(), 50);
+  };
+  const reactionsOf = (m: LiveMsg) => over[m.id] ?? m.reactions;
+  const react = (m: LiveMsg, emoji: string) => {
+    setMsgMenu(null);
+    if (!onboarded) return openGate();
+    sendReaction("dm", m.id, emoji, reactionsOf(m), (l) => setOver((o) => ({ ...o, [m.id]: l })));
+  };
+  const reply = (m: LiveMsg) => {
+    setMsgMenu(null);
+    if (!onboarded) return openGate();
+    if (editing) {
+      setEditing(null);
+      setText("");
+    }
+    setReplyTo(m);
+    window.setTimeout(() => input.current?.focus(), 50);
+  };
+  const jumpTo = (id: string | null | undefined) => {
+    if (!id) return;
+    const el = document.getElementById(`dm-${id}`);
+    if (!el) return toast("Ce message n'est plus disponible");
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    setFlash(id);
+    window.setTimeout(() => setFlash((f) => (f === id ? null : f)), 1400);
+  };
   const lastMine = msgs.map((m) => m.mine).lastIndexOf(true);
   const [busy, setBusy] = useState(false);
   const [rec, setRec] = useState<number | null>(null);
@@ -93,6 +149,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   }
 
   useEffect(() => {
+    if (demo) return;
     let stop = false;
     let timer = 0;
     let lastKey = "";
@@ -144,6 +201,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
   }, [userId]);
 
   useEffect(() => {
+    if (demo) return;
     let alive = true;
     getProfile(deviceId(), userId)
       .then((p) => alive && p?.photo && setPhoto(p.photo))
@@ -357,25 +415,48 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
           <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>
         )}
         {msgs.map((m, i) => (
-          <div key={m.id} className={m.mine ? "flex flex-col items-end" : "flex justify-start"}>
-            <div
-              className={
-                "max-w-[80%] rounded-2xl px-3 py-2 text-sm " +
-                (m.mine ? "bg-signal text-night" : "bg-surface")
-              }
-            >
-              {m.kind === "text" ? (
-                <AdQuoteBody body={m.body} mine={m.mine} />
-              ) : m.kind === "location" ? (
-                <LocationBubble msg={m} />
-              ) : (
-                <LiveMedia msg={m} />
+          <Row key={m.id} m={m} onSwipe={() => reply(m)}>
+            <div id={`dm-${m.id}`} className={m.mine ? "flex flex-col items-end" : "flex flex-col items-start"}>
+              <div className={"group flex max-w-full items-center gap-1 " + (m.mine ? "flex-row-reverse" : "")}>
+                <LongPress
+                  onLong={() => setMsgMenu(m)}
+                  className={
+                    "max-w-[80%] rounded-2xl px-3 py-2 text-sm select-none transition-shadow md:select-text " +
+                    (m.mine ? "bg-signal text-night" : "bg-surface") +
+                    (flash === m.id ? " ring-2 ring-amber-300" : "")
+                  }
+                >
+                  {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
+                  {m.kind === "text" ? (
+                    <AdQuoteBody body={bodyOf(m)} mine={m.mine} />
+                  ) : m.kind === "location" ? (
+                    <LocationBubble msg={m} />
+                  ) : demo ? (
+                    <p>{msgPreview(m)}</p>
+                  ) : (
+                    <LiveMedia msg={m} />
+                  )}
+                  {(m.editedAt || edits[m.id] !== undefined) && (
+                    <span className={"mt-0.5 block text-right text-[11px] " + (m.mine ? "text-night/60" : "text-muted")}>modifié</span>
+                  )}
+                </LongPress>
+                <button
+                  type="button"
+                  aria-label="Réagir ou répondre"
+                  onClick={() => setMsgMenu(m)}
+                  className="hidden size-8 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/10 md:flex"
+                >
+                  <Smile className="size-4" />
+                </button>
+              </div>
+              <div className="mt-0.5">
+                <ReactionChips list={reactionsOf(m)} mine={m.mine} onToggle={(e) => react(m, e)} />
+              </div>
+              {m.mine && i === lastMine && seenAt !== null && seenAt >= pgTime(m.at) && (
+                <p className="mt-0.5 text-[11px] text-muted">Vu</p>
               )}
             </div>
-            {m.mine && i === lastMine && seenAt !== null && seenAt >= pgTime(m.at) && (
-              <p className="mt-0.5 text-[11px] text-muted">Vu</p>
-            )}
-          </div>
+          </Row>
         ))}
         <div ref={end} />
       </div>
@@ -385,6 +466,67 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
         </p>
       )}
       {busy && rec === null && <p className="px-4 pb-2 text-xs text-muted">Envoi…</p>}
+      {msgMenu && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={() => setMsgMenu(null)}>
+          <div className="dock w-full max-w-md rounded-t-3xl border border-line bg-night pt-2" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" />
+            <div className="mb-2">
+              <ReactionBar list={reactionsOf(msgMenu)} onPick={(e) => react(msgMenu, e)} />
+            </div>
+            <div className="mx-4 mb-2 rounded-2xl bg-surface px-3 py-2 text-sm">
+              <span className="block text-xs font-bold text-muted">{msgMenu.mine ? "Toi" : pseudo}</span>
+              <span className="line-clamp-3 text-muted">{msgPreview(msgMenu)}</span>
+            </div>
+            <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => reply(msgMenu)}>
+              <CornerUpLeft className="size-5" /> Répondre
+            </button>
+            {canEditMsg(msgMenu.mine, msgMenu.kind, pgTime(msgMenu.at)) && (
+              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => startEdit(msgMenu)}>
+                <Pencil className="size-5" /> Modifier
+              </button>
+            )}
+            {msgMenu.kind === "text" && (
+              <button
+                type="button"
+                className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(msgMenu.body).then(() => toast("Copié"));
+                  setMsgMenu(null);
+                }}
+              >
+                <Copy className="size-5" /> Copier
+              </button>
+            )}
+            <button type="button" className="flex h-12 w-full items-center justify-center px-5 text-[15px] text-muted active:bg-white/5" onClick={() => setMsgMenu(null)}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+      {editing && onboarded && (
+        <div className="border-t border-line px-3 pt-2">
+          <ReplyDraft
+            edit
+            title="Modifier le message"
+            text={bodyOf(editing)}
+            onJump={() => jumpTo(editing.id)}
+            onCancel={() => {
+              setEditing(null);
+              setText("");
+            }}
+          />
+        </div>
+      )}
+      {replyTo && onboarded && (
+        <div className="border-t border-line px-3 pt-2">
+          <ReplyDraft
+            title={`Répondre à ${replyTo.mine ? "toi" : pseudo}`}
+            text={msgPreview(replyTo)}
+            onJump={() => jumpTo(replyTo.id)}
+            onCancel={() => setReplyTo(null)}
+          />
+        </div>
+      )}
       {!onboarded ? (
         <div className="dock border-t border-line px-4 pt-3 text-center">
           <p className="text-sm text-muted">
@@ -406,11 +548,34 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
             const body = text.trim();
             if (!body) return;
             setText("");
-            void sendLive({ data: { self: deviceId(), to: userId, body } })
+            if (editing) {
+              const m = editing;
+              setEditing(null);
+              if (body === bodyOf(m) || demo) {
+                if (demo) setEdits((e) => ({ ...e, [m.id]: body }));
+                return;
+              }
+              setEdits((e) => ({ ...e, [m.id]: body }));
+              void editMessage("dm", m.id, body)
+                .then(refresh)
+                .catch((err: unknown) => {
+                  setEdits((e) => {
+                    const { [m.id]: _drop, ...rest } = e;
+                    return rest;
+                  });
+                  toast(err instanceof Error ? err.message : "Modification impossible");
+                });
+              return;
+            }
+            const r = replyTo;
+            setReplyTo(null);
+            if (demo) return;
+            void sendLive({ data: { self: deviceId(), to: userId, body, replyTo: r?.id ?? null } })
               .then(refresh)
               // Keep the draft so a failed send (network, flood guard) isn't lost.
               .catch((err) => {
                 setText((t) => t || body);
+                setReplyTo(r);
                 toast(err instanceof Error ? err.message : "Message non envoyé");
               });
           }}
@@ -433,6 +598,7 @@ export function LiveChat({ userId, pseudo }: { userId: string; pseudo: string })
             {rec !== null ? <Square className="size-4" /> : <Mic className="size-5" />}
           </button>
           <input
+            ref={input}
             className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none"
             value={text}
             maxLength={500}
@@ -559,5 +725,22 @@ function AdQuoteBody({ body, mine }: { body: string; mine: boolean }) {
       </button>
       <p className="break-words whitespace-pre-wrap">{q.rest}</p>
     </>
+  );
+}
+
+/** Aperçu de dev uniquement (captures d'écran) : conversation privée d'exemple. */
+export function LiveChatDemo() {
+  const at = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+  const msgs: LiveMsg[] = [
+    { id: "m1", mine: false, body: "Salut ! Tu sors ce soir ?", at: at(40), kind: "text", duration: null },
+    { id: "m2", mine: true, body: "Oui, je pensais aller vers la Comédie 🍻", at: at(38), kind: "text", duration: null, reactions: [{ e: "🔥", n: 1, mine: false }] },
+    { id: "m3", mine: false, body: "Top, je connais un bar sympa rue de l'Université", at: at(35), kind: "text", duration: null },
+    { id: "m4", mine: true, body: "Carrément, on dit 22 h ?", at: at(6), editedAt: at(5), kind: "text", duration: null, replyTo: "m3", reply: { pseudo: "Lucas34", body: "Top, je connais un bar sympa rue de l'Université" } },
+    { id: "m5", mine: false, body: "Parfait 😄 à tout à l'heure", at: at(4), kind: "text", duration: null, reactions: [{ e: "❤️", n: 1, mine: true }, { e: "👍", n: 1, mine: true }] },
+  ];
+  return (
+    <div className="flex h-dvh flex-col bg-night text-ink">
+      <LiveChat userId="7f3a0000-0000-4000-8000-000000000000" pseudo="Lucas34" demo={msgs} />
+    </div>
   );
 }

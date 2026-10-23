@@ -15,6 +15,7 @@ import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth"
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverLink } from "./recover";
 import { GroupChatDemo } from "./group-chat";
+import { LiveChatDemo } from "./live-chat";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
@@ -212,6 +213,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
   if (location.search.includes("groupchat")) return <GroupChatDemo />;
+  if (location.search.includes("dmchat")) return <LiveChatDemo />;
   if (location.search.includes("salonrows")) {
     const iso = (m: number) => new Date(Date.now() - m * 60000).toISOString();
     const base = { description: null, official: true, mine: false, last_at: iso(2), recent: 12, people: 4 };

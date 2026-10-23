@@ -30,7 +30,33 @@ export type LiveMsg = {
   at: string;
   kind: "text" | "image" | "audio" | "location" | "video";
   duration: number | null;
+  replyTo?: string | null;
+  reply?: { pseudo: string; body: string } | null;
+  reactions?: Reaction[];
+  editedAt?: string | null;
 };
+
+/** Un message se modifie pendant 15 min après l'envoi (texte seulement, v76). */
+export const EDIT_WINDOW_MS = 15 * 60_000;
+export const canEditMsg = (mine: boolean, kind: string, atMs: number) => mine && kind === "text" && Date.now() - atMs < EDIT_WINDOW_MS;
+export const editMessage = (scope: "dm" | "salon" | "area", id: string, body: string) =>
+  rpc<{ body: string; edited_at: string }>("hdar_edit_message", { p_scope: scope, p_id: id, p_body: body });
+
+/** Réaction emoji agrégée d'un message (v76). */
+export type Reaction = { e: string; n: number; mine: boolean };
+export const REACTIONS = ["❤️", "😂", "🔥", "👍", "😮", "😢"] as const;
+export type ReactScope = "dm" | "salon" | "area";
+/** Ajoute ou retire (2e appui) ma réaction ; renvoie les réactions à jour. */
+export const reactTo = (scope: ReactScope, id: string, emoji: string) =>
+  rpc<Reaction[]>("hdar_react", { p_scope: scope, p_id: id, p_emoji: emoji });
+/** Applique localement un appui (affichage immédiat avant la réponse du serveur). */
+export function toggleReaction(list: Reaction[] | undefined, emoji: string): Reaction[] {
+  const cur = list ?? [];
+  const hit = cur.find((r) => r.e === emoji);
+  if (!hit) return [...cur, { e: emoji, n: 1, mine: true }];
+  if (hit.mine) return cur.flatMap((r) => (r.e !== emoji ? [r] : r.n > 1 ? [{ ...r, n: r.n - 1, mine: false }] : []));
+  return cur.map((r) => (r.e === emoji ? { ...r, n: r.n + 1, mine: true } : r));
+}
 
 export type SignalKind = "offer" | "answer" | "hangup";
 export type SignalRow = {
@@ -97,6 +123,11 @@ export function pgTime(v: string): number {
   return Number.isFinite(ms) ? ms : Date.now();
 }
 
+/** Fonction SQL absente (base pas encore à jour) : on retombe sur l'ancienne. */
+function missingFn(e: unknown) {
+  return e instanceof Error && /could not find the function|schema cache/i.test(e.message);
+}
+
 function selfId(value: string) {
   const id = String(value || "")
     .trim()
@@ -156,6 +187,11 @@ export async function listLive({ data }: { data: string }): Promise<LivePin[]> {
 
 // Private chat -------------------------------------------------------------
 
+type ThreadRow = {
+  id: string; from_id: string; body: string; at: string; kind: LiveMsg["kind"]; duration: number | null;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null;
+};
+
 export async function readThread({
   data,
 }: {
@@ -164,16 +200,13 @@ export async function readThread({
   const self = selfId(data.self);
   const withId = otherId(data.withId);
   if (!withId || withId === self) return [];
-  const rows = await rpc<
-    {
-      id: string;
-      from_id: string;
-      body: string;
-      at: string;
-      kind: LiveMsg["kind"];
-      duration: number | null;
-    }[]
-  >("hdar_thread", { p_self: self, p_with: withId });
+  let rows: ThreadRow[];
+  try {
+    rows = await rpc<ThreadRow[]>("hdar_thread2", { p_with: withId });
+  } catch (e) {
+    if (!missingFn(e)) throw e;
+    rows = await rpc<ThreadRow[]>("hdar_thread", { p_self: self, p_with: withId });
+  }
   return rows.map((r) => ({
     id: r.id,
     mine: r.from_id === self,
@@ -181,15 +214,24 @@ export async function readThread({
     at: r.at,
     kind: r.kind,
     duration: r.duration,
+    replyTo: r.reply_to ?? null,
+    reply: r.reply ?? null,
+    reactions: r.reactions ?? [],
+    editedAt: r.edited_at ?? null,
   }));
 }
 
-export async function sendLive({ data }: { data: { self: string; to: string; body: string } }) {
+export async function sendLive({ data }: { data: { self: string; to: string; body: string; replyTo?: string | null } }) {
   const body = String(data.body || "")
     .trim()
     .slice(0, 500);
   if (!body) return;
-  await rpc("hdar_send", { p_self: selfId(data.self), p_to: otherId(data.to), p_body: body });
+  try {
+    await rpc("hdar_send2", { p_to: otherId(data.to), p_body: body, p_reply: data.replyTo ?? null });
+  } catch (e) {
+    if (!missingFn(e)) throw e;
+    await rpc("hdar_send", { p_self: selfId(data.self), p_to: otherId(data.to), p_body: body });
+  }
   track("msg_pm");
   // Propose push notifications only after a real conversation gesture, never on load.
   if (typeof window !== "undefined") window.dispatchEvent(new Event("hdar-ask-push"));
@@ -1223,12 +1265,14 @@ export type GroupLine = {
   mine: boolean;
   replyTo: string | null;
   reply: { pseudo: string; body: string } | null;
+  reactions?: Reaction[];
+  editedAt?: string | null;
   lat?: number;
   lng?: number;
 };
 type GroupRow = {
   id: string; from_id: string; pseudo: string; body: string; kind?: string | null; at: string; mine: boolean;
-  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; lat?: number; lng?: number;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; lat?: number; lng?: number;
 };
 const toLine = (r: GroupRow): GroupLine => ({
   id: r.id,
@@ -1240,11 +1284,13 @@ const toLine = (r: GroupRow): GroupLine => ({
   mine: r.mine,
   replyTo: r.reply_to ?? null,
   reply: r.reply ?? null,
+  reactions: r.reactions ?? [],
+  editedAt: r.edited_at ?? null,
   lat: r.lat == null ? undefined : Number(r.lat),
   lng: r.lng == null ? undefined : Number(r.lng),
 });
 /** Fonction SQL absente (base pas encore à jour) : on retombe sur l'ancienne. */
-const missingFn = (e: unknown) => e instanceof Error && /could not find the function|schema cache/i.test(e.message);
+
 
 export const listSalons = () => rpc<Salon[]>("hdar_salons", {});
 export type InboxSalon = Salon & {

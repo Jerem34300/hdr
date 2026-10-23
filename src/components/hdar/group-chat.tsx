@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowDown, Copy, CornerUpLeft, Flag, MessageCircle, Send, Trash2, UserRound, X } from "lucide-react";
+import { ArrowDown, Copy, CornerUpLeft, Flag, MessageCircle, Pencil, Send, Smile, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import type { MediaKind, MediaScope } from "@/lib/hdar/chat-media";
-import type { GroupLine } from "@/lib/hdar/live";
+import { canEditMsg, editMessage, type GroupLine, type Reaction } from "@/lib/hdar/live";
+import { ReactionBar, ReactionChips, ReplyDraft, ReplyQuote, sendReaction } from "./reactions";
 import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
@@ -67,6 +68,27 @@ export function GroupChat(p: Props) {
   const input = useRef<HTMLTextAreaElement>(null);
   const lastId = useRef<string | undefined>(undefined);
   const first = useRef(true);
+  // Réactions affichées tout de suite, avant le prochain rafraîchissement du fil.
+  const [over, setOver] = useState<Record<string, Reaction[]>>({});
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<GroupLine | null>(null);
+  useEffect(() => {
+    setOver({});
+    setEdits({});
+  }, [p.lines]);
+  const bodyOf = (m: GroupLine) => edits[m.id] ?? m.body;
+  const startEdit = (m: GroupLine) => {
+    setMenu(null);
+    setReplyTo(null);
+    setEditing(m);
+    setText(bodyOf(m));
+    window.setTimeout(() => input.current?.focus(), 50);
+  };
+  const reactionsOf = (m: GroupLine) => over[m.id] ?? m.reactions;
+  const react = (m: GroupLine, emoji: string) => {
+    setMenu(null);
+    sendReaction(p.scope, m.id, emoji, reactionsOf(m), (l) => setOver((o) => ({ ...o, [m.id]: l })));
+  };
 
   // Reste collé en bas sauf si l'utilisateur remonte lire ; sinon compte les nouveaux.
   useLayoutEffect(() => {
@@ -104,6 +126,10 @@ export function GroupChat(p: Props) {
     setFlash(id);
   };
   const reply = (m: GroupLine) => {
+    if (editing) {
+      setEditing(null);
+      setText("");
+    }
     setReplyTo(m);
     setMenu(null);
     window.setTimeout(() => input.current?.focus(), 50);
@@ -111,6 +137,23 @@ export function GroupChat(p: Props) {
   const send = () => {
     const body = text.trim();
     if (!body) return;
+    if (editing) {
+      const m = editing;
+      setEditing(null);
+      setText("");
+      if (body === bodyOf(m)) return;
+      setEdits((e) => ({ ...e, [m.id]: body }));
+      editMessage(p.scope, m.id, body)
+        .then(p.onChanged)
+        .catch((err: unknown) => {
+          setEdits((e) => {
+            const { [m.id]: _drop, ...rest } = e;
+            return rest;
+          });
+          toast(err instanceof Error ? err.message : "Modification impossible");
+        });
+      return;
+    }
     const r = replyTo;
     setText("");
     setReplyTo(null);
@@ -153,7 +196,7 @@ export function GroupChat(p: Props) {
                   </p>
                 )}
                 <Row m={m} onSwipe={() => reply(m)}>
-                  <div id={`gm-${m.id}`} className={"flex items-end gap-2 " + (m.mine ? "justify-end" : "") + (head ? " mt-3" : " mt-0.5")}>
+                  <div id={`gm-${m.id}`} className={"group flex items-end gap-2 " + (m.mine ? "justify-end" : "") + (head ? " mt-3" : " mt-0.5")}>
                     {!m.mine && (
                       <span className="w-8 shrink-0">
                         {tail && (
@@ -178,26 +221,25 @@ export function GroupChat(p: Props) {
                           {m.pseudo}
                         </span>
                       )}
-                      {m.reply && (
-                        <span
-                          role="link"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            jumpTo(m.replyTo);
-                          }}
-                          className={"my-1 block rounded-lg border-l-[3px] px-2 py-1 text-[13px] " + (m.mine ? "border-night/60 bg-night/10" : "border-signal bg-white/5")}
-                        >
-                          <span className="block truncate font-bold">{m.reply.pseudo}</span>
-                          <span className="line-clamp-2 opacity-80">{m.reply.body}</span>
-                        </span>
-                      )}
-                      {m.kind === "text" ? m.body : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}
+                      {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
+                      {m.kind === "text" ? bodyOf(m) : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}
                       <span className={"float-right mt-1.5 ml-2 translate-y-0.5 text-[11px] " + (m.mine ? "text-night/60" : "text-muted")}>
                         {extra ? `${extra} · ` : ""}
+                        {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
                         {hhmm(m.at)}
                       </span>
                     </button>
+                    <button
+                      type="button"
+                      aria-label="Réagir"
+                      onClick={() => setMenu(m)}
+                      className={"hidden size-8 shrink-0 items-center justify-center self-center rounded-full text-muted opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/10 md:flex " + (m.mine ? "order-first" : "")}
+                    >
+                      <Smile className="size-4" />
+                    </button>
+                  </div>
+                  <div className={m.mine ? "" : "pl-10"}>
+                    <ReactionChips list={reactionsOf(m)} mine={m.mine} onToggle={(e) => react(m, e)} />
                   </div>
                 </Row>
               </Fragment>
@@ -222,19 +264,26 @@ export function GroupChat(p: Props) {
       </div>
 
       <div className="dock border-t border-line px-3 pt-2">
+        {editing && (
+          <ReplyDraft
+            edit
+            title="Modifier le message"
+            text={bodyOf(editing)}
+            onJump={() => jumpTo(editing.id)}
+            onCancel={() => {
+              setEditing(null);
+              setText("");
+            }}
+          />
+        )}
         {replyTo && (
-          <div className="mb-2 flex items-center gap-2 rounded-xl bg-surface px-3 py-2 text-sm">
-            <CornerUpLeft className="size-4 shrink-0 text-signal" />
-            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => jumpTo(replyTo.id)}>
-              <span className="block truncate text-xs font-bold" style={{ color: nameColor(replyTo.fromId) }}>
-                Répondre à {replyTo.mine ? "toi" : replyTo.pseudo}
-              </span>
-              <span className="block truncate text-muted">{preview(replyTo)}</span>
-            </button>
-            <button type="button" aria-label="Annuler la réponse" className="flex size-8 items-center justify-center" onClick={() => setReplyTo(null)}>
-              <X className="size-4" />
-            </button>
-          </div>
+          <ReplyDraft
+            title={`Répondre à ${replyTo.mine ? "toi" : replyTo.pseudo}`}
+            color={nameColor(replyTo.fromId)}
+            text={preview(replyTo)}
+            onJump={() => jumpTo(replyTo.id)}
+            onCancel={() => setReplyTo(null)}
+          />
         )}
         <form
           className="flex items-end gap-2"
@@ -294,8 +343,11 @@ export function GroupChat(p: Props) {
         <MessageMenu
           m={menu}
           canHide={p.canHide(menu)}
+          reactions={reactionsOf(menu)}
+          onReact={(e) => react(menu, e)}
           onClose={() => setMenu(null)}
           onReply={() => reply(menu)}
+          onEdit={canEditMsg(menu.mine, menu.kind, menu.at) ? () => startEdit(menu) : undefined}
           onProfile={() => {
             setMenu(null);
             openProfile(menu.fromId, menu.pseudo);
@@ -323,7 +375,7 @@ export function GroupChat(p: Props) {
 }
 
 /** Glisser une bulle vers la droite = répondre (comme Telegram / WhatsApp). */
-function Row({ m, onSwipe, children }: { m: GroupLine; onSwipe: () => void; children: ReactNode }) {
+export function Row({ m, onSwipe, children }: { m: { id: string }; onSwipe: () => void; children: ReactNode }) {
   const el = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number; dx: number } | null>(null);
   const set = (dx: number) => {
@@ -368,6 +420,9 @@ function Row({ m, onSwipe, children }: { m: GroupLine; onSwipe: () => void; chil
 function MessageMenu({
   m,
   canHide,
+  reactions,
+  onReact,
+  onEdit,
   onClose,
   onReply,
   onProfile,
@@ -377,6 +432,9 @@ function MessageMenu({
 }: {
   m: GroupLine;
   canHide: boolean;
+  reactions?: Reaction[];
+  onReact: (emoji: string) => void;
+  onEdit?: () => void;
   onClose: () => void;
   onReply: () => void;
   onProfile: () => void;
@@ -389,6 +447,9 @@ function MessageMenu({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div className="dock w-full max-w-md rounded-t-3xl border border-line bg-night pt-2" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" />
+        <div className="mb-2">
+          <ReactionBar list={reactions} onPick={onReact} />
+        </div>
         <div className="mx-4 mb-2 rounded-2xl bg-surface px-3 py-2 text-sm">
           <span className="block text-xs font-bold" style={{ color: nameColor(m.fromId) }}>
             {m.mine ? "Toi" : m.pseudo} · {new Date(m.at).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" })}
@@ -398,6 +459,11 @@ function MessageMenu({
         <button type="button" className={item} onClick={onReply}>
           <CornerUpLeft className="size-5" /> Répondre
         </button>
+        {onEdit && (
+          <button type="button" className={item} onClick={onEdit}>
+            <Pencil className="size-5" /> Modifier
+          </button>
+        )}
         {!m.mine && (
           <>
             <button type="button" className={item} onClick={onProfile}>
@@ -447,9 +513,9 @@ export function GroupChatDemo() {
   const lines = [
     mk(1, "7f3a", "Lucas34", "Quelqu'un sort ce soir vers Comédie ?", 1500),
     mk(2, "b21c", "Nina", "Moi peut-être, plutôt vers 22 h", 1490),
-    mk(3, "me", "Toi", "Partant pour un verre 🔥", 30),
+    mk(3, "me", "Toi", "Partant pour un verre 🔥", 14, { editedAt: new Date(now - 13 * 60_000).toISOString(), reactions: [{ e: "🔥", n: 3, mine: false }, { e: "❤️", n: 1, mine: false }] }),
     mk(4, "7f3a", "Lucas34", "Top ! On se retrouve où ?", 12, { replyTo: "d3", reply: { pseudo: "Toi", body: "Partant pour un verre 🔥" } }),
-    mk(5, "7f3a", "Lucas34", "Je connais un bar sympa rue de l'Université", 11),
+    mk(5, "7f3a", "Lucas34", "Je connais un bar sympa rue de l'Université", 11, { reactions: [{ e: "👍", n: 2, mine: true }] }),
     mk(6, "c90e", "Sam", "Je viens aussi si ça vous dérange pas 😊", 3),
   ];
   return (
