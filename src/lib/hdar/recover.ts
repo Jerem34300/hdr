@@ -45,10 +45,11 @@ export async function recoverVerify(email: string, code: string) {
 }
 
 function frErr(m: string) {
+  if (/captcha/i.test(m)) return "Coche à nouveau « Vérifiez que vous êtes humain » juste au-dessus, puis réessaie.";
   if (/rate limit|too many|seconds/i.test(m)) return "Trop de demandes, réessaie dans une minute.";
   if (/expired|invalid/i.test(m)) return "Code invalide ou expiré.";
   if (/signups not allowed|not found|user not found/i.test(m)) return "Aucun profil lié à cet email.";
-  if (/already been registered|already registered|exists/i.test(m)) return "Cet email est déjà lié à un autre profil.";
+  if (/already been registered|already registered|exists/i.test(m)) return "Cet email a déjà un profil : pour le récupérer, ouvre hdar.chat sur l'écran d'entrée et touche « Déjà un profil ? Le retrouver ».";
   return m;
 }
 

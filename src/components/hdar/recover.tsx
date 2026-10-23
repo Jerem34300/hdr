@@ -61,33 +61,64 @@ export function ProtectProfileCard() {
   );
 }
 
+const PENDING = "hdar-recover";
+const PENDING_TTL = 60 * 60_000; // le code reçu par mail reste valable 1 h
+
+/** Étape « code envoyé » gardée sur l'appareil : sur Android, aller lire son mail recharge souvent la page. */
+function readPending(): { email: string; at: number } | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(PENDING) || "null") as { email: string; at: number } | null;
+    return v && v.email && Date.now() - v.at < PENDING_TTL ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 /** « Déjà un profil ? Le retrouver » — par email + code reçu par mail. */
 export function RecoverLink({ captchaToken, onUsed }: { captchaToken?: string; onUsed?: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  const [pending] = useState(readPending);
+  const [open, setOpen] = useState(!!pending);
+  const [email, setEmail] = useState(pending?.email ?? "");
   const [code, setCode] = useState("");
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(!!pending);
   const [busy, setBusy] = useState(false);
   const run = async (f: () => Promise<void>) => { setBusy(true); try { await f(); } catch (e) { toast(e instanceof Error ? e.message : "Erreur"); } finally { setBusy(false); } };
+  const emailOk = /^\S+@\S+\.\S+$/.test(email);
+  const toCode = () => {
+    try { localStorage.setItem(PENDING, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() })); } catch { /* stockage indisponible */ }
+    setSent(true);
+  };
+  const send = () => void run(async () => {
+    if (!captchaToken) throw new Error("Coche d'abord « Vérifiez que vous êtes humain » juste au-dessus, puis réessaie.");
+    await recoverStart(email, captchaToken);
+    onUsed?.();
+    toCode();
+  });
   if (!open) return <button type="button" onClick={() => setOpen(true)} className="w-full text-center text-sm text-muted">Déjà un profil ? <span className="font-bold text-ink underline">Le retrouver</span></button>;
   return (
     <div className="space-y-2 rounded-3xl border border-line bg-surface p-4">
       <p className="font-display font-bold">Retrouver mon profil</p>
-      <p className="text-xs text-muted">Avec l'email que tu as lié à ton profil (« Protège ton profil »).</p>
       {!sent ? (
         <>
+          <p className="text-xs text-muted">Avec l'email que tu as lié à ton profil (« Protège ton profil »).</p>
           <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="ton@email.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button type="button" disabled={busy || !/^\S+@\S+\.\S+$/.test(email)} onClick={() => void run(async () => { await recoverStart(email, captchaToken); onUsed?.(); setSent(true); })}
+          <button type="button" disabled={busy || !emailOk} onClick={send}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Recevoir un code"}</button>
+          <button type="button" disabled={!emailOk} onClick={toCode} className="w-full text-xs font-bold text-ink underline disabled:opacity-40">J'ai déjà reçu un code</button>
         </>
       ) : (
         <>
+          <p className="text-xs text-muted">Entre le code à 8 chiffres reçu à <b className="text-ink">{email}</b> (pense aux spams). Tu peux aller lire ton mail et revenir ici : cette étape reste ouverte 1 h.</p>
           <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
-          <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(() => recoverVerify(email, code))}
+          <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(async () => { await recoverVerify(email, code); try { localStorage.removeItem(PENDING); } catch { /* rien */ } })}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Retrouver mon profil"}</button>
+          <div className="flex justify-between text-xs">
+            <button type="button" disabled={busy} onClick={send} className="text-muted underline">Renvoyer un code</button>
+            <button type="button" onClick={() => { setSent(false); setCode(""); try { localStorage.removeItem(PENDING); } catch { /* rien */ } }} className="text-muted underline">Changer d'email</button>
+          </div>
         </>
       )}
-      <button type="button" onClick={() => setOpen(false)} className="w-full text-xs text-muted">Annuler</button>
+      <button type="button" onClick={() => { setOpen(false); try { localStorage.removeItem(PENDING); } catch { /* rien */ } }} className="w-full text-xs text-muted">Annuler</button>
     </div>
   );
 }
