@@ -181,7 +181,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
         }}
       >
         <h1 className="font-display text-3xl font-extrabold">hdar.</h1>
-        <p className="text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.</p>
+        <p className="text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.</p>
         <p className="text-xs text-muted">Sans inscription. Ouvert à toutes et tous, LGBT-friendly 🏳️‍🌈</p>
         <ul className="grid grid-cols-3 gap-2 text-center text-[11px] text-muted">
           <li className="rounded-2xl border border-line px-2 py-2">🗺️<br />Qui est là</li>

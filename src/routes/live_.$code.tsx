@@ -14,7 +14,7 @@ export const Route = createFileRoute("/live_/$code")({
   head: ({ params, loaderData }) => {
     const m = loaderData as { pseudo: string; active: boolean; area: string | null; around: number } | null | undefined;
     const title = m ? (m.active ? `${m.pseudo} est en Live sur hdar. 🎥` : `Le live de ${m.pseudo} — hdar.`) : "Un live sur hdar. 🎥";
-    const desc = `${m?.area ? m.area + " · " : ""}${m && m.around > 0 ? `${m.around} personnes autour en ce moment. ` : ""}Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.`;
+    const desc = `${m?.area ? m.area + " · " : ""}${m && m.around > 0 ? `${m.around} personnes autour en ce moment. ` : ""}Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.`;
     const og = `${SITE_URL}/og-live.jpg`;
     return {
       meta: [

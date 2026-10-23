@@ -15,7 +15,7 @@ export const LOCAL: Record<string, LocalContent> = {
   montpellier: {
     og: "/og-montpellier.jpg",
     description:
-      "Sortir et rencontrer à Montpellier, pour tout le monde : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Parcs, belvédères, places, lieux partenaires, conseils. Gratuit, anonyme, sans compte, 18+.",
+      "Sortir et rencontrer à Montpellier, pour tout le monde : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Parcs, belvédères, places, lieux partenaires, conseils. Gratuit, discret, sans compte, 18+.",
     nearby: ["sete", "nimes", "agde", "cap-d-agde", "beziers"],
     faq: [
       {

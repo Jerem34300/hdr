@@ -47,7 +47,7 @@ export function ProfileReminder() {
       <p className="mt-1 text-sm text-muted">
         {!pseudo
           ? "Choisis un pseudo et une photo : les profils complets reçoivent bien plus de messages."
-          : "Les profils avec photo reçoivent bien plus de messages. Elle peut être floue, de dos ou juste un détail, tu restes anonyme."}
+          : "Les profils avec photo reçoivent bien plus de messages. Elle peut être floue, de dos ou juste un détail, tu restes discret."}
       </p>
       <div className="mt-3 flex gap-2">
         <button

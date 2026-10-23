@@ -82,7 +82,7 @@ export function InstallPrompt() {
               <Mark className="size-5" /> hdar.
             </p>
             <p className="text-sm text-muted">
-              Anonymes, tout près. Installe l'appli : plein écran, ouverture en un geste,
+              Discrets, tout près. Installe l'appli : plein écran, ouverture en un geste,
               notifications.
             </p>
           </div>

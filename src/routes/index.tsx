@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
       ...((match?.search as { r?: string } | undefined)?.r
         ? [
             { property: "og:title", content: "Viens sur hdar. : 3 jours hdar+ offerts 🎁" },
-            { property: "og:description", content: "La carte des sorties et rencontres en direct, pour tout le monde, 100 % anonyme. Ton ami t'invite : 3 jours de hdar+ offerts pour vous deux." },
+            { property: "og:description", content: "La carte des sorties et rencontres en direct, pour tout le monde, 100 % discret. Ton ami t'invite : 3 jours de hdar+ offerts pour vous deux." },
             { property: "og:image", content: `${SITE_URL}/og-invite.png` },
             { property: "og:image:width", content: "1200" },
             { property: "og:image:height", content: "630" },
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+. Vois qui est connecté et où sortir autour de toi : carte en direct, lieux, chat du quartier, messages, vocaux et vidéo.",
+          "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+. Vois qui est connecté et où sortir autour de toi : carte en direct, lieux, chat du quartier, messages, vocaux et vidéo.",
       },
       { name: "robots", content: "index, follow" },
     ],
@@ -65,7 +65,7 @@ function Splash() {
       <p className="font-display text-4xl font-extrabold tracking-tight">
         hdar<span className="text-signal">.</span>
       </p>
-      <h1 className="mt-3 text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.</h1>
+      <h1 className="mt-3 text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.</h1>
       <nav aria-label="Villes" className="absolute inset-x-6 bottom-6 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
         {SEO_CITIES.filter((c) => c.slug !== "cap-d-agde").map((c) => (
           <a key={c.slug} href={`/rencontre/${c.slug}`}>{c.name}</a>

@@ -47,7 +47,7 @@ export const placesLabel = (n: number | null) => (n == null ? "" : n <= 0 ? "Plu
 /** Partage natif du bon plan (aperçu du lien : page d'accueil, texte sans contenu explicite). */
 export async function shareFirst(remaining: number | null, region?: string | null) {
   const where = region ? (remaining != null && remaining > 0 ? ` : plus que ${remaining} en ${region}` : ` en ${region}`) : remaining != null && remaining > 0 ? ` (plus que ${remaining} places)` : "";
-  const text = `hdar. : sorties et rencontres autour de toi, gratuit et anonyme. hdar+ offert à vie aux 5000 premiers avec le code FIRST${where} 🎁`;
+  const text = `hdar. : sorties et rencontres autour de toi, gratuit et discret. hdar+ offert à vie aux 5000 premiers avec le code FIRST${where} 🎁`;
   try {
     if (navigator.share) { await navigator.share({ title: "hdar+ offert aux 5000 premiers", text, url: SHARE_URL }); return "shared"; }
     await navigator.clipboard.writeText(`${text} ${SHARE_URL}`);

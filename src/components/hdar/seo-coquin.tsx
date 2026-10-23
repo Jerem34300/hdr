@@ -10,7 +10,7 @@ const path = (c?: CityPayload | null) => (c ? `/rencontre/${c.s}/live-coquin` : 
 export function coquinHead(c?: CityPayload | null) {
   return seoHead({
     title: c ? `Live coquin ${a(c.n)} : flirter en vidéo, en direct — hdar.` : "Live coquin : flirter en vidéo entre adultes, en direct — hdar.",
-    desc: c ? `Envie de flirter ${a(c.n)} ? Lance un Live et discute en vidéo avec des inconnus, en direct. Entre adultes, consentement et respect, anonyme, gratuit, 18+.` : "Flirte en vidéo avec des inconnus, en direct : face-à-face au hasard ou diffusion à plusieurs. Entre adultes, consentement et respect, anonyme, gratuit, 18+.",
+    desc: c ? `Envie de flirter ${a(c.n)} ? Lance un Live et discute en vidéo avec des inconnus, en direct. Entre adultes, consentement et respect, discret, gratuit, 18+.` : "Flirte en vidéo avec des inconnus, en direct : face-à-face au hasard ou diffusion à plusieurs. Entre adultes, consentement et respect, discret, gratuit, 18+.",
     path: path(c), og: "/og-live-coquin.jpg",
   });
 }
@@ -33,7 +33,7 @@ export function CoquinPage({ c }: { c?: CityPayload | null }) {
     { q: "C'est quoi le Live de hdar ?", a: "Un face-à-face vidéo au hasard avec une autre personne connectée. Tu passes à la suivante quand tu veux. Tu peux aussi diffuser ta caméra aux gens qui font défiler les Lives." },
     { q: "Combien de personnes peuvent me regarder ?", a: "En mode Diffuser, jusqu'à 6 spectateurs te voient et t'entendent, 12 avec hdar+. Ton partenaire en face-à-face reste privé, sauf s'il choisit de diffuser avec toi." },
     { q: "Un spectateur peut-il allumer sa caméra ?", a: "Oui, mais uniquement avec consentement : tu peux lui proposer, il peut te le proposer, et rien ne s'allume sans accord." },
-    { q: "C'est anonyme et gratuit ?", a: "Oui. Pas d'e-mail, un pseudo suffit. Le Live est gratuit ; les réactions 🔥 🥵 😛 ❤️ coûtent 1 cœur chacune." },
+    { q: "C'est discret et gratuit ?", a: "Oui. Pas d'e-mail, un pseudo suffit. Le Live est gratuit ; les réactions 🔥 🥵 😛 ❤️ coûtent 1 cœur chacune." },
     { q: "Quelles sont les règles ?", a: "Réservé aux 18 ans et plus. Nudité et contenus sexuels interdits, consentement obligatoire, enregistrement interdit (voir les CGU). Tu peux bloquer et signaler à tout moment ; les comptes signalés sont suspendus." },
     ...(c ? [{ q: `Je peux tomber sur des gens ${a(c.n)} ?`, a: `Le Live mélange les gens connectés en France, en évitant les personnes à moins de 2 km. Pour les gens tout près ${a(c.n)}, utilise la carte et le chat du quartier.` }] : []),
   ];
@@ -43,7 +43,7 @@ export function CoquinPage({ c }: { c?: CityPayload | null }) {
       <Hero seed={s} kicker={c ? `Live coquin · ${c.n}` : "Live coquin · 18+"} title={<>Flirter <span className="text-[#FA6F6C]">en direct</span>{at}</>}>
         <p className="mt-4 text-lg leading-snug text-ink/85">{lead}</p>
         <CtaLive />
-        <p className="mt-3 text-xs text-muted">Anonyme · sans compte · 18+ · sans nudité</p>
+        <p className="mt-3 text-xs text-muted">Discret · sans compte · 18+ · sans nudité</p>
       </Hero>
       <article className="mx-auto max-w-2xl px-5">
         <Crumbs items={[{ name: "hdar.", to: "/" }, ...(c ? [{ name: c.n, to: `/rencontre/${c.s}` }] : []), { name: "Live coquin" }]} />
@@ -54,7 +54,7 @@ export function CoquinPage({ c }: { c?: CityPayload | null }) {
           <Feature icon="👥" title="Cam à 3">Ton partenaire peut diffuser avec toi : les spectateurs vous voient tous les deux.</Feature>
           <Feature icon="🎥" title="Consentement d'abord">Un spectateur n'allume sa cam ou son micro que si vous êtes d'accord tous les deux.</Feature>
           <Feature icon="❤️" title="Réactions">Envoie 🔥 😛 ❤️ à qui te plaît : chaque réaction coûte 1 cœur.</Feature>
-          <Feature icon="🕶️" title="Anonyme">Pas d'e-mail, un pseudo, et le chat du quartier pour les gens autour.</Feature>
+          <Feature icon="🕶️" title="Discret">Pas d'e-mail, un pseudo, et le chat du quartier pour les gens autour.</Feature>
         </ul>
         <h2 className="seo-reveal mt-12 font-display text-2xl font-bold">Sans prise de tête, avec du respect</h2>
         <p className="seo-reveal mt-3 text-sm leading-relaxed text-ink/85">{c ? pick(s + "d", [`Pas de profil à remplir, pas de swipe sans fin : tu ouvres et tu discutes. Si le courant passe avec quelqu'un ${a(c.n)}, continuez en privé.`, `Flirt d'un soir ou simple curiosité, chacun garde la main. Et si l'autre est trop près, hdar te propose plutôt le chat privé.`]) : "Pas de profil à remplir, pas de swipe sans fin : tu ouvres et tu discutes. Si le courant passe, continuez en privé, en messages ou en appel vidéo."}</p>

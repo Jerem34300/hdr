@@ -4,7 +4,7 @@ import { CityChips, Crumbs, Cta, Hero, SeoShell, fmt, seoHead } from "@/componen
 
 export const Route = createFileRoute("/rencontre/")({
   loader: () => getIndex(),
-  head: () => seoHead({ title: "Rencontres et sorties partout en France, ville par ville — hdar.", desc: "Trouve ta ville ou ta région : la carte en direct des gens connectés autour de toi, le chat du quartier et les lieux. Gratuit, anonyme, pour tout le monde, 18+.", path: "/rencontre" }),
+  head: () => seoHead({ title: "Rencontres et sorties partout en France, ville par ville — hdar.", desc: "Trouve ta ville ou ta région : la carte en direct des gens connectés autour de toi, le chat du quartier et les lieux. Gratuit, discret, pour tout le monde, 18+.", path: "/rencontre" }),
   component: () => {
     const d = Route.useLoaderData();
     return (

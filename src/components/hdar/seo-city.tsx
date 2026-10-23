@@ -13,9 +13,9 @@ export function cityHead(c: CityPayload | undefined, t: Theme, og?: string) {
   const title = t === "tchat-gay" ? `Tchat gay ${c.n} : rencontres LGBT-friendly en direct — hdar.`
     : t === "sortir-ce-soir" ? `Sortir ce soir ${a(c.n)} : qui est dehors autour de toi — hdar.`
     : pick(c.s, [`Rencontres et sorties ${a(c.n)} (${c.dep.code}) : la carte en direct — hdar.`, `Rencontre ${a(c.n)} : tchat, sorties et amis autour de toi — hdar.`, `${c.n} : rencontres, tchat et sorties ce soir — hdar.`]);
-  const desc = t === "tchat-gay" ? `Tchat gay et LGBT-friendly ${a(c.n)} (${c.dep.n}) : vois qui est connecté autour de toi, discute en privé, photos, vocaux, vidéo. Gratuit, anonyme, 18+.`
+  const desc = t === "tchat-gay" ? `Tchat gay et LGBT-friendly ${a(c.n)} (${c.dep.n}) : vois qui est connecté autour de toi, discute en privé, photos, vocaux, vidéo. Gratuit, discret, 18+.`
     : t === "sortir-ce-soir" ? `Envie de sortir ce soir ${a(c.n)} ? La carte hdar montre qui est connecté autour de toi et les lieux du moment. Gratuit, sans compte, 18+.`
-    : `Rencontres ${a(c.n)} et autour (${c.dep.n}) : amour, amitié, tchat en ligne ou sortie ce soir. Carte en direct, chat du quartier, pour tout le monde et LGBT-friendly. Gratuit, anonyme, 18+.`;
+    : `Rencontres ${a(c.n)} et autour (${c.dep.n}) : amour, amitié, tchat en ligne ou sortie ce soir. Carte en direct, chat du quartier, pour tout le monde et LGBT-friendly. Gratuit, discret, 18+.`;
   return seoHead({ title, desc, path: path(c, t), og });
 }
 

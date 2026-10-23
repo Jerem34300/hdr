@@ -8,7 +8,7 @@ export const Route = createFileRoute("/annonces/$id")({
   loader: async ({ params }) => ({ city: await getAdShareCity({ data: params.id }) }),
   head: ({ loaderData }) => {
     const title = "Une annonce t'attend sur hdar.chat";
-    const desc = loaderData?.city ? `Petite annonce à ${loaderData.city} · 18+, anonyme, gratuit.` : "Petites annonces entre adultes · 18+, anonyme, gratuit.";
+    const desc = loaderData?.city ? `Petite annonce à ${loaderData.city} · 18+, discret, gratuit.` : "Petites annonces entre adultes · 18+, discret, gratuit.";
     return {
       meta: [
         { title: `${title} — hdar.` }, { name: "robots", content: "noindex, nofollow, noarchive" }, { name: "description", content: desc },

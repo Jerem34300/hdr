@@ -123,7 +123,7 @@ export function App() {
               <Wordmark className="text-3xl" />
             </div>
             <p className="mt-8 font-display text-4xl font-extrabold tracking-tight">
-              Anonymes,
+              Discrets,
               <br />
               tout près.
             </p>

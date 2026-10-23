@@ -13,7 +13,7 @@ export function adsHead(c: CityPayload | null | undefined) {
   if (!c) return seoHead({ title: "Petites annonces rencontres et sorties, ville par ville — hdar.", desc: "Poste une petite annonce pour une rencontre ou une sortie près de chez toi : anonyme, gratuite, réservée aux 18 ans et plus. Les annonces restent dans l'appli, entre adultes.", path: "/petites-annonces" });
   return seoHead({
     title: `Petites annonces rencontre ${a(c.n)} (${c.dep.code}) : sorties et rencontres — hdar.`,
-    desc: `Petites annonces de rencontres et de sorties ${a(c.n)} et autour (${c.dep.n}). Anonyme, gratuit, 18+ : poste la tienne pour 24 h, 3 jours ou 7 jours et réponds en message privé.`,
+    desc: `Petites annonces de rencontres et de sorties ${a(c.n)} et autour (${c.dep.n}). Discret, gratuit, 18+ : poste la tienne pour 24 h, 3 jours ou 7 jours et réponds en message privé.`,
     path: `/petites-annonces/${c.s}`,
   });
 }
@@ -21,7 +21,7 @@ export function adsHead(c: CityPayload | null | undefined) {
 const FEATURES = [
   { icon: "📌", t: "Une annonce qui reste", d: "Elle reste visible 24 h, 3 jours ou 7 jours, même quand tu n'es pas connecté." },
   { icon: "🗺️", t: "Par ville et par région", d: "Tu vois d'abord les annonces de ton coin, puis tu élargis si tu veux." },
-  { icon: "🕶️", t: "Anonyme", d: "Un pseudo, pas d'e-mail ni de numéro. Ta ville est approximative, jamais ton adresse." },
+  { icon: "🕶️", t: "Discret", d: "Pas de nom, pas de numéro : tu restes discret. Ta ville est approximative, jamais ton adresse." },
   { icon: "💬", t: "Réponse en privé", d: "On te répond dans tes messages, avec le titre de ton annonce pour s'y retrouver." },
   { icon: "🔞", t: "Entre adultes", d: "Réservé aux 18 ans et plus. Les annonces ne sont visibles que dans l'appli, pas sur les moteurs de recherche." },
   { icon: "🛡️", t: "Modéré", d: "Un bouton pour signaler, une équipe qui regarde, et les annonces signalées sont masquées." },
@@ -38,9 +38,9 @@ export function AdsPage({ c, city, region }: { c: CityPayload | null; city: numb
   return (
     <SeoShell>
       <Hero seed={"pa-" + (c?.s ?? "fr")} kicker={c ? `${c.dep.n} · ${c.reg.n}` : "Toute la France"} title={<>Petites annonces <span className="text-[#FA6F6C]">{c ? a(c.n) : "rencontres et sorties"}</span></>}>
-        <p className="mt-4 text-lg leading-snug text-ink/85">Une envie de sortie, de rencontre ou de compagnie {where} ? Poste une petite annonce anonyme et laisse les gens du coin te répondre en privé.</p>
+        <p className="mt-4 text-lg leading-snug text-ink/85">Une envie de sortie, de rencontre ou de compagnie {where} ? Poste une petite annonce discrète et laisse les gens du coin te répondre en privé.</p>
         <AdsCta label={c ? `Voir les annonces ${a(c.n)}` : "Voir les annonces"} />
-        <p className="mt-3 text-xs text-muted">Gratuit · anonyme · 18+ · annonces visibles dans l'appli uniquement</p>
+        <p className="mt-3 text-xs text-muted">Gratuit · discret · 18+ · annonces visibles dans l'appli uniquement</p>
         <dl className="mt-8 grid grid-cols-2 gap-2 text-center">
           {c ? (
             <>

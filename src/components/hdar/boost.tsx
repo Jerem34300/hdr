@@ -96,7 +96,7 @@ const FAQ = [
   ["Quand mon boost est-il visible ?", "Dès le paiement confirmé, et chaque fois que tu es visible sur la carte. Si tu te caches, personne ne voit ton pin, boosté ou non."],
   ["Les durées s'additionnent ?", "Oui. Si tu reprends un boost alors qu'un autre est en cours, le temps s'ajoute à la fin."],
   ["C'est un abonnement ?", "Non, chaque boost est un paiement unique, sans renouvellement automatique."],
-  ["Mon anonymat ?", "Rien ne change : pas de nom, pas de numéro. Le paiement est géré par Stripe, hdar ne voit jamais ta carte."],
+  ["Ma vie privée ?", "Rien ne change : pas de nom, pas de numéro. Le paiement est géré par Stripe, hdar ne voit jamais ta carte."],
   ["Comment je paie ?", PAYMENTS_ENABLED ? "Carte bancaire, Apple Pay, Google Pay ou Link, sur la page sécurisée de Stripe." : "Tu ne paies rien : pendant le lancement, les boosts sont offerts avec le code FIRST."],
 ] as const;
 

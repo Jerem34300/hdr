@@ -51,7 +51,7 @@ const PERKS = [
 
 const FAQ = [
   ["C'est un abonnement ?", "Oui, renouvelé automatiquement chaque semaine ou chaque mois. Tu résilies en deux clics depuis cette page, et tu gardes hdar+ jusqu'à la fin de la période payée."],
-  ["Mon anonymat ?", PAYMENTS_ENABLED ? "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Stripe gère le paiement, hdar ne voit jamais ta carte." : "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Et aucun paiement pendant le lancement."],
+  ["Ma vie privée ?", PAYMENTS_ENABLED ? "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Stripe gère le paiement, hdar ne voit jamais ta carte." : "Rien ne change : pas de nom, pas de numéro, pas de compte Google. Et aucun paiement pendant le lancement."],
   ["La recherche montre où sont les gens ?", "Non. Tu vois le pseudo et s'il est en ligne, jamais sa position. Les profils bloqués, bannis ou inactifs depuis 7 jours n'apparaissent pas."],
   ["Demande à se voir, ça défloute l'autre ?", "Jamais. L'autre reçoit une invitation « … aimerait te voir 👀 » et choisit « Me montrer » ou « Non merci ». Une seule demande par rencontre."],
   ["Le Live est réservé à hdar+ ?", "Non, le Live est gratuit pour tous les profils avec photo validée. hdar+ ajoute le retour en arrière, les filtres, le matching prioritaire et la demande à se voir."],
@@ -193,7 +193,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
         <section className="mt-8 text-center">
           <p className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: GOLD }}>{PAYMENTS_ENABLED ? "Abonnement" : "Offert pendant le lancement"}</p>
           <h1 className="mt-2 font-display text-5xl font-extrabold leading-tight">hdar<span className="premium-text">+</span></h1>
-          <p className="mx-auto mt-3 max-w-sm text-sm text-muted">Filtre la carte et le Live, découvre qui t'a vu et qui t'a mis en favori, retrouve un pseudo. Toujours anonyme.</p>
+          <p className="mx-auto mt-3 max-w-sm text-sm text-muted">Filtre la carte et le Live, découvre qui t'a vu et qui t'a mis en favori, retrouve un pseudo. Ta vie privée reste privée.</p>
           <div className="relative mx-auto mt-6 flex size-36 items-center justify-center">
             <span className="absolute inset-0 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(${GOLD}, transparent 70%)` }} />
             <span className="premium-ring relative flex size-24 items-center justify-center rounded-full"><Crown className="size-10" style={{ color: GOLD }} /></span>

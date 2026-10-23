@@ -65,7 +65,7 @@ export function LiveSharePage({ code, demo }: { code: string; demo?: LiveShareVi
   if (!adult) return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-night px-6 text-center text-ink">
       <Wordmark /><p className="font-display text-2xl font-extrabold">On t'a partagé un live 🎥</p>
-      <p className="text-sm text-white/70">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, anonyme, 18+.</p>
+      <p className="text-sm text-white/70">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.</p>
       <button type="button" onClick={() => { confirmAdult(); setAdult(true); }} className="h-14 w-full max-w-sm rounded-full bg-[#FA6F6C] font-display text-lg font-extrabold text-night">J'ai 18 ans ou plus</button>
       <a href="https://www.google.com" className="text-sm text-white/50 underline">J'ai moins de 18 ans</a>
     </main>
@@ -134,13 +134,13 @@ function LivePreview({ code, demo }: { code: string; demo?: LiveShareView }) {
         <button type="button" onClick={(e) => { e.stopPropagation(); join(); }} className="h-14 w-full rounded-full bg-[#FA6F6C] font-display text-lg font-extrabold text-night shadow-lg">
           {v.active ? "Inscris-toi et rejoins le live" : "Live terminé, rejoins quand même"}
         </button>
-        <p className="mt-2 text-center text-[11px] text-white/60">Gratuit, anonyme, 18+. Positions approximatives, jamais exactes.</p>
+        <p className="mt-2 text-center text-[11px] text-white/60">Gratuit, discret, 18+. Positions approximatives, jamais exactes.</p>
       </div>
       {sheet && (
         <div className="absolute inset-0 z-30 flex items-end bg-black/50" onClick={(e) => { e.stopPropagation(); setSheet(false); }}>
           <div className="w-full rounded-t-3xl bg-surface p-6" onClick={(e) => e.stopPropagation()}>
             <p className="font-display text-xl font-extrabold">Inscris-toi pour discuter</p>
-            <p className="mt-1 text-sm text-muted">Pseudos et profils sont floutés tant que tu n'es pas inscrit·e. C'est gratuit, anonyme, réservé aux 18+.</p>
+            <p className="mt-1 text-sm text-muted">Pseudos et profils sont floutés tant que tu n'es pas inscrit·e. C'est gratuit, discret, réservé aux 18+.</p>
             <button type="button" onClick={join} className="mt-4 h-12 w-full rounded-full bg-[#FA6F6C] font-display font-extrabold text-night">C'est parti</button>
           </div>
         </div>

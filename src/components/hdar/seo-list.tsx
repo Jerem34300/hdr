@@ -4,7 +4,7 @@ import { CityChips, Count, Crumbs, Cta, Faq, Hero, SeoShell, fmt, seoHead } from
 const label = (d: ListPayload) => (d.kind === "region" ? d.n : `${d.n} (${d.code})`);
 export function listHead(d: ListPayload | undefined) {
   if (!d) return seoHead({ title: "Introuvable — hdar.", desc: "", path: "/rencontre", noindex: true });
-  return seoHead({ title: `Rencontres et sorties ${d.kind === "region" ? "en " : ": "}${label(d)} : toutes les villes — hdar.`, desc: `Rencontres, tchat et sorties dans les ${fmt(d.count)} communes ${d.kind === "region" ? "de la région" : "du département"} ${d.n}. Carte en direct, gratuit, anonyme, pour tout le monde, 18+.`, path: `/rencontre/${d.kind}/${d.s}` });
+  return seoHead({ title: `Rencontres et sorties ${d.kind === "region" ? "en " : ": "}${label(d)} : toutes les villes — hdar.`, desc: `Rencontres, tchat et sorties dans les ${fmt(d.count)} communes ${d.kind === "region" ? "de la région" : "du département"} ${d.n}. Carte en direct, gratuit, discret, pour tout le monde, 18+.`, path: `/rencontre/${d.kind}/${d.s}` });
 }
 export function ListPage({ d }: { d: ListPayload }) {
   return (
@@ -28,7 +28,7 @@ export function ListPage({ d }: { d: ListPayload }) {
         <Faq items={[
           { q: `hdar fonctionne-t-il partout en ${d.n} ?`, a: `Oui, dans toutes les communes, des grandes villes aux villages. La carte montre les gens connectés autour de toi, quelle que soit ta commune.` },
           { q: "C'est pour qui ?", a: "Pour tout le monde, 18 ans et plus, et LGBT-friendly : rencontre amoureuse, amitié, tchat en ligne ou sortie ce soir." },
-          { q: "C'est gratuit et anonyme ?", a: "Oui : pas d'e-mail, pas de compte obligatoire, position arrondie à environ 110 mètres." },
+          { q: "C'est gratuit et discret ?", a: "Oui : pas d'e-mail, pas de compte obligatoire, position arrondie à environ 110 mètres." },
         ]} />
       </div>
     </SeoShell>
