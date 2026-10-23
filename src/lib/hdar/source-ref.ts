@@ -4,7 +4,7 @@
  * jour × ref (aucune IP, aucun identifiant d'appareil), puis la ref est rattachée au profil à sa création.
  * Voir supabase/hdar_v77_ref_sources.sql.
  */
-import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
+import { SUPABASE_KEY, SUPABASE_URL, accessToken, authUserId } from "./session";
 
 const KEY = "hdar-src";
 const SENT = "hdar-src-visit";
@@ -27,8 +27,9 @@ function read(): Stored | null {
 /** Ref active (30 jours après la 1re visite), sinon null. */
 export const sourceRef = () => (typeof window === "undefined" ? null : read()?.ref ?? null);
 
-async function call(fn: string, args: Record<string, unknown>) {
-  const token = await accessToken();
+async function call(fn: string, args: Record<string, unknown>, anonOk = false) {
+  // Avant l'écran 18+ il n'y a pas encore de session : la visite part avec la simple clé publique.
+  const token = anonOk && !(await authUserId().catch(() => null)) ? SUPABASE_KEY : await accessToken();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST",
     headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -61,7 +62,7 @@ export function captureSourceRef() {
     const mark = `${day}:${cur.ref}`;
     if (localStorage.getItem(SENT) === mark) return;
     localStorage.setItem(SENT, mark);
-    void call("hdar_ref_visit", { p_ref: cur.ref }).catch(() => localStorage.removeItem(SENT));
+    void call("hdar_ref_visit", { p_ref: cur.ref }, true).catch(() => localStorage.removeItem(SENT));
   } catch {
     /* stockage indisponible : statistique facultative */
   }
