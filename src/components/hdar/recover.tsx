@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { askConfirm } from "@/lib/hdar/confirm";
+import { TURNSTILE_SITE_KEY } from "@/lib/hdar/session";
+import { useHdar } from "@/lib/hdar/store";
+import { loadTurnstile } from "./adult-gate";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
 import { newsSet, newsStatus } from "@/lib/hdar/live";
@@ -75,9 +79,16 @@ function readPending(): { email: string; at: number } | null {
 }
 
 /** « Déjà un profil ? Le retrouver » — par email + code reçu par mail. */
-export function RecoverLink({ captchaToken, onUsed }: { captchaToken?: string; onUsed?: () => void }) {
+export function RecoverLink({ captchaToken, onUsed, startOpen, beforeVerify, onCancel }: {
+  captchaToken?: string;
+  onUsed?: () => void;
+  startOpen?: boolean;
+  /** Dernière chance d'annuler avant de basculer sur le profil retrouvé (false = on arrête). */
+  beforeVerify?: () => Promise<boolean>;
+  onCancel?: () => void;
+}) {
   const [pending] = useState(readPending);
-  const [open, setOpen] = useState(!!pending);
+  const [open, setOpen] = useState(!!pending || !!startOpen);
   const [email, setEmail] = useState(pending?.email ?? "");
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(!!pending);
@@ -110,7 +121,7 @@ export function RecoverLink({ captchaToken, onUsed }: { captchaToken?: string; o
         <>
           <p className="text-xs text-muted">Entre le code à 8 chiffres reçu à <b className="text-ink">{email}</b> (pense aux spams). Tu peux aller lire ton mail et revenir ici : cette étape reste ouverte 1 h.</p>
           <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
-          <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(async () => { await recoverVerify(email, code); try { localStorage.removeItem(PENDING); } catch { /* rien */ } })}
+          <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(async () => { if (beforeVerify && !(await beforeVerify())) return; await recoverVerify(email, code); try { localStorage.removeItem(PENDING); } catch { /* rien */ } })}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Retrouver mon profil"}</button>
           <div className="flex justify-between text-xs">
             <button type="button" disabled={busy} onClick={send} className="text-muted underline">Renvoyer un code</button>
@@ -118,7 +129,58 @@ export function RecoverLink({ captchaToken, onUsed }: { captchaToken?: string; o
           </div>
         </>
       )}
-      <button type="button" onClick={() => { setOpen(false); try { localStorage.removeItem(PENDING); } catch { /* rien */ } }} className="w-full text-xs text-muted">Annuler</button>
+      <button type="button" onClick={() => { setOpen(false); onCancel?.(); try { localStorage.removeItem(PENDING); } catch { /* rien */ } }} className="w-full text-xs text-muted">Annuler</button>
+    </div>
+  );
+}
+
+/** Paramètres → « Retrouver mon compte » : même parcours email → code, avec sa propre vérification anti-robot. */
+export function RecoverAccountSettings() {
+  const me = useHdar((s) => s.me);
+  const [open, setOpen] = useState(() => !!readPending());
+  const [token, setToken] = useState("");
+  const box = useRef<HTMLDivElement>(null);
+  const widget = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    void loadTurnstile().then((ts) => {
+      if (!alive || !ts || !box.current || widget.current) return;
+      try {
+        widget.current = ts.render(box.current, {
+          sitekey: TURNSTILE_SITE_KEY, theme: "dark", language: "fr",
+          callback: (t: string) => setToken(t), "expired-callback": () => setToken(""), "error-callback": () => setToken(""),
+        });
+      } catch { /* widget indisponible */ }
+    });
+    return () => { alive = false; widget.current = null; };
+  }, [open]);
+  const current = me.onboarded ? me.pseudo || "ton profil actuel" : null;
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="flex h-11 w-full items-center justify-center rounded-full border border-line text-sm">
+        🔑 Retrouver mon compte
+      </button>
+    );
+  return (
+    <div className="space-y-2">
+      {current && (
+        <p className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+          Tu es connecté avec <b>{current}</b>. Si tu retrouves un autre compte, cet appareil basculera dessus : {current} restera sur nos serveurs, mais tu ne pourras y revenir que s'il a un email lié (« Protège ton profil »).
+        </p>
+      )}
+      <div ref={box} className="min-h-[65px]" />
+      <RecoverLink
+        startOpen
+        captchaToken={token || undefined}
+        onUsed={() => { setToken(""); if (widget.current) window.turnstile?.reset(widget.current); }}
+        onCancel={() => setOpen(false)}
+        beforeVerify={current ? () => askConfirm({
+          title: "Basculer sur le compte retrouvé ?",
+          body: `Cet appareil quittera ${current} pour le compte lié à cet email. ${current} n'est pas supprimé.`,
+          confirm: "Basculer",
+        }) : undefined}
+      />
     </div>
   );
 }

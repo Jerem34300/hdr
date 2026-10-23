@@ -13,7 +13,7 @@ import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
 import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { RecoverLink } from "./recover";
+import { RecoverAccountSettings, RecoverLink } from "./recover";
 import { GroupChatDemo } from "./group-chat";
 import { LiveChatDemo } from "./live-chat";
 import { SalonInboxRow } from "./salons";
@@ -39,7 +39,7 @@ declare global {
 }
 
 let scriptPromise: Promise<Turnstile | null> | null = null;
-function loadTurnstile(): Promise<Turnstile | null> {
+export function loadTurnstile(): Promise<Turnstile | null> {
   if (!scriptPromise) {
     scriptPromise = new Promise((resolve) => {
       if (window.turnstile) return resolve(window.turnstile);
@@ -214,6 +214,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 function DevPreview() {
   if (location.search.includes("groupchat")) return <GroupChatDemo />;
   if (location.search.includes("dmchat")) return <LiveChatDemo />;
+  if (location.search.includes("recoversettings")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><h1 className="mb-4 font-display text-3xl font-extrabold">Paramètres</h1><RecoverAccountSettings /></main>;
   if (location.search.includes("salonrows")) {
     const iso = (m: number) => new Date(Date.now() - m * 60000).toISOString();
     const base = { description: null, official: true, mine: false, last_at: iso(2), recent: 12, people: 4 };

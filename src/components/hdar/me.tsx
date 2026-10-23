@@ -4,7 +4,7 @@ import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { openIntro } from "./intro-video";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { MapPrivacyToggle, NotifySettings } from "./notify-settings";
-import { ProtectProfileCard } from "./recover";
+import { ProtectProfileCard, RecoverAccountSettings } from "./recover";
 import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
@@ -544,6 +544,9 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
       <ProSettings />
       <p className="mt-6 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>
       <section className="mt-8 border-t border-line pt-6">
+        <div className="mb-4">
+          <RecoverAccountSettings />
+        </div>
         <button
           type="button"
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-signal/60 text-sm text-signal"
