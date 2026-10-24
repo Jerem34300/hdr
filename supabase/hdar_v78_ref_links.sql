@@ -61,3 +61,40 @@ revoke all on function public.hdar_admin_ref_link_archive(text, text, boolean) f
 grant execute on function public.hdar_admin_ref_links(text) to authenticated;
 grant execute on function public.hdar_admin_ref_link_save(text, text, text, boolean) to authenticated;
 grant execute on function public.hdar_admin_ref_link_archive(text, text, boolean) to authenticated;
+
+-- Profils venus par un lien ?ref= (pseudos uniquement, jamais d'email). « Actif » = vu dans les 7 derniers jours et non banni.
+create or replace function public.hdar_admin_ref_profiles(p_key text, p_ref text) returns jsonb
+language plpgsql stable security definer set search_path to '' as $$
+begin
+  perform hdar.admin_check(p_key);
+  return coalesce((select jsonb_agg(jsonb_build_object('id', p.user_id, 'pseudo', p.pseudo, 'photo', p.photo,
+      'created', coalesce(p.created_at, r.at), 'last', greatest(p.updated_at, p.visible_until),
+      'active', greatest(p.updated_at, p.visible_until) > now() - interval '7 days'
+                and not exists (select 1 from hdar.bans b where b.user_id = p.user_id and b.active))
+      order by r.at desc)
+    from hdar.profile_refs r join hdar.profiles p on p.user_id = r.user_id
+    where r.ref = lower(p_ref)), '[]'::jsonb);
+end $$;
+
+-- Classement des parrains (lien d'invitation ?r=) avec leurs filleuls.
+create or replace function public.hdar_admin_referrers(p_key text) returns jsonb
+language plpgsql stable security definer set search_path to '' as $$
+begin
+  perform hdar.admin_check(p_key);
+  return coalesce((select jsonb_agg(t order by (t ->> 'count')::int desc, t ->> 'last' desc) from (
+    select jsonb_build_object('id', p.user_id, 'pseudo', p.pseudo, 'photo', p.photo,
+      'count', count(*), 'rewarded', count(f.rewarded_at), 'last', max(f.created_at),
+      'referred', jsonb_agg(jsonb_build_object('id', c.user_id, 'pseudo', coalesce(c.pseudo, '(profil supprimé)'), 'photo', c.photo,
+          'created', f.created_at, 'rewarded', f.rewarded_at is not null,
+          'active', coalesce(greatest(c.updated_at, c.visible_until) > now() - interval '7 days', false))
+        order by f.created_at desc)) t
+    from hdar.referrals f
+    join hdar.profiles p on p.user_id = f.referrer
+    left join hdar.profiles c on c.user_id = f.referred
+    group by p.user_id, p.pseudo, p.photo) q), '[]'::jsonb);
+end $$;
+
+revoke all on function public.hdar_admin_ref_profiles(text, text) from public, anon;
+revoke all on function public.hdar_admin_referrers(text) from public, anon;
+grant execute on function public.hdar_admin_ref_profiles(text, text) to authenticated;
+grant execute on function public.hdar_admin_referrers(text) to authenticated;

@@ -189,7 +189,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
           </>
         )}
         {tab === "visitors" && <VisitorsTab adminKey={adminKey} />}
-        {tab === "refs" && <RefsTab adminKey={adminKey} />}
+        {tab === "refs" && <RefsTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "convos" && <ConversationsTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "direct" && <LiveNowTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "influencers" && (

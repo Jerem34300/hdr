@@ -1468,3 +1468,7 @@ export const adminRefLinkSave = (key: string, ref: string, label: string, withCo
   rpc("hdar_admin_ref_link_save", { p_key: key, p_ref: ref, p_label: label, p_with_code: withCode });
 export const adminRefLinkArchive = (key: string, ref: string, archived: boolean) =>
   rpc("hdar_admin_ref_link_archive", { p_key: key, p_ref: ref, p_archived: archived });
+export type RefPerson = { id: string | null; pseudo: string; photo: string | null; created: string; active: boolean; rewarded?: boolean };
+export type Referrer = { id: string; pseudo: string; photo: string | null; count: number; rewarded: number; last: string; referred: RefPerson[] };
+export const adminRefProfiles = (key: string, ref: string) => rpc<RefPerson[]>("hdar_admin_ref_profiles", { p_key: key, p_ref: ref });
+export const adminReferrers = (key: string) => rpc<Referrer[]>("hdar_admin_referrers", { p_key: key });

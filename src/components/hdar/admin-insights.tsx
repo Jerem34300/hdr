@@ -1,4 +1,4 @@
-import { RefLinks } from "./admin-ref-links";
+import { Referrers, RefLinks } from "./admin-ref-links";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MediaView } from "./media-composer";
@@ -690,7 +690,7 @@ function AdminThread({ adminKey, a, b }: { adminKey: string; a: string; b: strin
 }
 
 /** Provenance : visites arrivées par un lien ?ref=, profils créés et conversion, au total et par jour. */
-export function RefsTab({ adminKey }: { adminKey: string }) {
+export function RefsTab({ adminKey, onOpen }: { adminKey: string; onOpen?: (id: string) => void }) {
   const [days, setDays] = useState(30);
   const load = useCallback(() => adminRefs(adminKey, days), [adminKey, days]);
   const { data, error } = useLoad<AdminRefs>(load, 60_000);
@@ -699,7 +699,8 @@ export function RefsTab({ adminKey }: { adminKey: string }) {
   const profiles = (data?.total ?? []).reduce((n, r) => n + r.profiles, 0);
   return (
     <div className="space-y-4">
-      <RefLinks adminKey={adminKey} />
+      <RefLinks adminKey={adminKey} onOpen={onOpen} />
+      <Referrers adminKey={adminKey} onOpen={onOpen} />
       <h3 className="pt-2 font-display text-lg font-bold">Statistiques par période</h3>
       <Seg value={days} onChange={setDays} options={[[1, "Aujourd'hui"], [7, "7 j"], [30, "30 j"], [90, "90 j"]]} />
       <ErrorNote error={error} />
