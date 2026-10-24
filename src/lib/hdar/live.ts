@@ -1462,3 +1462,9 @@ export const hideOfflineSet = (on: boolean) => rpc("hdar_map_hide_offline_set", 
 export type RefRow = { ref: string; visits: number; profiles: number; conv: number | null };
 export type AdminRefs = { days: number; total: RefRow[]; daily: (RefRow & { day: string })[] };
 export const adminRefs = (key: string, days: number) => rpc<AdminRefs>("hdar_admin_refs", { p_key: key, p_days: days });
+export type RefLink = { ref: string; label: string; with_code: boolean; archived: boolean; created_at: string | null; visits: number; profiles: number };
+export const adminRefLinks = (key: string) => rpc<RefLink[]>("hdar_admin_ref_links", { p_key: key });
+export const adminRefLinkSave = (key: string, ref: string, label: string, withCode: boolean) =>
+  rpc("hdar_admin_ref_link_save", { p_key: key, p_ref: ref, p_label: label, p_with_code: withCode });
+export const adminRefLinkArchive = (key: string, ref: string, archived: boolean) =>
+  rpc("hdar_admin_ref_link_archive", { p_key: key, p_ref: ref, p_archived: archived });

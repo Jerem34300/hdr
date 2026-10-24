@@ -16,6 +16,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverAccountSettings, RecoverLink } from "./recover";
 import { GroupChatDemo } from "./group-chat";
 import { LiveChatDemo } from "./live-chat";
+import { RefLinksDemo } from "./admin-ref-links";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
@@ -214,6 +215,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 function DevPreview() {
   if (location.search.includes("groupchat")) return <GroupChatDemo />;
   if (location.search.includes("dmchat")) return <LiveChatDemo />;
+  if (location.search.includes("reflinks")) return <RefLinksDemo />;
   if (location.search.includes("recoversettings")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><h1 className="mb-4 font-display text-3xl font-extrabold">Paramètres</h1><RecoverAccountSettings /></main>;
   if (location.search.includes("salonrows")) {
     const iso = (m: number) => new Date(Date.now() - m * 60000).toISOString();

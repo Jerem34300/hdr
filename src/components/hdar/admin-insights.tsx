@@ -1,3 +1,4 @@
+import { RefLinks } from "./admin-ref-links";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MediaView } from "./media-composer";
@@ -698,6 +699,8 @@ export function RefsTab({ adminKey }: { adminKey: string }) {
   const profiles = (data?.total ?? []).reduce((n, r) => n + r.profiles, 0);
   return (
     <div className="space-y-4">
+      <RefLinks adminKey={adminKey} />
+      <h3 className="pt-2 font-display text-lg font-bold">Statistiques par période</h3>
       <Seg value={days} onChange={setDays} options={[[1, "Aujourd'hui"], [7, "7 j"], [30, "30 j"], [90, "90 j"]]} />
       <ErrorNote error={error} />
       <p className="text-xs text-muted">
