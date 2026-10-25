@@ -1480,8 +1480,11 @@ export const adminReferrers = (key: string) => rpc<Referrer[]>("hdar_admin_refer
 
 // Transfert (v80) ----------------------------------------------------------------
 export type FwdScope = "dm" | "salon";
+export type FwdSource = FwdScope | "area";
 /** Copie côté serveur d'un message (texte ou média) vers un message privé ou un salon. */
-export const forwardMessage = (src: FwdScope, id: string, dst: FwdScope, to: string) =>
+export const forwardMessage = (src: FwdSource, id: string, dst: FwdScope, to: string) =>
   rpc("hdar_forward", { p_src: src, p_id: id, p_dst: dst, p_to: dst === "dm" ? otherId(to) : to });
 /** Libellé d'en-tête : « Transféré » (d'un privé) ou « Transféré de X » (d'un salon). */
 export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f ? `Transféré de ${f}` : "Transféré");
+/** Retirer son propre message privé (supprimé côté serveur pour les deux, v81). */
+export const dmRemove = (id: string) => rpc("hdar_dm_remove", { p_id: id });

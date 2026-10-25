@@ -344,7 +344,7 @@ export function GroupChat(p: Props) {
         </form>
       </div>
 
-      {fwd && <ForwardSheet src="salon" id={fwd.id} preview={preview(fwd)} onClose={() => setFwd(null)} demo={p.demoTargets} />}
+      {fwd && <ForwardSheet src={p.scope} id={fwd.id} preview={preview(fwd)} onClose={() => setFwd(null)} demo={p.demoTargets} />}
       {menu && (
         <MessageMenu
           m={menu}
@@ -354,7 +354,7 @@ export function GroupChat(p: Props) {
           onClose={() => setMenu(null)}
           onReply={() => reply(menu)}
           onEdit={canEditMsg(menu.mine, menu.kind, menu.at) && menu.fwd == null ? () => startEdit(menu) : undefined}
-          onForward={p.scope === "salon" ? () => { setFwd(menu); setMenu(null); } : undefined}
+          onForward={() => { setFwd(menu); setMenu(null); }}
           onProfile={() => {
             setMenu(null);
             openProfile(menu.fromId, menu.pseudo);
@@ -463,7 +463,7 @@ function MessageMenu({
           <span className="block text-xs font-bold" style={{ color: nameColor(m.fromId) }}>
             {m.mine ? "Toi" : m.pseudo} · {new Date(m.at).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" })}
           </span>
-          <span className="line-clamp-3 text-muted">{preview(m)}</span>
+          <span className="block max-h-[5.75rem] overflow-y-auto break-words whitespace-pre-wrap text-muted">{preview(m)}</span>
         </div>
         <button type="button" className={item} onClick={onReply}>
           <CornerUpLeft className="size-5" /> Répondre
@@ -477,16 +477,6 @@ function MessageMenu({
           <button type="button" className={item} onClick={onEdit}>
             <Pencil className="size-5" /> Modifier
           </button>
-        )}
-        {!m.mine && (
-          <>
-            <button type="button" className={item} onClick={onProfile}>
-              <UserRound className="size-5" /> Voir le profil de {m.pseudo}
-            </button>
-            <button type="button" className={item} onClick={onPrivate}>
-              <MessageCircle className="size-5" /> Écrire en privé
-            </button>
-          </>
         )}
         {m.kind === "text" && (
           <button
@@ -506,6 +496,16 @@ function MessageMenu({
           </button>
         )}
         {!m.mine && (
+          <>
+            <button type="button" className={item} onClick={onProfile}>
+              <UserRound className="size-5" /> Voir le profil de {m.pseudo}
+            </button>
+            <button type="button" className={item} onClick={onPrivate}>
+              <MessageCircle className="size-5" /> Écrire en privé
+            </button>
+          </>
+        )}
+        {!m.mine && (
           <button type="button" className={item + " text-signal"} onClick={onReport}>
             <Flag className="size-5" /> Signaler
           </button>
@@ -521,6 +521,7 @@ function MessageMenu({
 /** Aperçu de dev uniquement (captures d'écran), avec des messages d'exemple. */
 export function GroupChatDemo() {
   const now = Date.now();
+  const area = typeof location !== "undefined" && location.search.includes("area");
   const mk = (i: number, fromId: string, pseudo: string, body: string, ago: number, extra: Partial<GroupLine> = {}): GroupLine => ({
     id: `d${i}`, fromId, pseudo, body, kind: "text", at: now - ago * 60_000, mine: fromId === "me", replyTo: null, reply: null, ...extra,
   });
@@ -532,11 +533,12 @@ export function GroupChatDemo() {
     mk(5, "7f3a", "Lucas34", "Je connais un bar sympa rue de l'Université", 11, { reactions: [{ e: "👍", n: 2, mine: true }] }),
     mk(6, "c90e", "Sam", "Je viens aussi si ça vous dérange pas 😊", 3),
     mk(7, "me", "Toi", "Le Live de ce soir commence à 21 h 🎥", 1, { fwd: "Hdar admin" }),
+    mk(8, "c90e", "Sam", "D'ici quelques minutes je serai devant la Comédie, côté fontaine des Trois Grâces. Je porte une veste bleue et j'ai un parapluie rouge, vous ne pouvez pas me rater 😄 Si vous êtes en retard écrivez ici, j'attends jusqu'à 22 h 30 au moins.", 0.5),
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">
       <GroupChat
-        scope="salon"
+        scope={area ? "area" : "salon"}
         lines={lines}
         loaded
         maxLength={1000}
@@ -555,9 +557,9 @@ export function GroupChatDemo() {
         ]}
         header={
           <header className="flex items-center gap-2 border-b border-line px-2 py-2">
-            <span className="px-3 text-2xl">☀️</span>
+            <span className="px-3 text-2xl">{area ? "📍" : "☀️"}</span>
             <div className="min-w-0 flex-1">
-              <p className="font-display font-bold">Occitanie</p>
+              <p className="font-display font-bold">{area ? "Chat du quartier" : "Occitanie"}</p>
               <p className="text-xs text-muted">3 personnes aujourd'hui · Montpellier, Toulouse, Nîmes…</p>
             </div>
             <OnlineButton

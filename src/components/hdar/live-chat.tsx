@@ -17,6 +17,7 @@ import {
   Check,
   CheckCheck,
   Forward,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
@@ -34,6 +35,7 @@ import {
   type Reaction,
   canEditMsg,
   editMessage,
+  dmRemove,
 } from "@/lib/hdar/live";
 import { LongPress, ReactionBar, ReactionChips, ReplyDraft, ReplyQuote, sendReaction } from "./reactions";
 import { Row } from "./group-chat";
@@ -82,6 +84,15 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [fwd, setFwd] = useState<LiveMsg | null>(null);
+  const removeMine = (m: LiveMsg) => {
+    setMsgMenu(null);
+    void askConfirm({ title: "Retirer ce message ?", body: "Il disparaît pour toi et pour l'autre personne.", confirm: "Retirer", danger: true }).then((ok) => {
+      if (!ok) return;
+      const drop = () => setMsgs((list) => list.filter((x) => x.id !== m.id));
+      if (demo) return drop();
+      void dmRemove(m.id).then(drop).catch((e: Error) => toast(e.message));
+    });
+  };
   const input = useRef<HTMLInputElement>(null);
   // Réactions affichées tout de suite, avant le prochain rafraîchissement du fil.
   const [over, setOver] = useState<Record<string, Reaction[]>>({});
@@ -485,7 +496,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             </div>
             <div className="mx-4 mb-2 rounded-2xl bg-surface px-3 py-2 text-sm">
               <span className="block text-xs font-bold text-muted">{msgMenu.mine ? "Toi" : pseudo}</span>
-              <span className="line-clamp-3 text-muted">{msgPreview(msgMenu)}</span>
+              <span className="block max-h-[5.75rem] overflow-y-auto break-words whitespace-pre-wrap text-muted">{msgPreview(msgMenu)}</span>
             </div>
             <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => reply(msgMenu)}>
               <CornerUpLeft className="size-5" /> Répondre
@@ -510,6 +521,11 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
                 }}
               >
                 <Copy className="size-5" /> Copier
+              </button>
+            )}
+            {msgMenu.mine && (
+              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] text-signal active:bg-white/5" onClick={() => removeMine(msgMenu)}>
+                <Trash2 className="size-5" /> Retirer le message
               </button>
             )}
             <button type="button" className="flex h-12 w-full items-center justify-center px-5 text-[15px] text-muted active:bg-white/5" onClick={() => setMsgMenu(null)}>

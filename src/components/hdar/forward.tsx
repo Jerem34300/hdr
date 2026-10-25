@@ -2,7 +2,7 @@ import { Forward, Search, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { deviceId } from "@/lib/hdar/device";
-import { forwardMessage, fwdLabel, listConversations, listSalons, type Conversation, type FwdScope, type Salon } from "@/lib/hdar/live";
+import { forwardMessage, fwdLabel, listConversations, listSalons, type Conversation, type FwdScope, type FwdSource, type Salon } from "@/lib/hdar/live";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
 
@@ -17,7 +17,7 @@ export function FwdHeader({ fwd }: { fwd?: string | null }) {
 }
 
 /** Choisir où transférer : conversations privées récentes + salons, avec recherche. */
-export function ForwardSheet({ src, id, preview, onClose, demo }: { src: FwdScope; id: string; preview: string; onClose: () => void; demo?: Target[] }) {
+export function ForwardSheet({ src, id, preview, onClose, demo }: { src: FwdSource; id: string; preview: string; onClose: () => void; demo?: Target[] }) {
   const onboarded = useHdar((s) => s.me.onboarded);
   const [targets, setTargets] = useState<Target[] | null>(demo ?? null);
   const [q, setQ] = useState("");
@@ -54,8 +54,8 @@ export function ForwardSheet({ src, id, preview, onClose, demo }: { src: FwdScop
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50" onClick={onClose}>
       <div className="dock flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-3xl border border-line bg-night pt-2" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-white/20" />
-        <p className="px-4 font-display text-lg font-bold">Transférer</p>
-        <p className="mx-4 mt-1 line-clamp-2 rounded-xl bg-surface px-3 py-2 text-sm text-muted">{preview}</p>
+        <p className="shrink-0 px-4 font-display text-lg font-bold">Transférer</p>
+        <p className="mx-4 mt-2 max-h-[5.75rem] shrink-0 overflow-y-auto rounded-xl bg-surface px-3 py-2 text-sm leading-snug break-words whitespace-pre-wrap text-muted">{preview}</p>
         <label className="mx-4 mt-3 flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 focus-within:border-signal">
           <Search className="size-4 text-muted" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher une personne ou un salon" className="min-w-0 flex-1 bg-transparent text-base outline-none" />
