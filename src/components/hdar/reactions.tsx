@@ -68,7 +68,7 @@ export function ReplyQuote({ reply, mine, onJump }: { reply: { pseudo: string; b
         e.stopPropagation();
         onJump();
       }}
-      className={"my-1 block cursor-pointer rounded-lg border-l-[3px] px-2 py-1 text-left text-[13px] " + (mine ? "border-night/60 bg-night/10" : "border-signal bg-white/5")}
+      className={"my-1 block cursor-pointer rounded-lg border-l-[3px] px-2 py-1 text-left text-[13px] " + (mine ? "border-current/60 bg-black/10" : "border-signal bg-white/5")}
     >
       <span className="block truncate font-bold">{reply.pseudo}</span>
       <span className="line-clamp-2 opacity-80">{reply.body}</span>

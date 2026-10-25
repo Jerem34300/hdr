@@ -34,6 +34,8 @@ export type LiveMsg = {
   reply?: { pseudo: string; body: string } | null;
   reactions?: Reaction[];
   editedAt?: string | null;
+  /** Transféré : "" = d'un message privé (auteur jamais nommé), sinon pseudo d'origine (salon). */
+  fwd?: string | null;
 };
 
 /** Un message se modifie pendant 15 min après l'envoi (texte seulement, v76). */
@@ -189,7 +191,7 @@ export async function listLive({ data }: { data: string }): Promise<LivePin[]> {
 
 type ThreadRow = {
   id: string; from_id: string; body: string; at: string; kind: LiveMsg["kind"]; duration: number | null;
-  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; fwd?: string | null;
 };
 
 export async function readThread({
@@ -218,6 +220,7 @@ export async function readThread({
     reply: r.reply ?? null,
     reactions: r.reactions ?? [],
     editedAt: r.edited_at ?? null,
+    fwd: r.fwd ?? null,
   }));
 }
 
@@ -1267,12 +1270,13 @@ export type GroupLine = {
   reply: { pseudo: string; body: string } | null;
   reactions?: Reaction[];
   editedAt?: string | null;
+  fwd?: string | null;
   lat?: number;
   lng?: number;
 };
 type GroupRow = {
   id: string; from_id: string; pseudo: string; body: string; kind?: string | null; at: string; mine: boolean;
-  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; lat?: number; lng?: number;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; fwd?: string | null; lat?: number; lng?: number;
 };
 const toLine = (r: GroupRow): GroupLine => ({
   id: r.id,
@@ -1286,6 +1290,7 @@ const toLine = (r: GroupRow): GroupLine => ({
   reply: r.reply ?? null,
   reactions: r.reactions ?? [],
   editedAt: r.edited_at ?? null,
+  fwd: r.fwd ?? null,
   lat: r.lat == null ? undefined : Number(r.lat),
   lng: r.lng == null ? undefined : Number(r.lng),
 });
@@ -1472,3 +1477,11 @@ export type RefPerson = { id: string | null; pseudo: string; photo: string | nul
 export type Referrer = { id: string; pseudo: string; photo: string | null; count: number; rewarded: number; last: string; referred: RefPerson[] };
 export const adminRefProfiles = (key: string, ref: string) => rpc<RefPerson[]>("hdar_admin_ref_profiles", { p_key: key, p_ref: ref });
 export const adminReferrers = (key: string) => rpc<Referrer[]>("hdar_admin_referrers", { p_key: key });
+
+// Transfert (v80) ----------------------------------------------------------------
+export type FwdScope = "dm" | "salon";
+/** Copie côté serveur d'un message (texte ou média) vers un message privé ou un salon. */
+export const forwardMessage = (src: FwdScope, id: string, dst: FwdScope, to: string) =>
+  rpc("hdar_forward", { p_src: src, p_id: id, p_dst: dst, p_to: dst === "dm" ? otherId(to) : to });
+/** Libellé d'en-tête : « Transféré » (d'un privé) ou « Transféré de X » (d'un salon). */
+export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f ? `Transféré de ${f}` : "Transféré");

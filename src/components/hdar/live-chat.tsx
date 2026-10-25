@@ -14,6 +14,9 @@ import {
   Smile,
   Square,
   Video,
+  Check,
+  CheckCheck,
+  Forward,
 } from "lucide-react";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
@@ -34,6 +37,7 @@ import {
 } from "@/lib/hdar/live";
 import { LongPress, ReactionBar, ReactionChips, ReplyDraft, ReplyQuote, sendReaction } from "./reactions";
 import { Row } from "./group-chat";
+import { ForwardSheet, FwdHeader } from "./forward";
 import { deviceId } from "@/lib/hdar/device";
 import { readImage } from "@/lib/hdar/media";
 import { askConfirm } from "@/lib/hdar/confirm";
@@ -77,6 +81,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const [replyTo, setReplyTo] = useState<LiveMsg | null>(null);
   const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
+  const [fwd, setFwd] = useState<LiveMsg | null>(null);
   const input = useRef<HTMLInputElement>(null);
   // Réactions affichées tout de suite, avant le prochain rafraîchissement du fil.
   const [over, setOver] = useState<Record<string, Reaction[]>>({});
@@ -118,7 +123,6 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
     setFlash(id);
     window.setTimeout(() => setFlash((f) => (f === id ? null : f)), 1400);
   };
-  const lastMine = msgs.map((m) => m.mine).lastIndexOf(true);
   const [busy, setBusy] = useState(false);
   const [rec, setRec] = useState<number | null>(null);
   const recRef = useRef<MediaRecorder | null>(null);
@@ -410,7 +414,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           </div>
         )}
       </header>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4">
+      <div className="chat-wall min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
         {msgs.length === 0 && (
           <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>
         )}
@@ -421,24 +425,32 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
                 <LongPress
                   onLong={() => setMsgMenu(m)}
                   className={
-                    "max-w-[80%] rounded-2xl px-3 py-2 text-sm select-none transition-shadow md:select-text " +
-                    (m.mine ? "bg-signal text-night" : "bg-surface") +
+                    "max-w-[80%] rounded-[18px] px-3 pt-1.5 pb-1 shadow-sm select-none transition-shadow md:select-text " +
+                    (m.mine ? "bubble-mine" : "bubble-other") +
+                    ((msgs[i + 1]?.mine ?? !m.mine) !== m.mine ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
                     (flash === m.id ? " ring-2 ring-amber-300" : "")
                   }
                 >
+                  <FwdHeader fwd={m.fwd} />
                   {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
-                  {m.kind === "text" ? (
-                    <AdQuoteBody body={bodyOf(m)} mine={m.mine} />
-                  ) : m.kind === "location" ? (
-                    <LocationBubble msg={m} />
-                  ) : demo ? (
-                    <p>{msgPreview(m)}</p>
-                  ) : (
-                    <LiveMedia msg={m} />
-                  )}
-                  {(m.editedAt || edits[m.id] !== undefined) && (
-                    <span className={"mt-0.5 block text-right text-[11px] " + (m.mine ? "text-night/60" : "text-muted")}>modifié</span>
-                  )}
+                  <div className="msg-text">
+                    {m.kind === "text" ? (
+                      <AdQuoteBody body={bodyOf(m)} mine={m.mine} />
+                    ) : m.kind === "location" ? (
+                      <LocationBubble msg={m} />
+                    ) : demo ? (
+                      <p>{msgPreview(m)}</p>
+                    ) : (
+                      <LiveMedia msg={m} />
+                    )}
+                  </div>
+                  <span className="bubble-meta mt-0.5 flex items-center justify-end gap-1 text-[11px]">
+                    {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
+                    {new Date(pgTime(m.at)).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    {m.mine && (seenAt !== null && seenAt >= pgTime(m.at)
+                      ? <CheckCheck aria-label="Vu" className="size-3.5" />
+                      : <Check aria-label="Envoyé" className="size-3.5" />)}
+                  </span>
                 </LongPress>
                 <button
                   type="button"
@@ -452,9 +464,6 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               <div className="mt-0.5">
                 <ReactionChips list={reactionsOf(m)} mine={m.mine} onToggle={(e) => react(m, e)} />
               </div>
-              {m.mine && i === lastMine && seenAt !== null && seenAt >= pgTime(m.at) && (
-                <p className="mt-0.5 text-[11px] text-muted">Vu</p>
-              )}
             </div>
           </Row>
         ))}
@@ -466,6 +475,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         </p>
       )}
       {busy && rec === null && <p className="px-4 pb-2 text-xs text-muted">Envoi…</p>}
+      {fwd && <ForwardSheet src="dm" id={fwd.id} preview={msgPreview(fwd)} onClose={() => setFwd(null)} demo={demo ? [{ scope: "salon", id: "s1", name: "Général", emoji: "💬", hint: "Salon · 12 en ligne" }, { scope: "dm", id: "u2", name: "Nina", hint: "Message privé" }] : undefined} />}
       {msgMenu && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={() => setMsgMenu(null)}>
           <div className="dock w-full max-w-md rounded-t-3xl border border-line bg-night pt-2" onClick={(e) => e.stopPropagation()}>
@@ -480,7 +490,12 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => reply(msgMenu)}>
               <CornerUpLeft className="size-5" /> Répondre
             </button>
-            {canEditMsg(msgMenu.mine, msgMenu.kind, pgTime(msgMenu.at)) && (
+            {msgMenu.kind !== "location" && (
+              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => { setFwd(msgMenu); setMsgMenu(null); }}>
+                <Forward className="size-5" /> Transférer
+              </button>
+            )}
+            {canEditMsg(msgMenu.mine, msgMenu.kind, pgTime(msgMenu.at)) && msgMenu.fwd == null && (
               <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => startEdit(msgMenu)}>
                 <Pencil className="size-5" /> Modifier
               </button>
@@ -737,6 +752,7 @@ export function LiveChatDemo() {
     { id: "m3", mine: false, body: "Top, je connais un bar sympa rue de l'Université", at: at(35), kind: "text", duration: null },
     { id: "m4", mine: true, body: "Carrément, on dit 22 h ?", at: at(6), editedAt: at(5), kind: "text", duration: null, replyTo: "m3", reply: { pseudo: "Lucas34", body: "Top, je connais un bar sympa rue de l'Université" } },
     { id: "m5", mine: false, body: "Parfait 😄 à tout à l'heure", at: at(4), kind: "text", duration: null, reactions: [{ e: "❤️", n: 1, mine: true }, { e: "👍", n: 1, mine: true }] },
+    { id: "m6", mine: true, body: "Le Live de ce soir commence à 21 h 🎥", at: at(2), kind: "text", duration: null, fwd: "Hdar admin" },
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">

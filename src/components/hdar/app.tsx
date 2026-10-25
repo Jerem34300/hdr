@@ -1,3 +1,4 @@
+import "@/lib/hdar/appearance";
 import { resyncProfileFromServer } from "@/lib/hdar/recover";
 import { SurprisePopup } from "./growth";
 import { IntroVideo } from "./intro-video";

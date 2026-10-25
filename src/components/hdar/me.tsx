@@ -6,6 +6,7 @@ import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { MapPrivacyToggle, NotifySettings } from "./notify-settings";
 import { ProtectProfileCard, RecoverAccountSettings } from "./recover";
 import { LogoutButton, PinSettings } from "./security";
+import { AppearanceScreen } from "./appearance";
 import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
@@ -530,7 +531,9 @@ function BoostButton() {
 
 /** Paramètres : notifications, sons, confidentialité, compte. Ouvert par la roue ⚙️ du profil. */
 function SettingsScreen({ onBack }: { onBack: () => void }) {
+  const [appearance, setAppearance] = useState(false);
   const reset = useHdar((s) => s.reset);
+  if (appearance) return <AppearanceScreen onBack={() => setAppearance(false)} />;
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10">
       <div className="flex items-center gap-2">
@@ -540,6 +543,11 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Paramètres</h1>
       </div>
       <RedeemCode />
+      <button type="button" onClick={() => setAppearance(true)} className="mt-6 flex h-14 w-full items-center gap-3 rounded-2xl border border-line px-4 text-left">
+        <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#ff5a4e] via-[#7c5cff] to-[#2f7cf6] text-base">🎨</span>
+        <span className="flex-1"><span className="block text-sm font-bold">Apparence</span><span className="block text-xs text-muted">Couleur des bulles, police, taille, fond</span></span>
+        <span className="text-muted">›</span>
+      </button>
       <NotifySettings />
       <section className="mt-6"><p className="mb-1 text-xs font-bold tracking-[0.2em] text-muted uppercase">Carte</p><MapPrivacyToggle /></section>
       <ProSettings />

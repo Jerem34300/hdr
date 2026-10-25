@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowDown, Copy, CornerUpLeft, Flag, MessageCircle, Pencil, Send, Smile, Trash2, UserRound } from "lucide-react";
+import { ArrowDown, Copy, CornerUpLeft, Flag, Forward, MessageCircle, Pencil, Send, Smile, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import type { MediaKind, MediaScope } from "@/lib/hdar/chat-media";
 import { canEditMsg, editMessage, type GroupLine, type Reaction } from "@/lib/hdar/live";
@@ -9,6 +9,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
 import { RoomAttach, RoomMedia } from "./media-composer";
 import { OnlineButton } from "./room-people";
+import { ForwardSheet, FwdHeader } from "./forward";
 
 /** Couleur stable du pseudo (comme Telegram), lisible sur fond sombre. */
 const NAME_COLORS = ["#FA6F6C", "#60a5fa", "#34d399", "#fbbf24", "#c084fc", "#f472b6", "#22d3ee", "#a3e635"];
@@ -50,6 +51,8 @@ type Props = {
   /** Raison pour laquelle les médias sont indisponibles (affichée au toucher du trombone). */
   mediaLockedHint?: string;
   onChanged: () => void;
+  /** Aperçu de dev : destinations fictives du transfert. */
+  demoTargets?: Parameters<typeof ForwardSheet>[0]["demo"];
 };
 
 /** Discussion de groupe façon messagerie : bulles, heures, jours, réponses citées, menu par message. */
@@ -58,6 +61,7 @@ export function GroupChat(p: Props) {
   const openLive = useHdar((s) => s.openLive);
   const onboarded = useHdar((s) => s.me.onboarded);
   const setTab = useHdar((s) => s.setTab);
+  const [fwd, setFwd] = useState<GroupLine | null>(null);
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<GroupLine | null>(null);
   const [menu, setMenu] = useState<GroupLine | null>(null);
@@ -172,7 +176,7 @@ export function GroupChat(p: Props) {
       <div className="relative min-h-0 flex-1">
         <div
           ref={box}
-          className="h-full overflow-y-auto px-3 py-3"
+          className="chat-wall h-full overflow-y-auto px-3 py-3"
           onScroll={(e) => {
             const el = e.currentTarget;
             const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
@@ -210,9 +214,9 @@ export function GroupChat(p: Props) {
                       type="button"
                       onClick={() => setMenu(m)}
                       className={
-                        "relative max-w-[80%] min-w-[72px] px-3 pt-1.5 pb-1 text-left text-[15px] leading-snug break-words whitespace-pre-wrap transition-colors " +
-                        (m.mine ? "rounded-2xl bg-signal text-night" : "rounded-2xl bg-surface text-ink") +
-                        (tail ? (m.mine ? " rounded-br-md" : " rounded-bl-md") : "") +
+                        "relative max-w-[80%] min-w-[84px] px-3 pt-1.5 pb-1 text-left leading-snug break-words whitespace-pre-wrap shadow-sm transition-colors rounded-[18px] " +
+                        (m.mine ? "bubble-mine" : "bubble-other") +
+                        (tail ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
                         (flash === m.id ? " ring-2 ring-amber-300" : "")
                       }
                     >
@@ -221,9 +225,10 @@ export function GroupChat(p: Props) {
                           {m.pseudo}
                         </span>
                       )}
+                      <FwdHeader fwd={m.fwd} />
                       {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
-                      {m.kind === "text" ? bodyOf(m) : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}
-                      <span className={"float-right mt-1.5 ml-2 translate-y-0.5 text-[11px] " + (m.mine ? "text-night/60" : "text-muted")}>
+                      <span className="msg-text">{m.kind === "text" ? bodyOf(m) : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}</span>
+                      <span className="bubble-meta float-right mt-1.5 ml-2 translate-y-0.5 text-[11px]">
                         {extra ? `${extra} · ` : ""}
                         {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
                         {hhmm(m.at)}
@@ -339,6 +344,7 @@ export function GroupChat(p: Props) {
         </form>
       </div>
 
+      {fwd && <ForwardSheet src="salon" id={fwd.id} preview={preview(fwd)} onClose={() => setFwd(null)} demo={p.demoTargets} />}
       {menu && (
         <MessageMenu
           m={menu}
@@ -347,7 +353,8 @@ export function GroupChat(p: Props) {
           onReact={(e) => react(menu, e)}
           onClose={() => setMenu(null)}
           onReply={() => reply(menu)}
-          onEdit={canEditMsg(menu.mine, menu.kind, menu.at) ? () => startEdit(menu) : undefined}
+          onEdit={canEditMsg(menu.mine, menu.kind, menu.at) && menu.fwd == null ? () => startEdit(menu) : undefined}
+          onForward={p.scope === "salon" ? () => { setFwd(menu); setMenu(null); } : undefined}
           onProfile={() => {
             setMenu(null);
             openProfile(menu.fromId, menu.pseudo);
@@ -423,6 +430,7 @@ function MessageMenu({
   reactions,
   onReact,
   onEdit,
+  onForward,
   onClose,
   onReply,
   onProfile,
@@ -435,6 +443,7 @@ function MessageMenu({
   reactions?: Reaction[];
   onReact: (emoji: string) => void;
   onEdit?: () => void;
+  onForward?: () => void;
   onClose: () => void;
   onReply: () => void;
   onProfile: () => void;
@@ -459,6 +468,11 @@ function MessageMenu({
         <button type="button" className={item} onClick={onReply}>
           <CornerUpLeft className="size-5" /> Répondre
         </button>
+        {onForward && (
+          <button type="button" className={item} onClick={onForward}>
+            <Forward className="size-5" /> Transférer
+          </button>
+        )}
         {onEdit && (
           <button type="button" className={item} onClick={onEdit}>
             <Pencil className="size-5" /> Modifier
@@ -517,6 +531,7 @@ export function GroupChatDemo() {
     mk(4, "7f3a", "Lucas34", "Top ! On se retrouve où ?", 12, { replyTo: "d3", reply: { pseudo: "Toi", body: "Partant pour un verre 🔥" } }),
     mk(5, "7f3a", "Lucas34", "Je connais un bar sympa rue de l'Université", 11, { reactions: [{ e: "👍", n: 2, mine: true }] }),
     mk(6, "c90e", "Sam", "Je viens aussi si ça vous dérange pas 😊", 3),
+    mk(7, "me", "Toi", "Le Live de ce soir commence à 21 h 🎥", 1, { fwd: "Hdar admin" }),
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">
@@ -532,6 +547,12 @@ export function GroupChatDemo() {
         onSend={async () => undefined}
         mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
         onChanged={() => undefined}
+        demoTargets={[
+          { scope: "dm", id: "u1", name: "Alex", hint: "Message privé" },
+          { scope: "dm", id: "u2", name: "Nina", hint: "Message privé" },
+          { scope: "salon", id: "s1", name: "Général", emoji: "💬", hint: "Salon · 12 en ligne" },
+          { scope: "salon", id: "s2", name: "LGBT+", emoji: "🏳️‍🌈", hint: "Salon · 5 en ligne" },
+        ]}
         header={
           <header className="flex items-center gap-2 border-b border-line px-2 py-2">
             <span className="px-3 text-2xl">☀️</span>

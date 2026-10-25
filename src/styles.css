@@ -299,3 +299,15 @@
 .confetti span { position: absolute; top: -20px; border-radius: 2px; opacity: .95; animation-name: hdar-confetti; animation-timing-function: linear; animation-iteration-count: 3; animation-fill-mode: both; }
 @keyframes hdar-confetti { 0% { transform: translate3d(0, -20px, 0) rotate(0deg); } 100% { transform: translate3d(40px, 110vh, 0) rotate(720deg); } }
 @media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
+
+/* Apparence des discussions (Paramètres → Apparence) : mes bulles, police, taille, fond. */
+.bubble-mine { background: var(--my-bubble, var(--color-signal)); color: var(--my-bubble-ink, var(--color-night)); }
+.bubble-mine .bubble-meta { color: var(--my-bubble-meta, rgba(11, 11, 16, 0.6)); }
+.bubble-other { background: var(--color-surface); color: var(--color-ink); }
+.bubble-other .bubble-meta { color: var(--color-muted); }
+.msg-text { font-family: var(--msg-font, inherit); font-size: var(--msg-size, 15px); line-height: 1.35; }
+.chat-wall { background-image: var(--chat-wall, none); background-size: var(--chat-wall-size, auto); background-attachment: local; }
+.tail-mine, .tail-other { position: relative; }
+.tail-mine::after, .tail-other::after { content: ""; position: absolute; bottom: 0; width: 10px; height: 13px; background: inherit; }
+.tail-mine::after { right: -6px; clip-path: path("M0 0 C0 8 3 12 10 13 L0 13 Z"); }
+.tail-other::after { left: -6px; clip-path: path("M10 0 C10 8 7 12 0 13 L10 13 Z"); }
