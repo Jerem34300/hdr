@@ -1,3 +1,4 @@
+import { setBubble } from "@/lib/hdar/live";
 import { Check, CheckCheck, ChevronLeft, Forward } from "lucide-react";
 import type { CSSProperties } from "react";
 import { appearanceVars, BUBBLES, FONTS, SIZES, useAppearance, WALLS } from "@/lib/hdar/appearance";
@@ -35,7 +36,7 @@ export function AppearanceScreen({ onBack }: { onBack: () => void }) {
         <p className={label}>Couleur de mes messages</p>
         <div className="grid grid-cols-4 gap-3">
           {BUBBLES.map((b) => (
-            <button key={b.id} type="button" aria-label={b.name} aria-pressed={a.bubble === b.id} onClick={() => a.set({ bubble: b.id })} className="flex flex-col items-center gap-1">
+            <button key={b.id} type="button" aria-label={b.name} aria-pressed={a.bubble === b.id} onClick={() => { a.set({ bubble: b.id }); void setBubble(b.id).catch(() => {}); }} className="flex flex-col items-center gap-1">
               <span className={"flex size-12 items-center justify-center rounded-full ring-offset-2 ring-offset-night " + (a.bubble === b.id ? "ring-2 ring-ink" : "")} style={{ background: b.bg, color: b.ink }}>{a.bubble === b.id && <Check className="size-5" />}</span>
               <span className="text-[11px] text-muted">{b.name}</span>
             </button>

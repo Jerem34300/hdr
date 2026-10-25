@@ -311,3 +311,5 @@
 .tail-mine::after, .tail-other::after { content: ""; position: absolute; bottom: 0; width: 10px; height: 13px; background: inherit; }
 .tail-mine::after { right: -6px; clip-path: path("M0 0 C0 8 3 12 10 13 L0 13 Z"); }
 .tail-other::after { left: -6px; clip-path: path("M10 0 C10 8 7 12 0 13 L10 13 Z"); }
+.bubble-other.bubble-author { background: var(--b-bg); color: var(--b-ink); }
+.bubble-other.bubble-author .bubble-meta { color: var(--b-meta); }

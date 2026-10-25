@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+import { authorBubble } from "@/lib/hdar/appearance";
 import { parseAdQuote } from "@/lib/hdar/ads";
 import { useFavorites } from "@/lib/hdar/favorites";
 import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
@@ -435,9 +437,10 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               <div className={"group flex max-w-full items-center gap-1 " + (m.mine ? "flex-row-reverse" : "")}>
                 <LongPress
                   onLong={() => setMsgMenu(m)}
+                  style={m.mine ? undefined : (authorBubble(m.bubble) as CSSProperties | undefined)}
                   className={
                     "max-w-[80%] rounded-[18px] px-3 pt-1.5 pb-1 shadow-sm select-none transition-shadow md:select-text " +
-                    (m.mine ? "bubble-mine" : "bubble-other") +
+                    (m.mine ? "bubble-mine" : (m.bubble ? "bubble-other bubble-author" : "bubble-other")) +
                     ((msgs[i + 1]?.mine ?? !m.mine) !== m.mine ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
                     (flash === m.id ? " ring-2 ring-amber-300" : "")
                   }
@@ -763,11 +766,11 @@ function AdQuoteBody({ body, mine }: { body: string; mine: boolean }) {
 export function LiveChatDemo() {
   const at = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
   const msgs: LiveMsg[] = [
-    { id: "m1", mine: false, body: "Salut ! Tu sors ce soir ?", at: at(40), kind: "text", duration: null },
+    { id: "m1", mine: false, bubble: "violet", body: "Salut ! Tu sors ce soir ?", at: at(40), kind: "text", duration: null },
     { id: "m2", mine: true, body: "Oui, je pensais aller vers la Comédie 🍻", at: at(38), kind: "text", duration: null, reactions: [{ e: "🔥", n: 1, mine: false }] },
-    { id: "m3", mine: false, body: "Top, je connais un bar sympa rue de l'Université", at: at(35), kind: "text", duration: null },
+    { id: "m3", mine: false, bubble: "violet", body: "Top, je connais un bar sympa rue de l'Université", at: at(35), kind: "text", duration: null },
     { id: "m4", mine: true, body: "Carrément, on dit 22 h ?", at: at(6), editedAt: at(5), kind: "text", duration: null, replyTo: "m3", reply: { pseudo: "Lucas34", body: "Top, je connais un bar sympa rue de l'Université" } },
-    { id: "m5", mine: false, body: "Parfait 😄 à tout à l'heure", at: at(4), kind: "text", duration: null, reactions: [{ e: "❤️", n: 1, mine: true }, { e: "👍", n: 1, mine: true }] },
+    { id: "m5", mine: false, bubble: "violet", body: "Parfait 😄 à tout à l'heure", at: at(4), kind: "text", duration: null, reactions: [{ e: "❤️", n: 1, mine: true }, { e: "👍", n: 1, mine: true }] },
     { id: "m6", mine: true, body: "Le Live de ce soir commence à 21 h 🎥", at: at(2), kind: "text", duration: null, fwd: "Hdar admin" },
   ];
   return (

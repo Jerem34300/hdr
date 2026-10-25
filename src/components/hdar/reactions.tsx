@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useRef, type ReactNode } from "react";
 import { CornerUpLeft, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
@@ -95,13 +96,14 @@ export function ReplyDraft({ title, color, text, onJump, onCancel, edit }: { tit
 }
 
 /** Appui long (mobile) ou clic droit (ordinateur) → ouvre le menu du message. */
-export function LongPress({ onLong, children, className }: { onLong: () => void; children: ReactNode; className?: string }) {
+export function LongPress({ onLong, children, className, style }: { onLong: () => void; children: ReactNode; className?: string; style?: CSSProperties }) {
   const t = useRef(0);
   const fired = useRef(false);
   const cancel = () => window.clearTimeout(t.current);
   return (
     <div
       className={className}
+      style={style}
       onTouchStart={() => {
         fired.current = false;
         cancel();

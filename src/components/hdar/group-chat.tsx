@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+import { authorBubble } from "@/lib/hdar/appearance";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowDown, Copy, CornerUpLeft, Flag, Forward, MessageCircle, Pencil, Send, Smile, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
@@ -213,15 +215,16 @@ export function GroupChat(p: Props) {
                     <button
                       type="button"
                       onClick={() => setMenu(m)}
+                      style={m.mine ? undefined : (authorBubble(m.bubble) as CSSProperties | undefined)}
                       className={
                         "relative max-w-[80%] min-w-[84px] px-3 pt-1.5 pb-1 text-left leading-snug break-words whitespace-pre-wrap shadow-sm transition-colors rounded-[18px] " +
-                        (m.mine ? "bubble-mine" : "bubble-other") +
+                        (m.mine ? "bubble-mine" : (m.bubble ? "bubble-other bubble-author" : "bubble-other")) +
                         (tail ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
                         (flash === m.id ? " ring-2 ring-amber-300" : "")
                       }
                     >
                       {head && !m.mine && (
-                        <span className="block truncate text-[13px] font-bold" style={{ color: nameColor(m.fromId) }}>
+                        <span className="block truncate text-[13px] font-bold" style={{ color: m.bubble ? "inherit" : nameColor(m.fromId) }}>
                           {m.pseudo}
                         </span>
                       )}
@@ -523,7 +526,7 @@ export function GroupChatDemo() {
   const now = Date.now();
   const area = typeof location !== "undefined" && location.search.includes("area");
   const mk = (i: number, fromId: string, pseudo: string, body: string, ago: number, extra: Partial<GroupLine> = {}): GroupLine => ({
-    id: `d${i}`, fromId, pseudo, body, kind: "text", at: now - ago * 60_000, mine: fromId === "me", replyTo: null, reply: null, ...extra,
+    id: `d${i}`, fromId, pseudo, body, kind: "text", at: now - ago * 60_000, mine: fromId === "me", replyTo: null, reply: null, bubble: ({ "7f3a": "bleu", c90e: "vert" } as Record<string, string>)[fromId] ?? null, ...extra,
   });
   const lines = [
     mk(1, "7f3a", "Lucas34", "Quelqu'un sort ce soir vers Comédie ?", 1500),

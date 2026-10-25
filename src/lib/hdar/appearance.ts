@@ -56,3 +56,9 @@ if (typeof window !== "undefined") {
   applyAppearance(useAppearance.getState());
   useAppearance.subscribe((s) => applyAppearance(s));
 }
+
+/** Style d'une bulle reçue dans la couleur choisie par son auteur (null = gris neutre par défaut). */
+export function authorBubble(id: string | null | undefined): Record<string, string> | undefined {
+  const b = id ? BUBBLES.find((x) => x.id === id) : undefined;
+  return b ? { "--b-bg": b.bg, "--b-ink": b.ink, "--b-meta": b.meta } : undefined;
+}

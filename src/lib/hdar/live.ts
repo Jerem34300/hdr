@@ -36,6 +36,8 @@ export type LiveMsg = {
   editedAt?: string | null;
   /** Transféré : "" = d'un message privé (auteur jamais nommé), sinon pseudo d'origine (salon). */
   fwd?: string | null;
+  /** Couleur de bulle choisie par l'auteur (v82), null = pas de choix. */
+  bubble?: string | null;
 };
 
 /** Un message se modifie pendant 15 min après l'envoi (texte seulement, v76). */
@@ -191,7 +193,7 @@ export async function listLive({ data }: { data: string }): Promise<LivePin[]> {
 
 type ThreadRow = {
   id: string; from_id: string; body: string; at: string; kind: LiveMsg["kind"]; duration: number | null;
-  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; fwd?: string | null;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; fwd?: string | null; bubble?: string | null;
 };
 
 export async function readThread({
@@ -221,6 +223,7 @@ export async function readThread({
     reactions: r.reactions ?? [],
     editedAt: r.edited_at ?? null,
     fwd: r.fwd ?? null,
+    bubble: r.bubble ?? null,
   }));
 }
 
@@ -1271,12 +1274,13 @@ export type GroupLine = {
   reactions?: Reaction[];
   editedAt?: string | null;
   fwd?: string | null;
+  bubble?: string | null;
   lat?: number;
   lng?: number;
 };
 type GroupRow = {
   id: string; from_id: string; pseudo: string; body: string; kind?: string | null; at: string; mine: boolean;
-  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; fwd?: string | null; lat?: number; lng?: number;
+  reply_to?: string | null; reply?: { pseudo: string; body: string } | null; reactions?: Reaction[]; edited_at?: string | null; fwd?: string | null; bubble?: string | null; lat?: number; lng?: number;
 };
 const toLine = (r: GroupRow): GroupLine => ({
   id: r.id,
@@ -1291,6 +1295,7 @@ const toLine = (r: GroupRow): GroupLine => ({
   reactions: r.reactions ?? [],
   editedAt: r.edited_at ?? null,
   fwd: r.fwd ?? null,
+  bubble: r.bubble ?? null,
   lat: r.lat == null ? undefined : Number(r.lat),
   lng: r.lng == null ? undefined : Number(r.lng),
 });
@@ -1488,3 +1493,5 @@ export const forwardMessage = (src: FwdSource, id: string, dst: FwdScope, to: st
 export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f ? `Transféré de ${f}` : "Transféré");
 /** Retirer son propre message privé (supprimé côté serveur pour les deux, v81). */
 export const dmRemove = (id: string) => rpc("hdar_dm_remove", { p_id: id });
+/** Couleur de mes bulles, visible par tous (v82). */
+export const setBubble = (color: string) => rpc("hdar_set_bubble", { p_color: color });
