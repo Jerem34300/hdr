@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+import { ConfirmSheet } from "./confirm-sheet";
 import { useHdar } from "@/lib/hdar/store";
 import { Around } from "./around";
 import { Annonces, demoAds } from "./annonces";
@@ -14,6 +16,7 @@ import { ProLanding } from "./pro-landing";
 import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverAccountSettings, RecoverLink } from "./recover";
+import { LockScreen, LogoutButton, PinGate, PinSettings } from "./security";
 import { GroupChatDemo } from "./group-chat";
 import { LiveChatDemo } from "./live-chat";
 import { RefLinksDemo } from "./admin-ref-links";
@@ -129,7 +132,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
     };
   }, [state]);
 
-  if (state === "ok") return <>{children}</>;
+  if (state === "ok") return <PinGate>{children}</PinGate>;
   if (state === "loading") return null;
   const needsAdult = !adult;
   const ready = (!needsAdult || checked) && (token || widgetFailed) && !busy;
@@ -216,6 +219,8 @@ function DevPreview() {
   if (location.search.includes("groupchat")) return <GroupChatDemo />;
   if (location.search.includes("dmchat")) return <LiveChatDemo />;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
+  if (location.search.includes("lockscreen")) return <LockScreen demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onUnlock={() => toast("Déverrouillé")} />;
+  if (location.search.includes("security")) return <main className="min-h-dvh bg-night px-4 pt-6 pb-10 text-ink"><h1 className="font-display text-3xl font-extrabold">Paramètres</h1><PinSettings /><section className="mt-8 border-t border-line pt-6"><LogoutButton demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onProtect={() => toast("→ Protège ton profil")} /><RecoverAccountSettings /></section><ConfirmSheet /></main>;
   if (location.search.includes("recoversettings")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><h1 className="mb-4 font-display text-3xl font-extrabold">Paramètres</h1><RecoverAccountSettings /></main>;
   if (location.search.includes("salonrows")) {
     const iso = (m: number) => new Date(Date.now() - m * 60000).toISOString();

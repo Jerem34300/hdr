@@ -5,6 +5,7 @@ import { openIntro } from "./intro-video";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { MapPrivacyToggle, NotifySettings } from "./notify-settings";
 import { ProtectProfileCard, RecoverAccountSettings } from "./recover";
+import { LogoutButton, PinSettings } from "./security";
 import { HeartsCount } from "./hearts";
 import { getSensitiveConsent, setSensitiveConsent } from "@/lib/hdar/consent";
 import { deleteMyData } from "@/lib/hdar/live";
@@ -346,7 +347,7 @@ export function Me() {
       </section>
 
       <Favorites />
-      <ProtectProfileCard />
+      <div id="protect-profile"><ProtectProfileCard /></div>
       {me.onboarded && (
         <div className="mt-8 mb-6">
           <button type="button" disabled={savingAll} onClick={() => void saveAll()}
@@ -542,8 +543,10 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
       <NotifySettings />
       <section className="mt-6"><p className="mb-1 text-xs font-bold tracking-[0.2em] text-muted uppercase">Carte</p><MapPrivacyToggle /></section>
       <ProSettings />
+      <PinSettings />
       <p className="mt-6 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>
       <section className="mt-8 border-t border-line pt-6">
+        <LogoutButton onProtect={() => { onBack(); window.setTimeout(() => document.getElementById("protect-profile")?.scrollIntoView({ behavior: "smooth", block: "center" }), 150); }} />
         <div className="mb-4">
           <RecoverAccountSettings />
         </div>
