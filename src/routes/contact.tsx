@@ -39,7 +39,7 @@ function ContactForm() {
   return (
     <LegalPage title="Contact">
       <p className="text-muted">
-        Pas besoin de profil. Pour une demande RGPD, précise ce que tu souhaites (accès,
+        La réponse est peut-être déjà dans la <a className="font-bold text-signal underline" href="/faq">FAQ</a>. Pas besoin de profil. Pour une demande RGPD, précise ce que tu souhaites (accès,
         suppression, rectification…).
       </p>
       <form

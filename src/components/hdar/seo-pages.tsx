@@ -142,7 +142,7 @@ export function SeoShell({ children }: { children: ReactNode }) {
       <footer className="mx-auto max-w-2xl border-t border-line px-5 py-8 text-xs text-muted">
         <p>hdar. — sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, réservé aux 18 ans et plus.</p>
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-          <a href="/rencontre">Toutes les villes</a><a href="/live-coquin">Live</a><a href="/cgu">CGU</a><a href="/confidentialite">Confidentialité</a><a href="/contact">Contact</a>
+          <a href="/rencontre">Toutes les villes</a><a href="/live-coquin">Live</a><a href="/faq">FAQ</a><a href="/cgu">CGU</a><a href="/confidentialite">Confidentialité</a><a href="/contact">Contact</a>
         </p>
         <p className="mt-2">Données communes : INSEE via geo.api.gouv.fr.</p>
       </footer>

@@ -544,7 +544,8 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
       <section className="mt-6"><p className="mb-1 text-xs font-bold tracking-[0.2em] text-muted uppercase">Carte</p><MapPrivacyToggle /></section>
       <ProSettings />
       <PinSettings />
-      <p className="mt-6 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>
+      <a href="/faq" className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-line text-sm">❓ Aide &amp; questions fréquentes</a>
+      <p className="mt-4 text-center text-xs text-muted">ID support : <span className="font-mono">{deviceId().slice(0, 8)}</span> · à donner au support si tu as perdu ton profil</p>
       <section className="mt-8 border-t border-line pt-6">
         <LogoutButton onProtect={() => { onBack(); window.setTimeout(() => document.getElementById("protect-profile")?.scrollIntoView({ behavior: "smooth", block: "center" }), 150); }} />
         <div className="mb-4">
@@ -587,6 +588,10 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
           ·{" "}
           <a className="underline" href="/contact">
             Contact
+          </a>{" "}
+          ·{" "}
+          <a className="underline" href="/faq">
+            FAQ
           </a>
           <br />
           <a className="mt-2 inline-block text-[11px] opacity-70 hover:underline" href="/pro">

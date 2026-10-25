@@ -19,6 +19,7 @@ import { Route as CamToCamRouteImport } from './routes/cam-to-cam'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as LiveCoquinRouteImport } from './routes/live-coquin'
 import { Route as LoginRouteImport } from './routes/login'
@@ -92,6 +93,11 @@ const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveRoute = LiveRouteImport.update({
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
   '/live': typeof LiveRoute
   '/live-coquin': typeof LiveCoquinRoute
   '/login': typeof LoginRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
   '/live': typeof LiveRoute
   '/live-coquin': typeof LiveCoquinRoute
   '/login': typeof LoginRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/cgu': typeof CguRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
   '/live': typeof LiveRoute
   '/live-coquin': typeof LiveCoquinRoute
   '/login': typeof LoginRoute
@@ -339,6 +348,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/confidentialite'
     | '/contact'
+    | '/faq'
     | '/live'
     | '/live-coquin'
     | '/login'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/confidentialite'
     | '/contact'
+    | '/faq'
     | '/live'
     | '/live-coquin'
     | '/login'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/confidentialite'
     | '/contact'
+    | '/faq'
     | '/live'
     | '/live-coquin'
     | '/login'
@@ -448,6 +460,7 @@ export interface RootRouteChildren {
   CguRoute: typeof CguRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
+  FaqRoute: typeof FaqRoute
   LiveRoute: typeof LiveRoute
   LiveCoquinRoute: typeof LiveCoquinRoute
   LoginRoute: typeof LoginRoute
@@ -544,6 +557,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/live': {
@@ -728,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   CguRoute: CguRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
+  FaqRoute: FaqRoute,
   LiveRoute: LiveRoute,
   LiveCoquinRoute: LiveCoquinRoute,
   LoginRoute: LoginRoute,
