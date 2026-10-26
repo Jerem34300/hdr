@@ -980,7 +980,11 @@ export const GENDERS = [
   { id: "h", short: "H", label: "Homme" },
   { id: "f", short: "F", label: "Femme" },
   { id: "x", short: "X", label: "X / non-binaire" },
+  { id: "c", short: "Couple", label: "Couple" },
 ] as const;
+/** Libellé court d'un code genre (h/f/x/c, insensible à la casse), sinon tel quel. */
+export const genderShort = (id: string | null | undefined) => (id ? (GENDERS.find((g) => g.id === id.toLowerCase())?.short ?? id) : "");
+export const seekingShort = (s: string | null | undefined) => (s ? s.split(",").map(genderShort).filter(Boolean).join(", ") : "");
 /** « H · cherche H, X » */
 export function identityLine(iam: string, seeking: string[]) {
   const sh = (id: string) => GENDERS.find((g) => g.id === id)?.short ?? "";

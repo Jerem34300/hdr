@@ -1,3 +1,4 @@
+import { GENDERS, genderShort, seekingShort } from "@/lib/hdar/live";
 import { useEffect, useRef, useState } from "react";
 import { FloatingHearts, HeartPacks } from "./hearts";
 import { useNavigate } from "@tanstack/react-router";
@@ -36,7 +37,7 @@ function gathered(c: RTCPeerConnection) {
   if (c.iceGatheringState === "complete") return Promise.resolve();
   return new Promise<void>((r) => { const t = setTimeout(r, 700); c.addEventListener("icegatheringstatechange", () => { if (c.iceGatheringState === "complete") { clearTimeout(t); r(); } }); });
 }
-const label = (c: LiveCard) => [c.age ? `${c.age} ans` : null, c.iam || null, c.seeking ? `cherche ${c.seeking.split(",").join(", ")}` : null].filter(Boolean).join(" · ");
+const label = (c: LiveCard) => [c.age ? `${c.age} ans` : null, genderShort(c.iam) || null, c.seeking ? `cherche ${seekingShort(c.seeking)}` : null].filter(Boolean).join(" · ");
 
 export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium?: boolean; unblurred?: boolean; online?: number }; pro?: string }) {
   const nav = useNavigate();
@@ -599,7 +600,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setFilterOpen(false)}>
           <div className="w-full space-y-4 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display text-lg font-bold">Filtres Live 👑+</p>
-            <div className="flex gap-2">{["H", "F", "X"].map((g) => { const on = filters.iam.includes(g); return <button key={g} type="button" onClick={() => setFilters({ ...filters, iam: on ? filters.iam.filter((x) => x !== g) : [...filters.iam, g] })} className={`flex-1 rounded-full py-2 font-bold ${on ? "bg-[#FA6F6C] text-night" : "bg-night"}`}>{g}</button>; })}</div>
+            <div className="grid grid-cols-2 gap-2 pr-32">{GENDERS.map(({ id: g, short }) => { const on = filters.iam.includes(g); return <button key={g} type="button" onClick={() => setFilters({ ...filters, iam: on ? filters.iam.filter((x) => x !== g) : [...filters.iam, g] })} className={`flex-1 rounded-full py-2 font-bold ${on ? "bg-[#FA6F6C] text-night" : "bg-night"}`}>{short}</button>; })}</div>
             <div className="flex items-center gap-2 text-sm">Âge
               <input type="number" min={18} max={99} placeholder="18" value={filters.minAge ?? ""} onChange={(e) => setFilters({ ...filters, minAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /> à
               <input type="number" min={18} max={99} placeholder="99" value={filters.maxAge ?? ""} onChange={(e) => setFilters({ ...filters, maxAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /></div>

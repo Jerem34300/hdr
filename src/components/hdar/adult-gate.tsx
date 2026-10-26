@@ -1,3 +1,5 @@
+import { FilterSheet } from "./premium";
+import { GENDERS, identityLine } from "@/lib/hdar/live";
 import { Toaster } from "sonner";
 import { LeaveConfirm } from "./rich-text";
 import { toast } from "sonner";
@@ -223,6 +225,8 @@ function DevPreview() {
   if (location.search.includes("groupchat")) return <><GroupChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
   if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /></>;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
+  if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
+  if (location.search.includes("genres")) return <GenresDemo />;
   if (location.search.includes("appearance")) return <main className="flex h-dvh flex-col bg-night text-ink"><AppearanceScreen onBack={() => undefined} /></main>;
   if (location.search.includes("lockscreen")) return <LockScreen demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onUnlock={() => toast("Déverrouillé")} />;
   if (location.search.includes("security")) return <main className="min-h-dvh bg-night px-4 pt-6 pb-10 text-ink"><h1 className="font-display text-3xl font-extrabold">Paramètres</h1><PinSettings /><section className="mt-8 border-t border-line pt-6"><LogoutButton demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onProtect={() => toast("→ Protège ton profil")} /><RecoverAccountSettings /></section><ConfirmSheet /></main>;
@@ -311,5 +315,25 @@ function GateAdTicker({ onPick }: { onPick: (id: string) => void }) {
         <div className="ad-ticker-track flex w-max" style={{ ["--ticker-dur" as string]: `${Math.max(20, ads.length * 7)}s` }}>{row("a")}{row("b")}</div>
       </div>
     </div>
+  );
+}
+
+/** Aperçu de dev : Je suis / Je cherche avec « Couple », et la ligne affichée sur la fiche. */
+function GenresDemo() {
+  const [iam, setIam] = useState("c");
+  const [seeking, setSeeking] = useState<string[]>(["f", "c"]);
+  const chip = (on: boolean) => "h-9 rounded-full border px-3 text-sm " + (on ? "border-transparent bg-ink font-bold text-night" : "border-line");
+  return (
+    <main className="min-h-dvh bg-night px-4 pt-6 text-ink">
+      <h2 className="font-display text-lg font-bold">Je suis</h2>
+      <div className="mt-2 flex flex-wrap gap-2">{GENDERS.map((g) => <button key={g.id} type="button" onClick={() => setIam(iam === g.id ? "" : g.id)} className={chip(iam === g.id)}>{g.label}</button>)}</div>
+      <h2 className="mt-4 font-display text-lg font-bold">Je cherche</h2>
+      <div className="mt-2 flex flex-wrap gap-2">{GENDERS.map((g) => <button key={g.id} type="button" onClick={() => setSeeking(seeking.includes(g.id) ? seeking.filter((x) => x !== g.id) : [...seeking, g.id])} className={chip(seeking.includes(g.id))}>{g.label}</button>)}</div>
+      <p className="mt-8 text-xs text-muted">Sur la fiche :</p>
+      <div className="mt-2 rounded-3xl bg-surface p-5">
+        <p className="font-display text-2xl font-extrabold">Léa&Max, 31</p>
+        <p className="mt-1 text-sm font-bold text-ink/90">{identityLine(iam, seeking)}</p>
+      </div>
+    </main>
   );
 }

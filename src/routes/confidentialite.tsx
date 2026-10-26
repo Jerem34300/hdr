@@ -75,7 +75,7 @@ function Privacy() {
           les personnes qui cliquent sur toi depuis la carte.
         </li>
         <li>
-          « <strong>Je suis</strong> » et « <strong>Je cherche</strong> » (H, F, X) sont{" "}
+          « <strong>Je suis</strong> » et « <strong>Je cherche</strong> » (H, F, X, Couple) sont{" "}
           <strong>facultatifs</strong>. Comme ils peuvent révéler ton orientation sexuelle, ce sont
           des données sensibles (article 9 du RGPD) : ils ne sont enregistrés qu'avec ton{" "}
           <strong>consentement explicite</strong> (case à cocher dans ton profil). Tu peux retirer
@@ -234,7 +234,7 @@ function Privacy() {
           favori. Les visites sont gardées <strong>30 jours</strong>.
         </li>
         <li>
-          Live hdar+ : le retour arrière, les filtres et le matching prioritaire utilisent ton âge, H/F/X
+          Live hdar+ : le retour arrière, les filtres et le matching prioritaire utilisent ton âge, H/F/X/Couple
           et « Je cherche », jamais ta position. Une « Demande à se voir » n'envoie qu'une invitation :
           rien n'est déflouté sans l'action de la personne concernée. L'heure de la dernière demande est
           gardée le temps de la rencontre pour limiter à une demande.

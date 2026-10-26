@@ -1,3 +1,4 @@
+import { genderShort, seekingShort } from "@/lib/hdar/live";
 import { AdminFirstStats } from "./launch-offer";
 import { AD_CATEGORIES, adminAds, type AdminAd } from "@/lib/hdar/ads";
 import { signedMediaUrl } from "@/lib/hdar/chat-media";
@@ -929,7 +930,7 @@ function UsersTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string)
               <tr key={r.id} className="cursor-pointer border-t border-line hover:bg-surface" onClick={() => onOpen(r.id)}>
                 <td className="flex items-center gap-2 px-2 py-2 font-bold"><span className="size-7 shrink-0 overflow-hidden rounded-full border border-line"><Avatar src="" name={r.pseudo} className="size-full" /></span>{r.pseudo}{!r.has_photo ? "" : r.photo_status === "approved" ? " 📷" : " ⏳"}</td>
                 <td className="px-2">{r.city ?? r.region ?? "—"}</td>
-                <td className="px-2">{r.age ?? "—"}</td><td className="px-2">{r.iam ?? "—"}</td>
+                <td className="px-2">{r.age ?? "—"}</td><td className="px-2">{genderShort(r.iam) || "—"}</td>
                 <td className="px-2">{r.created ? new Date(r.created).toLocaleDateString("fr-FR") : "—"}</td>
                 <td className="px-2">{r.last ? new Date(r.last).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
                 <td className="px-2">{r.premium ? "👑" : ""}</td><td className="px-2">{r.boosts || ""}</td>
@@ -960,7 +961,7 @@ function UserExtra({ adminKey, id }: { adminKey: string; id: string }) {
   if (!x) return null;
   return (
     <section className="mb-5 space-y-4 rounded-2xl border border-line bg-surface p-4 text-sm">
-      <p>{x.iam ?? "—"} · cherche {x.seeking ?? "—"} · 📍 {x.region ?? "région inconnue"} · inscrit le {x.created ? new Date(x.created).toLocaleDateString("fr-FR") : "—"}</p>
+      <p>{genderShort(x.iam) || "—"} · cherche {seekingShort(x.seeking) || "—"} · 📍 {x.region ?? "région inconnue"} · inscrit le {x.created ? new Date(x.created).toLocaleDateString("fr-FR") : "—"}</p>
       {x.note && <p className="italic">💬 « {x.note} »</p>}
       {x.bio && <p className="text-muted">{x.bio}</p>}
       <p>👑 hdar+ : {x.premium_until ? `jusqu'au ${new Date(x.premium_until).toLocaleDateString("fr-FR")}` : "non"} · ❤️ solde {x.hearts?.balance ?? 0}, reçus {x.hearts?.received ?? 0}, achetés {x.hearts?.bought ?? 0}</p>

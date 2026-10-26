@@ -34,7 +34,7 @@ export function PremiumBadge({ className = "" }: { className?: string }) {
 }
 
 const PERKS = [
-  ["🔎", "Filtres de la carte", "Âge, H/F/X, envies, lieu, en ligne maintenant, avec photo : ne vois que ceux qui te correspondent."],
+  ["🔎", "Filtres de la carte", "Âge, H/F/X/Couple, envies, lieu, en ligne maintenant, avec photo : ne vois que ceux qui te correspondent."],
   ["👀", "Qui t'a vu", "La liste de ceux qui ont ouvert ton profil ces 30 derniers jours."],
   ["⭐", "Qui t'a mis en favori", "Découvre qui t'a ajouté à ses favoris."],
   ["🔤", "Recherche par pseudo", "Retrouve quelqu'un que tu as croisé, sans jamais voir sa position exacte."],
@@ -44,7 +44,7 @@ const PERKS = [
   ["🚀", "1 boost d'annonce offert par mois", "Ton annonce en tête de toute ta région pendant 24 h, chaque mois."],
   ["🎁", "Invite un ami", "3 jours de hdar+ offerts pour toi et ton ami dès que son profil est validé (Paramètres → Invite un ami)."],
   ["🎥", "Live : revenir en arrière", "Tu as zappé trop vite ? Reviens sur la personne d'avant si elle est encore dans le Live."],
-  ["🎚️", "Filtres du Live", "H/F/X et tranche d'âge : choisis qui tu croises en vidéo."],
+  ["🎚️", "Filtres du Live", "H/F/X/Couple et tranche d'âge : choisis qui tu croises en vidéo."],
   ["⚡", "Matching prioritaire", "Tu tombes d'abord sur ceux qui cherchent ce que tu es, et que tu cherches."],
   ["👀", "Demande à se voir", "Caméra floutée ? Envoie une demande. Seule l'autre personne décide de se montrer."],
 ] as const;
@@ -231,7 +231,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
           </div>
           <ul className="mx-auto mt-4 grid max-w-sm grid-cols-2 gap-2 text-xs">
             <li className="rounded-2xl bg-surface/70 p-3"><b className="block">↩︎ Retour arrière</b>la personne d'avant</li>
-            <li className="rounded-2xl bg-surface/70 p-3"><b className="block">🎚️ Filtres</b>H/F/X et âge</li>
+            <li className="rounded-2xl bg-surface/70 p-3"><b className="block">🎚️ Filtres</b>H/F/X/Couple et âge</li>
             <li className="rounded-2xl bg-surface/70 p-3"><b className="block">⚡ Prioritaire</b>ceux qui te cherchent</li>
             <li className="rounded-2xl bg-surface/70 p-3"><b className="block">👀 Se voir</b>il choisit de se montrer</li>
           </ul>
@@ -350,13 +350,13 @@ function PremiumSpace({ demo, adm, hits, q, setQ, go }: { demo: boolean; adm: Ad
   const toMe = () => { useHdar.getState().setTab("me"); void nav({ to: "/" }); };
   const list: Admirer[] = (tab === "viewers" ? adm?.viewers : tab === "fans" ? adm?.fans : []) ?? [];
   const F: [string, string, string, string, () => void][] = [
-    ["🗺️", "Filtres de la carte", "Âge, envies, H/F/X, en ligne, avec photo", "Filtrer", () => toMap(true)],
+    ["🗺️", "Filtres de la carte", "Âge, envies, H/F/X/Couple, en ligne, avec photo", "Filtrer", () => toMap(true)],
     ["👀", "Qui t'a vu", `${adm?.views ?? "–"} vues sur 30 jours`, "Voir", () => setTab(tab === "viewers" ? null : "viewers")],
     ["⭐", "Qui t'a mis en favori", `${adm?.favs ?? "–"} personnes`, "Voir", () => setTab(tab === "fans" ? null : "fans")],
     ["🔎", "Recherche par pseudo", "Retrouve quelqu'un en un instant", "Chercher", () => document.getElementById("pseudo-search")?.focus()],
     ["📸", "20 photos d'album", "Au lieu de 5", "Mon album", toMe],
     ["↩️", "Live : retour arrière", "Reviens sur la personne d'avant", "Ouvrir", () => void nav({ to: "/live" })],
-    ["🎚️", "Live : filtres", "H/F/X et tranche d'âge", "Filtrer", () => { location.href = "/live?filters=1"; }],
+    ["🎚️", "Live : filtres", "H/F/X/Couple et tranche d'âge", "Filtrer", () => { location.href = "/live?filters=1"; }],
     ["⚡", "Live : matching prioritaire", "Ceux qui te cherchent d'abord", "Live", () => void nav({ to: "/live" })],
     ["👁️", "Demande à se voir", "Propose de se montrer dans le Live", "Live", () => void nav({ to: "/live" })],
   ];

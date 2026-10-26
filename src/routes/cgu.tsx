@@ -122,9 +122,9 @@ function Terms() {
           payés via un prestataire de paiement. Les prix TTC sont affichés avant paiement.
         </li>
         <li>
-          hdar+ comprend : filtres de la carte (âge, H/F/X, envies, lieu, en ligne, avec photo), qui
+          hdar+ comprend : filtres de la carte (âge, H/F/X/Couple, envies, lieu, en ligne, avec photo), qui
           t'a vu et qui t'a mis en favori, recherche par pseudo, 20 photos d'album, badge, et dans le
-          Live : retour à la personne précédente, filtres H/F/X et âge, matching prioritaire et
+          Live : retour à la personne précédente, filtres H/F/X/Couple et âge, matching prioritaire et
           « Demande à se voir » (une invitation par rencontre ; seule la personne concernée peut
           choisir de se montrer).
         </li>

@@ -160,7 +160,7 @@ export function Me() {
               className={"h-9 rounded-full border px-3 text-sm disabled:opacity-40 " + (seeking.includes(g.id) ? "border-transparent bg-ink font-bold text-night" : "border-line")}>{g.label}</button>
           ))}
         </div>
-        <p className="mt-1 text-xs text-muted">Facultatif, affiché sur ta fiche (ex. « H · cherche H, X »).</p>
+        <p className="mt-1 text-xs text-muted">Facultatif, affiché sur ta fiche (ex. « Couple · cherche F, Couple »).</p>
         {picked && (
           <label className="mt-3 flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
             <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
