@@ -234,6 +234,12 @@ function DevPreview() {
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
   if (location.search.includes("botadmin")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Robot d'accueil</p><BotTab adminKey="demo" demo={{ enabled: true, dm_text: BOT_DEMO_DM, salon_text: "Bienvenue à {mentions} 👋 Faites-leur bon accueil !", reply_text: BOT_DEMO_REPLY, ...BOT_DEFAULTS, nudge_on: true, question_on: true, rules_on: true, tip_on: true, updated_at: new Date().toISOString(), welcomed: 128, pending: 2, salon: "Général", opted_out: 9 }} demoAnnounce={location.search.includes("annonce") ? { text: "Nouveau : choisis la couleur de tes bulles dans Profil → Apparence 🎨", target: "both", count: 1284 } : undefined} /><Toaster theme="dark" position="top-center" /></main>;
+  if (location.search.includes("bulles")) {
+    const t = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+    const B = ["Salut", "Ok", "Oui 👍", "Salut", "Ça va ?", "Top", "Regarde : https://www.example.com/une/adresse/vraiment/tres/longue/sans/aucun/espace?ref=hdar&utm_source=partage", "Un message un peu plus long pour vérifier que les retours à la ligne se font entre les mots et jamais au milieu."];
+    const demo = B.map((body, i) => ({ id: `b${i}`, mine: i % 2 === 0, body, at: t(20 - i), kind: "text" as const, duration: null }));
+    return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId="v539" pseudo="Discret 539" demo={demo} /></main>;
+  }
   if (location.search.includes("dmdiscret")) {
     const asD = location.search.includes("asdiscret"), t = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
     const demo = [

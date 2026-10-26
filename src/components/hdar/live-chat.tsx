@@ -449,12 +449,12 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         {msgs.map((m, i) => (
           <Row key={m.id} m={m} onSwipe={() => reply(m)}>
             <div id={`dm-${m.id}`} className={m.mine ? "flex flex-col items-end" : "flex flex-col items-start"}>
-              <div className={"group flex max-w-full items-center gap-1 " + (m.mine ? "flex-row-reverse" : "")}>
+              <div className={"group flex w-full items-center gap-1 " + (m.mine ? "flex-row-reverse" : "")}>
                 <LongPress
                   onLong={() => setMsgMenu(m)}
                   style={m.mine ? undefined : (authorBubble(m.bubble) as CSSProperties | undefined)}
                   className={
-                    "max-w-[80%] rounded-[18px] px-3 pt-1.5 pb-1 shadow-sm select-none transition-shadow md:select-text " +
+                    "max-w-[80%] min-w-[4.5rem] rounded-[18px] px-3 pt-1.5 pb-1 shadow-sm select-none transition-shadow md:select-text " +
                     (m.mine ? "bubble-mine" : (m.bubble ? "bubble-other bubble-author" : "bubble-other")) +
                     ((msgs[i + 1]?.mine ?? !m.mine) !== m.mine ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
                     (flash === m.id ? " ring-2 ring-amber-300" : "")

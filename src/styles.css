@@ -306,6 +306,8 @@
 .bubble-other { background: var(--color-surface); color: var(--color-ink); }
 .bubble-other .bubble-meta { color: var(--color-muted); }
 .msg-text { font-family: var(--msg-font, inherit); font-size: var(--msg-size, 15px); line-height: 1.35; }
+/* Jamais de coupure au milieu d'un mot, sauf un très long mot sans espace (URL) qui dépasserait la bulle. */
+.msg-text, .msg-text * { word-break: normal; overflow-wrap: break-word; hyphens: manual; }
 .chat-wall { background-image: var(--chat-wall, none); background-size: var(--chat-wall-size, auto); background-attachment: local; }
 .tail-mine, .tail-other { position: relative; }
 .tail-mine::after, .tail-other::after { content: ""; position: absolute; bottom: 0; width: 10px; height: 13px; background: inherit; }
