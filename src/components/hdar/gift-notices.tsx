@@ -1,6 +1,7 @@
 import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
-import { myNotices, proGiftBlock, type ProGift } from "@/lib/hdar/live";
+import { myNotices, proGiftBlock, type NoticeRef, type ProGift } from "@/lib/hdar/live";
+import { useHdar } from "@/lib/hdar/store";
 import { toast } from "sonner";
 import { GiftCard } from "./pro-tools";
 import { usePremium } from "@/lib/hdar/premium";
@@ -9,8 +10,17 @@ import { usePremium } from "@/lib/hdar/premium";
 export function GiftNotices() {
   const [list, setList] = useState<{ id: number; title: string; body: string | null; gift?: ProGift | null }[]>([]);
   useEffect(() => {
-    const t = setTimeout(() => void myNotices().then((r) => { if (r?.length) { setList(r); void usePremium.getState().refresh(); } }).catch(() => undefined), 2500);
-    return () => clearTimeout(t);
+    const pull = () => void myNotices().then((r) => {
+      if (!r?.length) return;
+      const mentions = r.filter((n) => n.kind === "mention");
+      for (const n of mentions) showMention(n.title, n.body, n.ref ?? null);
+      const rest = r.filter((n) => n.kind !== "mention");
+      if (rest.length) { setList((l) => [...l, ...rest]); void usePremium.getState().refresh(); }
+    }).catch(() => undefined);
+    const t = setTimeout(pull, 2500);
+    // Mentions : on revérifie régulièrement tant que l'app est visible.
+    const iv = setInterval(() => { if (document.visibilityState === "visible") pull(); }, 45_000);
+    return () => { clearTimeout(t); clearInterval(iv); };
   }, []);
   const n = list[0];
   if (!n) return null;
@@ -29,4 +39,16 @@ export function GiftNotices() {
       </div>
     </div>
   );
+}
+
+/** Notification de mention : « Nina t'a mentionné dans Occitanie » + extrait, bouton Voir. */
+export function showMention(title: string, body: string | null, ref: NoticeRef | null) {
+  const open = () => {
+    const st = useHdar.getState();
+    if (ref?.scope === "salon" && ref.salon) st.openSalon(ref.salon, ref.title ?? "Salon");
+    else if (ref?.scope === "dm" && ref.from) st.openLive(ref.from, ref.pseudo ?? "");
+    else if (ref?.scope === "area") st.openPocket();
+  };
+  toast("💬 " + title, { description: body ?? undefined, duration: 8000, action: { label: "Voir", onClick: open } });
+  try { navigator.vibrate?.(30); } catch { /* rien */ }
 }

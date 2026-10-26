@@ -1,3 +1,4 @@
+import { RichText } from "./rich-text";
 import { setProfileNote } from "@/lib/hdar/live";
 import { flyTo } from "@/lib/hdar/map-focus";
 import { useState } from "react";
@@ -389,7 +390,7 @@ function Person({ id }: { id: string }) {
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        <p>{person.bio}</p>
+        <p><RichText text={person.bio} mentions={false} /></p>
         <div className="flex flex-wrap gap-2">
           {person.tags.map((tag) => {
             const Icon = DESIRE_ICON[tag];

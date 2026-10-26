@@ -1,3 +1,4 @@
+import { RichText } from "./rich-text";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { HeartsCount } from "./hearts";
@@ -165,7 +166,7 @@ export function ProfileView({ userId, pseudo }: { userId: string; pseudo: string
         {profile?.bio && (
           <section className="mt-5">
             <h2 className="text-xs tracking-wide text-muted uppercase">À propos</h2>
-            <p className="mt-2 text-sm break-words whitespace-pre-wrap">{profile.bio}</p>
+            <p className="mt-2 text-sm break-words whitespace-pre-wrap"><RichText text={profile.bio} mentions={false} /></p>
           </section>
         )}
         {!self && (

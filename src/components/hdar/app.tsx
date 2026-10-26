@@ -1,3 +1,4 @@
+import { LeaveConfirm } from "./rich-text";
 import "@/lib/hdar/appearance";
 import { resyncProfileFromServer } from "@/lib/hdar/recover";
 import { SurprisePopup } from "./growth";
@@ -108,6 +109,7 @@ export function App() {
       <Toaster theme="dark" position="top-center" />
       <CallLayer />
       <GiftNotices />
+      <LeaveConfirm />
       <SurprisePopup />
       <ConfirmSheet />
       <ReportSheet />

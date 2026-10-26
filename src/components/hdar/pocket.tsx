@@ -1,3 +1,4 @@
+import { mentionNotify } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, LocateFixed } from "lucide-react";
 import { deviceId } from "@/lib/hdar/device";
@@ -62,7 +63,7 @@ export function PocketChat() {
       meta={(m) => (!m.mine && here && m.lat != null && m.lng != null ? bucketDistance(haversine(here, { lat: m.lat, lng: m.lng })) : null)}
       canHide={(m) => m.mine || isAdmin}
       onHide={(m) => areaHide(deviceId(), m.id)}
-      onSend={(text, replyTo) => areaSend2(center.lat, center.lng, pseudo || "Anonyme", text, replyTo)}
+      onSend={(text, replyTo) => areaSend2(center.lat, center.lng, pseudo || "Anonyme", text, replyTo).then(() => mentionNotify("area", null, text))}
       onSendMedia={onboarded ? (k, path, d) => areaSendMedia(center.lat, center.lng, pseudo || "Anonyme", k, path, d) : undefined}
       mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
       onChanged={refresh}

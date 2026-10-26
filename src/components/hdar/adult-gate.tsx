@@ -1,3 +1,5 @@
+import { Toaster } from "sonner";
+import { LeaveConfirm } from "./rich-text";
 import { toast } from "sonner";
 import { ConfirmSheet } from "./confirm-sheet";
 import { useHdar } from "@/lib/hdar/store";
@@ -218,8 +220,8 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
-  if (location.search.includes("groupchat")) return <GroupChatDemo />;
-  if (location.search.includes("dmchat")) return <LiveChatDemo />;
+  if (location.search.includes("groupchat")) return <><GroupChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
+  if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /></>;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
   if (location.search.includes("appearance")) return <main className="flex h-dvh flex-col bg-night text-ink"><AppearanceScreen onBack={() => undefined} /></main>;
   if (location.search.includes("lockscreen")) return <LockScreen demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onUnlock={() => toast("Déverrouillé")} />;

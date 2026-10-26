@@ -1,3 +1,5 @@
+import { MentionList, RichText, useMentions } from "./rich-text";
+import { mentionNotify } from "@/lib/hdar/live";
 import type { CSSProperties } from "react";
 import { authorBubble } from "@/lib/hdar/appearance";
 import { parseAdQuote } from "@/lib/hdar/ads";
@@ -81,6 +83,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const [menu, setMenu] = useState(false);
   const [photo, setPhoto] = useState("");
   const [text, setText] = useState("");
+  const ment = useMentions(text, setText, [{ pseudo }]);
   const [msgs, setMsgs] = useState<LiveMsg[]>(demo ?? []);
   const [replyTo, setReplyTo] = useState<LiveMsg | null>(null);
   const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
@@ -575,6 +578,8 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           </button>
         </div>
       ) : (
+        <>
+        <MentionList list={ment.list} onPick={ment.pick} />
         <form
           className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
           onSubmit={(e) => {
@@ -605,6 +610,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             setReplyTo(null);
             if (demo) return;
             void sendLive({ data: { self: deviceId(), to: userId, body, replyTo: r?.id ?? null } })
+              .then(() => mentionNotify("dm", userId, body))
               .then(refresh)
               // Keep the draft so a failed send (network, flood guard) isn't lost.
               .catch((err) => {
@@ -637,7 +643,8 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             value={text}
             maxLength={500}
             placeholder="Message"
-            onChange={(e) => setText(e.target.value)}
+            onSelect={(e) => ment.track(e.currentTarget)}
+            onChange={(e) => { ment.track(e.target); setText(e.target.value); }}
           />
           <button
             type="submit"
@@ -647,6 +654,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             <Send className="size-5" />
           </button>
         </form>
+        </>
       )}
     </div>
   );
@@ -750,14 +758,14 @@ function LocationBubble({ msg }: { msg: LiveMsg }) {
 /** Message privé : citation d'annonce (titre + lien) au-dessus du texte, sinon texte brut. */
 function AdQuoteBody({ body, mine }: { body: string; mine: boolean }) {
   const q = parseAdQuote(body);
-  if (!q) return <p className="break-words whitespace-pre-wrap">{body}</p>;
+  if (!q) return <p className="break-words whitespace-pre-wrap"><RichText text={body} /></p>;
   return (
     <>
       <button type="button" onClick={() => useHdar.getState().openAnnonces(q.id)} className={"mb-1 block w-full rounded-xl border-l-4 px-2 py-1 text-left text-xs " + (mine ? "border-night/50 bg-night/10" : "border-signal bg-night/40")}>
         <span className="opacity-70">📌 Réponse à l'annonce</span>
         <span className="block font-bold break-words">{q.title || "Annonce"} ›</span>
       </button>
-      <p className="break-words whitespace-pre-wrap">{q.rest}</p>
+      <p className="break-words whitespace-pre-wrap"><RichText text={q.rest} /></p>
     </>
   );
 }
@@ -768,7 +776,7 @@ export function LiveChatDemo() {
   const msgs: LiveMsg[] = [
     { id: "m1", mine: false, bubble: "violet", body: "Salut ! Tu sors ce soir ?", at: at(40), kind: "text", duration: null },
     { id: "m2", mine: true, body: "Oui, je pensais aller vers la Comédie 🍻", at: at(38), kind: "text", duration: null, reactions: [{ e: "🔥", n: 1, mine: false }] },
-    { id: "m3", mine: false, bubble: "violet", body: "Top, je connais un bar sympa rue de l'Université", at: at(35), kind: "text", duration: null },
+    { id: "m3", mine: false, bubble: "violet", body: "Top, je connais un bar sympa rue de l'Université, regarde https://www.lebarbu.fr/carte", at: at(35), kind: "text", duration: null },
     { id: "m4", mine: true, body: "Carrément, on dit 22 h ?", at: at(6), editedAt: at(5), kind: "text", duration: null, replyTo: "m3", reply: { pseudo: "Lucas34", body: "Top, je connais un bar sympa rue de l'Université" } },
     { id: "m5", mine: false, bubble: "violet", body: "Parfait 😄 à tout à l'heure", at: at(4), kind: "text", duration: null, reactions: [{ e: "❤️", n: 1, mine: true }, { e: "👍", n: 1, mine: true }] },
     { id: "m6", mine: true, body: "Le Live de ce soir commence à 21 h 🎥", at: at(2), kind: "text", duration: null, fwd: "Hdar admin" },

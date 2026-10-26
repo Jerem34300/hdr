@@ -1080,7 +1080,8 @@ export type AdminUserRow = { id: string; pseudo: string; age: number | null; iam
 export type AdminUserExtra = { region: string | null; iam: string | null; seeking: string | null; created: string | null; bio: string | null; note: string | null; premium_until: string | null;
   hearts: { balance: number; received: number; bought: number } | null;
   activity: Record<string, number>; payments: { at: string; product: string; kind: string; cents: number; ref: string }[]; gifts: { at: string; detail: { kind: string; amount: number; msg: string | null } }[] };
-export const myNotices = () => rpc<{ id: number; title: string; body: string | null; at: string; gift?: ProGift | null }[]>("hdar_my_notices", {});
+export type NoticeRef = { scope: "dm" | "salon" | "area"; salon?: string | null; title?: string | null; from?: string | null; pseudo?: string };
+export const myNotices = () => rpc<{ id: number; title: string; body: string | null; at: string; kind?: string | null; ref?: NoticeRef | null; gift?: ProGift | null }[]>("hdar_my_notices", {});
 
 /** Nouveautés hdar (opt-in, email lié requis). */
 export const newsStatus = () => rpc<{ on: boolean; at: string | null }>("hdar_news_status", {});
@@ -1495,3 +1496,12 @@ export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f 
 export const dmRemove = (id: string) => rpc("hdar_dm_remove", { p_id: id });
 /** Couleur de mes bulles, visible par tous (v82). */
 export const setBubble = (color: string) => rpc("hdar_set_bubble", { p_color: color });
+/** Mentions @pseudo (v83). Jamais d'email : pseudo + id seulement. */
+export type MentionHit = { user_id: string; pseudo: string; photo?: boolean };
+export const mentionSearch = (q: string) => rpc<MentionHit[]>("hdar_mention_search", { p_q: q });
+export const mentionLookup = (pseudo: string) => rpc<MentionHit | null>("hdar_mention_lookup", { p_pseudo: pseudo });
+/** À appeler juste après l'envoi d'un message contenant « @ » : le serveur notifie qui peut lire ce fil. */
+export function mentionNotify(scope: "dm" | "salon" | "area", ref: string | null, body: string) {
+  if (!/(^|[^\w@])@[\w.-]{2,}/.test(body)) return;
+  void rpc("hdar_mention_notify", { p_scope: scope, p_ref: ref }).catch(() => undefined);
+}

@@ -1,3 +1,4 @@
+import { mentionNotify } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -411,7 +412,7 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
       }
       canHide={(m) => m.mine || owner || isAdmin}
       onHide={(m) => salonHide(m.id)}
-      onSend={(text, replyTo) => salonSend(id, text, replyTo)}
+      onSend={(text, replyTo) => salonSend(id, text, replyTo).then(() => mentionNotify("salon", id, text))}
       onSendMedia={onboarded ? (k, path, d, replyTo) => salonSendMedia(id, k, path, d, replyTo) : undefined}
       mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
       onChanged={refresh}

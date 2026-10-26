@@ -1,3 +1,4 @@
+import { RichText } from "./rich-text";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, ChevronLeft, Pencil, Flag, MessageCircle, Plus, Share2, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -271,7 +272,7 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
         <span className="ml-auto text-muted">{ad.km != null && (near || ad.km < 30) ? `📍 ${kmLabel(ad.km)} · ` : ""}{ad.city}</span>
       </div>
       <h2 className="mt-2 font-display text-lg font-bold leading-snug break-words">{ad.title}</h2>
-      <p className="mt-1 text-sm break-words whitespace-pre-wrap text-ink/90">{ad.body}</p>
+      <p className="mt-1 text-sm break-words whitespace-pre-wrap text-ink/90"><RichText text={ad.body} mentions={false} /></p>
       {!!ad.tags?.length && (
         <div className="mt-2 flex flex-wrap gap-1.5">{ad.tags.map((t) => (
           <button key={t} type="button" onClick={() => onTag?.(t)} aria-pressed={activeTag === t} className={cn("h-7 rounded-full px-2.5 text-xs", activeTag === t ? "bg-[#8b7cff] font-bold text-night" : "bg-[#8b7cff]/15 text-[#c4b5fd]")}>#{t}</button>

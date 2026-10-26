@@ -1,3 +1,5 @@
+import { showMention } from "./gift-notices";
+import { MentionList, RichText, useMentions } from "./rich-text";
 import type { CSSProperties } from "react";
 import { authorBubble } from "@/lib/hdar/appearance";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -140,6 +142,7 @@ export function GroupChat(p: Props) {
     setMenu(null);
     window.setTimeout(() => input.current?.focus(), 50);
   };
+  const ment = useMentions(text, setText, [...new Map(p.lines.filter((l) => !l.mine).map((l) => [l.pseudo.toLowerCase(), { pseudo: l.pseudo }])).values()].reverse());
   const send = () => {
     const body = text.trim();
     if (!body) return;
@@ -230,7 +233,7 @@ export function GroupChat(p: Props) {
                       )}
                       <FwdHeader fwd={m.fwd} />
                       {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
-                      <span className="msg-text">{m.kind === "text" ? bodyOf(m) : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}</span>
+                      <span className="msg-text">{m.kind === "text" ? <RichText text={bodyOf(m)} /> : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}</span>
                       <span className="bubble-meta float-right mt-1.5 ml-2 translate-y-0.5 text-[11px]">
                         {extra ? `${extra} · ` : ""}
                         {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
@@ -293,6 +296,7 @@ export function GroupChat(p: Props) {
             onCancel={() => setReplyTo(null)}
           />
         )}
+        <MentionList list={ment.list} onPick={ment.pick} />
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
@@ -329,7 +333,9 @@ export function GroupChat(p: Props) {
             value={text}
             maxLength={p.maxLength}
             placeholder={p.placeholder}
+            onSelect={(e) => ment.track(e.currentTarget)}
             onChange={(e) => {
+              ment.track(e.target);
               setText(e.target.value);
               e.target.style.height = "auto";
               e.target.style.height = `${Math.min(128, e.target.scrollHeight)}px`;
@@ -523,6 +529,9 @@ function MessageMenu({
 
 /** Aperçu de dev uniquement (captures d'écran), avec des messages d'exemple. */
 export function GroupChatDemo() {
+  useEffect(() => {
+    if (location.search.includes("notif")) setTimeout(() => showMention("Nina t'a mentionné dans Occitanie", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹", { scope: "salon", salon: "demo", title: "Occitanie" }), 600);
+  }, []);
   const now = Date.now();
   const area = typeof location !== "undefined" && location.search.includes("area");
   const mk = (i: number, fromId: string, pseudo: string, body: string, ago: number, extra: Partial<GroupLine> = {}): GroupLine => ({
@@ -537,6 +546,7 @@ export function GroupChatDemo() {
     mk(6, "c90e", "Sam", "Je viens aussi si ça vous dérange pas 😊", 3),
     mk(7, "me", "Toi", "Le Live de ce soir commence à 21 h 🎥", 1, { fwd: "Hdar admin" }),
     mk(8, "c90e", "Sam", "D'ici quelques minutes je serai devant la Comédie, côté fontaine des Trois Grâces. Je porte une veste bleue et j'ai un parapluie rouge, vous ne pouvez pas me rater 😄 Si vous êtes en retard écrivez ici, j'attends jusqu'à 22 h 30 au moins.", 0.5),
+    mk(9, "b21c", "Nina", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹 et pour les questions hdar.chat/faq", 0.2),
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">
