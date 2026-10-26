@@ -1,3 +1,4 @@
+import { FirstGiftCard, useFirstRemaining } from "./launch-offer";
 import { useLaunchOffer } from "@/lib/hdar/payments";
 import { CardHead, glowInner, glowOuter } from "./profile-card";
 import { captureAmb, tryAmbAttach } from "./ambassador";
@@ -114,6 +115,7 @@ export async function downloadStory() {
 }
 
 export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () => void }) {
+  if (!demo && import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("refdemo")) demo = "E610477";
   const [n, setN] = useState<{ code: string; invited: number; rewarded: number } | null>(demo ? { code: demo, invited: 0, rewarded: 0 } : null);
   useEffect(() => { if (!demo) void myRef().then(setN).catch(() => undefined); }, [demo]);
   if (!n) return null;
@@ -214,15 +216,19 @@ const GIFT_HIDE = "hdar-gift-hide-until";
 export function MapGiftButton({ demoOpen }: { demoOpen?: boolean }) {
   const [hidden, setHidden] = useState(() => { try { return Number(localStorage.getItem(GIFT_HIDE) || 0) > Date.now(); } catch { return false; } });
   const [open, setOpen] = useState(!!demoOpen);
+  // Offre FIRST ouverte : le cadeau met en avant le code FIRST (parrainage en dessous) ; terminée : parrainage seul.
+  const firstLeft = useFirstRemaining();
+  const firstOpen = firstLeft != null && firstLeft > 0;
   const hide = () => { try { localStorage.setItem(GIFT_HIDE, String(Date.now() + 3 * 86400000)); } catch { /* */ } setOpen(false); setHidden(true); };
   if (hidden && !open) return null;
   return (
     <>
-      <button type="button" aria-label="Invite un ami 🎁" onClick={() => setOpen(true)} className="gift-wiggle relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#3EE08F] to-[#FA6F6C] text-xl shadow-[0_0_16px_#3EE08F]">🎁</button>
+      <button type="button" aria-label={firstOpen ? "Partage le code FIRST 🎁" : "Invite un ami 🎁"} onClick={() => setOpen(true)} className="gift-wiggle relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#3EE08F] to-[#FA6F6C] text-xl shadow-[0_0_16px_#3EE08F]">🎁</button>
       {open && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 p-3 pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={hide}>
           <div className="relative w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <button type="button" aria-label="Fermer" onClick={hide} className="absolute -top-3 right-2 z-10 flex size-9 items-center justify-center rounded-full bg-night text-lg shadow">✕</button>
+            {firstOpen && <div className="mb-3"><FirstGiftCard remaining={firstLeft} onAction={hide} /></div>}
             <InviteCard demo={demoOpen ? "E610477" : undefined} onAction={hide} />
           </div>
         </div>

@@ -214,6 +214,8 @@ export function FounderCard({ className = "mt-4" }: { className?: string }) {
   const [me, setMe] = useState<FirstMe | null>(demo() === "card" ? { founder: true, rank: 127, city: "Montpellier", remaining: 873 } : null);
   const celebrate = useLaunchOffer((s) => s.celebrate);
   useEffect(() => { if (onboarded && !demo()) void firstMe().then(setMe).catch(() => undefined); }, [onboarded, celebrate]);
+  // Offre terminée : on ne garde la carte que pour les membres FIRST (leur statut).
+  if (remaining === 0 && !me?.founder) return null;
   return (
     <section className={"rounded-3xl border border-[#fbbf24]/40 bg-gradient-to-br from-[#fbbf24]/10 to-[#FA6F6C]/10 p-4 " + className}>
       {me?.founder ? (
@@ -243,5 +245,19 @@ export function AdminFirstStats({ adminKey }: { adminKey: string }) {
       ⭐ Code FIRST : <b>{s.redeemed}</b> / {s.total} activés ({s.today} en 24 h) · {s.remaining} places restantes · boosts offerts : {s.profile_boosts} profil, {s.ad_boosts} annonce
       <span className="mt-1 block text-xs text-muted">{(s.regions ?? []).map((r) => `${r.region} ${r.used}/${r.quota}`).join(" · ")}</span>
     </p>
+  );
+}
+
+/** Popup du cadeau sur la carte tant que l'offre FIRST est ouverte. */
+export function FirstGiftCard({ remaining, onAction }: { remaining: number; onAction?: () => void }) {
+  const region = useFirstRegion();
+  return (
+    <section className="rounded-3xl border border-[#fbbf24]/50 bg-gradient-to-br from-[#2a2110] via-night to-[#2a1416] p-4 shadow-[0_0_30px_rgba(251,191,36,.25)]">
+      <p className="font-display text-xl font-extrabold">🎁 Partage le code FIRST</p>
+      <p className="mt-1 text-sm text-ink/90">Tes potes gagnent <b className="text-[#fbbf24]">hdar+ à vie</b> en s'inscrivant avec le code <b className="font-mono text-[#fbbf24]">FIRST</b>.</p>
+      <p className="mt-1 text-xs text-muted">{placesLabel(region ? region.remaining : remaining)}{region ? ` en ${region.name}` : ""} · offre réservée aux 5000 premiers</p>
+      <button type="button" onClick={() => { void shareFirst(region ? region.remaining : remaining, region?.name).then((r) => r === "copied" && toast("Lien copié 📋")); onAction?.(); }}
+        className="mt-3 h-12 w-full rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] font-display font-extrabold text-night">📣 Partager le code FIRST</button>
+    </section>
   );
 }

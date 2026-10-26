@@ -1,4 +1,4 @@
-import { FounderCard } from "./launch-offer";
+import { FounderCard, useFirstRemaining } from "./launch-offer";
 import { AmbNudge, ProfileAmb } from "./profile-card";
 import { InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { openIntro } from "./intro-video";
@@ -45,6 +45,8 @@ export function Me() {
   const [settings, setSettings] = useState(false);
   const MAX_PHOTOS = usePremium((s) => s.photoLimit);
   const isPrem = usePremium((s) => s.premium);
+  // Offre FIRST ouverte (ou inconnue) : FIRST d'abord ; terminée : le parrainage repasse en premier.
+  const firstOpen = useFirstRemaining() !== 0;
   const [iam, setIam] = useState("");
   const [seeking, setSeeking] = useState<string[]>([]);
   useEffect(() => {
@@ -324,13 +326,11 @@ export function Me() {
       </section>
 
       <section className="mt-8 space-y-3">
-        {picked && (
-          <label className="flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
-            <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; tout désélectionner efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
-          </label>
-        )}
         <div id="protect-profile"><ProtectProfileCard /></div>
+        <label className={"flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted " + (picked ? "" : "opacity-60")}>
+          <input type="checkbox" className="mt-0.5" disabled={!picked} checked={picked && consent} onChange={(e) => setConsent(e.target.checked)} />
+          <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; tout désélectionner efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a>{!picked && <span className="mt-1 block">À cocher seulement si tu remplis « Je suis » ou « Je cherche ».</span>}</span>
+        </label>
       </section>
       {!me.onboarded && (
         <button type="button" onClick={() => {
@@ -355,9 +355,7 @@ export function Me() {
       <ProSpaceCard />
       <ProfileAmb where="top" />
       <AmbNudge />
-      <FounderCard />
-      <PremiumCard />
-      <InviteCard />
+      {firstOpen ? <><FounderCard /><PremiumCard /><InviteCard /></> : <><InviteCard /><FounderCard /><PremiumCard /></>}
       <RedeemCode />
       <button type="button" onClick={openIntro} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-surface font-display font-bold text-ink active:scale-[.98]">🎬 Comment ça marche</button>
       <Favorites />
