@@ -1,3 +1,4 @@
+import { BOT_DEFAULTS } from "./bot-demo";
 import { BOT_ID, isBot } from "@/lib/hdar/live";
 import { BotBadge } from "./bot";
 import { typingText, useTyping, type Typer } from "@/lib/hdar/typing";
@@ -56,6 +57,8 @@ type Props = {
   onSend: (text: string, replyTo: string | null) => Promise<unknown>;
   /** Indicateurs « en train d'écrire » : id du salon ou « lat,lng » du quartier, et mon pseudo. */
   typingRef?: string | null;
+  /** Appelé après un signalement envoyé depuis ce fil. */
+  onReported?: () => void;
   myPseudo?: string;
   typingDemo?: Typer[];
   /** Absent = pas de médias (ex. sans profil). */
@@ -396,7 +399,7 @@ export function GroupChat(p: Props) {
           }}
           onReport={() => {
             setMenu(null);
-            void reportUser(menu.fromId, menu.pseudo, menu.body).then((sent) => sent && p.onChanged());
+            void reportUser(menu.fromId, menu.pseudo, menu.body).then((sent) => { if (sent) { p.onReported?.(); p.onChanged(); } });
           }}
         />
       )}
@@ -562,6 +565,8 @@ export function GroupChatDemo() {
     mk(8, "c90e", "Sam", "D'ici quelques minutes je serai devant la Comédie, côté fontaine des Trois Grâces. Je porte une veste bleue et j'ai un parapluie rouge, vous ne pouvez pas me rater 😄 Si vous êtes en retard écrivez ici, j'attends jusqu'à 22 h 30 au moins.", 0.5),
     mk(9, "b21c", "Nina", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹 et pour les questions hdar.chat/faq", 0.2),
     ...(location.search.includes("bot") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31, @Max et @Zoe 👋 Faites-leur bon accueil !", 0.1)] : []),
+    ...(location.search.includes("qdj") ? [mk(11, BOT_ID, "hdar", "💬 Question du jour : Plutôt café en terrasse ou apéro au coucher du soleil ? ☀️", 0.05)] : []),
+    ...(location.search.includes("regles") ? [mk(12, BOT_ID, "hdar", BOT_DEFAULTS.rules_text, 0.02)] : []),
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">

@@ -33,7 +33,7 @@ export const WALLS = [
 ] as const;
 
 /** typing = montrer aux autres quand j'écris / j'envoie un média (activé par défaut). */
-export type Appearance = { bubble: string; font: string; size: string; wall: string; typing?: boolean };
+export type Appearance = { bubble: string; font: string; size: string; wall: string; typing?: boolean; /** Relances et conseils du robot hdar (pas les annonces). */ botMsgs?: boolean };
 export const DEFAULT_APPEARANCE: Appearance = { bubble: "corail", font: "defaut", size: "m", wall: "aucun", typing: true };
 
 export const useAppearance = create<Appearance & { set: (p: Partial<Appearance>) => void; reset: () => void }>()(

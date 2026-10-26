@@ -1514,7 +1514,20 @@ export const typingTopic = (scope: string, ref: string) => rpc<{ topic: string; 
 /** Robot d'accueil officiel (v86) : profil système, sans position, ne lit pas les messages. */
 export const BOT_ID = "00000000-0000-4000-8000-00000000b075";
 export const isBot = (id: string | null | undefined) => id === BOT_ID;
-export type BotSettings = { enabled: boolean; dm_text: string; salon_text: string; reply_text: string; updated_at: string; welcomed: number; pending: number; salon: string | null };
+export type BotSettings = {
+  enabled: boolean; dm_text: string; salon_text: string; reply_text: string;
+  nudge_on: boolean; nudge1_text: string; nudge2_text: string;
+  question_on: boolean; questions: string;
+  rules_on: boolean; rules_text: string;
+  tip_on: boolean; tip_text: string;
+  updated_at: string; welcomed: number; pending: number; salon: string | null; opted_out?: number; outbox?: number;
+};
 export const adminBotGet = (key: string) => rpc<BotSettings>("hdar_admin_bot_get", { p_key: key });
-export const adminBotSet = (key: string, s: Pick<BotSettings, "enabled" | "dm_text" | "salon_text" | "reply_text">) =>
-  rpc("hdar_admin_bot_set", { p_key: key, p_enabled: s.enabled, p_dm: s.dm_text, p_salon: s.salon_text, p_reply: s.reply_text });
+export const adminBotSet = (key: string, s: BotSettings) => rpc("hdar_admin_bot_set", { p_key: key, p: s });
+export const adminBotAnnounce = (key: string, text: string, target: "salon" | "dm" | "both", confirm: boolean) =>
+  rpc<{ ok?: boolean; dm_count: number; salon?: string | null }>("hdar_admin_bot_announce", { p_key: key, p_text: text, p_target: target, p_confirm: confirm });
+/** Visite (relances) + préférence « Messages du robot hdar ». */
+export const botSeen = () => rpc<{ bot_msgs: boolean } | null>("hdar_bot_seen", {});
+export const botPrefs = (on: boolean) => rpc("hdar_bot_prefs", { p_on: on });
+/** Signalement fait depuis un salon (rappel des règles si plusieurs en peu de temps). */
+export const salonReportNote = (salon: string) => rpc("hdar_salon_report_note", { p_salon: salon });

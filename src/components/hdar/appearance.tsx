@@ -1,4 +1,4 @@
-import { setBubble } from "@/lib/hdar/live";
+import { botPrefs, setBubble } from "@/lib/hdar/live";
 import { Check, CheckCheck, ChevronLeft, Forward } from "lucide-react";
 import type { CSSProperties } from "react";
 import { appearanceVars, BUBBLES, FONTS, SIZES, useAppearance, WALLS } from "@/lib/hdar/appearance";
@@ -88,6 +88,13 @@ export function AppearanceScreen({ onBack }: { onBack: () => void }) {
             <span className="block text-xs text-muted">« … est en train d'écrire », « envoie une photo… ». Désactivé : personne ne le voit.</span>
           </span>
           <input type="checkbox" role="switch" checked={a.typing !== false} onChange={(e) => a.set({ typing: e.target.checked })} className="size-5 accent-[#FA6F6C]" />
+        </label>
+        <label className="mt-2 flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3">
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">Messages du robot hdar</span>
+            <span className="block text-xs text-muted">Relances et conseils en privé. Les annonces importantes restent envoyées.</span>
+          </span>
+          <input type="checkbox" role="switch" checked={a.botMsgs !== false} onChange={(e) => { a.set({ botMsgs: e.target.checked }); void botPrefs(e.target.checked).catch(() => {}); }} className="size-5 accent-[#FA6F6C]" />
         </label>
       </section>
 

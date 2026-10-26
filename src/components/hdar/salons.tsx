@@ -1,4 +1,4 @@
-import { mentionNotify } from "@/lib/hdar/live";
+import { mentionNotify, salonReportNote } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -400,6 +400,7 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
     <GroupChat
       scope="salon"
       typingRef={id}
+      onReported={() => void salonReportNote(id).catch(() => undefined)}
       myPseudo={useHdar.getState().me.pseudo || "Quelqu'un"}
       lines={lines}
       loaded={loaded}

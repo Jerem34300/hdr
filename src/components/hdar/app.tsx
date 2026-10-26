@@ -1,3 +1,5 @@
+import { useAppearance } from "@/lib/hdar/appearance";
+import { botSeen } from "@/lib/hdar/live";
 import { LeaveConfirm } from "./rich-text";
 import "@/lib/hdar/appearance";
 import { resyncProfileFromServer } from "@/lib/hdar/recover";
@@ -72,7 +74,11 @@ export function App() {
   // Parcours anonyme (admin « Visiteurs ») : onglets, écrans et fenêtres ouverts.
   useEffect(() => {
     track("app");
-    if (useHdar.getState().me.onboarded) track("has_profile");
+    if (useHdar.getState().me.onboarded) {
+      track("has_profile");
+      // Visite pour les relances du robot + préférence serveur « Messages du robot hdar ».
+      void botSeen().then((r) => { if (r && typeof r.bot_msgs === "boolean") useAppearance.getState().set({ botMsgs: r.bot_msgs }); }).catch(() => undefined);
+    }
     const note = (st: ReturnType<typeof useHdar.getState>) => {
       if (st.view.name === "tabs") track(`tab:${st.tab}`);
       else track(`view:${st.view.name}`);
