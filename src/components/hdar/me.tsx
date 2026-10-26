@@ -135,15 +135,45 @@ export function Me() {
           </button>
         </div>
       </div>
-      <BoostButton />
-      <ProSpaceCard />
-      <ProfileAmb where="top" />
-      <AmbNudge />
-      <FounderCard />
-      <PremiumCard />
-      <InviteCard />
-      <RedeemCode />
-      <button type="button" onClick={openIntro} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-surface font-display font-bold text-ink active:scale-[.98]">🎬 Comment ça marche</button>
+      {me.onboarded && <BoostButton />}
+
+      <section className="mt-6 space-y-3">
+        <h2 className="font-display text-lg font-bold">Toi</h2>
+        <div className="grid grid-cols-[1fr_6rem] gap-2">
+          <label className="block text-xs text-muted">
+            Pseudo
+            <input
+              className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
+              value={pseudo}
+              maxLength={24}
+              onChange={(e) => setPseudo(e.target.value)}
+              onBlur={() => {
+                const clean = pseudo.trim().slice(0, 24);
+                if (clean.length >= 2) patchMe({ pseudo: clean });
+                else setPseudo(me.pseudo);
+              }}
+            />
+          </label>
+          <label className="block text-xs text-muted">
+            Âge
+            <input
+              className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
+              inputMode="numeric"
+              value={age}
+              maxLength={2}
+              onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))}
+              onBlur={() => {
+                const n = Number(age);
+                if (n >= 18 && n <= 99) patchMe({ age: n });
+                else {
+                  if (age) toast("Âge entre 18 et 99 ans");
+                  setAge(me.age ? String(me.age) : "");
+                }
+              }}
+            />
+          </label>
+        </div>
+      </section>
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Je suis</h2>
@@ -161,16 +191,6 @@ export function Me() {
           ))}
         </div>
         <p className="mt-1 text-xs text-muted">Facultatif, affiché sur ta fiche (ex. « Couple · cherche F, Couple »).</p>
-        {picked && (
-          <label className="mt-3 flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
-            <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; tout désélectionner efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
-          </label>
-        )}
-        {dirty && (
-          <button type="button" disabled={picked && !consent} onClick={() => void saveIdentity()}
-            className="mt-3 h-12 w-full rounded-full bg-signal font-display font-bold text-night disabled:opacity-40">Enregistrer mon profil</button>
-        )}
       </section>
 
       <section className="mt-6">
@@ -243,41 +263,6 @@ export function Me() {
       </section>
 
       <section className="mt-6 space-y-3">
-        <h2 className="font-display text-lg font-bold">Toi</h2>
-        <div className="grid grid-cols-[1fr_6rem] gap-2">
-          <label className="block text-xs text-muted">
-            Pseudo
-            <input
-              className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
-              value={pseudo}
-              maxLength={24}
-              onChange={(e) => setPseudo(e.target.value)}
-              onBlur={() => {
-                const clean = pseudo.trim().slice(0, 24);
-                if (clean.length >= 2) patchMe({ pseudo: clean });
-                else setPseudo(me.pseudo);
-              }}
-            />
-          </label>
-          <label className="block text-xs text-muted">
-            Âge
-            <input
-              className="mt-1 h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal"
-              inputMode="numeric"
-              value={age}
-              maxLength={2}
-              onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))}
-              onBlur={() => {
-                const n = Number(age);
-                if (n >= 18 && n <= 99) patchMe({ age: n });
-                else {
-                  if (age) toast("Âge entre 18 et 99 ans");
-                  setAge(me.age ? String(me.age) : "");
-                }
-              }}
-            />
-          </label>
-        </div>
         <label className="block text-xs text-muted">
           Ta phrase du moment
           <input
@@ -307,15 +292,6 @@ export function Me() {
           />
         </label>
       </section>
-      {!me.onboarded && (
-        <button type="button" onClick={() => {
-          const n = Number(age); const ps = pseudo.trim().slice(0, 24);
-          if (ps.length < 2) return toast("Choisis un pseudo (2 lettres min.)");
-          if (!(n >= 18 && n <= 99)) return toast("Âge entre 18 et 99 ans");
-          useHdar.getState().completeGate({ pseudo: ps, age: n, adult: true, tags: me.tags, photo: me.photo });
-          toast("Profil créé 🎉");
-        }} className="boost-cta mt-4 h-12 w-full rounded-full font-display font-extrabold text-night">Enregistrer mon profil</button>
-      )}
 
       <section className="mt-6">
         <h2 className="font-display text-lg font-bold">Envies</h2>
@@ -347,16 +323,44 @@ export function Me() {
         </div>
       </section>
 
-      <Favorites />
-      <div id="protect-profile"><ProtectProfileCard /></div>
+      <section className="mt-8 space-y-3">
+        {picked && (
+          <label className="flex items-start gap-2 rounded-2xl border border-line p-3 text-xs text-muted">
+            <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <span>J'accepte que hdar. enregistre et affiche sur ma fiche mon genre et ce que je cherche, qui peuvent révéler mon orientation sexuelle (donnée sensible, art. 9 RGPD). Facultatif ; tout désélectionner efface ces infos. <a href="/confidentialite" className="underline">En savoir plus</a></span>
+          </label>
+        )}
+        <div id="protect-profile"><ProtectProfileCard /></div>
+      </section>
+      {!me.onboarded && (
+        <button type="button" onClick={() => {
+          const n = Number(age); const ps = pseudo.trim().slice(0, 24);
+          if (ps.length < 2) return toast("Choisis un pseudo (2 lettres min.)");
+          if (!(n >= 18 && n <= 99)) return toast("Âge entre 18 et 99 ans");
+          useHdar.getState().completeGate({ pseudo: ps, age: n, adult: true, tags: me.tags, photo: me.photo });
+          toast("Profil créé 🎉");
+        }} className="boost-cta mt-4 h-12 w-full rounded-full font-display font-extrabold text-night">Enregistrer mon profil</button>
+      )}
       {me.onboarded && (
-        <div className="mt-8 mb-6">
+        <div className="mt-4 mb-6">
           <button type="button" disabled={savingAll} onClick={() => void saveAll()}
             className="boost-cta h-14 w-full rounded-full font-display text-lg font-extrabold text-night shadow-[0_8px_30px_rgba(0,0,0,.5)] disabled:opacity-60">
             {savingAll ? "Enregistrement…" : savedAt ? "✓ Profil enregistré" : "Enregistrer mon profil"}
           </button>
         </div>
       )}
+
+      <div className="mt-8 border-t border-line pt-6"><p className="text-xs font-bold tracking-[0.2em] text-muted uppercase">Plus de hdar</p></div>
+      {!me.onboarded && <BoostButton />}
+      <ProSpaceCard />
+      <ProfileAmb where="top" />
+      <AmbNudge />
+      <FounderCard />
+      <PremiumCard />
+      <InviteCard />
+      <RedeemCode />
+      <button type="button" onClick={openIntro} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-surface font-display font-bold text-ink active:scale-[.98]">🎬 Comment ça marche</button>
+      <Favorites />
       <ProfileAmb where="bottom" />
     </div>
   );

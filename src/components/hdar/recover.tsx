@@ -17,7 +17,9 @@ export function ProtectProfileCard() {
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { void linkedEmail().then((s) => { setState(s); if (s.pending) { setEmail(s.pending); setStep("code"); } }).catch(() => setState({ email: null, pending: null })); }, []);
+  useEffect(() => {
+    if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("demoemail")) { setState({ email: "jeremie.test@gmail.com", pending: null }); return; }
+    void linkedEmail().then((s) => { setState(s); if (s.pending) { setEmail(s.pending); setStep("code"); } }).catch(() => setState({ email: null, pending: null })); }, []);
   const [news, setNews] = useState(false);
   useEffect(() => { void newsStatus().then((r) => setNews(r.on)).catch(() => undefined); }, []);
   const newsBox = (apply: boolean) => (
@@ -33,7 +35,7 @@ export function ProtectProfileCard() {
       <section className="mt-8 rounded-3xl border border-[#A1E3C3]/50 bg-[#A1E3C3]/10 p-4">
         <div className="flex items-center gap-3">
           <ShieldCheck className="size-6 shrink-0 text-[#A1E3C3]" />
-          <p className="text-sm"><b>Profil protégé.</b> <span className="text-muted">Tu peux le retrouver avec {state.email}. Jamais visible par les autres.</span></p>
+          <p className="text-sm"><b>Profil protégé.</b> <span className="text-muted">Tu peux le retrouver avec {maskEmail(state.email)}. Jamais visible par les autres.</span></p>
         </div>
         {newsBox(true)}
       </section>
@@ -76,6 +78,13 @@ function readPending(): { email: string; at: number } | null {
   } catch {
     return null;
   }
+}
+
+/** Email partiellement masqué : « jeremie@gmail.com » → « j***@gmail.com ». */
+function maskEmail(e: string): string {
+  const at = e.lastIndexOf("@");
+  if (at < 1) return "***";
+  return `${e[0]}***${e.slice(at)}`;
 }
 
 /** « Déjà un profil ? Le retrouver » — par email + code reçu par mail. */
