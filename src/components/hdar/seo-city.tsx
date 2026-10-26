@@ -16,7 +16,8 @@ export function cityHead(c: CityPayload | undefined, t: Theme, og?: string) {
   const desc = t === "tchat-gay" ? `Tchat gay et LGBT-friendly ${a(c.n)} (${c.dep.n}) : vois qui est connecté autour de toi, discute en privé, photos, vocaux, vidéo. Gratuit, discret, 18+.`
     : t === "sortir-ce-soir" ? `Envie de sortir ce soir ${a(c.n)} ? La carte hdar montre qui est connecté autour de toi et les lieux du moment. Gratuit, sans compte, 18+.`
     : `Rencontres ${a(c.n)} et autour (${c.dep.n}) : amour, amitié, tchat en ligne ou sortie ce soir. Carte en direct, chat du quartier, pour tout le monde et LGBT-friendly. Gratuit, discret, 18+.`;
-  return seoHead({ title, desc, path: path(c, t), og });
+    // Sous-pages thème = quasi-doublon de la page ville ; petites communes = gabarit : noindex, follow.
+  return seoHead({ title, desc, path: path(c, t), og, noindex: !!t || c.strong === false });
 }
 
 function intro(c: CityPayload) {

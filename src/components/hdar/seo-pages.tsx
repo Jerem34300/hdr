@@ -16,7 +16,7 @@ export function seoHead(o: { title: string; desc: string; path: string; og?: str
       { property: "og:url", content: url }, { property: "og:type", content: "website" }, { property: "og:image", content: og },
       { property: "og:image:width", content: "1200" }, { property: "og:image:height", content: "630" }, { property: "og:locale", content: "fr_FR" },
       { name: "twitter:card", content: "summary_large_image" }, { name: "twitter:image", content: og },
-      { name: "robots", content: o.noindex ? "noindex" : "index, follow, max-image-preview:large" },
+      { name: "robots", content: o.noindex ? "noindex, follow" : "index, follow, max-image-preview:large" },
     ],
     links: [{ rel: "canonical", href: url }],
   };

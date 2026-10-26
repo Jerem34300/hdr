@@ -4,7 +4,7 @@ import { CityChips, Count, Crumbs, Cta, Faq, Hero, SeoShell, fmt, seoHead } from
 const label = (d: ListPayload) => (d.kind === "region" ? d.n : `${d.n} (${d.code})`);
 export function listHead(d: ListPayload | undefined) {
   if (!d) return seoHead({ title: "Introuvable — hdar.", desc: "", path: "/rencontre", noindex: true });
-  return seoHead({ title: `Rencontres et sorties ${d.kind === "region" ? "en " : ": "}${label(d)} : toutes les villes — hdar.`, desc: `Rencontres, tchat et sorties dans les ${fmt(d.count)} communes ${d.kind === "region" ? "de la région" : "du département"} ${d.n}. Carte en direct, gratuit, discret, pour tout le monde, 18+.`, path: `/rencontre/${d.kind}/${d.s}` });
+  return seoHead({ title: `Rencontres et sorties ${d.kind === "region" ? "en " : ": "}${label(d)} : toutes les villes — hdar.`, desc: `Rencontres, tchat et sorties dans les ${fmt(d.count)} communes ${d.kind === "region" ? "de la région" : "du département"} ${d.n}. Carte en direct, gratuit, discret, pour tout le monde, 18+.`, path: `/rencontre/${d.kind}/${d.s}`, noindex: d.total < 100000 });
 }
 export function ListPage({ d }: { d: ListPayload }) {
   return (

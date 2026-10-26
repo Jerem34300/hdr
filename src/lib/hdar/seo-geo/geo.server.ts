@@ -13,6 +13,15 @@ const mini = (c: C, from?: C): Mini => ({ s: c.s, n: c.n, p: c.p, k: from ? Math
 const dep = (code: string) => ({ code, ...D.deps[code] });
 const reg = (code: string) => ({ code, ...D.regs[code] });
 export const TOP30 = new Set(D.cities.slice(0, 30).map((c) => c.s));
+/** Villes « fortes » : seules indexées et soumises au sitemap (50 000 hab. et plus, pôles, top 30, focus Hérault).
+ *  Les autres communes restent accessibles et suivies (noindex, follow) : gabarit trop proche pour être indexé. */
+const STRONG_MIN_POP = 50000;
+const FOCUS = new Set(["agde", "sete", "lunel", "frontignan", "marseillan", "vias", "pezenas", "palavas-les-flots", "la-grande-motte"]);
+const STRONG = new Set(D.cities.filter((c) => c.p >= STRONG_MIN_POP || c.H || TOP30.has(c.s) || FOCUS.has(c.s)).map((c) => c.s));
+const regPop: Record<string, number> = {};
+for (const c of D.cities) { const r = D.deps[c.d].r; regPop[r] = (regPop[r] || 0) + c.p; }
+/** Régions quasi vides (TAAF, Clipperton, Saint-Pierre…) : noindex. */
+export const REGION_MIN_POP = 100000;
 
 export function cityPayload(slug: string): CityPayload | null {
   const c = bySlug.get(slug);
@@ -24,7 +33,7 @@ export function cityPayload(slug: string): CityPayload | null {
   const aroundCount = c.H ? D.cities.filter((o) => o.h === c.s).length - 1 : 0;
   const depCities = D.cities.filter((o) => o.d === c.d);
   return {
-    s: c.s, n: c.n, p: c.p, x: c.x, y: c.y, hubKm: c.k, isHub: !!c.H, top: TOP30.has(c.s),
+    s: c.s, n: c.n, p: c.p, x: c.x, y: c.y, hubKm: c.k, isHub: !!c.H, top: TOP30.has(c.s), strong: STRONG.has(c.s),
     hub: mini(hub), dep: { s: dp.s, n: dp.n, code: dp.code }, reg: { s: rg.s, n: rg.n },
     rankInDep: depCities.indexOf(c) + 1, depCount: depCities.length,
     nearby, around, aroundCount,
@@ -56,19 +65,16 @@ export function indexPayload(): IndexPayload {
   };
 }
 
-/** Communes mises en avant dans le sitemap : pôles, top 30 et 5 000 habitants ou plus.
- *  Les autres restent indexables et liées (départements, « autour de »), juste pas soumises. */
-const SITEMAP_MIN_POP = 5000;
 
 /** Toutes les URL publiques, pour les sitemaps. */
 export function allUrls() {
-  const deps = new Set(D.cities.map((c) => D.deps[c.d].s));
-  const regs = new Set(D.cities.map((c) => D.regs[D.deps[c.d].r].s));
+  const regs = Object.keys(D.regs).filter((k) => (regPop[k] || 0) >= REGION_MIN_POP).map((k) => D.regs[k].s);
   return {
-    cities: D.cities.filter((c) => c.p >= SITEMAP_MIN_POP || c.H || TOP30.has(c.s)).map((c) => `/rencontre/${c.s}`),
-    // Pages publiques des petites annonces (description + compteur, jamais le contenu) : top 30 seulement.
-    annonces: ["/petites-annonces", ...D.cities.slice(0, 30).map((c) => `/petites-annonces/${c.s}`)],
-    themes: D.cities.slice(0, 30).flatMap((c) => [`/rencontre/${c.s}/tchat-gay`, `/rencontre/${c.s}/sortir-ce-soir`, `/rencontre/${c.s}/live-coquin`]),
-    lists: ["/rencontre", ...[...regs].map((s) => `/rencontre/region/${s}`), ...[...deps].map((s) => `/rencontre/departement/${s}`)],
+    cities: D.cities.filter((c) => STRONG.has(c.s)).map((c) => `/rencontre/${c.s}`),
+    // Annonces par ville (≈400 mots, gabarit) et sous-pages thème (quasi-doublons de la page ville) : hors sitemap.
+    annonces: ["/petites-annonces"],
+    themes: D.cities.slice(0, 30).map((c) => `/rencontre/${c.s}/live-coquin`),
+    // Départements : restent indexables (maillage) mais hors sitemap.
+    lists: ["/rencontre", ...regs.map((s) => `/rencontre/region/${s}`)],
   };
 }

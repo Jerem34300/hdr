@@ -10,10 +10,11 @@ const AdsCta = ({ label }: { label: string }) => (
 
 export function adsHead(c: CityPayload | null | undefined) {
   if (c === undefined) return seoHead({ title: "Ville introuvable — hdar.", desc: "", path: "/petites-annonces", noindex: true });
-  if (!c) return seoHead({ title: "Petites annonces rencontres et sorties, ville par ville — hdar.", desc: "Poste une petite annonce pour une rencontre ou une sortie près de chez toi : anonyme, gratuite, réservée aux 18 ans et plus. Les annonces restent dans l'appli, entre adultes.", path: "/petites-annonces" });
+  if (!c) return seoHead({ title: "Petites annonces rencontres et sorties, ville par ville — hdar.", desc: "Poste une petite annonce pour une rencontre ou une sortie près de chez toi : discrète, gratuite, réservée aux 18 ans et plus. Les annonces restent dans l'appli, entre adultes.", path: "/petites-annonces" });
   return seoHead({
     title: `Petites annonces rencontre ${a(c.n)} (${c.dep.code}) : sorties et rencontres — hdar.`,
     desc: `Petites annonces de rencontres et de sorties ${a(c.n)} et autour (${c.dep.n}). Discret, gratuit, 18+ : poste la tienne pour 24 h, 3 jours ou 7 jours et réponds en message privé.`,
+    noindex: true,
     path: `/petites-annonces/${c.s}`,
   });
 }

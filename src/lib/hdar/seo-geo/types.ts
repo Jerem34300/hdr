@@ -1,6 +1,6 @@
 export type Mini = { s: string; n: string; p: number; k?: number };
 export type CityPayload = {
-  s: string; n: string; p: number; x: number; y: number; hubKm: number; isHub: boolean; top: boolean;
+  s: string; n: string; p: number; x: number; y: number; hubKm: number; isHub: boolean; top: boolean; strong?: boolean;
   hub: Mini; dep: { s: string; n: string; code: string }; reg: { s: string; n: string };
   rankInDep: number; depCount: number; nearby: Mini[]; around: Mini[]; aroundCount: number;
 };
