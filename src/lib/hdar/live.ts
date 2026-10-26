@@ -1550,3 +1550,15 @@ export async function onlineList(b: { s: number; w: number; n: number; e: number
 }
 /** Mon nom « Discret N » quand je n'ai pas de profil (calculé côté serveur, stable). */
 export const myDiscreet = () => rpc<string>("hdar_my_discreet", {});
+
+/** Admin « Jour par jour » (v92) : agrégats par jour, liste des profils du jour (pseudo/âge/ville, jamais d'email). */
+export type DailyRow = { day: string; signups: number; visits: number; devices: number; new_devices: number; departures: number; revenue_cents: number; payments: number };
+export type DailyProfile = { id: string; pseudo: string; age: number | null; city: string | null; photo: string | null; at: string; ref: string | null };
+export type DailyDetail = {
+  day: string; profiles: DailyProfile[];
+  sources: { ref: string; visits: number; devices: number; profiles: number; revenue_cents: number }[];
+  revenue: { kind: string; cnt: number; cents: number }[];
+  departures: Record<string, number>; platforms: Record<string, number>;
+};
+export type AdminDaily = { days: DailyRow[]; day: DailyDetail };
+export const adminDaily = (key: string, day: string | null, days = 30) => rpc<AdminDaily>("hdar_admin_daily", { p_key: key, p_day: day, p_days: days });
