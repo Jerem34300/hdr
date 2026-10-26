@@ -617,11 +617,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         const pt = project(v.lat, v.lng);
         if (pt.x < -40 || pt.y < -40 || pt.x > size.w + 40 || pt.y > size.h + 40) return null;
         return (
-          <button key={`v${v.lat},${v.lng}`} type="button" aria-label="Quelqu'un traîne par ici (visiteur anonyme)"
+          <button key={`v${v.lat},${v.lng}`} type="button" aria-label="Quelqu'un traîne par ici (Discret, sans profil)"
             className="absolute z-[8] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: pt.x, top: pt.y, opacity: Math.max(0.45, 1 - v.h / 60) }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
-              if (useHdar.getState().me.onboarded) toast("Visiteur anonyme, sans profil 👀");
+              if (useHdar.getState().me.onboarded) toast("Un Discret, sans profil 👀 · liste dans « en ligne »");
               else { toast("Crée ton profil pour qu'on te voie aussi 👋"); useHdar.setState({ sheet: "gate" }); }
             }}>
             <span className="grid size-7 place-items-center rounded-full border border-dashed border-[#8b7cff]/70 bg-[#8b7cff]/20 text-[13px] shadow-[0_0_14px_rgba(139,124,255,.45)]">👤</span>

@@ -1531,3 +1531,22 @@ export const botSeen = () => rpc<{ bot_msgs: boolean } | null>("hdar_bot_seen", 
 export const botPrefs = (on: boolean) => rpc("hdar_bot_prefs", { p_on: on });
 /** Signalement fait depuis un salon (rappel des règles si plusieurs en peu de temps). */
 export const salonReportNote = (salon: string) => rpc("hdar_salon_report_note", { p_salon: salon });
+
+/** Liste « En ligne » : uniquement ce que la carte montre déjà (profils visibles + Discrets des bulles). */
+export type OnlinePerson = { id: string; pseudo: string; lat: number; lng: number; premium: boolean; age: number | null; iam: string | null; seeking: string | null; photo: string | null; min: number; new: boolean; since: string | null };
+export type OnlineVisitor = { id: string; name: string; lat: number; lng: number; min: number };
+export async function onlineList(b: { s: number; w: number; n: number; e: number }, f: MapFilters) {
+  const on = filtersOn(f);
+  const r = await rpc<{ people: OnlinePerson[]; visitors: OnlineVisitor[] }>("hdar_online_list", {
+    p_s: b.s, p_w: b.w, p_n: b.n, p_e: b.e,
+    p_min_age: on ? f.minAge : null, p_max_age: on ? f.maxAge : null,
+    p_desires: on && f.desires.length ? f.desires : null, p_places: on && f.places.length ? f.places : null,
+    p_online: on && f.online, p_photo: on && f.photo, p_iam: on && f.iam.length ? f.iam : null,
+  });
+  return {
+    people: (r?.people ?? []).map((p) => ({ ...p, lat: Number(p.lat), lng: Number(p.lng), min: Number(p.min) || 0 })),
+    visitors: (r?.visitors ?? []).map((v) => ({ ...v, lat: Number(v.lat), lng: Number(v.lng), min: Number(v.min) || 0 })),
+  };
+}
+/** Mon nom « Discret N » quand je n'ai pas de profil (calculé côté serveur, stable). */
+export const myDiscreet = () => rpc<string>("hdar_my_discreet", {});

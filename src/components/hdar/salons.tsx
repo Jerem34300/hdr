@@ -1,3 +1,4 @@
+import { useMyName } from "@/lib/hdar/discret";
 import { mentionNotify, salonReportNote } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, Plus, X } from "lucide-react";
@@ -396,12 +397,13 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
 
   const owner = info?.mine ?? false;
   const isAdmin = useAmAdmin();
+  const myName = useMyName();
   return (
     <GroupChat
       scope="salon"
       typingRef={id}
       onReported={() => void salonReportNote(id).catch(() => undefined)}
-      myPseudo={useHdar.getState().me.pseudo || "Quelqu'un"}
+      myPseudo={myName}
       lines={lines}
       loaded={loaded}
       maxLength={1000}

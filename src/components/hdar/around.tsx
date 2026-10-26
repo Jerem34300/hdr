@@ -1,3 +1,5 @@
+import { OnlineSheet } from "./online-sheet";
+import { ONLINE_DEMO } from "./online-demo";
 import { useEffect, useState } from "react";
 import { onlineCount } from "@/lib/hdar/recent";
 import { useScene } from "@/lib/hdar/scene";
@@ -79,19 +81,24 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
 
 /** « ● 3 en ligne » : tout le monde avec l'appli ouverte (5 min), pas seulement les gens visibles sur la carte. */
 function OnlinePill() {
-  const [n, setN] = useState(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("badgesdemo") ? 1 : 0));
+  const [n, setN] = useState(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("badgesdemo") ? 1 : import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("enlignedemo") ? 7 : 0));
   useEffect(() => {
     let stop = false;
+    if (import.meta.env.DEV && location.search.includes("enlignedemo")) return;
     const run = () => { if (document.visibilityState === "visible") void onlineCount().then((v) => !stop && setN(v)); };
     run();
     const id = window.setInterval(run, 60_000);
     return () => { stop = true; window.clearInterval(id); };
   }, []);
+  const [open, setOpen] = useState(() => import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("enlignedemo"));
   return (
-    <span className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label={`${n} en ligne`}>
-      <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-online" />
-      {n} en ligne
-    </span>
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label={`${n} en ligne, voir qui est visible`}>
+        <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-online" />
+        {n} en ligne
+      </button>
+      {open && <OnlineSheet onClose={() => setOpen(false)} demo={import.meta.env.DEV && location.search.includes("enlignedemo") ? ONLINE_DEMO : undefined} />}
+    </>
   );
 }
 

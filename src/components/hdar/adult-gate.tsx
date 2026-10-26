@@ -234,6 +234,14 @@ function DevPreview() {
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
   if (location.search.includes("botadmin")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Robot d'accueil</p><BotTab adminKey="demo" demo={{ enabled: true, dm_text: BOT_DEMO_DM, salon_text: "Bienvenue à {mentions} 👋 Faites-leur bon accueil !", reply_text: BOT_DEMO_REPLY, ...BOT_DEFAULTS, nudge_on: true, question_on: true, rules_on: true, tip_on: true, updated_at: new Date().toISOString(), welcomed: 128, pending: 2, salon: "Général", opted_out: 9 }} demoAnnounce={location.search.includes("annonce") ? { text: "Nouveau : choisis la couleur de tes bulles dans Profil → Apparence 🎨", target: "both", count: 1284 } : undefined} /><Toaster theme="dark" position="top-center" /></main>;
+  if (location.search.includes("dmdiscret")) {
+    const asD = location.search.includes("asdiscret"), t = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+    const demo = [
+      { id: "m1", mine: !asD, body: "Salut ! Je t'ai vu dans la liste en ligne, tu es du coin ? 🙂", at: t(6), kind: "text" as const, duration: null },
+      { id: "m2", mine: !asD, body: "Si tu crées ton profil on pourra discuter, c'est gratuit et discret.", at: t(5), kind: "text" as const, duration: null },
+    ];
+    return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={asD ? "d1" : "v417"} pseudo={asD ? "Nina" : "Discret 417"} demo={demo} /></main>;
+  }
   if (location.search.includes("botdm")) return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={BOT_ID} pseudo="hdar" demo={location.search.includes("nudge") ? [{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 4 * 86400_000).toISOString(), kind: "text", duration: null }, { id: "b2", mine: false, body: BOT_DEFAULTS.nudge1_text.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }] : [{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }]} /></main>;
   if (location.search.includes("profilview")) {
     const photo = location.search.includes("nophoto") ? "" : "/avatars/03.jpg";

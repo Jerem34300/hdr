@@ -76,7 +76,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const region = useRegion(userId);
   const onMap = useMapFocus((s) => !!s.pins[userId]);
   const favs = useFavorites();
-  const onboarded = useHdar((s) => s.me.onboarded);
+  const onboarded = useHdar((s) => s.me.onboarded) && !(import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("asdiscret"));
   const [camera, setCamera] = useState(false);
   const [seenAt, setSeenAt] = useState<number | null>(null);
   const openGate = useHdar((s) => s.openGate);
@@ -580,16 +580,27 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         <BotComposer />
       ) : !onboarded ? (
         <div className="dock border-t border-line px-4 pt-3 text-center">
-          <p className="text-sm text-muted">
-            Crée ton profil pour envoyer un message privé. La photo est facultative.
-          </p>
-          <button
-            type="button"
-            className="mt-2 h-11 w-full rounded-full bg-signal text-night"
-            onClick={openGate}
-          >
-            Créer mon profil
-          </button>
+          {msgs.some((m) => !m.mine) ? (
+            <>
+              <p className="text-sm text-muted">Tu es en mode Discret : tu peux lire, mais pas répondre en privé. Ta conversation sera conservée.</p>
+              <button type="button" className="boost-cta mt-2 h-12 w-full rounded-full font-display font-extrabold text-night" onClick={openGate}>
+                Crée ton profil pour répondre
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted">
+                Crée ton profil pour envoyer un message privé. La photo est facultative.
+              </p>
+              <button
+                type="button"
+                className="mt-2 h-11 w-full rounded-full bg-signal text-night"
+                onClick={openGate}
+              >
+                Créer mon profil
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <>

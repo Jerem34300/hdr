@@ -1,3 +1,4 @@
+import { useMyName } from "@/lib/hdar/discret";
 import { mentionNotify } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, LocateFixed } from "lucide-react";
@@ -18,7 +19,7 @@ export function PocketChat() {
   const here = useHdar((s) => s.here);
   const cityId = useHdar((s) => s.cityId);
   const customCenter = useHdar((s) => s.customCenter);
-  const pseudo = useHdar((s) => s.me.pseudo);
+  const pseudo = useMyName();
   const onboarded = useHdar((s) => s.me.onboarded);
   const fallback = resolvePlace(cityId, customCenter);
   const center = here ?? { lat: fallback.lat, lng: fallback.lng };
@@ -50,7 +51,7 @@ export function PocketChat() {
     <GroupChat
       scope="area"
       typingRef={`${center.lat.toFixed(3)},${center.lng.toFixed(3)}`}
-      myPseudo={pseudo || "Quelqu'un"}
+      myPseudo={pseudo}
       lines={lines}
       loaded={loaded}
       maxLength={300}
@@ -65,8 +66,8 @@ export function PocketChat() {
       meta={(m) => (!m.mine && here && m.lat != null && m.lng != null ? bucketDistance(haversine(here, { lat: m.lat, lng: m.lng })) : null)}
       canHide={(m) => m.mine || isAdmin}
       onHide={(m) => areaHide(deviceId(), m.id)}
-      onSend={(text, replyTo) => areaSend2(center.lat, center.lng, pseudo || "Anonyme", text, replyTo).then(() => mentionNotify("area", null, text))}
-      onSendMedia={onboarded ? (k, path, d) => areaSendMedia(center.lat, center.lng, pseudo || "Anonyme", k, path, d) : undefined}
+      onSend={(text, replyTo) => areaSend2(center.lat, center.lng, pseudo, text, replyTo).then(() => mentionNotify("area", null, text))}
+      onSendMedia={onboarded ? (k, path, d) => areaSendMedia(center.lat, center.lng, pseudo, k, path, d) : undefined}
       mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
       onChanged={refresh}
       header={
