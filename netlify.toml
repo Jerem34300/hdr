@@ -5,6 +5,19 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Liens courts partenaires / promos : hdar.chat/x/<nom> → /?ref=<ref> (stats admin « Provenance »).
+[[redirects]]
+  from = "/x/expose"
+  to = "/?ref=expose_twittos"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/x/:ref"
+  to = "/?ref=:ref"
+  status = 302
+  force = true
+
 [[redirects]]
   from = "/ambassadeur/guide"
   to = "/ambassadeur/guide.pdf"

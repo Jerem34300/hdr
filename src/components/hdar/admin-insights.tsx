@@ -690,28 +690,30 @@ function AdminThread({ adminKey, a, b }: { adminKey: string; a: string; b: strin
 }
 
 /** Provenance : visites arrivées par un lien ?ref=, profils créés et conversion, au total et par jour. */
-export function RefsTab({ adminKey, onOpen }: { adminKey: string; onOpen?: (id: string) => void }) {
+export function RefsTab({ adminKey, onOpen, demo }: { adminKey: string; onOpen?: (id: string) => void; demo?: AdminRefs }) {
   const [days, setDays] = useState(30);
-  const load = useCallback(() => adminRefs(adminKey, days), [adminKey, days]);
+  const load = useCallback(() => (demo ? Promise.resolve(demo) : adminRefs(adminKey, days)), [adminKey, days, demo]);
   const { data, error } = useLoad<AdminRefs>(load, 60_000);
   const conv = (r: RefRow) => (r.conv == null ? "—" : `${r.conv} %`);
   const visits = (data?.total ?? []).reduce((n, r) => n + r.visits, 0);
   const profiles = (data?.total ?? []).reduce((n, r) => n + r.profiles, 0);
+  const devices = (data?.total ?? []).reduce((n, r) => n + (r.devices ?? 0), 0);
   return (
     <div className="space-y-4">
-      <RefLinks adminKey={adminKey} onOpen={onOpen} />
-      <Referrers adminKey={adminKey} onOpen={onOpen} />
+      {!demo && <RefLinks adminKey={adminKey} onOpen={onOpen} />}
+      {!demo && <Referrers adminKey={adminKey} onOpen={onOpen} />}
       <h3 className="pt-2 font-display text-lg font-bold">Statistiques par période</h3>
       <Seg value={days} onChange={setDays} options={[[1, "Aujourd'hui"], [7, "7 j"], [30, "30 j"], [90, "90 j"]]} />
       <ErrorNote error={error} />
       <p className="text-xs text-muted">
-        Liens du type hdar.chat/?ref=next1 (compatible avec &code=FIRST). 1 visite = 1 appareil arrivé par le lien, au plus 1 fois par jour.
+        Liens du type hdar.chat/?ref=next1 ou lien court hdar.chat/x/nom (compatible avec &code=FIRST). 1 visite = 1 appareil arrivé par le lien, au plus 1 fois par jour ;
+        appareils = nouveaux appareils (1re arrivée par ce lien) ; FIRST = codes FIRST utilisés par les profils venus du lien.
         Aucune IP ni identifiant d'appareil n'est enregistré ; un profil est rattaché à la 1re ref vue dans les 30 jours.
       </p>
       {data && (
         <>
           <div className="grid grid-cols-3 gap-2">
-            <Tile label="Visites" value={visits} />
+            <Tile label="Visites" value={visits} hint={`${devices} appareils uniques`} />
             <Tile label="Profils créés" value={profiles} />
             <Tile label="Refs" value={data.total.length} hint={visits ? `${Math.round((1000 * profiles) / visits) / 10} % conversion` : undefined} />
           </div>
@@ -730,29 +732,48 @@ function RefTable({ title, rows, conv, day }: { title: string; rows: (RefRow & {
       {rows.length === 0 ? (
         <p className="text-sm text-muted">Aucune visite par lien ?ref= sur la période.</p>
       ) : (
-        <table className="w-full text-sm">
+        <table className="w-full whitespace-nowrap text-xs">
           <thead className="text-left text-xs text-muted">
             <tr>
               {day && <th className="py-1">Jour</th>}
               <th className="py-1">Ref</th>
-              <th className="py-1 text-right">Visites</th>
-              <th className="py-1 text-right">Profils</th>
-              <th className="py-1 text-right">Conv.</th>
+              <th className="py-1 pl-1.5 text-right">Visites</th>
+              <th className="py-1 pl-1.5 text-right">App.</th>
+              <th className="py-1 pl-1.5 text-right">Profils</th>
+              <th className="py-1 pl-1.5 text-right">FIRST</th>
+              <th className="py-1 pl-1.5 text-right">Conv.</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={(r.day ?? "") + r.ref} className="border-t border-line/60">
-                {day && <td className="py-1.5 text-muted">{r.day ? new Date(`${r.day}T12:00:00`).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" }) : ""}</td>}
-                <td className="py-1.5 font-bold">{r.ref}</td>
-                <td className="py-1.5 text-right">{r.visits}</td>
-                <td className="py-1.5 text-right">{r.profiles}</td>
-                <td className="py-1.5 text-right">{conv(r)}</td>
+                {day && <td className="py-1.5 text-muted">{r.day ? new Date(`${r.day}T12:00:00`).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "numeric" }) : ""}</td>}
+                <td className="max-w-[7rem] truncate py-1.5 font-bold">{r.ref}</td>
+                <td className="py-1.5 pl-1.5 text-right">{r.visits}</td>
+                <td className="py-1.5 pl-1.5 text-right">{r.devices ?? "—"}</td>
+                <td className="py-1.5 pl-1.5 text-right">{r.profiles}</td>
+                <td className="py-1.5 pl-1.5 text-right">{r.first_uses ?? "—"}</td>
+                <td className="py-1.5 pl-1.5 text-right">{conv(r)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
     </div>
+  );
+}
+
+/** Aperçu de dev (captures) : stats fictives d'un partenaire. */
+export function RefsTabDemo() {
+  const row = (day: string, visits: number, devices: number, profiles: number, first_uses: number, ref = "expose_twittos") =>
+    ({ day, ref, visits, devices, profiles, first_uses, conv: devices ? Math.round((1000 * profiles) / devices) / 10 : null });
+  const daily = [row("2026-10-28", 41, 33, 6, 4), row("2026-10-27", 128, 112, 19, 15), row("2026-10-26", 12, 12, 2, 1), row("2026-10-26", 3, 2, 1, 0, "next1")];
+  const sum = (ref: string) => daily.filter((d) => d.ref === ref).reduce((a, d) => ({ ...a, visits: a.visits + d.visits, devices: a.devices + d.devices, profiles: a.profiles + d.profiles, first_uses: a.first_uses + d.first_uses }), { ref, visits: 0, devices: 0, profiles: 0, first_uses: 0, conv: null as number | null });
+  const total = ["expose_twittos", "next1"].map(sum).map((t) => ({ ...t, conv: Math.round((1000 * t.profiles) / t.devices) / 10 }));
+  return (
+    <main className="min-h-dvh bg-night px-4 pt-6 pb-10 text-ink">
+      <h1 className="mb-3 font-display text-2xl font-extrabold">Provenance · Partenaires</h1>
+      <RefsTab adminKey="" demo={{ days: 30, total, daily }} />
+    </main>
   );
 }

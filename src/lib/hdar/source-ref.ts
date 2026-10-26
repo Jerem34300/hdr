@@ -50,7 +50,9 @@ export function captureSourceRef() {
     if (gc && /^[A-Za-z0-9-]{3,24}$/.test(gc)) localStorage.setItem("hdar-code", gc.toUpperCase());
     const raw = (q.get("ref") || "").trim().toLowerCase().slice(0, 32);
     let cur = read();
+    let fresh = false;
     if (raw && RE.test(raw) && !cur) {
+      fresh = true;
       cur = { ref: raw, at: Date.now() };
       localStorage.setItem(KEY, JSON.stringify(cur));
       localStorage.removeItem(DONE);
@@ -62,7 +64,7 @@ export function captureSourceRef() {
     const mark = `${day}:${cur.ref}`;
     if (localStorage.getItem(SENT) === mark) return;
     localStorage.setItem(SENT, mark);
-    void call("hdar_ref_visit", { p_ref: cur.ref }, true).catch(() => localStorage.removeItem(SENT));
+    void call("hdar_ref_visit", { p_ref: cur.ref, p_new: fresh }, true).catch(() => localStorage.removeItem(SENT));
   } catch {
     /* stockage indisponible : statistique facultative */
   }

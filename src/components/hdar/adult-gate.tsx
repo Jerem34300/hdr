@@ -31,6 +31,7 @@ import { AppearanceScreen } from "./appearance";
 import { GroupChatDemo } from "./group-chat";
 import { LiveChatDemo } from "./live-chat";
 import { RefLinksDemo } from "./admin-ref-links";
+import { RefsTabDemo } from "./admin-insights";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
@@ -231,6 +232,7 @@ function DevPreview() {
   if (location.search.includes("groupchat")) return <><GroupChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
   if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /></>;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
+  if (location.search.includes("provdemo")) return <RefsTabDemo />;
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
   if (location.search.includes("botadmin")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Robot d'accueil</p><BotTab adminKey="demo" demo={{ enabled: true, dm_text: BOT_DEMO_DM, salon_text: "Bienvenue à {mentions} 👋 Faites-leur bon accueil !", reply_text: BOT_DEMO_REPLY, ...BOT_DEFAULTS, nudge_on: true, question_on: true, rules_on: true, tip_on: true, updated_at: new Date().toISOString(), welcomed: 128, pending: 2, salon: "Général", opted_out: 9 }} demoAnnounce={location.search.includes("annonce") ? { text: "Nouveau : choisis la couleur de tes bulles dans Profil → Apparence 🎨", target: "both", count: 1284 } : undefined} /><Toaster theme="dark" position="top-center" /></main>;
