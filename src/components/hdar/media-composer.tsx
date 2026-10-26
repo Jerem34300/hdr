@@ -81,7 +81,7 @@ export function AttachButton({
 }
 
 /** Hold to record a voice note, release to send (60 s max). */
-export function HoldMic({ onDone, disabled }: { onDone: (blob: Blob, sec: number) => void; disabled?: boolean }) {
+export function HoldMic({ onDone, disabled, onTick }: { onDone: (blob: Blob, sec: number) => void; disabled?: boolean; /** Pendant l'enregistrement (indicateur « enregistre un vocal »). */ onTick?: () => void }) {
   const [sec, setSec] = useState<number | null>(null);
   const mr = useRef<MediaRecorder | null>(null);
   const started = useRef(0);
@@ -124,6 +124,7 @@ export function HoldMic({ onDone, disabled }: { onDone: (blob: Blob, sec: number
     timer.current = window.setInterval(() => {
       const s = Math.round((Date.now() - started.current) / 1000);
       setSec(s);
+      onTick?.();
       if (s >= MAX_VOICE_SEC) stop();
     }, 250);
   }
@@ -243,13 +244,16 @@ export function RoomMedia({ scope, id, mine }: { scope: MediaScope; id: string; 
 export function RoomAttach({
   send,
   disabled,
+  onActivity,
 }: {
   send: (kind: MediaKind, path: string, duration: number | null) => Promise<unknown>;
   disabled?: boolean;
+  onActivity?: (kind: "photo" | "video" | "audio") => void;
 }) {
   const [busy, setBusy] = useState(false);
   const go = (blob: Blob, kind: MediaKind, sec?: number) => {
     setBusy(true);
+    onActivity?.(kind === "image" ? "photo" : kind === "video" ? "video" : "audio");
     const t = toast.loading(kind === "video" ? "Envoi de la vidéo…" : kind === "audio" ? "Envoi du vocal…" : "Envoi de la photo…");
     void uploadChatMedia(blob, kind, sec)
       .then(({ path, duration }) => send(kind, path, duration))
@@ -260,7 +264,7 @@ export function RoomAttach({
   return (
     <>
       <AttachButton disabled={disabled || busy} onPick={(f, k) => go(f, k)} />
-      <HoldMic disabled={disabled || busy} onDone={(b, s) => go(b, "audio", s)} />
+      <HoldMic disabled={disabled || busy} onDone={(b, s) => go(b, "audio", s)} onTick={() => onActivity?.("audio")} />
     </>
   );
 }

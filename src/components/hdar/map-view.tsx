@@ -66,6 +66,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const focus = useMapFocus((s) => s.focus);
   const fly = useMapFocus((s) => s.fly);
   const [hl, setHl] = useState<string | null>(null);
+  /** Bulle ouverte sur un profil (après « Voir sur la carte »). */
+  const [card, setCard] = useState<string | null>(null);
+  const pinned = useRef(false);
   useEffect(() => {
     const t = () => { if (document.visibilityState === "visible") void liveIds().then((ids) => useMapFocus.setState({ liveIds: new Set(ids ?? []) })).catch(() => undefined); };
     t(); const i = setInterval(t, 30000); return () => clearInterval(i);
@@ -269,9 +272,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
 
   /** Position refusée et aucune position enregistrée : on centre sur la ville approximative (réseau). */
   function centerOnApproxCity() {
-    if (locked.current || useHdar.getState().cityId === "ici") return;
+    if (locked.current || pinned.current || useHdar.getState().cityId === "ici") return;
     void approxGeo().then((g) => {
-      if (!g || locked.current) return;
+      if (!g || locked.current || pinned.current) return;
       track("geo_approx");
       setApprox(g.city);
       follow.current = false;
@@ -387,10 +390,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
 
   useEffect(() => {
     if (!focus || Date.now() - focus.at > 5000) return;
+    // « Voir sur la carte » : rien d'automatique (GPS, ville approximative, cadrage du plus proche) ne doit reprendre la main.
     follow.current = false;
+    pinned.current = true;
+    autoFitted.current = true;
     setView((v) => ({ ...v, lat: focus.lat, lng: focus.lng }));
-    animateTo(16);
+    animateTo(15);
     setHl(focus.id);
+    setCard(focus.id);
     const t = setTimeout(() => setHl(null), 6000);
     useMapFocus.setState({ focus: null });
     return () => clearTimeout(t);
@@ -400,6 +407,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   useEffect(() => {
     if (!fly || Date.now() - fly.at > 5000) return;
     follow.current = !!fly.mine;
+    pinned.current = !fly.mine;
+    autoFitted.current = true;
     const to = fly.mine ? you : fly;
     setView((v) => ({ ...v, lat: to.lat, lng: to.lng }));
     animateTo(fly.zoom);
@@ -735,6 +744,16 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               <PinFace id={pin.id} pseudo={pin.pseudo} />
               {pin.premium && <PremiumBadge className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 scale-75 !px-1" />}
             </button>
+            {card === pin.id && (
+              <span className="absolute z-[30] -translate-x-1/2 -translate-y-full" style={{ left: c.x, top: c.y - face / 2 - 10 }} onPointerDown={(e) => e.stopPropagation()}>
+                <span className="relative flex items-center gap-2 rounded-2xl border border-[#A1E3C3]/60 bg-night/95 py-1.5 pr-1.5 pl-3 whitespace-nowrap shadow-[0_0_24px_rgba(161,227,195,.45)]">
+                  <b className="font-display text-sm">{pin.pseudo}</b>
+                  <button type="button" className="rounded-full bg-signal px-2.5 py-1 text-xs font-bold text-night" onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}>Voir le profil</button>
+                  <button type="button" aria-label="Fermer" className="px-1 text-muted" onClick={() => setCard(null)}>✕</button>
+                  <span className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 border-r border-b border-[#A1E3C3]/60 bg-night/95" />
+                </span>
+              </span>
+            )}
             {boosted.has(pin.id) && <span className="pointer-events-none absolute z-[22] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-1.5 text-[9px] font-extrabold text-night shadow" style={{ left: c.x, top: c.y + face / 2 - 2 }}>🚀</span>}
             </span>
           );

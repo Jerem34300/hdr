@@ -32,8 +32,9 @@ export const WALLS = [
   { id: "nuit", name: "Nuit", css: "radial-gradient(circle at 20% 10%, rgba(47,124,246,.16), transparent 45%), radial-gradient(circle at 85% 80%, rgba(61,220,151,.10), transparent 40%)", size: "auto" },
 ] as const;
 
-export type Appearance = { bubble: string; font: string; size: string; wall: string };
-export const DEFAULT_APPEARANCE: Appearance = { bubble: "corail", font: "defaut", size: "m", wall: "aucun" };
+/** typing = montrer aux autres quand j'écris / j'envoie un média (activé par défaut). */
+export type Appearance = { bubble: string; font: string; size: string; wall: string; typing?: boolean };
+export const DEFAULT_APPEARANCE: Appearance = { bubble: "corail", font: "defaut", size: "m", wall: "aucun", typing: true };
 
 export const useAppearance = create<Appearance & { set: (p: Partial<Appearance>) => void; reset: () => void }>()(
   persist((set) => ({ ...DEFAULT_APPEARANCE, set: (p) => set(p), reset: () => set(DEFAULT_APPEARANCE) }), { name: "hdar-appearance" }),

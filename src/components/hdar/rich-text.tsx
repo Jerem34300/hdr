@@ -163,3 +163,17 @@ export function MentionList({ list, onPick }: { list: { pseudo: string }[]; onPi
 
 // Retour depuis un lien externe : rouvre la même conversation au même endroit.
 if (typeof window !== "undefined") restoreReturn();
+
+/** Barre « … est en train d'écrire » avec 3 points animés, au-dessus de la zone de saisie. */
+export function TypingBar({ text }: { text: string }) {
+  return (
+    <div aria-live="polite" className={"flex h-6 items-center gap-2 px-4 text-xs text-muted transition-opacity " + (text ? "opacity-100" : "opacity-0")}>
+      {text && (
+        <>
+          <span className="typing-dots inline-flex gap-0.5" aria-hidden><i /><i /><i /></span>
+          <span className="truncate italic">{text}</span>
+        </>
+      )}
+    </div>
+  );
+}

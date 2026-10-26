@@ -1509,3 +1509,5 @@ export function mentionNotify(scope: "dm" | "salon" | "area", ref: string | null
   if (!/(^|[^\w@])@[\w.-]{2,}/.test(body)) return;
   void rpc("hdar_mention_notify", { p_scope: scope, p_ref: ref }).catch(() => undefined);
 }
+/** Nom du canal Realtime privé pour les indicateurs « en train d'écrire » (v85). null = pas d'indicateur. */
+export const typingTopic = (scope: string, ref: string) => rpc<{ topic: string; me: string } | null>("hdar_typing_topic", { p_scope: scope, p_ref: ref });

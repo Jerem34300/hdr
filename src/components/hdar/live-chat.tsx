@@ -1,3 +1,5 @@
+import { typingText, useTyping } from "@/lib/hdar/typing";
+import { TypingBar } from "./rich-text";
 import { MentionList, RichText, useMentions } from "./rich-text";
 import { mentionNotify } from "@/lib/hdar/live";
 import type { CSSProperties } from "react";
@@ -84,6 +86,9 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const [photo, setPhoto] = useState("");
   const [text, setText] = useState("");
   const ment = useMentions(text, setText, [{ pseudo }]);
+  const myPseudo = useHdar((s) => s.me.pseudo);
+  const onboardedMe = useHdar((s) => s.me.onboarded);
+  const ty = useTyping("dm", demo || !onboardedMe ? null : userId, myPseudo, demo ? (typeof location !== "undefined" && location.search.includes("typing") ? [{ id: userId, pseudo, kind: location.search.includes("vocal") ? "audio" : "text", at: Date.now() }] : []) : undefined);
   const [msgs, setMsgs] = useState<LiveMsg[]>(demo ?? []);
   const [replyTo, setReplyTo] = useState<LiveMsg | null>(null);
   const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
@@ -238,6 +243,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   }, [lastId, markSeen, userId]);
 
   async function sendVideo(file: File) {
+    ty.ping("video");
     setBusy(true);
     try {
       const { path, duration } = await uploadChatMedia(file, "video");
@@ -251,6 +257,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   }
 
   async function sendPhoto(file: File) {
+    ty.ping("photo");
     setBusy(true);
     try {
       const media = await readImage(file, 1280);
@@ -264,6 +271,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   }
 
   async function startRec() {
+    ty.ping("audio");
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       toast("Ton navigateur ne gère pas les vocaux");
       return;
@@ -305,6 +313,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
     recTimer.current = window.setInterval(() => {
       const s = Math.round((Date.now() - recStart.current) / 1000);
       setRec(s);
+      ty.ping("audio");
       if (s >= MAX_VOICE_SEC) stopRec();
     }, 250);
   }
@@ -579,6 +588,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         </div>
       ) : (
         <>
+        <TypingBar text={typingText(ty.typers)} />
         <MentionList list={ment.list} onPick={ment.pick} />
         <form
           className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
@@ -608,6 +618,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             }
             const r = replyTo;
             setReplyTo(null);
+            ty.stop();
             if (demo) return;
             void sendLive({ data: { self: deviceId(), to: userId, body, replyTo: r?.id ?? null } })
               .then(() => mentionNotify("dm", userId, body))
@@ -644,7 +655,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             maxLength={500}
             placeholder="Message"
             onSelect={(e) => ment.track(e.currentTarget)}
-            onChange={(e) => { ment.track(e.target); setText(e.target.value); }}
+            onChange={(e) => { ment.track(e.target); setText(e.target.value); if (e.target.value.trim()) ty.ping("text"); else ty.stop(); }}
           />
           <button
             type="submit"

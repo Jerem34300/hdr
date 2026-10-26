@@ -399,6 +399,8 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
   return (
     <GroupChat
       scope="salon"
+      typingRef={id}
+      myPseudo={useHdar.getState().me.pseudo || "Quelqu'un"}
       lines={lines}
       loaded={loaded}
       maxLength={1000}

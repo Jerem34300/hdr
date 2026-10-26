@@ -80,8 +80,19 @@ export function AppearanceScreen({ onBack }: { onBack: () => void }) {
         </div>
       </section>
 
+      <section className="mt-6">
+        <p className={label}>Confidentialité</p>
+        <label className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3">
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">Montrer quand j'écris</span>
+            <span className="block text-xs text-muted">« … est en train d'écrire », « envoie une photo… ». Désactivé : personne ne le voit.</span>
+          </span>
+          <input type="checkbox" role="switch" checked={a.typing !== false} onChange={(e) => a.set({ typing: e.target.checked })} className="size-5 accent-[#FA6F6C]" />
+        </label>
+      </section>
+
       <button type="button" onClick={a.reset} className="mt-8 h-11 w-full rounded-full border border-line text-sm text-muted">Revenir aux réglages d'origine</button>
-      <p className="mt-3 text-center text-xs text-muted">Ces réglages ne changent que ton affichage, sur ce téléphone. Les autres voient leurs propres couleurs.</p>
+      <p className="mt-3 text-center text-xs text-muted">La couleur de tes bulles est visible par tous. Police, taille et fond ne changent que ton affichage, sur ce téléphone.</p>
     </div>
   );
 }

@@ -49,6 +49,8 @@ export function PocketChat() {
   return (
     <GroupChat
       scope="area"
+      typingRef={`${center.lat.toFixed(3)},${center.lng.toFixed(3)}`}
+      myPseudo={pseudo || "Quelqu'un"}
       lines={lines}
       loaded={loaded}
       maxLength={300}

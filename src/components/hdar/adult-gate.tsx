@@ -1,3 +1,4 @@
+import { ProfileView } from "./profile-view";
 import { FilterSheet } from "./premium";
 import { GENDERS, identityLine } from "@/lib/hdar/live";
 import { Toaster } from "sonner";
@@ -227,6 +228,10 @@ function DevPreview() {
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
+  if (location.search.includes("profilview")) {
+    const photo = location.search.includes("nophoto") ? "" : "/avatars/03.jpg";
+    return <main className="flex h-dvh flex-col bg-night text-ink"><ProfileView userId="demo-p" pseudo="Soumisdu59" demo={{ id: "demo-p", pseudo: "Soumisdu59", age: 53, bio: "Curieux et bienveillant, j'aime les soirées qui finissent tard. Discrétion assurée 😉", tags: ["plan", "verre", "balade"], desires: ["plan", "dehors", "chez-toi"], photo, online: true, lat: null, lng: null, note: "Dispo ce soir vers Lille centre", premium: true, iam: "h", seeking: ["f", "c"] }} /></main>;
+  }
   if (location.search.includes("appearance")) return <main className="flex h-dvh flex-col bg-night text-ink"><AppearanceScreen onBack={() => undefined} /></main>;
   if (location.search.includes("lockscreen")) return <LockScreen demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onUnlock={() => toast("Déverrouillé")} />;
   if (location.search.includes("security")) return <main className="min-h-dvh bg-night px-4 pt-6 pb-10 text-ink"><h1 className="font-display text-3xl font-extrabold">Paramètres</h1><PinSettings /><section className="mt-8 border-t border-line pt-6"><LogoutButton demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onProtect={() => toast("→ Protège ton profil")} /><RecoverAccountSettings /></section><ConfirmSheet /></main>;
@@ -273,7 +278,7 @@ function DevPreview() {
 function AdsDemo() {
   const mode = new URLSearchParams(location.search).get("adsdemo");
   const ads = demoAds();
-  if (mode === "map") return <main className="flex h-dvh flex-col bg-night text-ink"><Around demoTicker={ads} /></main>;
+  if (mode === "map") return <main className="flex h-dvh flex-col bg-night text-ink"><Around demoTicker={ads} /><Toaster theme="dark" position="top-center" /></main>;
   if (mode === "admin") {
     const rows = ads.map((a, i) => ({ ...a, status: (i === 2 ? "hidden" : "active") as "active" | "hidden", replies: [4, 1, 0][i], reports: [0, 0, 3][i], open_reports: [0, 0, 3][i], reasons: i === 2 ? ["Spam", "Arnaque ou argent", "Autre"] : null, hidden: i === 2 }));
     return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Annonces <span className="text-xs text-[#fbbf24]">🧪 exemple</span></p><AdsTab adminKey="" onOpen={() => undefined} preview={rows} /></main>;

@@ -1,3 +1,5 @@
+import { typingText, useTyping, type Typer } from "@/lib/hdar/typing";
+import { TypingBar } from "./rich-text";
 import { showMention } from "./gift-notices";
 import { MentionList, RichText, useMentions } from "./rich-text";
 import type { CSSProperties } from "react";
@@ -50,6 +52,10 @@ type Props = {
   canHide: (m: GroupLine) => boolean;
   onHide: (m: GroupLine) => Promise<unknown>;
   onSend: (text: string, replyTo: string | null) => Promise<unknown>;
+  /** Indicateurs « en train d'écrire » : id du salon ou « lat,lng » du quartier, et mon pseudo. */
+  typingRef?: string | null;
+  myPseudo?: string;
+  typingDemo?: Typer[];
   /** Absent = pas de médias (ex. sans profil). */
   onSendMedia?: (kind: MediaKind, path: string, duration: number | null, replyTo: string | null) => Promise<unknown>;
   /** Raison pour laquelle les médias sont indisponibles (affichée au toucher du trombone). */
@@ -142,6 +148,7 @@ export function GroupChat(p: Props) {
     setMenu(null);
     window.setTimeout(() => input.current?.focus(), 50);
   };
+  const ty = useTyping(p.scope === "salon" ? "salon" : "area", p.typingRef ?? null, p.myPseudo ?? "", p.typingDemo);
   const ment = useMentions(text, setText, [...new Map(p.lines.filter((l) => !l.mine).map((l) => [l.pseudo.toLowerCase(), { pseudo: l.pseudo }])).values()].reverse());
   const send = () => {
     const body = text.trim();
@@ -166,6 +173,7 @@ export function GroupChat(p: Props) {
     const r = replyTo;
     setText("");
     setReplyTo(null);
+    ty.stop();
     p.onSend(body, r?.id ?? null)
       .then(p.onChanged)
       .catch((err: unknown) => {
@@ -296,6 +304,7 @@ export function GroupChat(p: Props) {
             onCancel={() => setReplyTo(null)}
           />
         )}
+        <TypingBar text={typingText(ty.typers)} />
         <MentionList list={ment.list} onPick={ment.pick} />
         <form
           className="flex items-end gap-2"
@@ -306,6 +315,7 @@ export function GroupChat(p: Props) {
         >
           {p.onSendMedia ? (
             <RoomAttach
+              onActivity={(k) => ty.ping(k)}
               send={(k, path, d) => {
                 const r = replyTo;
                 setReplyTo(null);
@@ -337,6 +347,7 @@ export function GroupChat(p: Props) {
             onChange={(e) => {
               ment.track(e.target);
               setText(e.target.value);
+              if (e.target.value.trim()) ty.ping("text"); else ty.stop();
               e.target.style.height = "auto";
               e.target.style.height = `${Math.min(128, e.target.scrollHeight)}px`;
             }}
@@ -551,6 +562,7 @@ export function GroupChatDemo() {
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">
       <GroupChat
+        typingDemo={location.search.includes("typing") ? (location.search.includes("multi") ? [{ id: "7f3a", pseudo: "Lucas34", kind: "text", at: now }, { id: "c90e", pseudo: "Sam", kind: "text", at: now }] : [{ id: "b21c", pseudo: "Nina", kind: "photo", at: now }]) : undefined}
         scope={area ? "area" : "salon"}
         lines={lines}
         loaded
