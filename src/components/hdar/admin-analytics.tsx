@@ -38,7 +38,7 @@ export const fmt = (n: number) => n.toLocaleString("fr-FR");
 export const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} %` : "—");
 export const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const dt = (v: string | null) =>
-  v ? new Date(v).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
+  v ? new Date(v).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 
 export function Period({ value, onChange }: { value: number; onChange: (d: number) => void }) {
   return (

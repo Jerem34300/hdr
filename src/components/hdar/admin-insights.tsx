@@ -45,7 +45,7 @@ function useLoad<T>(load: () => Promise<T>, everyMs = 0) {
 
 function when(v: string) {
   const ms = v.includes("T") ? Date.parse(v) : pgTime(v);
-  return new Date(ms).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return new Date(ms).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 function duration(first: string, last: string) {
@@ -743,7 +743,7 @@ function RefTable({ title, rows, conv, day }: { title: string; rows: (RefRow & {
           <tbody>
             {rows.map((r) => (
               <tr key={(r.day ?? "") + r.ref} className="border-t border-line/60">
-                {day && <td className="py-1.5 text-muted">{r.day ? new Date(`${r.day}T12:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : ""}</td>}
+                {day && <td className="py-1.5 text-muted">{r.day ? new Date(`${r.day}T12:00:00`).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" }) : ""}</td>}
                 <td className="py-1.5 font-bold">{r.ref}</td>
                 <td className="py-1.5 text-right">{r.visits}</td>
                 <td className="py-1.5 text-right">{r.profiles}</td>

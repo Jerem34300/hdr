@@ -46,7 +46,7 @@ function readKey() {
 
 function when(v: string) {
   const ms = v.includes("T") ? Date.parse(v) : pgTime(v);
-  return new Date(ms).toLocaleString("fr-FR", {
+  return new Date(ms).toLocaleString("fr-FR", { timeZone: "Europe/Paris",
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -933,8 +933,8 @@ function UsersTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string)
                 <td className="flex items-center gap-2 px-2 py-2 font-bold"><span className="size-7 shrink-0 overflow-hidden rounded-full border border-line"><Avatar src="" name={r.pseudo} className="size-full" /></span>{r.pseudo}{!r.has_photo ? "" : r.photo_status === "approved" ? " 📷" : " ⏳"}</td>
                 <td className="px-2">{r.city ?? r.region ?? "—"}</td>
                 <td className="px-2">{r.age ?? "—"}</td><td className="px-2">{genderShort(r.iam) || "—"}</td>
-                <td className="px-2">{r.created ? new Date(r.created).toLocaleDateString("fr-FR") : "—"}</td>
-                <td className="px-2">{r.last ? new Date(r.last).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
+                <td className="px-2">{r.created ? new Date(r.created).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" }) : "—"}</td>
+                <td className="px-2">{r.last ? new Date(Math.min(Date.parse(r.last), Date.now())).toLocaleString("fr-FR", { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" }) : "—"}</td>
                 <td className="px-2">{r.premium ? "👑" : ""}</td><td className="px-2">{r.boosts || ""}</td>
                 <td className="px-2">{r.hearts ? `${r.hearts.balance} / ${r.hearts.received}` : "—"}</td><td className="px-2">{r.spent ? eur(r.spent) : "—"}</td>
                 <td className="px-2">{r.reports || ""}</td><td className="px-2">{r.banned ? "🚫 banni" : ""}</td>
@@ -963,14 +963,14 @@ function UserExtra({ adminKey, id }: { adminKey: string; id: string }) {
   if (!x) return null;
   return (
     <section className="mb-5 space-y-4 rounded-2xl border border-line bg-surface p-4 text-sm">
-      <p>{genderShort(x.iam) || "—"} · cherche {seekingShort(x.seeking) || "—"} · 📍 {x.region ?? "région inconnue"} · inscrit le {x.created ? new Date(x.created).toLocaleDateString("fr-FR") : "—"}</p>
+      <p>{genderShort(x.iam) || "—"} · cherche {seekingShort(x.seeking) || "—"} · 📍 {x.region ?? "région inconnue"} · inscrit le {x.created ? new Date(x.created).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" }) : "—"}</p>
       {x.note && <p className="italic">💬 « {x.note} »</p>}
       {x.bio && <p className="text-muted">{x.bio}</p>}
-      <p>👑 hdar+ : {x.premium_until ? `jusqu'au ${new Date(x.premium_until).toLocaleDateString("fr-FR")}` : "non"} · ❤️ solde {x.hearts?.balance ?? 0}, reçus {x.hearts?.received ?? 0}, achetés {x.hearts?.bought ?? 0}</p>
+      <p>👑 hdar+ : {x.premium_until ? `jusqu'au ${new Date(x.premium_until).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : "non"} · ❤️ solde {x.hearts?.balance ?? 0}, reçus {x.hearts?.received ?? 0}, achetés {x.hearts?.bought ?? 0}</p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{Object.entries(x.activity).map(([k, v]) => <div key={k} className="rounded-xl bg-night p-2"><b className="block text-lg">{v}</b><span className="text-xs text-muted">{ACT[k] ?? k}</span></div>)}</div>
       <div>
         <h3 className="font-bold">Achats</h3>
-        {x.payments.length ? <ul className="mt-1 space-y-1">{x.payments.map((p) => <li key={p.ref} className="flex justify-between gap-2 text-xs"><span>{new Date(p.at).toLocaleString("fr-FR")} · {p.product}</span><b>{eur(p.cents)}</b></li>)}</ul> : <p className="text-xs text-muted">Aucun achat</p>}
+        {x.payments.length ? <ul className="mt-1 space-y-1">{x.payments.map((p) => <li key={p.ref} className="flex justify-between gap-2 text-xs"><span>{new Date(p.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {p.product}</span><b>{eur(p.cents)}</b></li>)}</ul> : <p className="text-xs text-muted">Aucun achat</p>}
       </div>
       <div className="space-y-2 rounded-xl border border-[#fbbf24]/50 p-3">
         <h3 className="font-bold">Offrir un cadeau 🎁</h3>
@@ -985,7 +985,7 @@ function UserExtra({ adminKey, id }: { adminKey: string; id: string }) {
         <input className="h-10 w-full rounded-xl border border-line bg-night px-3" placeholder="Message (facultatif), affiché à l'utilisateur" value={msg} maxLength={300} onChange={(e) => setMsg(e.target.value)} />
         <button type="button" className="h-10 rounded-full bg-[#fbbf24] px-4 font-bold text-night" onClick={() => { if (!window.confirm("Offrir ce cadeau ?")) return; admin.gift(adminKey, id, kind, amount, msg).then((r) => { setOut(`✅ Offert : ${r.label}`); setMsg(""); load(); }).catch((e: Error) => setOut(`❌ ${e.message}`)); }}>Offrir</button>
         {out && <p className="text-xs">{out}</p>}
-        {x.gifts.length > 0 && <ul className="text-xs text-muted">{x.gifts.map((g, i) => <li key={i}>{new Date(g.at).toLocaleString("fr-FR")} · {g.detail.kind} {g.detail.amount}{g.detail.msg ? ` · « ${g.detail.msg} »` : ""}</li>)}</ul>}
+        {x.gifts.length > 0 && <ul className="text-xs text-muted">{x.gifts.map((g, i) => <li key={i}>{new Date(g.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {g.detail.kind} {g.detail.amount}{g.detail.msg ? ` · « ${g.detail.msg} »` : ""}</li>)}</ul>}
       </div>
     </section>
   );
@@ -1029,7 +1029,7 @@ function EmailsTab({ adminKey }: { adminKey: string }) {
       {out && <p className="text-sm">{out}</p>}
       <p className="text-xs text-muted">Aperçu</p>
       <iframe title="Aperçu email" className="h-[640px] w-full rounded-2xl border border-line bg-[#0b0b10]" srcDoc={mailHtml(body || "Ton message ici…", "#", tpl, { code, title })} />
-      {!!info?.history.length && <ul className="text-xs text-muted">{info.history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("fr-FR")} · {h.subject} · {h.recipients} envoi(s)</li>)}</ul>}
+      {!!info?.history.length && <ul className="text-xs text-muted">{info.history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {h.subject} · {h.recipients} envoi(s)</li>)}</ul>}
     </section>
   );
 }
@@ -1045,14 +1045,14 @@ function ProGiftsTab({ adminKey }: { adminKey: string }) {
         <h3 className="font-display font-bold">Cadeaux pro ({g.length})</h3>
         <div className="mt-2 space-y-2">{g.map((x) => (
           <div key={x.id} className={"rounded-2xl border p-3 text-sm " + (x.reported ? "border-signal" : "border-line")}>
-            <p><b>{x.place}</b> → {x.to ?? "?"} · {x.via} · {new Date(x.at).toLocaleString("fr-FR")}</p>
-            <p>🎁 {x.title}{x.description ? ` — ${x.description}` : ""}{x.code ? ` · code ${x.code}` : ""} · jusqu'au {new Date(x.expires).toLocaleDateString("fr-FR")}</p>
+            <p><b>{x.place}</b> → {x.to ?? "?"} · {x.via} · {new Date(x.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}</p>
+            <p>🎁 {x.title}{x.description ? ` — ${x.description}` : ""}{x.code ? ` · code ${x.code}` : ""} · jusqu'au {new Date(x.expires).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}</p>
             {x.reported && <p className="text-xs text-signal">Signalé : {x.reason}</p>}
           </div>))}</div>
       </section>
       <section>
         <h3 className="font-display font-bold">Conversations pro ({t.length})</h3>
-        <div className="mt-2 space-y-1 text-sm">{t.map((x, i) => <p key={i} className={x.reported ? "text-signal" : ""}>{new Date(x.at).toLocaleString("fr-FR")} · <b>{x.place}</b> → {x.to ?? "?"}{x.reported ? " · signalé" : ""}</p>)}</div>
+        <div className="mt-2 space-y-1 text-sm">{t.map((x, i) => <p key={i} className={x.reported ? "text-signal" : ""}>{new Date(x.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · <b>{x.place}</b> → {x.to ?? "?"}{x.reported ? " · signalé" : ""}</p>)}</div>
       </section>
     </div>
   );
@@ -1089,7 +1089,7 @@ function CodesTab({ adminKey }: { adminKey: string }) {
       {rows?.map((c) => (
         <div key={c.code} className="flex items-center gap-3 rounded-2xl border border-line p-3 text-sm">
           <b className="font-mono">{c.code}</b>
-          <span className="flex-1 text-muted">{c.kind === "premium" ? `${c.amount} j hdar+` : c.kind === "boost" ? `boost ${c.amount} h` : `${c.amount} cœurs`} · {c.uses}/{c.max_uses}{c.expires_at ? ` · jusqu'au ${new Date(c.expires_at).toLocaleDateString("fr-FR")}` : ""}{c.note ? ` · ${c.note}` : ""}</span>
+          <span className="flex-1 text-muted">{c.kind === "premium" ? `${c.amount} j hdar+` : c.kind === "boost" ? `boost ${c.amount} h` : `${c.amount} cœurs`} · {c.uses}/{c.max_uses}{c.expires_at ? ` · jusqu'au ${new Date(c.expires_at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : ""}{c.note ? ` · ${c.note}` : ""}</span>
           <button type="button" onClick={() => void navigator.clipboard.writeText(c.code)} className="text-xs underline">Copier</button>
           <button type="button" onClick={() => void mail(c)} className="rounded-full border border-line px-3 py-1 text-xs">✉️ Envoyer</button>
         </div>))}
@@ -1118,7 +1118,7 @@ function PartnersTab({ adminKey }: { adminKey: string }) {
       {list.map((r) => (
         <button key={r.id} type="button" onClick={() => setOpen(r)} className="flex w-full items-center gap-3 rounded-2xl border border-line p-3 text-left text-sm">
           <span className="min-w-0 flex-1"><b className="block truncate">{r.name}</b>
-            <span className="text-xs text-muted">{r.active ? `✅ actif jusqu'au ${new Date(r.until!).toLocaleDateString("fr-FR")}` : "⏸️ inactif"}{r.sub ? ` · abo ${r.sub}` : ""}{r.pro_boost_until && new Date(r.pro_boost_until) > new Date() ? " · ⭐ boosté" : ""}</span></span>
+            <span className="text-xs text-muted">{r.active ? `✅ actif jusqu'au ${new Date(r.until!).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : "⏸️ inactif"}{r.sub ? ` · abo ${r.sub}` : ""}{r.pro_boost_until && new Date(r.pro_boost_until) > new Date() ? " · ⭐ boosté" : ""}</span></span>
           <span className="text-right text-xs"><b className="block text-sm">{eur(r.revenue)}</b>{r.views} vues · {r.boosts} boost(s)</span>
         </button>))}
     </div>

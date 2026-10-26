@@ -84,7 +84,7 @@ export function GrowthTab({ adminKey }: { adminKey: string }) {
               <ul className="mt-3 space-y-1 text-xs">
                 {g.payments.map((p, i) => (
                   <li key={i} className="flex justify-between gap-2 border-b border-line py-1">
-                    <span>{new Date(p.at).toLocaleString("fr-FR")} · {p.kind === "boost" ? "Boost" : p.kind === "pro_boost" ? "Boost Pro" : p.kind === "place_boost" ? "Boost de lieu" : p.kind === "premium" ? "hdar+" : p.kind === "hearts" ? "Cœurs" : `Lieu ${p.place ?? ""}`} · {p.product}</span>
+                    <span>{new Date(p.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {p.kind === "boost" ? "Boost" : p.kind === "pro_boost" ? "Boost Pro" : p.kind === "place_boost" ? "Boost de lieu" : p.kind === "premium" ? "hdar+" : p.kind === "hearts" ? "Cœurs" : `Lieu ${p.place ?? ""}`} · {p.product}</span>
                     <b>{euros(p.cents)}</b>
                   </li>
                 ))}
@@ -197,7 +197,7 @@ export function CommentsTab({ adminKey }: { adminKey: string }) {
         {data?.map((c) => (
           <li key={c.id} className={"rounded-2xl border bg-surface p-3 text-sm " + (c.reports ? "border-signal" : "border-line")}>
             <p className="text-xs text-muted">
-              {c.pseudo} sur <b className="text-ink">{c.place}</b> · {new Date(c.at).toLocaleString("fr-FR")}
+              {c.pseudo} sur <b className="text-ink">{c.place}</b> · {new Date(c.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}
               {c.hidden && " · MASQUÉ"} {c.reports > 0 && <span className="text-signal">· {c.reports} signalement(s)</span>}
             </p>
             <p className="mt-1 break-words">{c.body}</p>

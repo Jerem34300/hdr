@@ -82,7 +82,7 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
       <p className="text-xs text-muted">Validé = photo approuvée et profil encore actif 7 jours après l'inscription. CA net = après remboursements et frais Stripe estimés.</p>
       <div className="rounded-xl bg-night p-3 text-xs">
         <p className="mb-1 font-bold">Contrat</p>
-        {r.contract ? <p>✍️ Signé par {r.contract.name} le {new Date(r.contract.at).toLocaleString("fr-FR")} · {r.contract.version} <button type="button" className="ml-1 underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, r.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button></p> : <p className="text-muted">Non signé</p>}
+        {r.contract ? <p>✍️ Signé par {r.contract.name} le {new Date(r.contract.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {r.contract.version} <button type="button" className="ml-1 underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, r.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button></p> : <p className="text-muted">Non signé</p>}
         <p className="mt-2 mb-1 font-bold">Versements Stripe Connect</p>
         <p>{!r.stripe_account ? "⚪ Compte Stripe non créé" : r.payouts_enabled ? `✅ Compte prêt (${r.stripe_account})` : `🟡 Inscription Stripe incomplète (${r.stripe_account})`}{r.paused ? " · ⏸️ en pause" : ""}{r.hold_next ? " · prochain versement suspendu" : ""}</p>
         <p className="mt-1 text-muted">Virement automatique le 1er du mois si dû ≥ seuil. Identité, IBAN et SIRET : chez Stripe uniquement.</p>
@@ -112,7 +112,7 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
           <button type="button" disabled={r.due_total < r.min_payout_cents} className="rounded-full bg-[#fbbf24] px-4 py-1.5 font-bold text-night disabled:opacity-40"
             title="Versement fait hors Stripe" onClick={() => ro(adminAmbPayout(adminKey, r.user_id, Math.round(Number(pay) * 100), null, new Date().toISOString().slice(0, 10), "Versement sur facture"), "Versement enregistré")}>Marquer payé (manuel)</button></div>
         {r.due_total < r.min_payout_cents && <p className="mt-1 text-xs text-muted">Seuil de versement : {eur(r.min_payout_cents)}.</p>}
-        {r.payouts.map((p, i) => <p key={i} className="text-xs text-muted">{new Date(p.at).toLocaleDateString("fr-FR")} · {eur(p.amount)} · {p.status === "failed" ? "❌" : p.status === "held" ? "⏸️" : "✅"} {p.note}{p.error ? ` (${p.error})` : ""}</p>)}
+        {r.payouts.map((p, i) => <p key={i} className="text-xs text-muted">{new Date(p.at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} · {eur(p.amount)} · {p.status === "failed" ? "❌" : p.status === "held" ? "⏸️" : "✅"} {p.note}{p.error ? ` (${p.error})` : ""}</p>)}
       </div>
     </div>
   );
@@ -190,7 +190,7 @@ function Applications({ adminKey, demo, onChange }: { adminKey: string; demo: bo
       <p className="text-sm font-bold">📝 Candidatures {pending.length > 0 && <span className="ml-1 rounded-full bg-[#3EE08F] px-2 text-xs text-night">{pending.length}</span>}</p>
       {!rows ? <p className="mt-2 text-sm text-muted">Chargement…</p> : pending.length === 0 ? <p className="mt-2 text-sm text-muted">Aucune candidature en attente.</p> : pending.map((a) => (
         <div key={a.id} className="mt-3 rounded-xl bg-night p-3 text-sm">
-          <p><b>{a.pseudo}</b>{a.age ? ` · ${a.age} ans` : ""} · 📍 {a.city} <span className="text-xs text-muted">· {new Date(a.at).toLocaleDateString("fr-FR")}</span>{!a.photo_ok && <span className="ml-1 text-xs text-[#fbbf24]">📸 photo non validée</span>}{a.already_amb && <span className="ml-1 text-xs text-[#3EE08F]">déjà ambassadeur</span>}</p>
+          <p><b>{a.pseudo}</b>{a.age ? ` · ${a.age} ans` : ""} · 📍 {a.city} <span className="text-xs text-muted">· {new Date(a.at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}</span>{!a.photo_ok && <span className="ml-1 text-xs text-[#fbbf24]">📸 photo non validée</span>}{a.already_amb && <span className="ml-1 text-xs text-[#3EE08F]">déjà ambassadeur</span>}</p>
           <p className="mt-1"><span className="text-xs text-muted">Motivation :</span> {a.motivation}</p>
           <p className="mt-1"><span className="text-xs text-muted">Promotion :</span> {a.promote}</p>
           {a.audience && <p className="mt-1"><span className="text-xs text-muted">Audience :</span> {a.audience}</p>}
@@ -201,7 +201,7 @@ function Applications({ adminKey, demo, onChange }: { adminKey: string; demo: bo
           </div>
         </div>))}
       {done.length > 0 && <details className="mt-3 text-xs"><summary className="cursor-pointer text-muted">Traitées (60 derniers jours) · {done.length}</summary>
-        {done.map((a) => <p key={a.id} className="mt-1">{a.status === "accepted" ? "✅" : "❌"} <b>{a.pseudo}</b> · {a.city} · {a.decided_at ? new Date(a.decided_at).toLocaleDateString("fr-FR") : ""}{a.note ? ` · « ${a.note} »` : ""}</p>)}</details>}
+        {done.map((a) => <p key={a.id} className="mt-1">{a.status === "accepted" ? "✅" : "❌"} <b>{a.pseudo}</b> · {a.city} · {a.decided_at ? new Date(a.decided_at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" }) : ""}{a.note ? ` · « ${a.note} »` : ""}</p>)}</details>}
       <p className="mt-2 text-[11px] text-muted">Accepter envoie un lien de signature personnel (usage unique, 7 jours) depuis contact@hdar.chat + une notification in-app. L'email du candidat n'est jamais affiché.</p>
     </section>
   );
@@ -216,7 +216,7 @@ function SignedContracts({ adminKey, demo }: { adminKey: string; demo: boolean }
       <summary className="cursor-pointer font-bold">✍️ Contrats signés · {rows.length}</summary>
       {rows.length === 0 ? <p className="mt-2 text-xs text-muted">Aucun contrat signé.</p> : rows.map((c, i) => (
         <div key={i} className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span><b>{c.pseudo}</b> · {c.name} · {c.version} · {new Date(c.at).toLocaleDateString("fr-FR")} <span className="font-mono text-muted">{c.code}</span></span>
+          <span><b>{c.pseudo}</b> · {c.name} · {c.version} · {new Date(c.at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} <span className="font-mono text-muted">{c.code}</span></span>
           <button type="button" className="underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, c.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button>
         </div>))}
     </details>

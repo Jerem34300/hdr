@@ -41,7 +41,7 @@ export function RevenueTab({ adminKey, preview }: { adminKey: string; preview?: 
           <p className="mb-2 text-sm font-bold">Évolution (net de remboursements)</p>
           {r.series.length === 0 ? <p className="py-6 text-center text-xs text-muted">Pas encore de données</p> :
             <div className="flex h-32 items-end gap-1">{r.series.map((s) => (
-              <div key={s.t} title={`${new Date(s.t).toLocaleDateString("fr-FR")} · ${eur(s.cents)}`} className="flex-1 rounded-t bg-gradient-to-t from-[#FA6F6C] to-[#fbbf24]" style={{ height: `${Math.max(3, (s.cents / max) * 100)}%` }} />))}</div>}
+              <div key={s.t} title={`${new Date(s.t).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} · ${eur(s.cents)}`} className="flex-1 rounded-t bg-gradient-to-t from-[#FA6F6C] to-[#fbbf24]" style={{ height: `${Math.max(3, (s.cents / max) * 100)}%` }} />))}</div>}
         </section>
         <section className="rounded-2xl border border-line p-3">
           <p className="mb-2 text-sm font-bold">Sources de revenus</p>

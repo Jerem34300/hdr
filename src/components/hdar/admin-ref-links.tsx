@@ -37,7 +37,7 @@ function QrBox({ link, name }: { link: string; name: string }) {
 }
 
 
-const day = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+const day = (d: string) => new Date(d).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" });
 
 function PersonRow({ p, onOpen }: { p: RefPerson; onOpen?: (id: string) => void }) {
   return (
@@ -172,7 +172,7 @@ export function RefLinks({ adminKey, demo, demoPeople, onOpen }: { adminKey: str
               <button type="button" onClick={() => setOpen(open === l.ref ? null : l.ref)} className="flex w-full items-center gap-2 text-left">
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1 text-sm font-bold"><span className="truncate">{l.ref}</span>{l.with_code && <span className="shrink-0 rounded bg-amber-400/20 px-1 text-[10px] text-amber-300">FIRST</span>}</span>
-                  <span className="block truncate text-xs text-muted">{l.label || "—"}{l.created_at ? ` · ${new Date(l.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}` : ""}</span>
+                  <span className="block truncate text-xs text-muted">{l.label || "—"}{l.created_at ? ` · ${new Date(l.created_at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" })}` : ""}</span>
                 </span>
                 <span className="w-12 text-right text-sm">{l.visits}<span className="block text-[10px] text-muted">visites</span></span>
                 <span className="w-12 text-right text-sm font-bold">{l.profiles}<span className="block text-[10px] font-normal text-muted">profils</span></span>
