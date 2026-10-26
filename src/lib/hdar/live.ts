@@ -1511,3 +1511,10 @@ export function mentionNotify(scope: "dm" | "salon" | "area", ref: string | null
 }
 /** Nom du canal Realtime privé pour les indicateurs « en train d'écrire » (v85). null = pas d'indicateur. */
 export const typingTopic = (scope: string, ref: string) => rpc<{ topic: string; me: string } | null>("hdar_typing_topic", { p_scope: scope, p_ref: ref });
+/** Robot d'accueil officiel (v86) : profil système, sans position, ne lit pas les messages. */
+export const BOT_ID = "00000000-0000-4000-8000-00000000b075";
+export const isBot = (id: string | null | undefined) => id === BOT_ID;
+export type BotSettings = { enabled: boolean; dm_text: string; salon_text: string; reply_text: string; updated_at: string; welcomed: number; pending: number; salon: string | null };
+export const adminBotGet = (key: string) => rpc<BotSettings>("hdar_admin_bot_get", { p_key: key });
+export const adminBotSet = (key: string, s: Pick<BotSettings, "enabled" | "dm_text" | "salon_text" | "reply_text">) =>
+  rpc("hdar_admin_bot_set", { p_key: key, p_enabled: s.enabled, p_dm: s.dm_text, p_salon: s.salon_text, p_reply: s.reply_text });

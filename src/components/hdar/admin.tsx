@@ -1,3 +1,4 @@
+import { BotTab } from "./admin-bot";
 import { genderShort, seekingShort } from "@/lib/hdar/live";
 import { AdminFirstStats } from "./launch-offer";
 import { AD_CATEGORIES, adminAds, type AdminAd } from "@/lib/hdar/ads";
@@ -33,7 +34,7 @@ import { ConversationsTab, LiveNowTab, RatingsSummary, RefsTab, UserReportsAndIp
 import type { Influencer } from "@/lib/hdar/live";
 
 const KEY_STORE = "hdar-admin-key";
-type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live" | "visitors" | "refs" | "convos" | "direct" | "annonces";
+type Tab = "growth" | "roi" | "comments" | "pricing" | "overview" | "heat" | "week" | "top" | "influencers" | "money" | "stats" | "photos" | "reports" | "bans" | "contacts" | "places" | "support" | "users" | "emails" | "progifts" | "codes" | "partners" | "revenus" | "ambassadeurs" | "live" | "visitors" | "refs" | "convos" | "direct" | "annonces" | "bot";
 
 function readKey() {
   try {
@@ -217,6 +218,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         {tab === "users" && <UsersTab adminKey={adminKey} onOpen={setUserId} />}
         {tab === "photos" && <Photos adminKey={adminKey} />}
         {tab === "annonces" && <AdsTab adminKey={adminKey} onOpen={setUserId} />}
+        {tab === "bot" && <BotTab adminKey={adminKey} />}
         {tab === "contacts" && <Contacts adminKey={adminKey} onOpen={setUserId} />}
         {tab === "places" && <ProposedPlaces adminKey={adminKey} onOpen={setUserId} />}
         {tab === "bans" && <Bans adminKey={adminKey} onOpen={setUserId} />}
@@ -228,7 +230,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
 const NAV_GROUPS: [string, [Tab, string][]][] = [
   ["Audience", [["direct", "En direct"], ["overview", "Vue d'ensemble"], ["visitors", "Visiteurs"], ["refs", "Provenance"], ["users", "Utilisateurs"], ["stats", "Temps réel"], ["heat", "Carte de chaleur"], ["week", "Horaires"], ["influencers", "Influenceurs"]]],
   ["Conversations & lieux", [["convos", "Conversations"], ["comments", "Avis & notes"], ["top", "Top lieux"], ["roi", "ROI lieux"], ["places", "Lieux proposés"]]],
-  ["Modération", [["reports", "Signalements"], ["annonces", "Annonces"], ["photos", "Photos"], ["bans", "Bannis"], ["contacts", "Messages"], ["support", "Support · rattacher"]]],
+  ["Modération", [["reports", "Signalements"], ["annonces", "Annonces"], ["photos", "Photos"], ["bans", "Bannis"], ["contacts", "Messages"], ["support", "Support · rattacher"], ["bot", "Robot d'accueil"]]],
   ["Business", [["revenus", "Revenus"], ["growth", "Croissance & revenus"], ["money", "Boosts & partenaires"], ["partners", "Partenaires"], ["pricing", "Tarifs"], ["codes", "Codes cadeaux"], ["progifts", "Cadeaux pro"], ["emails", "Emails"], ["ambassadeurs", "Ambassadeurs"], ["live", "Live (qualité)"]]],
 ];
 const NAV_QUICK: Tab[] = ["direct", "overview", "visitors", "convos", "comments", "users", "reports", "annonces"];

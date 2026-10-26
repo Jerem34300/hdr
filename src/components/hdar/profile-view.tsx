@@ -9,7 +9,8 @@ import { toggleFav, useFavorites } from "@/lib/hdar/favorites";
 import { toast } from "sonner";
 import { startCall } from "@/lib/hdar/call";
 import { DESIRES, PLACES } from "@/lib/hdar/data";
-import { GENDERS } from "@/lib/hdar/live";
+import { GENDERS, isBot } from "@/lib/hdar/live";
+import { BotAvatar, BotBadge, BotComposer } from "./bot";
 import { PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
 import {
@@ -66,6 +67,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
   const [giftOpen, setGiftOpen] = useState(false);
   const setTab = useHdar((s) => s.setTab);
   const self = userId === deviceId();
+  const bot = isBot(userId);
   const favs = useFavorites();
   const fav = favs.some((f) => f.id === userId);
 
@@ -131,7 +133,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
             {extras && extras.album.length > 0 ? (
               <Album photos={extras.album} />
             ) : (
-              <HeroPhoto src={profile?.photo} name={name} online={!!profile?.online} />
+              bot ? <BotAvatar className="mx-auto size-40 rounded-full shadow-[0_0_50px_rgba(250,111,108,.45)]" /> : <HeroPhoto src={profile?.photo} name={name} online={!!profile?.online} />
             )}
           </div>
           <div className="relative mt-4 px-5 text-center">
@@ -139,7 +141,9 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
               {name}
               {profile?.age ? <span className="font-bold text-[#A1E3C3]">, {profile.age}</span> : null}
               {profile?.premium && <PremiumBadge className="ml-2 align-middle" />}
+              {bot && <BotBadge className="!text-xs" />}
             </h1>
+            {bot && <p className="mx-auto mt-2 max-w-xs text-sm text-muted">Compte officiel de l'équipe hdar. C'est un robot : il accueille les nouveaux membres et ne lit pas les messages.</p>}
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs font-bold">
               {profile?.online ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#A1E3C3]/15 px-3 py-1.5 text-[#A1E3C3] ring-1 ring-[#A1E3C3]/40"><span className="size-2 animate-pulse rounded-full bg-[#A1E3C3]" />En ligne</span>
@@ -152,7 +156,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
             </div>
             {(!self || inLive) && (
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                {!self && (
+                {!self && !bot && (
                   <button type="button" onClick={() => showOnMap(userId)} className={"inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold ring-1 " + (onMap ? "bg-surface ring-white/15" : "bg-surface/60 text-muted ring-white/10")}>🗺️ Voir sur la carte</button>
                 )}
                 {inLive && !self && (
@@ -216,7 +220,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
             <audio controls preload="metadata" src={extras.voice} className="mt-2 h-10 w-full" />
           </section>
         )}
-        {!self && (
+        {!self && !bot && (
           <div className="mt-8 flex justify-center gap-5 text-[11px] text-muted/70">
             <button type="button" className="hover:underline" onClick={() => void reportUser(userId, name).then((sent) => sent && closeView())}>Signaler</button>
             <button
@@ -234,7 +238,9 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
         )}
         </div>
       </div>
-      {self ? (
+      {bot ? (
+        <BotComposer />
+      ) : self ? (
         <div className="dock border-t border-line px-4 pt-3">
           <button
             type="button"

@@ -1,3 +1,5 @@
+import { BOT_ID, isBot } from "@/lib/hdar/live";
+import { BotBadge } from "./bot";
 import { typingText, useTyping, type Typer } from "@/lib/hdar/typing";
 import { TypingBar } from "./rich-text";
 import { showMention } from "./gift-notices";
@@ -237,6 +239,7 @@ export function GroupChat(p: Props) {
                       {head && !m.mine && (
                         <span className="block truncate text-[13px] font-bold" style={{ color: m.bubble ? "inherit" : nameColor(m.fromId) }}>
                           {m.pseudo}
+                          {isBot(m.fromId) && <BotBadge />}
                         </span>
                       )}
                       <FwdHeader fwd={m.fwd} />
@@ -558,6 +561,7 @@ export function GroupChatDemo() {
     mk(7, "me", "Toi", "Le Live de ce soir commence à 21 h 🎥", 1, { fwd: "Hdar admin" }),
     mk(8, "c90e", "Sam", "D'ici quelques minutes je serai devant la Comédie, côté fontaine des Trois Grâces. Je porte une veste bleue et j'ai un parapluie rouge, vous ne pouvez pas me rater 😄 Si vous êtes en retard écrivez ici, j'attends jusqu'à 22 h 30 au moins.", 0.5),
     mk(9, "b21c", "Nina", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹 et pour les questions hdar.chat/faq", 0.2),
+    ...(location.search.includes("bot") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31, @Max et @Zoe 👋 Faites-leur bon accueil !", 0.1)] : []),
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">

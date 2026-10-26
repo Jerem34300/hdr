@@ -1,3 +1,5 @@
+import { isBot } from "@/lib/hdar/live";
+import { BotAvatar } from "./bot";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { safeSrc } from "@/lib/hdar/media";
@@ -36,5 +38,6 @@ export function Avatar({
 /** Avatar of another live user: loads their profile photo, falls back to the initial. */
 export function UserAvatar({ id, name, className }: { id: string; name: string; className?: string }) {
   const photo = usePhoto(id);
+  if (isBot(id)) return <BotAvatar className={className} />;
   return <Avatar src={photo} name={name} className={className} />;
 }

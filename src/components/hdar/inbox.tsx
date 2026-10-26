@@ -1,3 +1,5 @@
+import { isBot } from "@/lib/hdar/live";
+import { BotBadge } from "./bot";
 import { parseAdQuote } from "@/lib/hdar/ads";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -58,6 +60,7 @@ export function Inbox() {
             <span className="flex items-center justify-between gap-2">
               <span className={"truncate font-display " + (unread ? "font-extrabold" : "font-bold")}>
                 {c.pseudo}
+                {isBot(c.otherId) && <BotBadge />}
                 {favIds.has(c.otherId) && (
                   <span className="ml-1 text-amber-400" aria-label="Favori">★</span>
                 )}

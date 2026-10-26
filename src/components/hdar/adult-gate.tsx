@@ -1,3 +1,6 @@
+import { LiveChat } from "./live-chat";
+import { BotTab } from "./admin-bot";
+import { BOT_ID } from "@/lib/hdar/live";
 import { ProfileView } from "./profile-view";
 import { FilterSheet } from "./premium";
 import { GENDERS, identityLine } from "@/lib/hdar/live";
@@ -228,6 +231,8 @@ function DevPreview() {
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
+  if (location.search.includes("botadmin")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Robot d'accueil</p><BotTab adminKey="demo" demo={{ enabled: true, dm_text: BOT_DEMO_DM, salon_text: "Bienvenue à {mentions} 👋 Faites-leur bon accueil !", reply_text: BOT_DEMO_REPLY, updated_at: new Date().toISOString(), welcomed: 128, pending: 2, salon: "Général" }} /><Toaster theme="dark" position="top-center" /></main>;
+  if (location.search.includes("botdm")) return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={BOT_ID} pseudo="hdar" demo={[{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }]} /></main>;
   if (location.search.includes("profilview")) {
     const photo = location.search.includes("nophoto") ? "" : "/avatars/03.jpg";
     return <main className="flex h-dvh flex-col bg-night text-ink"><ProfileView userId="demo-p" pseudo="Soumisdu59" demo={{ id: "demo-p", pseudo: "Soumisdu59", age: 53, bio: "Curieux et bienveillant, j'aime les soirées qui finissent tard. Discrétion assurée 😉", tags: ["plan", "verre", "balade"], desires: ["plan", "dehors", "chez-toi"], photo, online: true, lat: null, lng: null, note: "Dispo ce soir vers Lille centre", premium: true, iam: "h", seeking: ["f", "c"] }} /></main>;
@@ -342,3 +347,21 @@ function GenresDemo() {
     </main>
   );
 }
+
+const BOT_DEMO_DM = `Bienvenue sur hdar, {pseudo} ! 🎉
+Ravi de te compter parmi nous. L'essentiel pour bien démarrer :
+
+🗺️ La carte : vois qui est dispo autour de toi, en restant discret (ta position est toujours approximative).
+💬 Les salons et le Chat du quartier : discute avec ta région ou ton coin.
+🎥 Le Live : des rencontres en vidéo, caméra floutée tant que tu veux.
+👤 Ton profil : une photo et tes envies, et tu es bien plus visible.
+🎨 Apparence : la couleur de tes bulles, la police, le fond.
+🔒 Discrétion : active un code PIN et protège ton profil avec ton email (Paramètres).
+
+Les règles sont simples : 18 ans et plus, respect et consentement toujours. Un souci ? Appui long sur un message ou « Signaler » sur un profil, l'équipe s'en occupe.
+
+Toutes les réponses sont ici : hdar.chat/faq
+Belle découverte ! 💜 L'équipe hdar
+
+(Je suis le robot d'accueil : je ne lis pas les réponses.)`;
+const BOT_DEMO_REPLY = "Je suis le robot d'accueil de hdar 🤖 : je ne peux pas lire ta réponse. La plupart des questions trouvent leur réponse ici : hdar.chat/faq — et pour écrire à l'équipe, c'est par ici : hdar.chat/contact";

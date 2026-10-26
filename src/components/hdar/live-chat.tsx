@@ -1,3 +1,5 @@
+import { isBot } from "@/lib/hdar/live";
+import { BotAvatar, BotBadge, BotComposer } from "./bot";
 import { typingText, useTyping } from "@/lib/hdar/typing";
 import { TypingBar } from "./rich-text";
 import { MentionList, RichText, useMentions } from "./rich-text";
@@ -344,10 +346,11 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           aria-label={`Voir le profil de ${pseudo}`}
           onClick={() => openProfile(userId, pseudo)}
         >
-          <Avatar src={photo} name={pseudo} className="size-10 shrink-0 rounded-full" />
+          {isBot(userId) ? <BotAvatar className="size-10 shrink-0 rounded-full" /> : <Avatar src={photo} name={pseudo} className="size-10 shrink-0 rounded-full" />}
           <span className="min-w-0">
             <span className="block truncate font-display font-bold">
               {pseudo}
+              {isBot(userId) && <BotBadge />}
               {favs.some((f) => f.id === userId) && (
                 <span className="ml-1 text-amber-400" aria-label="Favori">★</span>
               )}
@@ -357,17 +360,17 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             </span>
           </span>
         </button>
-        {onMap && (
+        {onMap && !isBot(userId) && (
           <button type="button" aria-label="Voir sur la carte" title="Voir sur la carte" onClick={() => showOnMap(userId)} className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-lg">🗺️</button>
         )}
-        <button
+        {!isBot(userId) && <button
           type="button"
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-signal text-night"
           aria-label="Appel vidéo"
           onClick={() => (onboarded ? void startCall(userId, pseudo) : openGate())}
         >
           <Video className="size-5" />
-        </button>
+        </button>}
         <button
           type="button"
           className="flex size-10 shrink-0 items-center justify-center"
@@ -412,7 +415,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             >
               Supprimer la conversation
             </button>
-            <button
+            {!isBot(userId) && <button
               type="button"
               className="block w-full border-t border-line px-4 py-3 text-left text-signal"
               onClick={() => {
@@ -421,7 +424,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               }}
             >
               Signaler
-            </button>
+            </button>}
             <button
               type="button"
               className="block w-full border-t border-line px-4 py-3 text-left text-signal"
@@ -573,7 +576,9 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           />
         </div>
       )}
-      {!onboarded ? (
+      {isBot(userId) ? (
+        <BotComposer />
+      ) : !onboarded ? (
         <div className="dock border-t border-line px-4 pt-3 text-center">
           <p className="text-sm text-muted">
             Crée ton profil pour envoyer un message privé. La photo est facultative.
