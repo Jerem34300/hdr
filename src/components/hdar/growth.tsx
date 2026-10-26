@@ -216,7 +216,7 @@ const GIFT_HIDE = "hdar-gift-hide-until";
 export function MapGiftButton({ demoOpen }: { demoOpen?: boolean }) {
   const [hidden, setHidden] = useState(() => { try { return Number(localStorage.getItem(GIFT_HIDE) || 0) > Date.now(); } catch { return false; } });
   const [open, setOpen] = useState(!!demoOpen);
-  // Offre FIRST ouverte : le cadeau met en avant le code FIRST (parrainage en dessous) ; terminée : parrainage seul.
+  // Une seule carte : FIRST tant que l'offre est ouverte ; terminée ou inconnue : parrainage.
   const firstLeft = useFirstRemaining();
   const firstOpen = firstLeft != null && firstLeft > 0;
   const hide = () => { try { localStorage.setItem(GIFT_HIDE, String(Date.now() + 3 * 86400000)); } catch { /* */ } setOpen(false); setHidden(true); };
@@ -228,8 +228,7 @@ export function MapGiftButton({ demoOpen }: { demoOpen?: boolean }) {
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 p-3 pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={hide}>
           <div className="relative w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <button type="button" aria-label="Fermer" onClick={hide} className="absolute -top-3 right-2 z-10 flex size-9 items-center justify-center rounded-full bg-night text-lg shadow">✕</button>
-            {firstOpen && <div className="mb-3"><FirstGiftCard remaining={firstLeft} onAction={hide} /></div>}
-            <InviteCard demo={demoOpen ? "E610477" : undefined} onAction={hide} />
+            {firstOpen ? <FirstGiftCard remaining={firstLeft} onAction={hide} /> : <InviteCard demo={demoOpen ? "E610477" : undefined} onAction={hide} />}
           </div>
         </div>
       )}

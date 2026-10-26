@@ -14,7 +14,7 @@ import {
 const demo = () => (import.meta.env.DEV && typeof location !== "undefined" ? new URLSearchParams(location.search).get("firstdemo") : null);
 
 export function useFirstRemaining() {
-  const [n, setN] = useState<number | null>(demo() ? 873 : null);
+  const [n, setN] = useState<number | null>(demo() === "over" ? 0 : demo() ? 873 : null);
   useEffect(() => { if (!demo()) void firstRemaining().then(setN); }, []);
   return n;
 }
