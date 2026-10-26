@@ -70,9 +70,10 @@ export function captureSourceRef() {
   }
 }
 
-/** Une fois le profil créé : rattache la ref (réessayé à chaque ouverture tant que ça n'a pas marché). */
+/** Rattache la ref : avant le profil elle est gardée en attente côté serveur (v94), puis liée à sa création (réessayé à chaque ouverture tant que ça n'a pas marché). */
 export async function attachSourceRef() {
-  const ref = sourceRef();
+  // Venu par le lien d'invitation d'un membre (?r=CODE) sans autre ref : provenance « parrainage ».
+  const ref = sourceRef() ?? (localStorage.getItem("hdar-ref") ? "parrainage" : null);
   if (!ref || localStorage.getItem(DONE) === ref) return;
   try {
     await call("hdar_ref_profile", { p_ref: ref });

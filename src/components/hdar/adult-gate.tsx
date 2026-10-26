@@ -22,7 +22,7 @@ import { RevenueTab } from "./admin-revenue";
 import { ProDashboard, demoDash } from "./pro-dashboard";
 import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
-import { InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
+import { BoostCreditsCard, InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverAccountSettings, RecoverLink } from "./recover";
 import { LockScreen, LogoutButton, PinGate, PinSettings } from "./security";
@@ -252,6 +252,14 @@ function DevPreview() {
     ];
     return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={asD ? "d1" : "v417"} pseudo={asD ? "Nina" : "Discret 417"} demo={demo} /></main>;
   }
+  if (location.search.includes("botdm") && (location.search.includes("parrain") || location.search.includes("sanslien"))) {
+    const extra = location.search.includes("parrain")
+      ? "\n\n🎁 Ton lien de parrainage : https://hdar.chat/?r=ADB6FD0\nMets-le dans ta bio X : pour chaque ami qui crée son profil grâce à ton lien, tu gagnes un boost offert (jusqu'à 10 par mois). Tu retrouves tes boosts gratuits dans Profil → Parrainage, et tu les actives quand tu veux."
+      : "\n\n📣 Envie de faire découvrir hdar à tes potes ? Partage ce lien : https://hdar.chat\nPlus on est nombreux autour de toi, plus la carte s'anime !";
+    const body = BOT_DEMO_DM.replace("{pseudo}", "Lune").replace("\n\nToutes les réponses", extra + "\n\nToutes les réponses");
+    return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={BOT_ID} pseudo="hdar" demo={[{ id: "b1", mine: false, body, at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }]} /></main>;
+  }
+  if (location.search.includes("parraincard")) return <main className="min-h-dvh space-y-3 bg-night px-4 pt-6 text-ink"><p className="font-display text-xl font-extrabold">Profil · Parrainage (démo)</p><InviteCard demo="ADB6FD0" /><BoostCreditsCard demo={{ code: "ADB6FD0", earned: 3, used: 1, left: 2, filleuls: 4, validated: 3, hours: 1 }} /><Toaster theme="dark" position="top-center" /></main>;
   if (location.search.includes("botdm")) return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={BOT_ID} pseudo="hdar" demo={location.search.includes("nudge") ? [{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 4 * 86400_000).toISOString(), kind: "text", duration: null }, { id: "b2", mine: false, body: BOT_DEFAULTS.nudge1_text.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }] : [{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }]} /></main>;
   if (location.search.includes("profilview")) {
     const photo = location.search.includes("nophoto") ? "" : "/avatars/03.jpg";

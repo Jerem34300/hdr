@@ -1562,3 +1562,8 @@ export type DailyDetail = {
 };
 export type AdminDaily = { days: DailyRow[]; day: DailyDetail };
 export const adminDaily = (key: string, day: string | null, days = 30) => rpc<AdminDaily>("hdar_admin_daily", { p_key: key, p_day: day, p_days: days });
+
+/** Boosts gratuits de parrainage (v94) : nombres seulement, jamais qui sont les filleuls. */
+export type BoostCredits = { code: string; earned: number; used: number; left: number; filleuls: number; validated: number; hours: number };
+export const boostCredits = () => rpc<BoostCredits>("hdar_boost_credits", {});
+export const boostCreditUse = () => rpc<{ label: string; left: number }>("hdar_boost_credit_use", {});

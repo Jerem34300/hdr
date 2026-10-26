@@ -1,6 +1,6 @@
 import { FounderCard, useFirstRemaining } from "./launch-offer";
 import { AmbNudge, ProfileAmb } from "./profile-card";
-import { InviteCard, PremiumCard, RedeemCode } from "./growth";
+import { BoostCreditsCard, InviteCard, PremiumCard, RedeemCode } from "./growth";
 import { openIntro } from "./intro-video";
 import { ProSettings, ProSpaceCard } from "./pro-tools";
 import { MapPrivacyToggle, NotifySettings } from "./notify-settings";
@@ -355,7 +355,7 @@ export function Me() {
       <ProSpaceCard />
       <ProfileAmb where="top" />
       <AmbNudge />
-      {firstOpen ? <><FounderCard /><PremiumCard /><InviteCard /></> : <><InviteCard /><FounderCard /><PremiumCard /></>}
+      {firstOpen ? <><FounderCard /><PremiumCard /><InviteCard /><BoostCreditsCard /></> : <><InviteCard /><BoostCreditsCard /><FounderCard /><PremiumCard /></>}
       <RedeemCode />
       <button type="button" onClick={openIntro} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-surface font-display font-bold text-ink active:scale-[.98]">🎬 Comment ça marche</button>
       <Favorites />

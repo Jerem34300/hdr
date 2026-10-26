@@ -6,7 +6,7 @@ import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { codeRedeem, myRef, refClaim, shareReward, surprise } from "@/lib/hdar/live";
+import { boostCreditUse, boostCredits, type BoostCredits, codeRedeem, myRef, refClaim, shareReward, surprise } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { attachSourceRef } from "@/lib/hdar/source-ref";
 import { useHdar } from "@/lib/hdar/store";
@@ -125,7 +125,7 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
       <div className={glowInner}>
         <span aria-hidden className="pointer-events-none absolute -top-10 -right-8 size-32 rounded-full bg-[#3EE08F]/25 blur-2xl" />
         <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-10 size-36 rounded-full bg-[#FA6F6C]/30 blur-2xl" />
-        <CardHead icon="🎁" accent="#FA6F6C" chevron={false} title="Invite un ami" sub={`+3 jours hdar+ pour vous deux${n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}`} />
+        <CardHead icon="🎁" accent="#FA6F6C" chevron={false} title="Invite un ami" sub={`+3 j hdar+ à deux · 1 boost pour toi${n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}`} />
         <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-dashed border-white/20 bg-black/30 px-4 py-2.5">
           <div><p className="text-[10px] font-bold tracking-[0.25em] text-muted uppercase">Ton code</p>
             <p className="font-mono text-2xl font-extrabold tracking-[0.2em] text-[#FA6F6C]">{n.code}</p></div>
@@ -233,5 +233,38 @@ export function MapGiftButton({ demoOpen }: { demoOpen?: boolean }) {
         </div>
       )}
     </>
+  );
+}
+
+/** Profil → Parrainage : compteur de boosts gratuits (gagnés / utilisés / restants) et filleuls, en nombres seulement. */
+export function BoostCreditsCard({ demo }: { demo?: BoostCredits }) {
+  const [c, setC] = useState<BoostCredits | null>(demo ?? null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (!demo) void boostCredits().then(setC).catch(() => undefined); }, [demo]);
+  if (!c) return null;
+  const use = async () => {
+    if (busy || c.left <= 0) return;
+    setBusy(true);
+    try {
+      if (demo) { setC({ ...c, used: c.used + 1, left: c.left - 1 }); toast("Boost activé ✨ (1 h)"); return; }
+      const r = await boostCreditUse();
+      setC({ ...c, used: c.used + 1, left: r.left });
+      toast(`Boost activé ✨ (${r.label})`);
+    } catch (e) { toast(e instanceof Error ? e.message.replace(/^.*?: /, "") : "Impossible pour l'instant"); } finally { setBusy(false); }
+  };
+  const Stat = ({ n, l }: { n: number; l: string }) => <div className="rounded-xl bg-black/30 px-2 py-2 text-center"><p className="font-display text-xl font-extrabold tabular-nums">{n}</p><p className="text-[10px] text-muted">{l}</p></div>;
+  return (
+    <div {...glowOuter("relative overflow-hidden bg-gradient-to-br from-[#fbbf24] via-[#FA6F6C] to-[#f472b6]", "rgba(251,191,36,.3)")}>
+      <div className={glowInner}>
+        <CardHead icon="🚀" accent="#fbbf24" chevron={false} title="Parrainage · boosts gratuits" sub="1 boost par ami inscrit · 10 max / mois" />
+        <div className="mt-3 grid grid-cols-4 gap-1.5">
+          <Stat n={c.filleuls} l="filleuls" /><Stat n={c.earned} l="gagnés" /><Stat n={c.used} l="utilisés" /><Stat n={c.left} l="restants" />
+        </div>
+        <button type="button" disabled={busy || c.left <= 0} onClick={() => void use()} className="boost-cta mt-3 h-11 w-full rounded-full font-display font-extrabold text-night disabled:opacity-40">
+          {c.left > 0 ? `✨ Utiliser un boost gratuit (${c.hours} h)` : "Aucun boost gratuit pour l'instant"}
+        </button>
+        <p className="mt-2 text-[11px] text-muted">Par discrétion, tu vois seulement des nombres : jamais qui s'est inscrit avec ton lien. Ton lien : hdar.chat/?r={c.code}</p>
+      </div>
+    </div>
   );
 }

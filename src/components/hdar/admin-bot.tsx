@@ -69,7 +69,7 @@ export function BotTab({ adminKey, demo, demoAnnounce }: { adminKey: string; dem
       </div>
 
       <Section title="Accueil" hint="Message privé à chaque nouveau profil + bienvenue groupée dans Général (1 message / 10 min)." on={s.enabled} onToggle={(v) => set({ enabled: v })}>
-        <label className="block text-sm font-bold">Message privé <span className="font-normal text-muted">({"{pseudo}"})</span>
+        <label className="block text-sm font-bold">Message privé <span className="font-normal text-muted">({"{pseudo}"}, {"{provenance}"} = bloc parrainage ou lien de partage selon d'où vient le membre)</span>
           <textarea rows={6} value={s.dm_text} maxLength={2000} onChange={(e) => set({ dm_text: e.target.value })} className={area} /></label>
         <label className="block text-sm font-bold">Salon Général <span className="font-normal text-muted">({"{mentions}"})</span>
           <textarea rows={2} value={s.salon_text} maxLength={300} onChange={(e) => set({ salon_text: e.target.value })} className={area} /></label>
