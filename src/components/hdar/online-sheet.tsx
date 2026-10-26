@@ -23,6 +23,16 @@ function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
 const distLabel = (k: number) => (k < 1.5 ? "≈ 1 km" : k < 10 ? `≈ ${Math.round(k)} km` : `≈ ${Math.round(k / 5) * 5} km`);
 const ago = (m: number) => (m <= 5 ? "en ligne" : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.floor(m / 60)} h` : `il y a ${Math.floor(m / 1440)} j`);
 
+/** Même personne avec deux profils (deux appareils) : même pseudo + même âge à moins de 5 km → une seule ligne, la plus récente. */
+function dedupe(list: OnlinePerson[]) {
+  const out: OnlinePerson[] = [];
+  for (const p of [...list].sort((a, b) => a.min - b.min)) {
+    const k = p.pseudo.trim().toLowerCase();
+    if (!out.some((o) => o.pseudo.trim().toLowerCase() === k && o.age === p.age && km(o, p) < 5)) out.push(p);
+  }
+  return out;
+}
+
 /** Feuille « ● N en ligne » : qui est visible sur la carte autour de moi. */
 export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { me: { lat: number; lng: number }; people: OnlinePerson[]; visitors: OnlineVisitor[] } }) {
   const onboarded = useHdar((s) => s.me.onboarded);
@@ -50,7 +60,7 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
   const rows = useMemo<Row[]>(() => {
     if (!data || !center) return [];
     let r: Row[] = [
-      ...(who === "discrets" ? [] : data.people.map((p) => ({ kind: "profile" as const, p, km: km(center, p) }))),
+      ...(who === "discrets" ? [] : dedupe(data.people).map((p) => ({ kind: "profile" as const, p, km: km(center, p) }))),
       ...(who === "profiles" || gender || seekMe ? [] : data.visitors.map((v) => ({ kind: "discret" as const, v, km: km(center, v) }))),
     ];
     if (gender) r = r.filter((x) => x.kind === "profile" && (x.p.iam ?? "").toLowerCase() === gender);
@@ -71,7 +81,7 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
     if (!onboarded) { toast("Crée ton profil pour écrire en privé"); st.openGate(); return; }
     onClose(); st.openLive(x.v.id, x.v.name);
   };
-  const nP = data?.people.length ?? 0, nV = data?.visitors.length ?? 0;
+  const nP = data ? dedupe(data.people).length : 0, nV = data?.visitors.length ?? 0;
   const chip = (on: boolean) => "h-8 shrink-0 rounded-full border px-3 text-xs font-bold " + (on ? "border-transparent bg-ink text-night" : "border-line text-muted");
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55" onClick={onClose}>
