@@ -518,7 +518,7 @@ function MessageMenu({
         )}
         {canHide && (
           <button type="button" className={item + " text-signal"} onClick={onHide}>
-            <Trash2 className="size-5" /> Retirer le message
+            <Trash2 className="size-5" /> {m.mine ? "Retirer le message" : "Modération : retirer ce message"}
           </button>
         )}
         {!m.mine && (
@@ -579,7 +579,7 @@ export function GroupChatDemo() {
         maxLength={1000}
         placeholder="Message"
         empty={null}
-        canHide={(m) => m.mine}
+        canHide={(m) => m.mine || location.search.includes("modo")}
         onHide={async () => undefined}
         onSend={async () => undefined}
         mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
