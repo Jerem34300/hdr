@@ -1,10 +1,10 @@
 -- hdar v94 — Bienvenue selon la provenance + boosts gratuits de parrainage.
 -- 1) La ref (?ref=, /x/…, ?r=) est gardée côté serveur dès l'arrivée (avant le profil) dans hdar.pending_refs,
 --    puis rattachée au profil à sa création : le message d'accueil connaît donc la provenance.
--- 2) Message privé du robot : venu par un lien → lien de PARRAINAGE + boost offert par ami inscrit ;
---    venu sans lien → lien de partage normal, sans boost.
--- 3) Parrainage : +1 boost gratuit (en réserve) par filleul avec un vrai profil (photo validée, règle existante),
---    10 maximum par 30 jours (même plafond que hdar+). Le membre l'active quand il veut (1 h).
+-- 2) Message privé du robot : tout le monde reçoit son lien de PARRAINAGE + boost offert par ami inscrit ;
+--    la place conseillée suit la provenance (bio Telegram, bio X… ou « dans ta bio ou sur tes réseaux »).
+-- 3) Parrainage : +1 boost gratuit (en réserve) par filleul dès son vrai profil créé (sans photo),
+--    10 max / 30 jours, jamais deux fois pour la même personne. Les 3 jours hdar+ gardent la photo validée.
 -- Confidentialité : le parrain ne voit que des nombres (jamais qui, ni quand) ; le filleul ne voit pas son parrain.
 -- RGPD : aucune donnée sensible ; pending_refs supprimé avec le compte (purge 30 j).
 
@@ -70,11 +70,10 @@ end $$;
 create or replace function hdar.welcome_extra(u text) returns text language plpgsql security definer set search_path to '' as $$
 declare r text; place text;
 begin
+  -- Tout le monde reçoit son lien de parrainage ; seule la place suggérée change selon la provenance.
   select ref into r from hdar.profile_refs where user_id = u;
-  if r is null then
-    return E'\n\n📣 Envie de faire découvrir hdar à tes potes ? Partage ce lien : https://hdar.chat\nPlus on est nombreux autour de toi, plus la carte s''anime !';
-  end if;
   place := case
+    when r is null then 'dans ta bio ou sur tes réseaux'
     when r ~ '(telegram|^next[0-9]*$)' then 'dans ta bio Telegram'
     when r ~ '(^x$|twit|^expose)' then 'dans ta bio X'
     when r ~ 'tiktok' then 'dans ta bio TikTok'
@@ -112,7 +111,7 @@ end $$;
 update hdar.bot_settings set dm_text = replace(dm_text, E'\n\nToutes les réponses', E'{provenance}\n\nToutes les réponses')
 where dm_text not like '%{provenance}%' and dm_text like E'%\n\nToutes les réponses%';
 
--- Parrainage validé (photo approuvée) : hdar+ comme avant + 1 boost gratuit en réserve pour le parrain.
+-- Parrainage validé (photo approuvée) : 3 jours hdar+ pour les deux, comme avant (le boost, lui, part dès le profil créé).
 create or replace function hdar.ref_settle(u text) returns void language plpgsql security definer set search_path to '' as $$
 declare r hdar.referrals; n int;
 begin
@@ -125,11 +124,75 @@ begin
   select count(*) into n from hdar.referrals where referrer = r.referrer and rewarded_at > now() - interval '30 days';
   if n <= 10 then
     perform hdar.grant_gift(r.referrer, 'premium', 3);
-    insert into hdar.boost_credits as b (user_id, earned) values (r.referrer, 1)
-    on conflict (user_id) do update set earned = b.earned + 1, updated_at = now();
     -- Confidentialité : aucune notification au parrain (l'heure trahirait le filleul) ; il voit seulement ses compteurs.
   end if;
 end $$;
+
+-- Boost de parrainage : dès qu'un vrai profil est créé avec le lien (pas besoin de photo).
+-- Anti-abus : pas d'auto-parrainage (même compte ou même appareil), 10 max / 30 jours,
+-- et une seule fois par personne parrainée, même si son profil est supprimé puis recréé
+-- (empreinte md5 du compte, sans donnée lisible, gardée 1 an).
+alter table hdar.referrals add column if not exists boost_at timestamptz;
+create table if not exists hdar.referral_ledger (
+  referred_hash text primary key,
+  referrer text not null,
+  at timestamptz not null default now()
+);
+alter table hdar.referral_ledger enable row level security;
+revoke all on hdar.referral_ledger from anon, authenticated;
+
+create or replace function hdar.ref_boost(u text) returns void language plpgsql security definer set search_path to '' as $$
+declare r hdar.referrals; me hdar.profiles; par hdar.profiles; h text; n int;
+begin
+  select * into r from hdar.referrals where referred = u and boost_at is null for update;
+  if r.referred is null then return; end if;
+  select * into me from hdar.profiles where user_id = u;
+  select * into par from hdar.profiles where user_id = r.referrer;
+  if me.profile_at is null or par.user_id is null then return; end if;
+  if me.user_id = par.user_id or me.auth_user_id = par.auth_user_id then return; end if;
+  h := md5('hdar-ref:' || coalesce(me.auth_user_id::text, me.user_id));
+  insert into hdar.referral_ledger (referred_hash, referrer) values (h, r.referrer) on conflict do nothing;
+  if not found then return; end if; -- déjà compté une fois (profil recréé)
+  update hdar.referrals set boost_at = now() where referred = u;
+  select count(*) into n from hdar.referrals where referrer = r.referrer and boost_at > now() - interval '30 days';
+  if n > 10 then return; end if;
+  insert into hdar.boost_credits as b (user_id, earned) values (r.referrer, 1)
+  on conflict (user_id) do update set earned = b.earned + 1, updated_at = now();
+end $$;
+
+-- Rattachement du parrainage (inchangé) + boost immédiat.
+create or replace function public.hdar_ref_claim(p_code text) returns jsonb
+language plpgsql security definer set search_path to '' as $$
+declare s text := hdar.self_id(); ref hdar.profiles; me hdar.profiles;
+begin
+  select * into me from hdar.profiles where user_id = s;
+  select * into ref from hdar.profiles where ref_code = upper(btrim(p_code));
+  if ref.user_id is null or me.user_id is null then return jsonb_build_object('ok', false); end if;
+  if ref.user_id = s or ref.auth_user_id = me.auth_user_id then return jsonb_build_object('ok', false, 'reason', 'self'); end if;
+  if coalesce(me.created_at, now()) < now() - interval '7 days' then return jsonb_build_object('ok', false, 'reason', 'old'); end if;
+  if ref.created_at > me.created_at then return jsonb_build_object('ok', false); end if;
+  insert into hdar.referrals (referred, referrer) values (s, ref.user_id) on conflict do nothing;
+  perform hdar.ref_boost(s);
+  perform hdar.ref_settle(s);
+  return jsonb_build_object('ok', true);
+end $$;
+
+-- Admin : ce que rapportent les parrains selon le réseau par lequel ils sont eux-mêmes arrivés.
+create or replace function public.hdar_admin_ref_network(p_key text, p_days int default 30) returns jsonb
+language plpgsql stable security definer set search_path to '' as $$
+declare since timestamptz := now() - make_interval(days => least(greatest(coalesce(p_days, 30), 1), 400));
+begin
+  perform hdar.admin_check(p_key);
+  return coalesce((select jsonb_agg(t order by t.filleuls desc) from (
+    select coalesce(pr.ref, '(sans lien)') source, count(distinct r.referrer)::int parrains, count(*)::int filleuls,
+           count(r.boost_at)::int boosts, count(r.rewarded_at)::int valides
+    from hdar.referrals r left join hdar.profile_refs pr on pr.user_id = r.referrer
+    where r.created_at >= since group by 1) t), '[]'::jsonb);
+end $$;
+revoke all on function public.hdar_admin_ref_network(text, int) from public, anon;
+grant execute on function public.hdar_admin_ref_network(text, int) to authenticated;
+
+select cron.schedule('hdar_ref_ledger_purge', '23 4 * * *', $$delete from hdar.referral_ledger where at < now() - interval '1 year'$$);
 
 -- Compteur du membre : boosts gagnés / utilisés / restants, filleuls.
 create or replace function public.hdar_boost_credits() returns jsonb

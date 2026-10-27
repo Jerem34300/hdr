@@ -1567,3 +1567,5 @@ export const adminDaily = (key: string, day: string | null, days = 30) => rpc<Ad
 export type BoostCredits = { code: string; earned: number; used: number; left: number; filleuls: number; validated: number; hours: number };
 export const boostCredits = () => rpc<BoostCredits>("hdar_boost_credits", {});
 export const boostCreditUse = () => rpc<{ label: string; left: number }>("hdar_boost_credit_use", {});
+export type RefNetworkRow = { source: string; parrains: number; filleuls: number; boosts: number; valides: number };
+export const adminRefNetwork = (key: string, days = 30) => rpc<RefNetworkRow[]>("hdar_admin_ref_network", { p_key: key, p_days: days });

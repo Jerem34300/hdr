@@ -21,7 +21,7 @@ import {
   type AdminSalonMsg,
   type AdminVisitors,
   type Breakdown,
-  type VisitorRow, adminRefs, type AdminRefs, type RefRow } from "@/lib/hdar/live";
+  type VisitorRow, adminRefs, type AdminRefs, type RefRow, adminRefNetwork, type RefNetworkRow } from "@/lib/hdar/live";
 
 function useLoad<T>(load: () => Promise<T>, everyMs = 0) {
   const [data, setData] = useState<T | null>(null);
@@ -702,6 +702,7 @@ export function RefsTab({ adminKey, onOpen, demo }: { adminKey: string; onOpen?:
     <div className="space-y-4">
       {!demo && <RefLinks adminKey={adminKey} onOpen={onOpen} />}
       {!demo && <Referrers adminKey={adminKey} onOpen={onOpen} />}
+      {!demo && <RefNetwork adminKey={adminKey} />}
       <h3 className="pt-2 font-display text-lg font-bold">Statistiques par période</h3>
       <Seg value={days} onChange={setDays} options={[[1, "Aujourd'hui"], [7, "7 j"], [30, "30 j"], [90, "90 j"]]} />
       <ErrorNote error={error} />
@@ -775,5 +776,23 @@ export function RefsTabDemo() {
       <h1 className="mb-3 font-display text-2xl font-extrabold">Provenance · Partenaires</h1>
       <RefsTab adminKey="" demo={{ days: 30, total, daily }} />
     </main>
+  );
+}
+
+/** Parrainage par réseau : selon d'où viennent les parrains eux-mêmes, combien de filleuls ils amènent (30 j). */
+export function RefNetwork({ adminKey, demo }: { adminKey: string; demo?: RefNetworkRow[] }) {
+  const [rows, setRows] = useState<RefNetworkRow[] | null>(demo ?? null);
+  useEffect(() => { if (!demo) void adminRefNetwork(adminKey).then(setRows).catch(() => setRows([])); }, [adminKey, demo]);
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-4">
+      <h3 className="mb-1 font-display font-bold">Parrainage par réseau (30 j)</h3>
+      <p className="mb-2 text-xs text-muted">Source = lien par lequel le parrain est arrivé. Boosts = filleuls avec un profil créé ; validés = photo approuvée (hdar+).</p>
+      {!rows ? <p className="text-xs text-muted">Chargement…</p> : !rows.length ? <p className="text-xs text-muted">Aucun parrainage sur la période.</p> : (
+        <table className="w-full whitespace-nowrap text-xs">
+          <thead className="text-left text-muted"><tr><th className="py-1">Source</th><th className="text-right">Parrains</th><th className="pl-1.5 text-right">Filleuls</th><th className="pl-1.5 text-right">Boosts</th><th className="pl-1.5 text-right">Validés</th></tr></thead>
+          <tbody>{rows.map((r) => <tr key={r.source} className="border-t border-line/60"><td className="max-w-[8rem] truncate py-1.5 font-bold">{r.source}</td><td className="text-right">{r.parrains}</td><td className="pl-1.5 text-right font-bold">{r.filleuls}</td><td className="pl-1.5 text-right">{r.boosts}</td><td className="pl-1.5 text-right">{r.valides}</td></tr>)}</tbody>
+        </table>
+      )}
+    </div>
   );
 }

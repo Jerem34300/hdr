@@ -31,7 +31,7 @@ import { AppearanceScreen } from "./appearance";
 import { GroupChatDemo } from "./group-chat";
 import { LiveChatDemo } from "./live-chat";
 import { RefLinksDemo } from "./admin-ref-links";
-import { RefsTabDemo } from "./admin-insights";
+import { RefNetwork, RefsTabDemo } from "./admin-insights";
 import { DailyTabDemo } from "./admin-daily";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
@@ -234,6 +234,7 @@ function DevPreview() {
   if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /></>;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
   if (location.search.includes("provdemo")) return <RefsTabDemo />;
+  if (location.search.includes("reseaudemo")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Provenance (démo)</p><RefNetwork adminKey="" demo={[{ source: "expose_twittos", parrains: 6, filleuls: 14, boosts: 12, valides: 7 }, { source: "(sans lien)", parrains: 9, filleuls: 11, boosts: 11, valides: 5 }, { source: "next1", parrains: 2, filleuls: 3, boosts: 3, valides: 1 }]} /></main>;
   if (location.search.includes("jourdemo")) return <DailyTabDemo />;
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
@@ -255,7 +256,7 @@ function DevPreview() {
   if (location.search.includes("botdm") && (location.search.includes("parrain") || location.search.includes("sanslien"))) {
     const extra = location.search.includes("parrain")
       ? "\n\n🎁 Ton lien de parrainage : https://hdar.chat/?r=ADB6FD0\nMets-le dans ta bio X : pour chaque ami qui crée son profil grâce à ton lien, tu gagnes un boost offert (jusqu'à 10 par mois). Tu retrouves tes boosts gratuits dans Profil → Parrainage, et tu les actives quand tu veux."
-      : "\n\n📣 Envie de faire découvrir hdar à tes potes ? Partage ce lien : https://hdar.chat\nPlus on est nombreux autour de toi, plus la carte s'anime !";
+      : "\n\n🎁 Ton lien de parrainage : https://hdar.chat/?r=ADB6FD0\nMets-le dans ta bio ou sur tes réseaux : pour chaque ami qui crée son profil grâce à ton lien, tu gagnes un boost offert (jusqu'à 10 par mois). Tu retrouves tes boosts gratuits dans Profil → Parrainage, et tu les actives quand tu veux.";
     const body = BOT_DEMO_DM.replace("{pseudo}", "Lune").replace("\n\nToutes les réponses", extra + "\n\nToutes les réponses");
     return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={BOT_ID} pseudo="hdar" demo={[{ id: "b1", mine: false, body, at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }]} /></main>;
   }
