@@ -137,6 +137,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ zoom: number; dist: number; lat: number; lng: number; x: number; y: number } | null>(null);
   const anim = useRef(0);
+  // Appui long (≈500 ms) sur la carte dézoomée : vol rapide vers ma position.
+  const press = useRef<{ t: number; x: number; y: number; fired: boolean } | null>(null);
+  const [pulseAt, setPulseAt] = useState(0);
+  const [ring, setRing] = useState<{ x: number; y: number; k: number } | null>(null);
   const [live, setLive] = useState<LivePin[]>([]);
   // Activité anonyme des dernières 24 h (carreaux ~5 km) : la carte n'est jamais vide.
   const [recent, setRecent] = useState<Recent | null>(null);
@@ -493,6 +497,28 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finding, nearestHidden]);
 
+  /** Vol rapide (≈0,8 s) vers ma position, zoom élevé. Sans position connue : localisation habituelle. */
+  function flyToMe() {
+    try { navigator.vibrate?.(15); } catch { /* pas de vibreur */ }
+    const from = viewRef.current;
+    // Bascule : zoomé (≥ 14) → vue d'ensemble de la ville (zoom 11) centrée sur la vue actuelle.
+    const out = from.zoom >= 14;
+    if (!out && !located) { askLocation(); return; }
+    cancelAnimationFrame(anim.current);
+    follow.current = !out;
+    const to = out ? { lat: from.lat, lng: from.lng, zoom: 11 } : { lat: you.lat, lng: you.lng, zoom: 16 };
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / 800);
+      const e = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2;
+      setView({ lat: from.lat + (to.lat - from.lat) * e, lng: from.lng + (to.lng - from.lng) * e, zoom: from.zoom + (to.zoom - from.zoom) * e });
+      if (k < 1) anim.current = requestAnimationFrame(step);
+      else if (!out) setPulseAt(Date.now());
+    };
+    anim.current = requestAnimationFrame(step);
+  }
+  const cancelPress = () => { setRing(null); if (press.current && !press.current.fired) { clearTimeout(press.current.t); press.current = null; } };
+
   function animateTo(nextZoom: number) {
     cancelAnimationFrame(anim.current);
     const from = viewRef.current.zoom;
@@ -511,7 +537,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     <div
       ref={box}
       className="relative h-full min-h-0 overflow-hidden bg-[#0c1014]"
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "none", WebkitTouchCallout: "none" }}
+      onContextMenu={(e) => e.preventDefault()}
       onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest("button")) return;
         pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -529,11 +556,21 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         } else {
           gesture.current = { zoom: current.zoom, dist: 0, lat: current.lat, lng: current.lng, x: e.clientX, y: e.clientY };
         }
+        cancelPress();
+        if (pts.length === 1 && !useHdar.getState().pendingSpot && box.current) {
+          const p = { t: 0, x: e.clientX, y: e.clientY, fired: false };
+          p.t = window.setTimeout(() => { p.fired = true; setRing(null); flyToMe(); }, 500);
+          press.current = p;
+          const r = box.current.getBoundingClientRect();
+          setRing({ x: e.clientX - r.left, y: e.clientY - r.top, k: Date.now() });
+        }
         e.currentTarget.setPointerCapture(e.pointerId);
       }}
       onPointerMove={(e) => {
         if (!pointers.current.has(e.pointerId)) return;
         pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (press.current && (pointers.current.size > 1 || Math.hypot(e.clientX - press.current.x, e.clientY - press.current.y) > 8)) cancelPress();
+        if (press.current?.fired) return; // le vol est en cours : on ne fait pas glisser la carte
         const start = gesture.current;
         if (!start) return;
         const pts = [...pointers.current.values()];
@@ -566,7 +603,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         });
       }}
       onPointerUp={(e) => {
-        const start = gesture.current;
+        const longPressed = !!press.current?.fired;
+        cancelPress();
+        if (pointers.current.size <= 1) press.current = null;
+        const start = longPressed ? null : gesture.current;
         pointers.current.delete(e.pointerId);
         const waiting = useHdar.getState().pendingSpot;
         if (waiting && start && start.dist === 0 && pointers.current.size === 0 && box.current) {
@@ -583,6 +623,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         if (pointers.current.size === 0) gesture.current = null;
       }}
       onPointerCancel={(e) => {
+        cancelPress();
+        press.current = null;
         pointers.current.delete(e.pointerId);
         gesture.current = null;
       }}
@@ -706,6 +748,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           <p className="text-sm text-muted">Localisation…</p>
         </div>
       )}
+      {ring && <svg key={ring.k} aria-hidden className="press-ring pointer-events-none absolute z-40 size-16 -translate-x-1/2 -translate-y-1/2" style={{ left: ring.x, top: ring.y }} viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.25)" strokeWidth="4" /><circle cx="32" cy="32" r="26" fill="none" stroke="#FA6F6C" strokeWidth="4" strokeLinecap="round" strokeDasharray="164" strokeDashoffset="164" transform="rotate(-90 32 32)" /></svg>}
+      {located && pulseAt > 0 && <span key={pulseAt} aria-hidden className="me-pulse pointer-events-none absolute z-10 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-signal" style={{ left: youPx.x, top: youPx.y }} />}
       <div className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: youPx.x, top: youPx.y }}>
         <span className="radar-sweep block size-48" />
         <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-signal" />
