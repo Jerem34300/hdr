@@ -13,6 +13,18 @@
   force = true
 
 [[redirects]]
+  from = "/x/twitter"
+  to = "/?ref=hdar_x"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/x/tiktok"
+  to = "/?ref=hdar_tiktok"
+  status = 302
+  force = true
+
+[[redirects]]
   from = "/x/:ref"
   to = "/?ref=:ref"
   status = 302
