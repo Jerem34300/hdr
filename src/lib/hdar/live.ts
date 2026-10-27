@@ -1492,8 +1492,22 @@ export const adminReferrers = (key: string) => rpc<Referrer[]>("hdar_admin_refer
 export type FwdScope = "dm" | "salon";
 export type FwdSource = FwdScope | "area";
 /** Copie côté serveur d'un message (texte ou média) vers un message privé ou un salon. */
-export const forwardMessage = (src: FwdSource, id: string, dst: FwdScope, to: string) =>
-  rpc("hdar_forward", { p_src: src, p_id: id, p_dst: dst, p_to: dst === "dm" ? otherId(to) : to });
+export async function forwardMessage(src: FwdSource, id: string, dst: FwdScope, to: string, self?: string) {
+  const args = { p_src: src, p_id: id, p_dst: dst, p_to: dst === "dm" ? otherId(to) : to };
+  try {
+    await rpc("hdar_forward", args);
+  } catch (e) {
+    // v95 : photo / vocal privé stocké en ligne → un salon a besoin d'un fichier : on téléverse une copie puis on réessaie.
+    if (!(e instanceof Error && e.message.includes("NEED_UPLOAD")) || src !== "dm" || !self) throw e;
+    const data = await getMedia(self, id);
+    if (!data.startsWith("data:")) throw new Error("Média indisponible");
+    const blob = await (await fetch(data)).blob();
+    const kind = blob.type.startsWith("audio/") ? "audio" : "image";
+    const { uploadChatMedia } = await import("./chat-media");
+    const { path } = await uploadChatMedia(blob, kind);
+    await rpc("hdar_forward", { ...args, p_path: path });
+  }
+}
 /** Libellé d'en-tête : « Transféré » (d'un privé) ou « Transféré de X » (d'un salon). */
 export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f ? `Transféré de ${f}` : "Transféré");
 /** Retirer son propre message privé (supprimé côté serveur pour les deux, v81). */

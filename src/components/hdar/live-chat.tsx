@@ -807,6 +807,7 @@ export function LiveChatDemo() {
     { id: "m4", mine: true, body: "Carrément, on dit 22 h ?", at: at(6), editedAt: at(5), kind: "text", duration: null, replyTo: "m3", reply: { pseudo: "Lucas34", body: "Top, je connais un bar sympa rue de l'Université" } },
     { id: "m5", mine: false, bubble: "violet", body: "Parfait 😄 à tout à l'heure", at: at(4), kind: "text", duration: null, reactions: [{ e: "❤️", n: 1, mine: true }, { e: "👍", n: 1, mine: true }] },
     { id: "m6", mine: true, body: "Le Live de ce soir commence à 21 h 🎥", at: at(2), kind: "text", duration: null, fwd: "Hdar admin" },
+    ...(typeof location !== "undefined" && location.search.includes("fwdphoto") ? [{ id: "m7", mine: true, body: "", at: at(0), kind: "image" as const, duration: null }] : []),
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">

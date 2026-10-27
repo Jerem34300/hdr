@@ -38,7 +38,7 @@ export function ForwardSheet({ src, id, preview, onClose, demo }: { src: FwdSour
     setBusy(t.id);
     const done = () => { toast(`Transféré à ${t.name}`); onClose(); };
     if (demo) return done();
-    void forwardMessage(src, id, t.scope, t.id).then(done).catch((e: Error) => { setBusy(null); toast(e.message); });
+    void forwardMessage(src, id, t.scope, t.id, deviceId()).then(done).catch((e: Error) => { setBusy(null); toast(e.message); });
   };
   const dms = list.filter((t) => t.scope === "dm"), salons = list.filter((t) => t.scope === "salon");
   const row = (t: Target) => (

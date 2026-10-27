@@ -231,7 +231,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
   if (location.search.includes("groupchat")) return <><GroupChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
-  if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /></>;
+  if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;
   if (location.search.includes("provdemo")) return <RefsTabDemo />;
   if (location.search.includes("reseaudemo")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Provenance (démo)</p><RefNetwork adminKey="" demo={[{ source: "expose_twittos", parrains: 6, filleuls: 14, boosts: 12, valides: 7 }, { source: "(sans lien)", parrains: 9, filleuls: 11, boosts: 11, valides: 5 }, { source: "next1", parrains: 2, filleuls: 3, boosts: 3, valides: 1 }]} /></main>;
