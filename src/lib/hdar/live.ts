@@ -997,6 +997,7 @@ export function identityLine(iam: string, seeking: string[]) {
 export type RoomMediaRow = { id: string; kind: "image" | "video" | "audio"; media: string; duration: number | null };
 const roomMediaCache = new Map<string, Promise<RoomMediaRow | null>>();
 export function roomMedia(scope: "area" | "place" | "spot" | "salon", id: string): Promise<RoomMediaRow | null> {
+  if (import.meta.env.DEV && id === "dvid") return Promise.resolve({ id, kind: "video", media: "demo/v.mp4", duration: 154 });
   const key = `${scope}:${id}`;
   let hit = roomMediaCache.get(key);
   if (!hit) {
@@ -1583,3 +1584,18 @@ export const boostCredits = () => rpc<BoostCredits>("hdar_boost_credits", {});
 export const boostCreditUse = () => rpc<{ label: string; left: number }>("hdar_boost_credit_use", {});
 export type RefNetworkRow = { source: string; parrains: number; filleuls: number; boosts: number; valides: number };
 export const adminRefNetwork = (key: string, days = 30) => rpc<RefNetworkRow[]>("hdar_admin_ref_network", { p_key: key, p_days: days });
+
+/** Signale une vidéo (ou tout média stocké) : file des signalements de l'admin. */
+export const reportVideo = (path: string, reason = "") => rpc("hdar_media_report", { p_path: path, p_reason: reason });
+
+export type StoredVideo = { path: string; duration: number; pending?: boolean };
+/** Vidéos du profil (60 s, 3 max). Une vidéo signalée NSFW reste visible pour son auteur seulement. */
+export const profileVideos = (userId: string) => rpc<StoredVideo[]>("hdar_profile_videos", { p_user: userId });
+export const profileVideoAdd = (path: string, duration: number, flag: string | null) =>
+  rpc("hdar_profile_video_add", { p_path: path, p_duration: duration, p_flag: flag });
+export const profileVideoRemove = (path: string) => rpc("hdar_profile_video_remove", { p_path: path });
+/** Vidéos de la page d'un lieu (propriétaire / pro, 60 s, 3 max). */
+export const placeVideos = (placeId: string) => rpc<StoredVideo[]>("hdar_place_videos", { p_place: placeId });
+export const placeVideoAdd = (placeId: string, path: string, duration: number) =>
+  rpc("hdar_place_video_add", { p_place: placeId, p_path: path, p_duration: duration });
+export const placeVideoRemove = (placeId: string, path: string) => rpc("hdar_place_video_remove", { p_place: placeId, p_path: path });

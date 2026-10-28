@@ -1,3 +1,4 @@
+import { VideoSection } from "./video-section";
 import { safeSrc } from "@/lib/hdar/media";
 import { RichText } from "./rich-text";
 import { useEffect, useState } from "react";
@@ -166,6 +167,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
             )}
           </div>
         </div>
+        <div className="px-5"><VideoSection target="profile" id={userId} canEdit={false} demo={demo ? (location.search.includes("video") ? [{ path: "demo/v-vert.mp4", duration: 38 }] : []) : undefined} title="Ses vidéos" /></div>
         <div className="px-5">
         {state === "loading" && <p className="mt-8 text-center text-sm text-muted">Chargement du profil…</p>}
         {state === "gone" && <p className="mt-8 text-center text-sm text-muted">Profil indisponible.</p>}

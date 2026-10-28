@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, Film, Flag, Image as ImageIcon, Mic, Plus, Video } from "lucide-react";
 import { toast } from "sonner";
-import { MAX_VOICE_SEC, signedMediaUrl, uploadChatMedia, type MediaKind, type MediaScope } from "@/lib/hdar/chat-media";
-import { mediaReport, roomMedia, type RoomMediaRow } from "@/lib/hdar/live";
+import { MAX_VOICE_SEC, posterPath, signedMediaUrl, uploadChatMedia, type MediaKind, type MediaScope } from "@/lib/hdar/chat-media";
+import { mediaReport, reportVideo, roomMedia, type RoomMediaRow } from "@/lib/hdar/live";
 
 /** Compact "+" button: photo / camera / video from gallery / record video. */
 export function AttachButton({
@@ -72,7 +72,7 @@ export function AttachButton({
               <Film className="size-5" /> Vidéo de la galerie
               {input("video/*", "video")}
             </label>
-            <p className="px-3 pt-1 pb-1.5 text-[11px] text-muted">Vidéo : 60 s et 50 Mo max</p>
+            <p className="px-3 pt-1 pb-1.5 text-[11px] text-muted">Vidéo : 3 min max, compressée automatiquement</p>
           </div>
         </>
       )}
@@ -159,9 +159,13 @@ export function HoldMic({ onDone, disabled, onTick }: { onDone: (blob: Blob, sec
   );
 }
 
+const fmtDur = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+
 /** Renders one stored media from its storage path (signed URL). */
-export function MediaView({ kind, path, duration }: { kind: string; path: string; duration?: number | null }) {
+export function MediaView({ kind, path, duration, reportable }: { kind: string; path: string; duration?: number | null; /** Bouton « Signaler » sur la vidéo (média d'un autre). */ reportable?: boolean }) {
   const [src, setSrc] = useState("");
+  const [poster, setPoster] = useState<string | undefined>(undefined);
+  const [reported, setReported] = useState(false);
   const [failed, setFailed] = useState(false);
   const [zoom, setZoom] = useState(false);
   useEffect(() => {
@@ -169,6 +173,10 @@ export function MediaView({ kind, path, duration }: { kind: string; path: string
     signedMediaUrl(path)
       .then((u) => alive && setSrc(u))
       .catch(() => alive && setFailed(true));
+    if (kind === "video")
+      signedMediaUrl(posterPath(path))
+        .then((u) => alive && setPoster(u))
+        .catch(() => undefined);
     return () => {
       alive = false;
     };
@@ -178,7 +186,27 @@ export function MediaView({ kind, path, duration }: { kind: string; path: string
   if (!src) return <span className="block opacity-70">{label}{duration ? ` · ${duration}s` : ""}…</span>;
   if (kind === "audio") return <audio controls preload="metadata" src={src} className="h-10 w-60 max-w-full" />;
   if (kind === "video")
-    return <video controls playsInline preload="metadata" src={src} className="max-h-72 max-w-full rounded-xl bg-black" />;
+    return (
+      <span className="relative inline-block max-w-full align-top">
+        <video controls playsInline preload="metadata" src={src} poster={poster} className="max-h-72 max-w-full rounded-xl bg-black" />
+        {duration ? <span className="pointer-events-none absolute top-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white">{fmtDur(duration)}</span> : null}
+        {reportable && (
+          <button
+            type="button"
+            aria-label="Signaler cette vidéo"
+            disabled={reported}
+            className="absolute top-1.5 right-1.5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white disabled:opacity-50"
+            onClick={() =>
+              void reportVideo(path)
+                .then(() => (setReported(true), toast("Merci, vidéo signalée")))
+                .catch((e: Error) => toast(e.message))
+            }
+          >
+            <Flag className="size-4" />
+          </button>
+        )}
+      </span>
+    );
   return (
     <>
       <button type="button" className="block" onClick={() => setZoom(true)} aria-label="Agrandir la photo">

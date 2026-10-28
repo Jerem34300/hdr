@@ -1,3 +1,4 @@
+import { VideoSection } from "./video-section";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -363,6 +364,7 @@ function PlaceExtras({ id }: { id: string }) {
           ))}
         </div>
       )}
+      <VideoSection target="place" id={id} canEdit={info.owner} title="Vidéos du lieu" />
       {(info.website || info.contact) && (
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           {info.website && (

@@ -1,10 +1,18 @@
 /** Photos, videos and voice notes in chats, stored in the private `hdar-media` bucket (signed URLs only). */
 import { supabase, accessToken, authUserId } from "./session";
+import { toast } from "sonner";
+import { compressVideo } from "./video";
 
 export type MediaKind = "image" | "video" | "audio";
 export type MediaScope = "area" | "place" | "spot" | "salon";
-export const MAX_VIDEO_MB = 50;
-export const MAX_VIDEO_SEC = 60;
+/** Après compression (≈1,3 Mbit/s) : 3 min ≈ 30 Mo, 60 s ≈ 10 Mo. Le serveur refuse au-delà (40 / 16 Mo). */
+export const MAX_VIDEO_MB = 40;
+export const MAX_SHORT_VIDEO_MB = 16;
+/** Chats (salons, quartier, lieux, DM) : 3 min. Annonces, profil, page de lieu : 60 s. */
+export const MAX_VIDEO_SEC = 180;
+export const MAX_SHORT_VIDEO_SEC = 60;
+/** Fichier source accepté avant compression. */
+export const MAX_SOURCE_MB = 500;
 export const MAX_VOICE_SEC = 60;
 const BUCKET = "hdar-media";
 
@@ -57,24 +65,59 @@ function extFor(type: string) {
   return "webm";
 }
 
-/** Validates, compresses (photos) and uploads; returns the storage path + duration. */
+export type UploadOpts = {
+  /** Vidéo courte (annonce, profil, page de lieu) : 60 s / 16 Mo au lieu de 3 min / 40 Mo. */
+  short?: boolean;
+  /** Progression de la compression (0-100). Par défaut : un toast « Compression de la vidéo… ». */
+  onProgress?: (pct: number) => void;
+};
+
+async function putFile(path: string, blob: Blob, type: string) {
+  const { error } = await supabase().storage.from(BUCKET).upload(path, blob, { contentType: type, upsert: false });
+  if (error) throw new Error(error.message.includes("size") ? "Fichier trop lourd" : "Envoi du fichier impossible");
+}
+
+/**
+ * Validates, compresses (photos and videos) and uploads; returns the storage path + duration.
+ * Videos: re-encoded in the browser to ≈720p / ≈1.3 Mbit/s with sound, a poster is stored next to
+ * them (`<path>.jpg`), and `frames` (3 stills) are returned for the NSFW check.
+ */
 export async function uploadChatMedia(
   input: Blob,
   kind: MediaKind,
   seconds?: number,
-): Promise<{ path: string; duration: number | null }> {
+  opts: UploadOpts = {},
+): Promise<{ path: string; duration: number | null; poster?: string; frames?: string[] }> {
   await accessToken();
   const uid = await authUserId();
   if (!uid) throw new Error("Session expirée, recharge l'appli");
   let blob = input;
   let duration: number | null = null;
+  let posterBlob: Blob | null = null;
+  let frames: string[] | undefined;
   if (kind === "image") {
     blob = await compressImage(input);
   } else if (kind === "video") {
-    if (input.size > MAX_VIDEO_MB * 1024 * 1024) throw new Error(`Vidéo trop lourde (max ${MAX_VIDEO_MB} Mo)`);
-    const d = seconds ?? (await videoDuration(input));
-    if (d > MAX_VIDEO_SEC + 0.5) throw new Error(`Vidéo trop longue (max ${MAX_VIDEO_SEC} s)`);
-    duration = Math.max(1, Math.round(d || 1));
+    if (input.size > MAX_SOURCE_MB * 1024 * 1024) throw new Error(`Vidéo trop lourde (max ${MAX_SOURCE_MB} Mo)`);
+    const maxSec = opts.short ? MAX_SHORT_VIDEO_SEC : MAX_VIDEO_SEC;
+    const maxMb = opts.short ? MAX_SHORT_VIDEO_MB : MAX_VIDEO_MB;
+    let t: string | number | undefined;
+    const progress =
+      opts.onProgress ??
+      ((pct: number) => {
+        const msg = `Compression de la vidéo… ${pct} %`;
+        t = t === undefined ? toast.loading(msg) : toast.loading(msg, { id: t });
+      });
+    try {
+      const c = await compressVideo(input, { maxSec, onProgress: progress });
+      blob = c.blob;
+      posterBlob = c.poster;
+      frames = c.frames;
+      duration = Math.max(1, Math.round(c.duration || seconds || 1));
+    } finally {
+      if (t !== undefined) toast.dismiss(t);
+    }
+    if (blob.size > maxMb * 1024 * 1024) throw new Error(`Vidéo trop lourde même compressée (max ${maxMb} Mo)`);
   } else {
     if (input.size > 5 * 1024 * 1024) throw new Error("Vocal trop long");
     duration = Math.min(MAX_VOICE_SEC, Math.max(1, Math.round(seconds ?? 1)));
@@ -83,14 +126,37 @@ export async function uploadChatMedia(
   const rand = crypto.getRandomValues(new Uint8Array(12));
   const name = Array.from(rand, (b) => b.toString(16).padStart(2, "0")).join("");
   const path = `${uid}/${Date.now().toString(36)}${name}.${extFor(type)}`;
-  const { error } = await supabase().storage.from(BUCKET).upload(path, blob, { contentType: type, upsert: false });
-  if (error) throw new Error(error.message.includes("size") ? "Fichier trop lourd" : "Envoi du fichier impossible");
-  return { path, duration };
+  await putFile(path, blob, type);
+  let poster: string | undefined;
+  if (posterBlob) {
+    poster = `${path}.jpg`;
+    await putFile(poster, posterBlob, "image/jpeg").catch(() => (poster = undefined));
+  }
+  return { path, duration, poster, frames };
 }
+
+/** Contrôle NSFW sur les images extraites d'une vidéo : raison si l'une d'elles semble explicite. */
+export async function explicitVideoReason(frames: string[] | undefined): Promise<string | null> {
+  if (!frames?.length) return null;
+  const { explicitReason } = await import("./nsfw");
+  for (const f of frames) {
+    const r = await explicitReason(f);
+    if (r) return r;
+  }
+  return null;
+}
+
+/** Vignette d'une vidéo stockée (même chemin + .jpg). */
+export const posterPath = (videoPath: string) => `${videoPath}.jpg`;
 
 const signed = new Map<string, Promise<string>>();
 /** Short-lived signed URL (1 h), cached for the session. */
 export function signedMediaUrl(path: string): Promise<string> {
+  // Captures de dev uniquement (?…demo) : fichiers locaux, jamais en production.
+  if (import.meta.env.DEV && path.startsWith("demo/") && /\.(mp4|webm)(\.jpg)?$/.test(path)) {
+    const v = path.includes("vert") ? "vertical" : "horizontal";
+    return Promise.resolve(path.endsWith(".jpg") ? `/promo/poster_${v}.png` : `/promo/hdar_pro_${v === "vertical" ? "vertical_1080x1920" : "horizontal_1920x1080"}.mp4`);
+  }
   let hit = signed.get(path);
   if (!hit) {
     hit = accessToken()

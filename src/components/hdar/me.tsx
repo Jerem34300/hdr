@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { askConfirm } from "@/lib/hdar/confirm";
 import { DESIRES, type Desire } from "@/lib/hdar/data";
 import { deviceId } from "@/lib/hdar/device";
+import { VideoSection } from "./video-section";
 import { goDark, saveProfile, setProfileNote } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
 import { myPhotos, useHdar } from "@/lib/hdar/store";
@@ -254,6 +255,10 @@ export function Me() {
             </label>
           )}
         </div>
+        {(me.onboarded || (import.meta.env.DEV && location.search.includes("mevideo"))) && (
+          <VideoSection target="profile" id="" canEdit title="Mes vidéos"
+            demo={import.meta.env.DEV && location.search.includes("mevideo") ? [{ path: "demo/v-vert.mp4", duration: 38 }] : undefined} />
+        )}
       </section>
 
       <section className="mt-6">

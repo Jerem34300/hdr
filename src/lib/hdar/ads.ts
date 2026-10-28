@@ -67,7 +67,7 @@ export const euros = (c: number) => (c / 100).toFixed(2).replace(".", ",") + " â
 
 export type Ad = {
   id: string; user_id: string; pseudo: string; title: string; body: string; category: AdCategory;
-  region: string; city: string; city_slug: string; photos: string[]; created_at: string; expires_at: string;
+  region: string; city: string; city_slug: string; photos: string[]; videos?: string[]; video_secs?: number[]; created_at: string; expires_at: string;
   mine: boolean; boost_scope: BoostScope | null; boost_until: string | null; hidden?: boolean; replies?: number;
   premium?: boolean; lat?: number | null; lng?: number | null; km?: number | null; tags?: string[];
 };
@@ -102,11 +102,12 @@ export const adsLayerOn = () => typeof localStorage !== "undefined" && localStor
 export const setAdsLayer = (on: boolean) => localStorage.setItem(ADS_LAYER, on ? "on" : "off");
 export const getAd = (id: string) => rpc<Ad | null>("hdar_ad_get", { p_id: id });
 export const myAds = () => rpc<Ad[]>("hdar_ads_mine", {});
-export const createAd = (a: { title: string; body: string; category: AdCategory; region: string; city: string; hours: number; photos: string[]; pos?: { lat: number; lng: number } | null; tags?: string[] }) =>
+export const createAd = (a: { title: string; body: string; category: AdCategory; region: string; city: string; hours: number; photos: string[]; videos?: { path: string; duration: number }[]; pos?: { lat: number; lng: number } | null; tags?: string[] }) =>
   rpc<string>("hdar_ad_create", {
     p_title: a.title.trim(), p_body: a.body.trim(), p_category: a.category, p_region: a.region, p_city: a.city.trim(),
     p_city_slug: slugify(a.city) || "ville", p_hours: a.hours, p_photos: a.photos,
     p_lat: a.pos?.lat ?? null, p_lng: a.pos?.lng ?? null, p_tags: a.tags ?? [],
+    p_videos: (a.videos ?? []).map((v) => v.path), p_video_secs: (a.videos ?? []).map((v) => v.duration),
   });
 export const deleteAd = (id: string) => rpc("hdar_ad_delete", { p_id: id });
 export const reportAd = (id: string, reason: string) => rpc("hdar_ad_report", { p_id: id, p_reason: reason });

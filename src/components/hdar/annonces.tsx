@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/cn";
 import { useHdar } from "@/lib/hdar/store";
 import { startCheckout } from "@/lib/hdar/live";
-import { signedMediaUrl, uploadChatMedia } from "@/lib/hdar/chat-media";
+import { explicitVideoReason, MAX_SHORT_VIDEO_SEC, signedMediaUrl, uploadChatMedia } from "@/lib/hdar/chat-media";
+import { MediaView } from "./media-composer";
+import { VideoPicker } from "./video-picker";
 import {
   AD_BOOSTS, AD_CATEGORIES, AD_DURATIONS, AD_REGIONS, MAX_ACTIVE_ADS, MAX_ACTIVE_ADS_PLUS, adsStatus, cleanTag, createAd, freeBoost, kmLabel, MAX_TAGS, SUGGESTED_TAGS, topTags, type AdsStatus, deleteAd, euros, getAd, listAds, myAds,
   regionFromPos, regionName, ALERT_SCOPES, alertLabel, deleteAlert, myAlerts, saveAlert, type AdAlert, type AlertScope, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
@@ -279,6 +281,11 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
         ))}</div>
       )}
       {ad.photos.length > 0 && <AdPhotos photos={ad.photos} />}
+      {!!ad.videos?.length && (
+        <div className="mt-3 grid gap-2">
+          {ad.videos.map((v, k) => <MediaView key={v} kind="video" path={v} duration={ad.video_secs?.[k]} reportable={!ad.mine} />)}
+        </div>
+      )}
       <p className="mt-3 text-xs text-muted">
         {ad.mine ? "Ton annonce" : <button type="button" className="font-bold text-ink underline" onClick={() => openProfile(ad.user_id, ad.pseudo)}>{ad.pseudo}</button>}
         {" · "}{ago(ad.created_at)} · {expired ? "expirée" : `expire dans ${left(ad.expires_at)}`}
@@ -345,6 +352,7 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
   const toggleTag = (t: string) => setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : cur.length >= MAX_TAGS ? (toast(`${MAX_TAGS} tags maximum`), cur) : [...cur, t]));
   const addCustom = () => { const t = cleanTag(custom); if (t.length < 2) return toast("Tag trop court"); if (!tags.includes(t)) toggleTag(t); setCustom(""); };
   const [files, setFiles] = useState<File[]>([]);
+  const [vids, setVids] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (approx.city && !city) setCity(approx.city); if (approx.region) setRegion((r) => r || approx.region); }, [approx]); // eslint-disable-line react-hooks/exhaustive-deps
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
@@ -358,7 +366,14 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
     try {
       const photos: string[] = [];
       for (const f of files) photos.push((await uploadChatMedia(f, "image")).path);
-      await createAd({ title, body, category, region, city, hours, photos, pos, tags });
+      const videos: { path: string; duration: number }[] = [];
+      for (const f of vids) {
+        const up = await uploadChatMedia(f, "video", undefined, { short: true });
+        // Annonces publiques : une vidéo qui semble explicite n'est pas publiée.
+        if (await explicitVideoReason(up.frames)) throw new Error("Cette vidéo ne peut pas être publiée dans une annonce (contenu explicite)");
+        videos.push({ path: up.path, duration: up.duration ?? 1 });
+      }
+      await createAd({ title, body, category, region, city, hours, photos, videos, pos, tags });
       toast("Annonce en ligne 🎉");
       onDone();
     } catch (e) {
@@ -423,6 +438,8 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
           </label>
         )}
       </div>
+      <p className="mt-3 text-xs text-muted">Vidéos (2 max, {MAX_SHORT_VIDEO_SEC} s chacune) · compressées automatiquement, avec le son</p>
+      <VideoPicker files={vids} max={2} maxSec={MAX_SHORT_VIDEO_SEC} onChange={setVids} />
       <p className="mt-3 text-[11px] leading-snug text-muted">18+ uniquement, entre adultes consentants. Interdit : mineurs, contenu illégal, échanges d'argent, coordonnées. Les annonces signalées sont masquées.</p>
       {!plus && <a href="/premium" className="mt-3 block rounded-2xl border border-[#8b7cff]/50 bg-[#8b7cff]/10 px-3 py-2 text-xs"><b>👑 hdar+</b> : 10 annonces, jusqu'à 30 jours, badge hdar+ et 1 boost Région offert chaque mois ›</a>}
       <button type="button" disabled={busy || full} onClick={() => void submit()} className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night disabled:opacity-40">{busy ? "Publication…" : "Publier l'annonce"}</button>
@@ -500,7 +517,7 @@ export function demoAds(): Ad[] {
   const base = { user_id: "demo", region: "occitanie", photos: [] as string[], mine: false, boost_scope: null, boost_until: null };
   return [
     { ...base, id: "00000000-0000-0000-0000-000000000001", pseudo: "Sunny34", title: "Verre en terrasse ce soir vers la Comédie", tags: ["ce soir", "apéro", "sans prise de tête"], body: "Envie de discuter autour d'un verre après le boulot, plutôt 20 h. Ambiance tranquille, on voit si le courant passe 😊", category: "sortie", city: "Montpellier", city_slug: "montpellier", created_at: h(-2), expires_at: h(70), boost_scope: "region", boost_until: h(20), km: 1.4, premium: true },
-    { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", photos: ["demo/1.jpg", "demo/2.jpg"], title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
+    { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", photos: ["demo/1.jpg", "demo/2.jpg"], videos: ["demo/v.mp4"], video_secs: [42], title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
     { ...base, id: "00000000-0000-0000-0000-000000000003", pseudo: "Leo", title: "Plan kink entre adultes", tags: ["kink", "discret", "cuir"], body: "Curieux et respectueux, on en parle d'abord en privé. Consentement avant tout.", category: "kink", city: "Lattes", city_slug: "lattes", created_at: h(-20), expires_at: h(4), km: 6.8 },
   ];
 }

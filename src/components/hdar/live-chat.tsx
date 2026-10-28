@@ -706,7 +706,7 @@ function LiveMedia({ msg }: { msg: LiveMsg }) {
     };
   }, [msg.id]);
 
-  if (src.startsWith("sb:")) return <MediaView kind={msg.kind} path={src.slice(3)} duration={msg.duration} />;
+  if (src.startsWith("sb:")) return <MediaView kind={msg.kind} path={src.slice(3)} duration={msg.duration} reportable={!msg.mine} />;
   if (failed) return <p>{msg.kind === "image" ? "Photo indisponible" : msg.kind === "video" ? "Vidéo indisponible" : "Vocal indisponible"}</p>;
   if (!src)
     return (

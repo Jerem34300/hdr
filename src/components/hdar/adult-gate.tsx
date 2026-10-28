@@ -1,3 +1,4 @@
+import { CompressionBar, VideoSection } from "./video-section";
 import { BOT_DEFAULTS } from "./bot-demo";
 import { LiveChat } from "./live-chat";
 import { BotTab } from "./admin-bot";
@@ -262,6 +263,23 @@ function DevPreview() {
   }
   if (location.search.includes("parraincard")) return <main className="min-h-dvh space-y-3 bg-night px-4 pt-6 text-ink"><p className="font-display text-xl font-extrabold">Profil · Parrainage (démo)</p><InviteCard demo="ADB6FD0" /><BoostCreditsCard demo={{ code: "ADB6FD0", earned: 3, used: 1, left: 2, filleuls: 4, validated: 3, hours: 1 }} /><Toaster theme="dark" position="top-center" /></main>;
   if (location.search.includes("botdm")) return <main className="flex h-dvh flex-col bg-night text-ink"><LiveChat userId={BOT_ID} pseudo="hdar" demo={location.search.includes("nudge") ? [{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 4 * 86400_000).toISOString(), kind: "text", duration: null }, { id: "b2", mine: false, body: BOT_DEFAULTS.nudge1_text.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }] : [{ id: "b1", mine: false, body: BOT_DEMO_DM.replace("{pseudo}", "Jeteken"), at: new Date(Date.now() - 60_000).toISOString(), kind: "text", duration: null }]} /></main>;
+  if (location.search.includes("placevideo")) return (
+    <main className="min-h-dvh bg-night px-5 pt-6 pb-10 text-ink">
+      <p className="text-xs font-bold text-[#A1E3C3]">🍸 Bar · Partenaire hdar</p>
+      <h1 className="mt-1 font-display text-3xl font-extrabold">Le Barbu</h1>
+      <p className="mt-1 text-sm text-muted">Bar à cocktails, rue de l'Université · ouvert jusqu'à 2 h</p>
+      <div className="mt-3 flex gap-2 overflow-x-auto"><img src="/og-montpellier.jpg" alt="" className="h-32 shrink-0 rounded-2xl object-cover" /><img src="/boost-cover.jpg" alt="" className="h-32 shrink-0 rounded-2xl object-cover" /></div>
+      <VideoSection target="place" id="demo" canEdit={location.search.includes("owner")} title="Vidéos du lieu" demo={[{ path: "demo/v.mp4", duration: 52 }]} />
+      <div className="mt-3 flex gap-2 text-sm"><span className="rounded-full bg-signal px-4 py-2 font-bold text-night">Site web</span><span className="rounded-full border border-line px-4 py-2">Contact</span></div>
+      <Toaster theme="dark" position="top-center" />
+    </main>
+  );
+  if (location.search.includes("videoprogress")) return (
+    <main className="min-h-dvh bg-night px-5 pt-6 text-ink">
+      <h1 className="font-display text-2xl font-extrabold">Mes vidéos</h1>
+      <CompressionBar pct={Number(new URLSearchParams(location.search).get("pct") ?? 42)} />
+    </main>
+  );
   if (location.search.includes("profilview")) {
     const photo = location.search.includes("nophoto") ? "" : "/avatars/03.jpg";
     return <main className="flex h-dvh flex-col bg-night text-ink"><ProfileView userId="demo-p" pseudo="Soumisdu59" demo={{ id: "demo-p", pseudo: "Soumisdu59", age: 53, bio: "Curieux et bienveillant, j'aime les soirées qui finissent tard. Discrétion assurée 😉", tags: ["plan", "verre", "balade"], desires: ["plan", "dehors", "chez-toi"], photo, online: true, lat: null, lng: null, note: "Dispo ce soir vers Lille centre", premium: true, iam: "h", seeking: ["f", "c"] }} /></main>;
