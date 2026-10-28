@@ -162,7 +162,8 @@ export function HoldMic({ onDone, disabled, onTick }: { onDone: (blob: Blob, sec
 const fmtDur = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 
 /** Renders one stored media from its storage path (signed URL). */
-export function MediaView({ kind, path, duration, reportable }: { kind: string; path: string; duration?: number | null; /** Bouton « Signaler » sur la vidéo (média d'un autre). */ reportable?: boolean }) {
+export function MediaView({ kind, path, duration, reportable, blur = reportable }: { kind: string; path: string; duration?: number | null; /** Bouton « Signaler » sur la vidéo (média d'un autre). */ reportable?: boolean; /** Vidéo floutée jusqu'au toucher (comme les photos des annonces). Par défaut : vidéo d'un autre. */ blur?: boolean }) {
+  const [revealed, setRevealed] = useState(false);
   const [src, setSrc] = useState("");
   const [poster, setPoster] = useState<string | undefined>(undefined);
   const [reported, setReported] = useState(false);
@@ -188,7 +189,16 @@ export function MediaView({ kind, path, duration, reportable }: { kind: string; 
   if (kind === "video")
     return (
       <span className="relative inline-block max-w-full align-top">
-        <video controls playsInline preload="metadata" src={src} poster={poster} className="max-h-72 max-w-full rounded-xl bg-black" />
+        {blur && !revealed ? (
+          // Floutée : seule la vignette (floutée) est affichée, la vidéo n'est même pas chargée.
+          <button type="button" aria-label="Voir la vidéo" onClick={() => setRevealed(true)}
+            className="relative block h-48 w-72 max-w-full overflow-hidden rounded-xl bg-night">
+            {poster && <img src={poster} alt="" className="size-full scale-110 object-cover blur-xl" />}
+            <span className="absolute inset-0 grid place-items-center text-center text-[11px] font-bold text-white drop-shadow">🔞<br />Toucher<br />pour voir la vidéo</span>
+          </button>
+        ) : (
+        <video controls autoPlay={blur && revealed} playsInline preload="metadata" src={src} poster={poster} className="max-h-72 max-w-full rounded-xl bg-black" />
+        )}
         {duration ? <span className="pointer-events-none absolute top-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white">{fmtDur(duration)}</span> : null}
         {reportable && (
           <button
@@ -238,7 +248,7 @@ export function RoomMedia({ scope, id, mine }: { scope: MediaScope; id: string; 
   if (!row) return <span className="opacity-70">Média retiré</span>;
   return (
     <span className="relative inline-block align-top">
-      <MediaView kind={row.kind} path={row.media} duration={row.duration} />
+      <MediaView kind={row.kind} path={row.media} duration={row.duration} blur={!mine} />
       {!mine && row.kind !== "audio" && (
         <button
           type="button"
