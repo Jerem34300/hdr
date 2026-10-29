@@ -26,7 +26,7 @@ export const PLACES: { id: PlaceKind; label: string }[] = [
 export const LENGTHS: { id: TonightLen; label: string; hours: number }[] = [
   { id: "1h", label: "1 h", hours: 1 },
   { id: "3h", label: "3 h", hours: 3 },
-  { id: "nuit", label: "La nuit", hours: 8 },
+  { id: "nuit", label: "Toute la nuit", hours: 8 },
 ];
 
 export type Tonight = {
@@ -265,7 +265,7 @@ const DEMO_PEOPLE: Person[] = [
   },
 ];
 
-/** Pas de faux profils : seules les vraies personnes connectées apparaissent. */
+/** Pas de faux profils : seules les vraies personnes visibles apparaissent. */
 export const PEOPLE: Person[] = [];
 void DEMO_PEOPLE;
 

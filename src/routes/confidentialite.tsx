@@ -42,7 +42,7 @@ function Privacy() {
       <ul>
         <li>
           Tu n'apparais sur la carte que lorsque tu le décides, pour{" "}
-          <strong>1 h, 3 h ou 12 h</strong>. À la fin de cette durée, ta position est{" "}
+          <strong>1 h, 3 h ou toute la nuit</strong>. À la fin de cette durée, ta position est{" "}
           <strong>retirée de la carte « en ligne »</strong>.
         </li>
         <li>

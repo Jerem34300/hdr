@@ -398,7 +398,7 @@ function GenresDemo() {
 const BOT_DEMO_DM = `Bienvenue sur hdar, {pseudo} ! 🎉
 Ravi de te compter parmi nous. L'essentiel pour bien démarrer :
 
-🗺️ La carte : vois qui est dispo autour de toi, en restant discret (ta position est toujours approximative).
+🗺️ La carte : touche « Se montrer » pour apparaître (1 h, 3 h ou toute la nuit) et vois qui est visible autour de toi. « Se cacher » à tout moment, ta position reste approximative.
 💬 Les salons et le Chat du quartier : discute avec ta région ou ton coin.
 🎥 Le Live : des rencontres en vidéo, caméra floutée tant que tu veux.
 👤 Ton profil : une photo et tes envies, et tu es bien plus visible.

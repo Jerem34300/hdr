@@ -90,7 +90,7 @@ export function SampleFiche() {
 }
 
 const BENEFITS = [
-  ["📍", "Vu en temps réel", "Votre lieu s'affiche aux personnes connectées autour de vous, au moment où elles cherchent où sortir."],
+  ["📍", "Vu en temps réel", "Votre lieu s'affiche aux personnes visibles autour de vous, au moment où elles cherchent où sortir."],
   ["✨", "Un halo qui attire l'œil", "Ton pin brille sur la carte, impossible de le rater parmi les autres lieux."],
   ["💬", "Votre propre chat", "Annoncez une soirée, répondez aux questions, créez l'envie avant même que les gens arrivent."],
   ["⭐", "Avis sous votre contrôle", "Notes et commentaires : activés ou non, publics sur la fiche ou privés pour vous seul."],

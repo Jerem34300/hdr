@@ -20,7 +20,7 @@ function Terms() {
         compris ta position exacte lorsque tu choisis de l'envoyer.
       </p>
       <p>
-        Carte : après ta dernière connexion, ton pin peut rester affiché estompé (« vu il y a … », position arrondie à ~400 m)
+        Carte : après la dernière fois où tu t'es montré, ton pin peut rester affiché estompé (« vu il y a … », position arrondie à ~400 m)
         pendant 48 h, sauf si tu actives « Me cacher de la carte quand je suis hors ligne ». Sans profil et avec la
         géolocalisation acceptée, une bulle anonyme (~1 km, sans pseudo ni photo) peut apparaître pendant 48 h ; tu peux la
         désactiver. Détails dans la <a href="/confidentialite">politique de confidentialité</a>.

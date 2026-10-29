@@ -138,7 +138,7 @@ export function App() {
               tout près.
             </p>
             <ul className="mt-8 space-y-3 text-sm text-muted">
-              <li>La carte montre qui est connecté.</li>
+              <li>La carte montre qui est visible.</li>
               <li>Un profil ouvre une discussion privée.</li>
               <li>Le chat du quartier réunit les gens autour.</li>
             </ul>

@@ -10,7 +10,7 @@ export function ListPage({ d }: { d: ListPayload }) {
   return (
     <SeoShell>
       <Hero seed={d.s} kicker={d.kind === "region" ? "Région" : "Département"} title={<>Rencontres et sorties {d.kind === "region" ? "en " : ": "}<span className="text-[#FA6F6C]">{d.kind === "region" ? d.n : label(d)}</span></>}>
-        <p className="mt-4 text-lg text-ink/85">De {d.hubs[0]?.n ?? d.cities[0]?.n} aux plus petits villages : choisis ta commune et vois qui est connecté autour de toi.</p>
+        <p className="mt-4 text-lg text-ink/85">De {d.hubs[0]?.n ?? d.cities[0]?.n} aux plus petits villages : choisis ta commune et vois qui est visible autour de toi.</p>
         <Cta />
         <dl className="mt-8 grid grid-cols-2 gap-2 text-center">
           <div className="seo-card py-3"><dt className="text-[11px] text-muted">communes</dt><dd className="font-display text-xl font-bold"><Count value={d.count} /></dd></div>
@@ -26,7 +26,7 @@ export function ListPage({ d }: { d: ListPayload }) {
           <CityChips list={d.cities} />
         </section>
         <Faq items={[
-          { q: `hdar fonctionne-t-il partout en ${d.n} ?`, a: `Oui, dans toutes les communes, des grandes villes aux villages. La carte montre les gens connectés autour de toi, quelle que soit ta commune.` },
+          { q: `hdar fonctionne-t-il partout en ${d.n} ?`, a: `Oui, dans toutes les communes, des grandes villes aux villages. La carte montre les gens visibles autour de toi, quelle que soit ta commune.` },
           { q: "C'est pour qui ?", a: "Pour tout le monde, 18 ans et plus, et LGBT-friendly : rencontre amoureuse, amitié, tchat en ligne ou sortie ce soir." },
           { q: "C'est gratuit et discret ?", a: "Oui : pas d'e-mail, pas de compte obligatoire, position arrondie à environ 110 mètres." },
         ]} />

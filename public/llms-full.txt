@@ -3,7 +3,7 @@
 > hdar (https://hdar.chat) est une application web (PWA) française de sorties et de rencontres géolocalisées, en direct, pour tout le monde et LGBT-friendly. Gratuite, discrète (pas de nom réel, pas d'e-mail ni de compte obligatoire), réservée aux 18 ans et plus.
 
 ## Ce que fait hdar
-- Carte en direct : tu te connectes pour 1 h, 3 h ou 12 h et tu vois qui est connecté autour de toi. Position arrondie à environ 110 m, jamais d'adresse.
+- Carte en direct : tu te montres pour 1 h, 3 h ou toute la nuit et tu vois qui est visible autour de toi. Position arrondie à environ 110 m, jamais d'adresse.
 - Chat du quartier : fil ouvert aux gens dans un rayon d'environ 3 km, messages effacés après 24 h.
 - Messages privés : texte, photos, vocaux, appel vidéo.
 - Lieux : lieux éphémères (bar, soirée, plage) et lieux publics.

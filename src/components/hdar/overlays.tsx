@@ -235,11 +235,11 @@ function Tonight() {
         <span className="mt-1 block text-xs text-muted">Une phrase courte affichée sur ton profil, modifiable dans Profil · {note.length}/60</span>
       </label>
       <Button type="submit" size="lg" className="w-full">
-        Me rendre dispo
+        {`Se montrer ${(LENGTHS.find((l) => l.id === len)?.label ?? "").toLowerCase()}`}
       </Button>
       {active && (
         <Button type="button" variant="line" className="w-full" onClick={clearTonight}>
-          Retirer · {remainingLabel(active.expiresAt, now)}
+          Se cacher · encore {remainingLabel(active.expiresAt, now)}
         </Button>
       )}
     </form>

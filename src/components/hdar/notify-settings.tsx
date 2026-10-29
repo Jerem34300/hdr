@@ -82,7 +82,7 @@ function SoftToggle({ kind, label }: { kind: SoftKind; label: string }) {
   );
 }
 
-/** Confidentialité carte : profil → « Me cacher quand je suis hors ligne » ; visiteur → bulle anonyme. */
+/** Confidentialité carte : profil → « Retirer aussi mon pin estompé quand je suis caché » ; visiteur → bulle anonyme. */
 export function MapPrivacyToggle({ compact }: { compact?: boolean }) {
   const onboarded = useHdar((s) => s.me.onboarded);
   const [on, setOn] = useState(false);
@@ -90,7 +90,7 @@ export function MapPrivacyToggle({ compact }: { compact?: boolean }) {
     if (onboarded) void hideOfflineGet().then((v) => setOn(!!v)).catch(() => undefined);
     else setOn(visitorHidden());
   }, [onboarded]);
-  const label = onboarded ? "Me cacher de la carte quand je suis hors ligne" : "Ne pas m'afficher en bulle anonyme sur la carte";
+  const label = onboarded ? "Retirer aussi mon pin estompé quand je suis caché" : "Ne pas m'afficher en bulle anonyme sur la carte";
   return (
     <label className={compact ? "flex items-center justify-center gap-2 text-[11px] text-muted" : "flex min-h-11 items-center justify-between gap-3 text-sm"}>
       {compact && <input type="checkbox" checked={on} onChange={(e) => change(e.target.checked)} />}

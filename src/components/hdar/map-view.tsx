@@ -820,7 +820,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           <button
             key={c.key}
             type="button"
-            aria-label={`${n} personnes connectées ici, zoomer`}
+            aria-label={`${n} personnes visibles ici, zoomer`}
             className="cluster-glow absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-signal font-display font-extrabold text-night"
             style={{ left: c.x, top: c.y, width: d, height: d }}
             onPointerDown={(e) => e.stopPropagation()}

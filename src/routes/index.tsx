@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+. Vois qui est connecté et où sortir autour de toi : carte en direct, lieux, chat du quartier, messages, vocaux et vidéo.",
+          "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+. Vois qui est visible et où sortir autour de toi : carte en direct, lieux, chat du quartier, messages, vocaux et vidéo.",
       },
       { name: "robots", content: "index, follow" },
     ],

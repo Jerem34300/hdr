@@ -20,7 +20,7 @@ export function adsHead(c: CityPayload | null | undefined) {
 }
 
 const FEATURES = [
-  { icon: "📌", t: "Une annonce qui reste", d: "Elle reste visible 24 h, 3 jours ou 7 jours, même quand tu n'es pas connecté." },
+  { icon: "📌", t: "Une annonce qui reste", d: "Elle reste visible 24 h, 3 jours ou 7 jours, même quand tu es caché." },
   { icon: "🗺️", t: "Par ville et par région", d: "Tu vois d'abord les annonces de ton coin, puis tu élargis si tu veux." },
   { icon: "🕶️", t: "Discret", d: "Pas de nom, pas de numéro : tu restes discret. Ta ville est approximative, jamais ton adresse." },
   { icon: "💬", t: "Réponse en privé", d: "On te répond dans tes messages, avec le titre de ton annonce pour s'y retrouver." },
@@ -33,7 +33,7 @@ export function AdsPage({ c, city, region }: { c: CityPayload | null; city: numb
   const faq = [
     { q: `Comment poster une petite annonce ${where} ?`, a: "Ouvre hdar.chat, confirme que tu as 18 ans et crée ton profil (un pseudo suffit). Dans Lieux, touche Petites annonces puis Poster : un titre, quelques mots, une catégorie, ta ville et la durée." },
     { q: "C'est gratuit ?", a: "Oui, poster et répondre est gratuit, jusqu'à 3 annonces en ligne en même temps. Un boost payant et facultatif permet de remonter en tête de liste." },
-    { q: "Qui voit mon annonce ?", a: "Seulement les adultes connectés à l'appli. Les annonces ne sont pas publiées sur Google ni sur cette page : ici, on affiche uniquement leur nombre." },
+    { q: "Qui voit mon annonce ?", a: "Seulement les adultes inscrits sur l'appli. Les annonces ne sont pas publiées sur Google ni sur cette page : ici, on affiche uniquement leur nombre." },
     { q: "Comment me répondre ?", a: "Les gens touchent Répondre : le message arrive dans tes Messages hdar, avec le titre de l'annonce. Tu peux bloquer ou signaler à tout moment." },
   ];
   return (

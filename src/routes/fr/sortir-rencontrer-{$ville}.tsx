@@ -10,7 +10,7 @@ export const Route = createFileRoute("/fr/sortir-rencontrer-{$ville}")({
     const local = LOCAL[city.slug];
     const desc =
       local?.description ??
-      `Sorties et rencontres à ${city.name}, pour tout le monde : vois sur la carte qui est connecté et où sortir autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`;
+      `Sorties et rencontres à ${city.name}, pour tout le monde : vois sur la carte qui est visible et où sortir autour de toi, discute dans le chat du quartier, photos, vocaux et vidéo. Gratuit, sans inscription, 18+.`;
     const title = `Sortir et rencontrer à ${city.name} : qui est autour, en direct — hdar.`;
     const og = `${SITE_URL}${local?.og ?? "/og.jpg?v=discret2"}`;
     return {
@@ -66,7 +66,7 @@ function CityPage() {
     },
     {
       q: `C'est quoi le chat du quartier à ${city.name} ?`,
-      a: "Un chat ouvert à tous les gens connectés dans un rayon d'environ 3 km. Les messages disparaissent au bout de 24 heures.",
+      a: "Un chat ouvert à tous les gens visibles dans un rayon d'environ 3 km. Les messages disparaissent au bout de 24 heures.",
     },
     {
       q: "C'est gratuit ?",
@@ -115,7 +115,7 @@ function CityPage() {
         <p className="mt-3 text-lg">{city.line}</p>
         <p className="mt-3 text-muted">
           hdar est une appli de sorties et de rencontres géolocalisée, en direct et pour tout le monde (LGBT-friendly), pour {city.name} et toute la région {city.region}.
-          Pas de profil à remplir pendant des heures : tu ouvres, tu vois qui est connecté autour, tu discutes.
+          Pas de profil à remplir pendant des heures : tu ouvres, tu vois qui est visible autour, tu discutes.
         </p>
         <Link to="/" className="mt-6 inline-flex h-12 items-center rounded-full bg-signal px-6 font-medium text-night">
           Voir qui est autour à {city.name}
@@ -123,7 +123,7 @@ function CityPage() {
         <h2 className="mt-10 font-display text-xl font-bold">Ce que tu peux faire</h2>
         <ul className="mt-3 space-y-2 text-sm">
           <li className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <strong>La carte en direct</strong> — les gens connectés autour de toi, avec une distance arrondie.
+            <strong>La carte en direct</strong> — les gens visibles autour de toi, avec une distance arrondie.
           </li>
           <li className="rounded-2xl border border-line bg-surface px-4 py-3">
             <strong>Le chat du quartier</strong> — un fil ouvert aux gens à ~3 km, effacé après 24 h.

@@ -15,7 +15,7 @@ export const LOCAL: Record<string, LocalContent> = {
   montpellier: {
     og: "/og-montpellier.jpg",
     description:
-      "Sortir et rencontrer à Montpellier, pour tout le monde : la carte en direct de qui est connecté dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Parcs, belvédères, places, lieux partenaires, conseils. Gratuit, discret, sans compte, 18+.",
+      "Sortir et rencontrer à Montpellier, pour tout le monde : la carte en direct de qui est visible dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Parcs, belvédères, places, lieux partenaires, conseils. Gratuit, discret, sans compte, 18+.",
     nearby: ["sete", "nimes", "agde", "cap-d-agde", "beziers"],
     faq: [
       {
@@ -39,9 +39,9 @@ export const LOCAL: Record<string, LocalContent> = {
           <em>qui est là maintenant</em> compte plus qu'une grille de profils de toute la région.
         </p>
         <p className="mt-3 text-sm leading-relaxed">
-          Sur hdar, tu apparais sur la carte de Montpellier seulement quand tu le décides, pour 1 h, 3 h ou 12 h. Ta
+          Sur hdar, tu apparais sur la carte de Montpellier seulement quand tu le décides, pour 1 h, 3 h ou toute la nuit. Ta
           position est arrondie à environ 110 mètres puis effacée : personne ne peut deviner ton adresse. Un soir dans
-          l'Écusson, la carte montre qui est connecté autour de la place de la Comédie ou de Saint-Roch, et le chat du
+          l'Écusson, la carte montre qui est visible autour de la place de la Comédie ou de Saint-Roch, et le chat du
           quartier permet de demander simplement « qui sort ce soir ? ».
         </p>
 
@@ -96,10 +96,10 @@ export const LOCAL: Record<string, LocalContent> = {
         <h2 className="mt-10 font-display text-xl font-bold">Comment marche hdar à Montpellier</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">
           <li>Ouvre hdar.chat (ou installe-la sur ton écran d'accueil), confirme que tu as 18 ans. Pas de compte, pas d'e-mail.</li>
-          <li>Touche « Se montrer » et choisis 1 h, 3 h ou 12 h : tu apparais sur la carte, position arrondie.</li>
+          <li>Touche « Se montrer » et choisis 1 h, 3 h ou toute la nuit : tu apparais sur la carte, position arrondie.</li>
           <li>Regarde qui est autour, écris dans le chat du quartier (effacé après 24 h) ou crée un « lieu » pour ta soirée.</li>
           <li>Pour les messages privés, crée un pseudo : texte, photos, vocaux, appel vidéo et partage de position exacte facultatif (1 h).</li>
-          <li>Ajoute des favoris : tu es prévenu quand ils se connectent à Montpellier.</li>
+          <li>Ajoute des favoris : tu es prévenu quand ils se montrent à Montpellier.</li>
           <li>Active la couche « Lieux permanents » pour voir parcs, belvédères, places, plages et lieux partenaires, ou proposer un lieu.</li>
         </ol>
 
@@ -121,9 +121,9 @@ export const LOCAL: Record<string, LocalContent> = {
         <h2 className="mt-10 font-display text-xl font-bold">Sète, entre l'étang et la mer</h2>
         <p className="mt-3 text-sm leading-relaxed">
           À une vingtaine de minutes de Montpellier en train, Sète vit au rythme des canaux, du quartier haut et des
-          plages du lido. La ville est petite : la carte en direct de hdar montre qui est connecté du port jusqu'à la
+          plages du lido. La ville est petite : la carte en direct de hdar montre qui est visible du port jusqu'à la
           Corniche, sans grille de profils et sans compte. Ta position est arrondie à environ 110 mètres et s'efface
-          après 1 h, 3 h ou 12 h.
+          après 1 h, 3 h ou toute la nuit.
         </p>
         <p className="mt-3 text-sm leading-relaxed">
           En été, crée un « lieu » pour une plage ou une soirée afin de retrouver les gens du coin, et utilise le chat
