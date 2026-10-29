@@ -758,3 +758,7 @@ export const useHdar = create<State>()(
 
 // Captures de dev uniquement : accès au store depuis Playwright.
 if (import.meta.env.DEV && typeof window !== "undefined") (window as unknown as { __hdar: typeof useHdar }).__hdar = useHdar;
+
+/** Recharge l'état sauvé (profil, position) une seule fois, quelle que soit la page d'arrivée (/boost, /premium…). */
+let hydrating: Promise<void> | null = null;
+export const hydrateHdar = () => (hydrating ??= Promise.resolve(useHdar.persist.rehydrate()).then(() => undefined));

@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { App } from "@/components/hdar/app";
 import { SEO_CITIES, SITE_URL } from "@/lib/hdar/seo";
-import { ensureClock, useHdar } from "@/lib/hdar/store";
+import { ensureClock, useHdar, hydrateHdar } from "@/lib/hdar/store";
 
 export const Route = createFileRoute("/")({
   head: ({ match }) => ({
@@ -37,7 +37,7 @@ function Home() {
   // otherwise it opens on the default city and jumps.
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    void Promise.resolve(useHdar.persist.rehydrate()).then(() => {
+    void Promise.resolve(hydrateHdar()).then(() => {
       const now = Date.now();
       useHdar.setState((s) => ({
         now,

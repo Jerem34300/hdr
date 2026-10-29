@@ -3,7 +3,7 @@ import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { useHdar } from "@/lib/hdar/store";
+import { useHdar, hydrateHdar } from "@/lib/hdar/store";
 import { usePremium } from "@/lib/hdar/premium";
 import { playFavoriteSound } from "@/lib/hdar/sounds";
 import { approxGeo } from "@/lib/hdar/recent";
@@ -97,10 +97,20 @@ function FounderActions({ me, product, placeId, onClose }: { me: FirstMe; produc
 export function LaunchOfferSheet() {
   const { open, product, placeId } = useLaunchOffer();
   const onboarded = useHdar((s) => s.me.onboarded) || demo() === "sheet";
+  // Arrivée directe sur /boost : attendre l'état sauvé avant de juger « pas de profil ».
+  const [hydrated, setHydrated] = useState(() => useHdar.persist?.hasHydrated?.() ?? false);
+  useEffect(() => { if (open && !hydrated) void hydrateHdar().then(() => setHydrated(true)); }, [open, hydrated]);
+  const [loaded, setLoaded] = useState(false);
   const remaining = useFirstRemaining();
   const region = useFirstRegion();
   const [me, setMe] = useState<FirstMe | null>(null);
-  useEffect(() => { if (open && onboarded && !demo()) void firstMe().then(setMe).catch(() => setMe(null)); }, [open, onboarded]);
+  useEffect(() => {
+    if (!open) return;
+    if (demo() === "founder") { setMe({ founder: true, rank: 12, city: "Toulon", remaining: 873, profile_boosts_left: 3 } as FirstMe); setLoaded(true); return; }
+    if (!onboarded || demo()) { setLoaded(hydrated); return; }
+    setLoaded(false);
+    void firstMe().then(setMe).catch(() => setMe(null)).finally(() => setLoaded(true));
+  }, [open, onboarded, hydrated]);
   useEffect(() => { if (demo() === "sheet") useLaunchOffer.setState({ open: true }); }, []);
   if (!open) return null;
   const close = () => useLaunchOffer.setState({ open: false });
@@ -114,7 +124,7 @@ export function LaunchOfferSheet() {
         <p className="mt-1 text-sm text-muted">Pas de paiement sur hdar pour l'instant. Les <b className="text-ink">5000 premiers profils</b> reçoivent tout, à vie, avec le code <b className="font-mono text-[#fbbf24]">FIRST</b>.</p>
         {remaining != null && <p className="mt-2 inline-block rounded-full bg-[#fbbf24]/15 px-3 py-1 text-xs font-bold text-[#f5d27a]">🔥 {placesLabel(remaining)}</p>}
         {!me?.founder && <RegionTeaser c={region} className="mt-3" />}
-        {me?.founder ? (
+        {!loaded ? <p className="mt-4 text-center text-sm text-muted">…</p> : me?.founder ? (
           <>
             <p className="mt-4 rounded-2xl bg-[#fbbf24]/10 px-3 py-2 text-sm">⭐ Tu es <b>Membre FIRST n° {me.rank}</b>{me.city ? ` · ${me.city}` : ""}.</p>
             <FounderActions me={me} product={product} placeId={placeId} onClose={close} />
@@ -126,7 +136,7 @@ export function LaunchOfferSheet() {
               <div className="mt-4 rounded-2xl border border-line bg-night px-4 py-3 text-sm">
                 <p><b>Crée ton profil</b> et entre le code <b className="font-mono text-[#fbbf24]">FIRST</b>.</p>
                 <button type="button" className="mt-3 h-11 w-full rounded-full bg-signal font-bold text-night"
-                  onClick={() => { localStorage.setItem("hdar-code", FIRST_CODE); close(); useHdar.setState({ sheet: "gate" }); }}>Créer mon profil</button>
+                  onClick={() => { localStorage.setItem("hdar-code", FIRST_CODE); close(); if (location.pathname !== "/") location.href = "/?code=FIRST"; else useHdar.setState({ sheet: "gate" }); }}>Créer mon profil</button>
               </div>
             )}
           </>

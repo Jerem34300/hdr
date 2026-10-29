@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdultGate } from "@/components/hdar/adult-gate";
 import { App } from "@/components/hdar/app";
-import { ensureClock, useHdar } from "@/lib/hdar/store";
+import { ensureClock, useHdar, hydrateHdar } from "@/lib/hdar/store";
 
 /** Petites annonces dans l'appli : derrière l'écran 18+, jamais indexées (noindex + robots.txt + hors sitemap). */
 export function AnnoncesShell({ focus }: { focus: string | null }) {
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/annonces/")({
 function AnnoncesRoute({ focus: initial }: { focus: string | null }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    void Promise.resolve(useHdar.persist.rehydrate()).then(() => {
+    void Promise.resolve(hydrateHdar()).then(() => {
       const now = Date.now();
       const focus = initial ?? new URLSearchParams(window.location.search).get("annonce");
       useHdar.setState((s) => ({ now, cover: false, clock: ensureClock(s.clock, now), view: { name: "annonces", focus }, returnTo: null }));
