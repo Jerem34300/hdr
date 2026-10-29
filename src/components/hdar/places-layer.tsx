@@ -1,4 +1,5 @@
 import { VideoSection } from "./video-section";
+import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -402,7 +403,7 @@ function PlaceExtras({ id }: { id: string }) {
             {info.comments.map((c) => (
               <li key={c.id} className="rounded-2xl bg-night p-3 text-sm">
                 <p className="text-xs text-muted">
-                  <b className="text-ink">{c.mine ? "Toi" : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString("fr-FR")}
+                  <b className="text-ink">{c.mine ? "Toi" : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString(locale())}
                 </p>
                 <p className="mt-1 break-words">{c.body}</p>
                 {c.reply && <p className="mt-1.5 rounded-xl border-s-2 border-[#fbbf24] bg-night px-3 py-1.5 text-xs"><b className="text-[#fbbf24]">Réponse du lieu :</b> {c.reply}</p>}

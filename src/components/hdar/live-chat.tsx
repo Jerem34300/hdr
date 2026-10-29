@@ -1,4 +1,5 @@
 import { isBot } from "@/lib/hdar/live";
+import { locale } from "@/lib/hdar/i18n";
 import { BotAvatar, BotBadge, BotComposer } from "./bot";
 import { typingText, useTyping } from "@/lib/hdar/typing";
 import { TypingBar } from "./rich-text";
@@ -475,7 +476,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
                   </div>
                   <span className="bubble-meta mt-0.5 flex items-center justify-end gap-1 text-[11px]">
                     {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
-                    {new Date(pgTime(m.at)).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(pgTime(m.at)).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" })}
                     {m.mine && (seenAt !== null && seenAt >= pgTime(m.at)
                       ? <CheckCheck aria-label="Vu" className="size-3.5" />
                       : <Check aria-label="Envoyé" className="size-3.5" />)}
@@ -775,7 +776,7 @@ function LocationBubble({ msg }: { msg: LiveMsg }) {
       {until && Number.isFinite(until.getTime()) && (
         <p className="text-xs opacity-70">
           Visible jusqu'à{" "}
-          {until.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+          {until.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" })}
         </p>
       )}
     </div>

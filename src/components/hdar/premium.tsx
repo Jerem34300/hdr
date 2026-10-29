@@ -1,4 +1,5 @@
 import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
+import { locale } from "@/lib/hdar/i18n";
 import { FounderCard } from "./launch-offer";
 import { useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
@@ -21,7 +22,7 @@ import { Wordmark } from "./logo";
 const GOLD = "#fbbf24";
 const MINT = "#A1E3C3";
 const CORAL = "#FA6F6C";
-const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const euros = (c: number) => (c / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
 const per = (p: PriceRow) => (/sem|week/i.test(p.label + p.product) ? "/ semaine" : /mois|month/i.test(p.label + p.product) ? "/ mois" : "");
 
 /** Petit badge discret hdar+. */
@@ -203,7 +204,7 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
             <div className="premium-card mx-auto mt-6 max-w-sm rounded-3xl p-5 text-start">
               <p className="text-xs font-bold tracking-widest text-white/80 uppercase">👑 Tu es hdar+</p>
               <p className="mt-1 text-sm text-white/90">
-                {store.until ? `${cancelling ? "Actif jusqu'au" : "Prochain renouvellement vers le"} ${new Date(store.until).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : "Abonnement actif"}
+                {store.until ? `${cancelling ? "Actif jusqu'au" : "Prochain renouvellement vers le"} ${new Date(store.until).toLocaleDateString(locale(), { day: "numeric", month: "long" })}` : "Abonnement actif"}
               </p>
               <button type="button" onClick={() => openBillingPortal("premium").catch((e: Error) => toast(e.message))} className="mt-3 h-10 rounded-full bg-night/50 px-4 text-sm font-bold">
                 Gérer mon abonnement
@@ -344,7 +345,7 @@ function PremiumSpace({ demo, adm, hits, q, setQ, go }: { demo: boolean; adm: Ad
   const lifetime = demo || !until || until.getFullYear() > 2090;
   const stripe = store.status === "active" || store.status === "cancelling";
   const cancelling = store.status === "cancelling" || store.status === "cancelled" || store.status === "canceled";
-  const day = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const day = (d: Date) => d.toLocaleDateString(locale(), { day: "numeric", month: "long", year: "numeric" });
   const status = lifetime ? "hdar+ à vie ✨" : stripe && !cancelling ? `Abonnement actif · renouvellement le ${day(until!)}` : `Actif jusqu'au ${day(until!)}`;
   const toMap = (filters = false) => { if (filters) sessionStorage.setItem("hdar-open-filters", "1"); useHdar.getState().setTab("around"); void nav({ to: "/" }); };
   const toMe = () => { useHdar.getState().setTab("me"); void nav({ to: "/" }); };

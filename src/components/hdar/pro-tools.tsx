@@ -1,4 +1,5 @@
 import { CardHead, glowInner, glowOuter } from "./profile-card";
+import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { myPro, myProGifts, proBadge, proChatBlock, proChatOpen, proGiftSend, proGiftsPref, type ProGift, type ProPlace } from "@/lib/hdar/live";
@@ -94,7 +95,7 @@ export function GiftCard({ g }: { g: ProGift }) {
       <p className="font-bold">🎁 {g.title} <span className="font-normal text-muted">· {g.place}</span></p>
       {g.description && <p className="text-xs text-muted">{g.description}</p>}
       {g.code && <p className="mt-1 font-mono text-lg font-extrabold tracking-widest text-[#A1E3C3]">{g.code}</p>}
-      <p className="text-[11px] text-muted">À montrer sur place · valable jusqu'au {new Date(g.expires).toLocaleDateString("fr-FR")}</p>
+      <p className="text-[11px] text-muted">À montrer sur place · valable jusqu'au {new Date(g.expires).toLocaleDateString(locale())}</p>
     </div>
   );
 }

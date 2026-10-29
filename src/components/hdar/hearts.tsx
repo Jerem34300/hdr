@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { locale } from "@/lib/hdar/i18n";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import { heartsReceived, pricing, type PriceRow } from "@/lib/hdar/live";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
 import { WaiverCheckbox } from "./waiver";
 
-const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const euros = (c: number) => (c / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
 
 /** Gros bouton brillant (même style que « Booster mon profil » du profil). */
 export function ShinyCta({ href, children, sub }: { href: string; children: React.ReactNode; sub?: string }) {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { locale } from "@/lib/hdar/i18n";
 import { toast } from "sonner";
 import { ambApply, ambApplyStatus, ambMe, type AmbApplyForm, type AmbApplyStatus } from "@/lib/hdar/live";
 import { AmbassadorSpace, demoAmb } from "./ambassador";
@@ -30,7 +31,7 @@ const EARN = [
 // 20 % du net des inscrits pendant 6 mois, 25 % de l'abonnement lieu 1 mois = 49 € pendant 3 mois).
 // Hypothèse affichée : 5 % des inscrits paient en moyenne 6,99 €/mois (pack 50 cœurs).
 const SIM = { perSignup: 0.5, bonus: 20, bonusAt: 50, cap: 50, userPct: 0.2, userMonths: 6, payRate: 0.05, avgSpend: 6.99, partnerPct: 0.25, partnerPrice: 49, partnerMonths: 3 };
-const fmt = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+const fmt = (n: number) => n.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 function simulate(n: number, p: number) {
   const signup = Math.min(SIM.cap, n * SIM.perSignup + (n >= SIM.bonusAt ? SIM.bonus : 0));
   const users = n * SIM.userMonths * SIM.payRate * SIM.avgSpend * SIM.userPct;

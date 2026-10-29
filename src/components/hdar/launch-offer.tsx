@@ -1,4 +1,5 @@
 /** Offre de lancement FIRST : feuille d'achat remplacée, bienvenue après le profil, fête fondateur avec confettis. */
+import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
@@ -80,7 +81,7 @@ const PERKS = ["👑 hdar+ à vie : filtres, qui m'a vu, 10 annonces, 20 photos�
 
 function FounderActions({ me, product, placeId, onClose }: { me: FirstMe; product: string | null; placeId: string | null; onClose: () => void }) {
   const ready = (at?: string | null) => !at || Date.parse(at) <= Date.now();
-  const when = (at: string) => new Date(at).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  const when = (at: string) => new Date(at).toLocaleString(locale(), { weekday: "short", hour: "2-digit", minute: "2-digit" });
   const p = product ?? "";
   if (p.startsWith("ad_boost") && placeId) return ready(me.ad_boost_at)
     ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstAdBoost(placeId).then(() => { toast("Annonce boostée en France pour 24 h 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>📌 Booster mon annonce (France, 24 h)</button>

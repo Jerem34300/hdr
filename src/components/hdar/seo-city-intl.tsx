@@ -16,6 +16,7 @@ type Tx = {
   intro: (n: string, pop: string, dep: string, reg: string) => string;
   sub: string;
   cta: string;
+  app: string;
   facts: [string, string, string];
   feats: [string, string][];
   how: string;
@@ -36,10 +37,11 @@ const T: Record<SeoLang, Tx> = {
     intro: (n, p, d, r) => `${n} has ${p} inhabitants (${d}, ${r}). hdar shows who is visible around you right now, instead of a grid of profiles from all over the country.`,
     sub: "Free · no account · rounded location · 18+",
     cta: "Open the map",
+    app: "Open the app",
     facts: ["inhabitants", "chat radius", "price"],
     feats: [["Go out tonight", "See who is out tonight and where things are happening."], ["Dating", "Take the time to talk first: messages, voice notes, video calls."], ["Make friends", "New in town? Find people for a drink, a sport or a walk."], ["For everyone, LGBT-friendly", "Straight, gay, lesbian, bi, trans or questioning: hdar is open to all."]],
     how: "How it works",
-    steps: ["Open hdar.chat and confirm you are 18 or older. No e-mail.", "Tap “Show me”: you appear on the map for 1 h, 3 h or all night.", "Write in the neighbourhood chat, create a place or send a private message."],
+    steps: ["Open hdar.chat and confirm you are 18 or older. No e-mail.", "Tap “Show myself”: you appear on the map for 1 h, 3 h or all night.", "Write in the neighbourhood chat, create a place or send a private message."],
     faqT: "Frequently asked questions",
     faq: [["Is hdar free?", "Yes. The map, the neighbourhood chat, private messages and places are free. A paid option (hdar+) adds extras but is not required."], ["Do I need an account or an e-mail?", "No. You choose a nickname and confirm you are 18. No e-mail, no password, no mandatory photo."], ["Is my exact location visible?", "No. Others see a location rounded to about 110 metres and an approximate distance, never your address."]],
     near: (n) => `Around ${n}`,
@@ -54,6 +56,7 @@ const T: Record<SeoLang, Tx> = {
     intro: (n, p, d, r) => `${n} tiene ${p} habitantes (${d}, ${r}). hdar te muestra quién está visible a tu alrededor ahora mismo, en lugar de una cuadrícula de perfiles de todo el país.`,
     sub: "Gratis · sin cuenta · ubicación aproximada · +18",
     cta: "Abrir el mapa",
+    app: "Abrir la app",
     facts: ["habitantes", "radio del chat", "precio"],
     feats: [["Salir esta noche", "Mira quién está fuera esta noche y dónde hay ambiente."], ["Citas", "Tómate tu tiempo para hablar: mensajes, audios, videollamadas."], ["Hacer amigos", "¿Nuevo en la ciudad? Encuentra gente para tomar algo, hacer deporte o pasear."], ["Para todos, LGBT-friendly", "Hetero, gay, lesbiana, bi, trans o explorando: hdar está abierto a todos."]],
     how: "Cómo funciona",
@@ -72,10 +75,11 @@ const T: Record<SeoLang, Tx> = {
     intro: (n, p, d, r) => `${n} hat ${p} Einwohner (${d}, ${r}). hdar zeigt dir, wer gerade in deiner Nähe sichtbar ist, statt eines Rasters von Profilen aus dem ganzen Land.`,
     sub: "Kostenlos · ohne Konto · gerundeter Standort · ab 18",
     cta: "Karte öffnen",
+    app: "App öffnen",
     facts: ["Einwohner", "Chat-Radius", "Preis"],
     feats: [["Heute Abend ausgehen", "Sieh, wer heute Abend unterwegs ist und wo etwas los ist."], ["Dating", "Lass dir Zeit zum Schreiben: Nachrichten, Sprachnachrichten, Videoanrufe."], ["Freunde finden", "Neu in der Stadt? Finde Leute für einen Drink, Sport oder einen Spaziergang."], ["Für alle, LGBT-freundlich", "Hetero, schwul, lesbisch, bi, trans oder auf der Suche: hdar ist für alle offen."]],
     how: "So funktioniert es",
-    steps: ["Öffne hdar.chat und bestätige, dass du mindestens 18 bist. Keine E-Mail.", "Tippe auf „Zeig mich“: Du erscheinst 1 Std., 3 Std. oder die ganze Nacht auf der Karte.", "Schreib im Viertel-Chat, erstelle einen Ort oder sende eine private Nachricht."],
+    steps: ["Öffne hdar.chat und bestätige, dass du mindestens 18 bist. Keine E-Mail.", "Tippe auf „Mich zeigen“: Du erscheinst 1 Std., 3 Std. oder die ganze Nacht auf der Karte.", "Schreib im Viertel-Chat, erstelle einen Ort oder sende eine private Nachricht."],
     faqT: "Häufige Fragen",
     faq: [["Ist hdar kostenlos?", "Ja. Karte, Viertel-Chat, private Nachrichten und Orte sind kostenlos. Eine kostenpflichtige Option (hdar+) bietet Extras, ist aber nicht nötig."], ["Brauche ich ein Konto oder eine E-Mail?", "Nein. Du wählst einen Spitznamen und bestätigst, dass du 18 bist. Keine E-Mail, kein Passwort, kein Pflichtfoto."], ["Ist mein genauer Standort sichtbar?", "Nein. Andere sehen einen auf etwa 110 Meter gerundeten Standort und eine ungefähre Entfernung, nie deine Adresse."]],
     near: (n) => `Rund um ${n}`,
@@ -90,6 +94,7 @@ const T: Record<SeoLang, Tx> = {
     intro: (n, p, d, r) => `${n} conta ${p} abitanti (${d}, ${r}). hdar ti mostra chi è visibile intorno a te adesso, invece di una griglia di profili di tutto il paese.`,
     sub: "Gratis · senza account · posizione arrotondata · 18+",
     cta: "Apri la mappa",
+    app: "Apri l'app",
     facts: ["abitanti", "raggio della chat", "prezzo"],
     feats: [["Uscire stasera", "Guarda chi è fuori stasera e dove c'è movimento."], ["Incontri", "Prenditi il tempo di parlare: messaggi, vocali, videochiamate."], ["Fare amicizia", "Nuovo in città? Trova persone per un drink, uno sport o una passeggiata."], ["Per tutti, LGBT-friendly", "Etero, gay, lesbica, bi, trans o in ricerca: hdar è aperto a tutti."]],
     how: "Come funziona",
@@ -108,6 +113,7 @@ const T: Record<SeoLang, Tx> = {
     intro: (n, p, d, r) => `${n} tem ${p} habitantes (${d}, ${r}). O hdar mostra quem está visível à tua volta agora, em vez de uma grelha de perfis do país inteiro.`,
     sub: "Grátis · sem conta · localização arredondada · 18+",
     cta: "Abrir o mapa",
+    app: "Abrir a app",
     facts: ["habitantes", "raio do chat", "preço"],
     feats: [["Sair esta noite", "Vê quem está fora esta noite e onde há movimento."], ["Encontros", "Leva o teu tempo a conversar: mensagens, áudios, videochamadas."], ["Fazer amigos", "Novo na cidade? Encontra pessoas para um copo, um desporto ou um passeio."], ["Para todos, LGBT-friendly", "Hétero, gay, lésbica, bi, trans ou a descobrir: o hdar está aberto a todos."]],
     how: "Como funciona",
@@ -126,12 +132,13 @@ const T: Record<SeoLang, Tx> = {
     intro: (n, p, d, r) => `يبلغ عدد سكان ${n} ${p} نسمة (${d}، ${r}). يُظهر لك hdar من هو ظاهر حولك الآن، بدلاً من شبكة ملفات من كل البلد.`,
     sub: "مجاني · بدون حساب · موقع تقريبي · +18",
     cta: "افتح الخريطة",
+    app: "افتح التطبيق",
     facts: ["نسمة", "نطاق الدردشة", "السعر"],
     feats: [["الخروج الليلة", "شاهد من في الخارج الليلة وأين الأجواء."], ["مواعدة", "خذ وقتك في الحديث: رسائل، رسائل صوتية، مكالمات فيديو."], ["تكوين صداقات", "جديد في المدينة؟ جد أشخاصاً لمشروب أو رياضة أو نزهة."], ["للجميع", "مهما كان توجّهك، hdar مفتوح للجميع."]],
     how: "كيف يعمل",
     steps: ["افتح hdar.chat وأكّد أن عمرك 18 عاماً أو أكثر. بدون بريد إلكتروني.", "اضغط «أظهرني»: تظهر على الخريطة لمدة ساعة أو 3 ساعات أو طوال الليل.", "اكتب في دردشة الحي، أو أنشئ مكاناً، أو أرسل رسالة خاصة."],
     faqT: "أسئلة شائعة",
-    faq: [["هل hdar مجاني؟", "نعم. الخريطة ودردشة الحي والرسائل الخاصة والأماكن مجانية. خيار مدفوع (hdar+) يضيف ميزات إضافية لكنه غير ضروري."], ["هل أحتاج إلى حساب أو بريد إلكتروني؟", "لا. تختار اسماً مستعاراً وتؤكد أن عمرك 18 عاماً. بدون بريد، بدون كلمة مرور، بدون صورة إلزامية."], ["هل موقعي الدقيق ظاهر؟", "لا. يرى الآخرون موقعاً مقرّباً إلى نحو 110 أمتار ومسافة تقريبية، وليس عنوانك أبداً."]],
+    faq: [["هل hdar مجاني؟", "نعم. الخريطة ودردشة الحي والرسائل الخاصة والأماكن مجانية. خيار مدفوع (hdar+) يضيف ميزات إضافية لكنه غير ضروري."], ["هل أحتاج إلى حساب أو بريد إلكتروني؟", "لا. تختار اسماً مستعاراً وتؤكد أن عمرك 18 عاماً. بدون بريد، بدون كلمة مرور، بدون صورة إلزامية."], ["هل موقعي الدقيق ظاهر؟", "لا. يرى الآخرون موقعاً تقريبياً بدقة نحو 110 أمتار ومسافة تقريبية، وليس عنوانك أبداً."]],
     near: (n) => `حول ${n}`,
     fr: "النسخة الفرنسية",
     foot: "hdar. — سهرات ولقاءات حولك، للجميع. مجاني، متكتّم، للبالغين +18 فقط.",
@@ -161,7 +168,7 @@ export function IntlCityPage({ l, c }: { l: SeoLang; c: CityPayload }) {
   return (
     <main lang={l} dir={l === "ar" ? "rtl" : "ltr"} data-noi18n className="h-dvh overflow-y-auto bg-night text-ink">
       <Ld data={{ "@context": "https://schema.org", "@type": "WebPage", url: SITE_URL + intlPath(l, c.s), inLanguage: l, name: `${tx.h1} ${c.n}`, about: { "@type": "City", name: c.n } }} />
-      <Hero seed={c.s} kicker={`${c.dep.n} · ${c.reg.n}`} title={<>{tx.h1} <span className="text-[#FA6F6C]">{c.n}</span></>}>
+      <Hero seed={c.s} open={tx.app} home={`/?lang=${l}`} kicker={`${c.dep.n} · ${c.reg.n}`} title={<>{tx.h1} <span className="text-[#FA6F6C]">{c.n}</span></>}>
         <p className="mt-4 text-lg leading-snug text-ink/85">{tx.intro(c.n, nf(c.p), c.dep.n, c.reg.n)}</p>
         <a href={`/?lang=${l}`} className="seo-cta mt-7 inline-flex h-14 items-center rounded-full px-7 font-semibold text-night">{tx.cta}</a>
         <p className="mt-3 text-xs text-muted">{tx.sub}</p>

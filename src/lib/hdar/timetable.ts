@@ -1,3 +1,4 @@
+import { locale } from "@/lib/hdar/i18n";
 // Horaires ouverts, gratuits, sans clé : Transitous (MOTIS, api.transitous.org), agrégateur communautaire de GTFS
 // publics du monde entier (SNCF, IDFM, DB, Trenitalia, CFF, OpenOV…). Appel direct depuis le navigateur (CORS ouvert).
 // Tout est facultatif : si rien n'est trouvé, on rejoint quand même le salon par numéro.
@@ -109,7 +110,7 @@ export function autoDay(kind: "train" | "flight" | "metro" | "bus", info: TrainI
 }
 
 export function hhmm(iso: string) {
-  return new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 }
 
 // ---------------------------------------------------------------- Démo (DEV, captures)

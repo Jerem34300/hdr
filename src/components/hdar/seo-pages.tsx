@@ -67,7 +67,7 @@ export function Count({ value, suffix = "" }: { value: number; suffix?: string }
 }
 
 /** Hero : carte stylisée, points lumineux qui apparaissent, flares qui dérivent. Décoratif (aria-hidden), positions déterministes. */
-export function Hero({ seed, kicker, title, children }: { seed: string; kicker: ReactNode; title: ReactNode; children?: ReactNode }) {
+export function Hero({ seed, kicker, title, children, open, home }: { seed: string; kicker: ReactNode; title: ReactNode; children?: ReactNode; open?: string; home?: string }) {
   const h = hash(seed);
   const dots = Array.from({ length: 11 }, (_, i) => {
     const a = ((h >> (i % 24)) % 360) * (Math.PI / 180) + i * 2.4, r = 14 + ((h >> i) % 30) + i * 2;
@@ -87,7 +87,7 @@ export function Hero({ seed, kicker, title, children }: { seed: string; kicker: 
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between">
           <a href="/" className="font-display text-lg font-extrabold tracking-tight">hdar<span className="text-[#FA6F6C]">.</span></a>
-          <a href="/" className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs backdrop-blur">Ouvrir l'appli</a>
+          <a href={home ?? "/"} className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs backdrop-blur">{open ?? "Ouvrir l'appli"}</a>
         </div>
         <p className="mt-14 text-xs font-semibold uppercase tracking-[.18em] text-[#3ee08f]">{kicker}</p>
         <h1 className="mt-3 font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-5xl">{title}</h1>

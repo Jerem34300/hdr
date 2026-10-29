@@ -56,8 +56,49 @@ export function t(fr: string, lang: Lang = useLang.getState().lang): string {
   if (lang === "fr") return fr;
   const d = dicts[lang];
   if (!d) return fr;
-  const k = norm(fr);
-  return d[k] ?? fr;
+  return d[fr] ?? d[norm(fr)] ?? fr;
+}
+/** Texte à trous : tf("Bonjour {n}", nom) -> traduit puis remplit les {n} dans l'ordre. */
+export function tf(fr: string, ...vals: (string | number)[]): string {
+  let i = 0;
+  return t(fr).replace(/\{n\}/g, () => String(vals[i++] ?? ""));
+}
+/** Locale Intl de l'interface, pour dates, heures et nombres. */
+export function locale(lang: Lang = useLang.getState().lang): string {
+  return lang === "fr" ? "fr-FR" : lang === "en" ? "en-GB" : lang === "pt" ? "pt-PT" : lang === "ar" ? "ar-u-nu-latn" : lang;
+}
+// Gabarits à trous ({n} = n'importe quel texte), compilés une fois par langue, du plus précis au plus général.
+const tpls: Partial<Record<Lang, { re: RegExp; tr: string }[]>> = {};
+function templates(lang: Lang) {
+  if (tpls[lang]) return tpls[lang]!;
+  const d = dicts[lang] ?? {};
+  const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const list = Object.keys(d)
+    .filter((k) => k.includes("{n}") && k.replace(/\{n\}/g, "").replace(/[\s·,.:!?()]/g, "").length >= 2)
+    .sort((a, b) => b.replace(/\{n\}/g, "").length - a.replace(/\{n\}/g, "").length)
+    .map((k) => ({ re: new RegExp("^" + k.split("{n}").map(esc).join("(.+?)") + "$", "s"), tr: d[k] }));
+  return (tpls[lang] = list);
+}
+function trKey(k: string, lang: Lang): string | undefined {
+  const d = dicts[lang];
+  if (!d) return;
+  const r = d[k];
+  if (r) return r;
+  // Nombres d'abord (rapide), puis gabarits généraux.
+  if (/\d/.test(k)) {
+    const nums = k.match(/\d+(?:[.,]\d+)?/g) ?? [];
+    const tpl = d[k.replace(/\d+(?:[.,]\d+)?/g, "{n}")];
+    if (tpl) { let i = 0; return tpl.replace(/\{n\}/g, () => nums[i++] ?? ""); }
+  }
+  for (const { re, tr } of templates(lang)) {
+    const m = re.exec(k);
+    if (m) {
+      let i = 1;
+      return tr.replace(/\{n\}/g, () => { const x = m[i++] ?? ""; return d[x] ?? x; });
+    }
+  }
+  const g = /^Général (.+)$/.exec(k);
+  if (g && d["Général"]) return `${d["Général"]} ${g[1]}`;
 }
 /** Nom d'un pays dans la langue de l'interface (Intl). */
 export function countryName(cc: string, lang: Lang = useLang.getState().lang): string {
@@ -94,19 +135,8 @@ function trText(v: string, lang: Lang) {
   if (lang === "fr") return v;
   const k = norm(v);
   if (!k) return v;
-  const d = dicts[lang];
-  const r = d?.[k];
-  if (r) return v.replace(k, r);
-  // Textes avec nombres : « Se montrer 3 h » -> clé « Se montrer {n} h ».
-  if (/\d/.test(k)) {
-    const nums = k.match(/\d+(?:[.,]\d+)?/g) ?? [];
-    const tpl = d?.[k.replace(/\d+(?:[.,]\d+)?/g, "{n}")];
-    if (tpl) { let i = 0; return v.replace(k, tpl.replace(/\{n\}/g, () => nums[i++] ?? "")); }
-  }
-  // « Général France » (salon par pays) : mot traduit + pays via Intl.
-  const g = /^Général (.+)$/.exec(k);
-  if (g && d?.["Général"]) return v.replace(k, `${d["Général"]} ${g[1]}`);
-  return v;
+  const r = trKey(k, lang);
+  return r ? v.replace(k, r) : v;
 }
 function translateAttrs(el: Element, lang: Lang) {
   let rec = srcAttr.get(el);
@@ -116,7 +146,7 @@ function translateAttrs(el: Element, lang: Lang) {
     if (!rec) { rec = {}; srcAttr.set(el, rec); }
     const prevOut = rec["_" + a];
     if (prevOut !== v) rec[a] = v;
-    const next = lang === "fr" ? rec[a] : (dicts[lang]?.[norm(rec[a])] ?? rec[a]);
+    const next = lang === "fr" ? rec[a] : (trKey(norm(rec[a]), lang) ?? rec[a]);
     rec["_" + a] = next;
     if (next !== v) el.setAttribute(a, next);
   }
@@ -144,7 +174,7 @@ let observer: MutationObserver | null = null;
 async function load(lang: Lang) {
   if (dicts[lang]) return;
   const l = loaders[`./i18n/${lang}.json`];
-  if (l) dicts[lang] = (await l()).default;
+  if (l) { dicts[lang] = (await l()).default; delete tpls[lang]; }
 }
 function applyDoc(lang: Lang) {
   const h = document.documentElement;

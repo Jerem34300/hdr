@@ -1,10 +1,11 @@
 import type { PriceRow } from "@/lib/hdar/live";
+import { locale } from "@/lib/hdar/i18n";
 import { PLACE_KINDS, Stars } from "./places-layer";
 import { Mark, Wordmark } from "./logo";
 
 const CORAL = "#FA6F6C";
 const MINT = "#A1E3C3";
-const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const euros = (c: number) => (c / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
 
 function Bokeh({ className = "" }: { className?: string }) {
   return (

@@ -1,4 +1,5 @@
 import { RichText } from "./rich-text";
+import { tf } from "@/lib/hdar/i18n";
 import { setProfileNote } from "@/lib/hdar/live";
 import { flyTo } from "@/lib/hdar/map-focus";
 import { useState } from "react";
@@ -287,7 +288,7 @@ function Cities() {
 function Share() {
   const code = useHdar((s) => s.safetyCode);
   const { place } = useScene();
-  const text = `Hdar — je sors.\nZone : ${place.area} (position approximative)\nCode : ${code}\nSi je ne donne pas de nouvelles, écris-moi.\nÇa expire dans 12 h.`;
+  const text = tf("Hdar — je sors.\nZone : {n} (position approximative)\nCode : {n}\nSi je ne donne pas de nouvelles, écris-moi.\nÇa expire dans 12 h.", place.area, code);
   return (
     <div className="space-y-4 px-4 pt-6 pb-8">
       <Close />

@@ -1,4 +1,5 @@
 import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
+import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
 import { checkoutWithWaiver } from "@/lib/hdar/consent";
@@ -13,7 +14,7 @@ import { Wordmark } from "./logo";
 
 const CORAL = "#FA6F6C";
 const MINT = "#A1E3C3";
-const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const euros = (c: number) => (c / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
 
 export function fmtLeft(ms: number) {
   if (ms <= 0) return "terminé";
@@ -229,7 +230,7 @@ export function BoostPage() {
               {rows.map((b) => (
                 <li key={b.id} className="rounded-2xl border border-line bg-surface/70 p-3">
                   <p className="text-xs text-muted">
-                    {new Date(b.starts_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })} → {new Date(b.ends_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}
+                    {new Date(b.starts_at).toLocaleString(locale(), { dateStyle: "short", timeStyle: "short" })} → {new Date(b.ends_at).toLocaleString(locale(), { dateStyle: "short", timeStyle: "short" })}
                     {b.active && <b style={{ color: CORAL }}> · en cours</b>}
                   </p>
                   <p className="mt-1">👀 {b.views} vues de profil · 💬 {b.messages} messages reçus</p>

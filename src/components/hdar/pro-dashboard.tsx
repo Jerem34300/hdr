@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { locale } from "@/lib/hdar/i18n";
 import { toast } from "sonner";
 import { proDashboard, proGiftUse, proReviewReply, proReviewReport, type ProDash } from "@/lib/hdar/live";
 
@@ -46,7 +47,7 @@ export function ProDashboard({ id, name, onBack, demo, readOnly }: { id: string;
               <div className="rounded-2xl bg-night p-3"><b className="block font-display text-2xl">{d.boost_out}</b><span className="text-[11px] text-muted">vues / jour sans boost</span></div>
             </div>
             {d.boost_out > 0 && d.boost_in > 0 && <p className="mt-2 text-center text-sm font-bold" style={{ color: MINT }}>{d.boost_in >= d.boost_out ? "+" : ""}{Math.round(((d.boost_in - d.boost_out) / d.boost_out) * 100)} % de vues avec le Boost Pro</p>}
-            {d.boosts.length ? <ul className="mt-2 space-y-1 text-xs">{d.boosts.map((b, i) => <li key={i} className="rounded-lg bg-night px-3 py-1.5">⭐ {b.label} · du {new Date(b.from).toLocaleDateString("fr-FR")} au {new Date(b.to).toLocaleDateString("fr-FR")}</li>)}</ul>
+            {d.boosts.length ? <ul className="mt-2 space-y-1 text-xs">{d.boosts.map((b, i) => <li key={i} className="rounded-lg bg-night px-3 py-1.5">⭐ {b.label} · du {new Date(b.from).toLocaleDateString(locale())} au {new Date(b.to).toLocaleDateString(locale())}</li>)}</ul>
               : <p className="mt-2 text-xs text-muted">Aucun Boost Pro pour l'instant. Achetez-en un depuis votre espace pro pour comparer.</p>}
           </Section>
           <Section title="Heures d'affluence (anonyme, agrégé)"><Heatmap heat={d.heat} /></Section>
@@ -76,7 +77,7 @@ function LineChart({ data, labels, color, second }: { data: number[]; labels: st
         <polyline points={pts(data)} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" />
         {second && <polyline points={pts(second)} fill="none" stroke={MINT} strokeWidth="2" strokeDasharray="4 3" />}
       </svg>
-      <div className="flex justify-between text-[10px] text-muted"><span>{labels[0] ? new Date(labels[0]).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : ""}</span><span>max {max}</span><span>aujourd'hui</span></div>
+      <div className="flex justify-between text-[10px] text-muted"><span>{labels[0] ? new Date(labels[0]).toLocaleDateString(locale(), { day: "numeric", month: "short" }) : ""}</span><span>max {max}</span><span>aujourd'hui</span></div>
     </div>
   );
 }
@@ -117,7 +118,7 @@ function Review({ r, onDone, demo }: { r: ProDash["reviews"][number]; onDone: ()
   const report = async () => { if (demo) return void toast("Démo : lecture seule"); if (!window.confirm("Signaler cet avis comme abusif ?")) return; try { await proReviewReport(r.id); toast("Avis signalé à la modération"); } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); } };
   return (
     <li className="rounded-2xl bg-night p-3 text-sm">
-      <p className="text-xs text-muted">{r.stars ? <span style={{ color: GOLD }}>{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</span> : "Sans note"} · {new Date(r.at).toLocaleDateString("fr-FR")}</p>
+      <p className="text-xs text-muted">{r.stars ? <span style={{ color: GOLD }}>{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</span> : "Sans note"} · {new Date(r.at).toLocaleDateString(locale())}</p>
       <p className="mt-1 break-words">{r.body}</p>
       {r.reply ? <p className="mt-2 rounded-xl border-s-2 border-[#fbbf24] bg-surface px-3 py-2 text-xs"><b>Votre réponse :</b> {r.reply}</p> : open ? (
         <div className="mt-2 flex gap-2"><input value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={500} placeholder="Votre réponse publique (une seule fois)" className="min-w-0 flex-1 rounded-full bg-surface px-3 py-2 text-xs" />

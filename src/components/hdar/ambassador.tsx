@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { locale } from "@/lib/hdar/i18n";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { ambContractPdf, ambSign, ambAttach, ambConnect, ambCodeCreate, ambInviteInfo, ambMe, ambPlaceCreate, type AmbMe } from "@/lib/hdar/live";
 
 const SITE = "https://hdar.chat";
 const AMB_KEY = "hdar-amb";
-const eur = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const eur = (c: number) => (c / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
 
 /** ?a=CODE → mémorisé puis rattaché au profil dès qu'il existe. */

@@ -1,4 +1,5 @@
 import { BOT_DEFAULTS } from "./bot-demo";
+import { locale } from "@/lib/hdar/i18n";
 import { BOT_ID, isBot } from "@/lib/hdar/live";
 import { BotBadge } from "./bot";
 import { typingText, useTyping, type Typer } from "@/lib/hdar/typing";
@@ -28,7 +29,7 @@ function nameColor(id: string) {
   return NAME_COLORS[h % NAME_COLORS.length];
 }
 
-const hhmm = (ms: number) => new Date(ms).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const hhmm = (ms: number) => new Date(ms).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 function dayLabel(ms: number) {
   const d = new Date(ms);
   const today = new Date();
@@ -36,7 +37,7 @@ function dayLabel(ms: number) {
   y.setDate(today.getDate() - 1);
   if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
   if (d.toDateString() === y.toDateString()) return "Hier";
-  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  return d.toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" });
 }
 
 const preview = (m: GroupLine) =>
@@ -487,7 +488,7 @@ function MessageMenu({
         </div>
         <div className="mx-4 mb-2 rounded-2xl bg-surface px-3 py-2 text-sm">
           <span className="block text-xs font-bold" style={{ color: nameColor(m.fromId) }}>
-            {m.mine ? "Toi" : m.pseudo} · {new Date(m.at).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" })}
+            {m.mine ? "Toi" : m.pseudo} · {new Date(m.at).toLocaleString(locale(), { weekday: "short", hour: "2-digit", minute: "2-digit" })}
           </span>
           <span className="block max-h-[5.75rem] overflow-y-auto break-words whitespace-pre-wrap text-muted">{preview(m)}</span>
         </div>

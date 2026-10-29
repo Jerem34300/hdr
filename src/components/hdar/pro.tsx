@@ -1,4 +1,5 @@
 import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
+import { locale } from "@/lib/hdar/i18n";
 import { ProDashboard, demoDash } from "./pro-dashboard";
 import { useCallback, useEffect, useState } from "react";
 import { ShinyCta } from "./hearts";
@@ -15,8 +16,8 @@ import { ProLanding } from "./pro-landing";
 
 const KINDS: PlaceKind[] = ["bar", "club", "sauna", "other"];
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
-const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
-const day = (v: string | null) => (v ? new Date(v).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—");
+const euros = (c: number) => (c / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
+const day = (v: string | null) => (v ? new Date(v).toLocaleString(locale(), { dateStyle: "short", timeStyle: "short" }) : "—");
 
 export function ProSpace() {
   const [prices, setPrices] = useState<PriceRow[]>([]);
