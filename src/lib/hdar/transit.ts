@@ -28,19 +28,49 @@ export function isTransitDemo() {
   return import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("transitdemo");
 }
 
+/** Les deux serveurs en parallèle, 20 s max chacun : le premier qui répond gagne, l'autre est annulé. */
 async function overpass(q: string, signal?: AbortSignal): Promise<{ elements: OsmEl[] }> {
-  let last: unknown;
-  for (const url of OVERPASS) {
-    try {
-      const r = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(q), signal, headers: { "content-type": "application/x-www-form-urlencoded" } });
-      if (r.ok) return (await r.json()) as { elements: OsmEl[] };
-      last = new Error(String(r.status));
-    } catch (e) {
-      if ((e as Error).name === "AbortError") throw e;
-      last = e;
-    }
+  const ctrls = OVERPASS.map(() => new AbortController());
+  const onAbort = () => ctrls.forEach((c) => c.abort());
+  signal?.addEventListener("abort", onAbort);
+  const timer = window.setTimeout(onAbort, 20_000);
+  try {
+    return await Promise.any(
+      OVERPASS.map(async (url, i) => {
+        const r = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(q), signal: ctrls[i].signal, headers: { "content-type": "application/x-www-form-urlencoded" } });
+        if (!r.ok) throw new Error(String(r.status));
+        const j = (await r.json()) as { elements: OsmEl[] };
+        ctrls.forEach((c, k) => k !== i && c.abort());
+        return j;
+      }),
+    );
+  } finally {
+    window.clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
   }
-  throw last;
+}
+// Cache persistant (7 jours, 60 zones max) : les gares ne bougent pas.
+const LS = "hdar-transit-cache";
+const TTL = 7 * 86400_000;
+function lsGet(k: string): TransitStop[] | null {
+  try {
+    const all = JSON.parse(localStorage.getItem(LS) || "{}") as Record<string, { t: number; v: TransitStop[] }>;
+    const e = all[k];
+    return e && Date.now() - e.t < TTL ? e.v : null;
+  } catch {
+    return null;
+  }
+}
+function lsSet(k: string, v: TransitStop[]) {
+  try {
+    const all = JSON.parse(localStorage.getItem(LS) || "{}") as Record<string, { t: number; v: TransitStop[] }>;
+    all[k] = { t: Date.now(), v };
+    const keys = Object.keys(all).sort((a, b) => all[b].t - all[a].t);
+    for (const old of keys.slice(60)) delete all[old];
+    localStorage.setItem(LS, JSON.stringify(all));
+  } catch {
+    /* quota : tant pis */
+  }
 }
 type OsmEl = { type: "node" | "way" | "relation"; id: number; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> };
 
@@ -62,8 +92,16 @@ export async function fetchTransit(b: { s: number; w: number; n: number; e: numb
   const bb = `${r(b.s, false).toFixed(2)},${r(b.w, false).toFixed(2)},${r(b.n, true).toFixed(2)},${r(b.e, true).toFixed(2)}`;
   const key = `${bb}|${zoom >= 14 ? 14 : zoom >= 12 ? 12 : 8}`;
   if (isTransitDemo()) return DEMO_STOPS.filter((x) => x.lat >= b.s - 0.2 && x.lat <= b.n + 0.2 && x.lng >= b.w - 0.3 && x.lng <= b.e + 0.3);
-  const hit = cache.get(key);
-  if (hit) return hit;
+  const hit = cache.get(key) ?? lsGet(key);
+  if (hit) {
+    cache.set(key, hit);
+    return hit;
+  }
+  const db = await fromDb(b, zoom).catch(() => null);
+  if (db && db.length) {
+    cache.set(key, db);
+    return db;
+  }
   const parts = [`nwr["aeroway"="aerodrome"]["iata"](${bb});`];
   if (zoom >= 12) parts.push(`nwr["railway"~"^(station|halt)$"]["name"](${bb});`);
   if (zoom >= 14) parts.push(`node["railway"="tram_stop"]["name"](${bb});`);
@@ -83,7 +121,16 @@ export async function fetchTransit(b: { s: number; w: number; n: number; e: numb
     out.push({ ref: `osm:${el.type}/${el.id}`, kind, name, lat, lng, iata: t.iata });
   }
   cache.set(key, out);
+  lsSet(key, out);
   return out;
+}
+
+/** Arrêts importés en base (v99, comme les toilettes) ; vide tant que l'import n'a pas couvert la zone. */
+async function fromDb(b: { s: number; w: number; n: number; e: number }, zoom: number): Promise<TransitStop[]> {
+  const rows = await rpcCall<{ ref: string; kind: TransitKind; name: string; lat: number; lng: number; iata: string | null }[]>("hdar_transit", {
+    p_s: b.s, p_w: b.w, p_n: b.n, p_e: b.e, p_zoom: Math.floor(zoom),
+  });
+  return rows.map((r) => ({ ...r, iata: r.iata ?? undefined }));
 }
 
 export function useTransit(on: boolean, b: { s: number; w: number; n: number; e: number }, zoom: number) {
@@ -119,7 +166,7 @@ export async function stopLines(s: TransitStop): Promise<TransitLine[]> {
     const ref = (t.ref || "").trim();
     if (!ref) continue;
     const mode = t.route === "tram" ? "Tram" : "Métro";
-    const network = (t.network || t.operator || "").split(";")[0].trim().slice(0, 40);
+    const network = (t.operator || t.network || "").split(";")[0].trim().slice(0, 40);
     const label = `${mode} ${ref}`;
     const id = `${label}|${network}`;
     if (!m.has(id)) m.set(id, { ref, label, network, colour: t.colour });

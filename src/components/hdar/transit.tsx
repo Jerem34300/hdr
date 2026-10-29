@@ -7,9 +7,10 @@ import { useHdar } from "@/lib/hdar/store";
 import {
   TRANSIT_KINDS, TRIP_FOR, TRIP_LABEL, ensureStop, isTransitDemo, normalizeTrip, stopLines, todayISO, tripJoin, tripLeave,
   tripsAt, tripsMine, validTrip,
-  type TransitKind, type TransitLine, type TransitStop, type Trip, type TripKind,
+  type TransitKind, type TransitStop, type Trip, type TripKind,
 } from "@/lib/hdar/transit";
 import { PlaceChat } from "./places-layer";
+import { autoDay, hhmm, lookupTrain, stationLines, type LineDirections, type TrainInfo } from "@/lib/hdar/timetable";
 import { bindTap } from "./tap";
 
 export function TransitIcon({ kind, className = "size-4" }: { kind: TransitKind | TripKind; className?: string }) {
@@ -132,26 +133,47 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
   const [kind, setKind] = useState<TripKind>(k0 ?? "train");
   const [code, setCode] = useState("");
   const [network, setNetwork] = useState("");
-  const [day, setDay] = useState(todayISO());
-  const [lines, setLines] = useState<TransitLine[] | null>(null);
+  const here = useHdar((s) => s.here);
+  const [lines, setLines] = useState<LineDirections[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [train, setTrain] = useState<TrainInfo | null | "loading">(null);
+  const at = stop ? { lat: stop.lat, lng: stop.lng } : here;
   useEffect(() => {
-    if (kind !== "metro" || !stop) return;
-    void stopLines(stop).then(setLines).catch(() => setLines([]));
-  }, [kind, stop?.ref]);
+    if (kind !== "metro" || !at) return;
+    // Directions et prochains passages (Transitous), sinon lignes OSM, sinon saisie.
+    void stationLines(at)
+      .catch(() => [] as LineDirections[])
+      .then((r) => (r.length || !stop ? r : stopLines(stop).then((o) => o.map<LineDirections>((l) => ({ label: l.label, mode: "Métro", colour: l.colour, network: l.network, directions: [], next: [] })))))
+      .then(setLines)
+      .catch(() => setLines([]));
+  }, [kind, stop?.ref, !!at]);
   const ok = validTrip(kind, code);
-  const days = [-1, 0, 1].map((d) => {
-    const x = new Date();
-    x.setDate(x.getDate() + d);
-    return { v: todayISO(x), l: d === 0 ? "Aujourd'hui" : d < 0 ? "Hier" : "Demain" };
-  });
+  useEffect(() => {
+    if (kind !== "train" || !ok || !at) {
+      setTrain(null);
+      return;
+    }
+    setTrain("loading");
+    let stopped = false;
+    const t = window.setTimeout(() => {
+      void lookupTrain(code, at, stop ? 0.004 : 0.03)
+        .catch(() => null)
+        .then((r) => !stopped && setTrain(r));
+    }, 600);
+    return () => {
+      stopped = true;
+      window.clearTimeout(t);
+    };
+  }, [kind, code, ok, stop?.ref]);
+  const info = train === "loading" ? null : train;
+  const day = autoDay(kind, info);
   const join = (c = code, net = network) => {
     if (!onboarded && !isTransitDemo()) {
       toast("Crée ton profil pour rejoindre un salon à bord", { action: { label: "Créer", onClick: () => setTab("me") } });
       return;
     }
     setBusy(true);
-    tripJoin(kind, c, day, placeId ?? null, kind === "metro" ? net.trim() || null : null)
+    tripJoin(kind, kind === "train" && info && c === code ? info.label : c, day, placeId ?? null, kind === "metro" ? net.trim() || null : null)
       .then(onJoined)
       .catch((e: Error) => toast(e.message))
       .finally(() => setBusy(false));
@@ -183,21 +205,35 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
             ))}
           </div>
         )}
+        {kind === "metro" && lines === null && at && <p className="mt-4 text-xs text-muted">Recherche des lignes…</p>}
         {kind === "metro" && lines && lines.length > 0 && (
           <>
             <p className="mt-4 text-xs font-bold text-muted">Lignes à cette station</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 max-h-72 space-y-2 overflow-y-auto">
               {lines.map((l) => (
                 <button
                   key={l.label + l.network}
                   type="button"
                   disabled={busy}
+                  data-act="trip-line"
                   onClick={() => join(l.label, l.network)}
-                  className="flex h-10 items-center gap-2 rounded-full border border-line bg-night px-3 text-sm font-semibold"
+                  className="flex w-full items-start gap-3 rounded-2xl border border-line bg-night px-3 py-2.5 text-left text-sm"
                 >
-                  <span className="size-3 rounded-full" style={{ background: l.colour || "#c084fc" }} />
-                  {l.label}
-                  {l.network && <span className="text-xs font-normal text-muted">{l.network}</span>}
+                  <span className="mt-0.5 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white" style={{ background: l.colour || "#7c3aed" }}>
+                    {l.label.replace(/^(Métro|Tram) /, "")}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">
+                      {l.label}
+                      {l.network && <span className="ml-1.5 text-xs font-normal text-muted">{l.network}</span>}
+                    </span>
+                    {l.directions.length > 0 && <span className="block truncate text-xs text-muted">Direction {l.directions.slice(0, 2).join(" ou ")}</span>}
+                    {l.next.length > 0 && (
+                      <span className="block text-xs text-online">
+                        Prochains : {l.next.map((n) => Math.max(0, Math.round((new Date(n).getTime() - Date.now()) / 60_000)) + " min").join(", ")}
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
@@ -220,18 +256,28 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
             <input value={network} onChange={(e) => setNetwork(e.target.value.slice(0, 40))} placeholder="ex. Paris, Lyon, London" className="mt-1 h-11 w-full rounded-2xl border border-line bg-night px-4 text-sm text-ink" />
           </label>
         )}
-        {kind !== "metro" && (
-          <div className="mt-3 flex gap-2">
-            {days.map((d) => (
-              <button
-                key={d.v}
-                type="button"
-                onClick={() => setDay(d.v)}
-                className={"h-10 flex-1 rounded-full border text-sm " + (day === d.v ? "border-signal bg-signal/15 font-bold text-signal" : "border-line text-muted")}
-              >
-                {d.l}
-              </button>
-            ))}
+        {kind === "train" && ok && (
+          <div className="mt-3 rounded-2xl border border-line bg-night p-3 text-sm" data-act="train-info">
+            {train === "loading" ? (
+              <p className="text-muted">Recherche de l'horaire…</p>
+            ) : info ? (
+              <>
+                <p className="flex items-center gap-2 font-bold">
+                  <TrainFront className="size-4 text-signal" /> {info.label}
+                  {info.cancelled && <span className="rounded-full bg-red-500/20 px-2 text-xs text-red-300">Supprimé</span>}
+                </p>
+                <p className="mt-1">
+                  {info.from} <span className="text-muted">→</span> <span className="font-semibold">{info.to}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {hhmm(info.time)} à {info.stop}
+                  {info.day !== todayISO() ? " · parti hier" : ""}
+                  {info.realTime ? " · temps réel" : " · horaire prévu"}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-muted">Horaire introuvable près d'ici : tu rejoins quand même le salon de ce numéro.</p>
+            )}
           </div>
         )}
         {code && !ok && <p className="mt-2 text-xs text-amber-300">{kind === "flight" ? "Format attendu : AF1234" : "Format attendu : TGV 6201 ou 6201"}</p>}
