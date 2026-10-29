@@ -506,7 +506,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
             })}
       </div>
       <p className="border-t border-line px-3 py-1.5 text-[10px] text-muted">
-        Horaires Transitous (données ouvertes){rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"} · touche un train pour rejoindre son salon
+        {rows?.some((r) => r.rtSource === "sncf") ? "Retards et suppressions : temps réel SNCF · horaires Transitous" : `Horaires Transitous (données ouvertes)${rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"}`} · touche un train pour rejoindre son salon
       </p>
     </div>
   );

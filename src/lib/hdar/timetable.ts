@@ -148,6 +148,8 @@ export type BoardRow = {
   cancelled: boolean; realTime: boolean;
   day: string; // jour de service
   mode: string;
+  schedDep?: string; schedArr?: string;
+  sncf: boolean; rtSource?: "sncf" | "transitous";
 };
 const ALL_RAIL = "HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,REGIONAL_FAST_RAIL,REGIONAL_RAIL,RAIL";
 function cleanStop(n: string) {
@@ -196,14 +198,18 @@ export async function stationBoard(at: { lat: number; lng: number }, urban: bool
       from: cleanStop(x.tripFrom?.name ?? ""), to: cleanStop(x.tripTo?.name ?? x.headsign ?? ""),
       track: p.track ?? p.scheduledTrack, cancelled: !!(x.cancelled || (x as { tripCancelled?: boolean }).tripCancelled),
       realTime: !!x.realTime, day: serviceDay(x.tripId, t), mode: x.mode,
+      schedDep: p.departure ? p.scheduledDeparture ?? p.departure : undefined, schedArr: p.arrival ? p.scheduledArrival ?? p.arrival : undefined,
+      sncf: /sncf|^\d{8}_[^_]*_fr-/i.test(x.tripId) || /sncf|ter|ouigo|inoui|intercit/i.test(x.agencyName ?? "") || /^(TER|TGV|OUIGO|IC|INTERCIT)/i.test(x.displayName ?? ""), rtSource: x.realTime ? "transitous" : undefined,
     });
   }
-  return out.sort((a, b) => a.time.localeCompare(b.time));
+  out.sort((a, b) => a.time.localeCompare(b.time));
+  if (!urban) await mergeSncf(out).catch(() => undefined);
+  return out;
 }
 
 function demoBoard(urban: boolean): BoardRow[] {
   const t = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
-  const base = { arr: undefined, cancelled: false, realTime: true, day: autoDay("train", null), network: "SNCF", colour: undefined, line: "", mode: "REGIONAL_RAIL" };
+  const base = { arr: undefined, cancelled: false, realTime: true, sncf: false, day: autoDay("train", null), network: "SNCF", colour: undefined, line: "", mode: "REGIONAL_RAIL" };
   if (urban) return [
     { ...base, id: "u1", time: t(1), dep: t(1), delayMin: 0, label: "Métro 14", num: "", line: "14", colour: "#640082", network: "RATP", from: "Saint-Denis - Pleyel", to: "Aéroport d'Orly", mode: "SUBWAY" },
     { ...base, id: "u2", time: t(2), dep: t(2), delayMin: 0, label: "Métro 6", num: "", line: "6", colour: "#82dc73", network: "RATP", from: "Nation", to: "Charles de Gaulle - Étoile", mode: "SUBWAY" },
@@ -212,4 +218,48 @@ function demoBoard(urban: boolean): BoardRow[] {
     { ...base, id: "d1", time: t(9), dep: t(9), arr: t(7), delayMin: 0, label: "TER 876620", num: "876620", from: "Narbonne", to: "Nîmes Centre", track: "1" },
     { ...base, id: "d2", time: t(24), dep: t(24), arr: t(21), delayMin: 5, label: "TGV INOUI 6260", num: "6260", from: "Perpignan", to: "Paris Gare de Lyon", track: "2" },
   ];
+}
+
+// ---------------------------------------------------------------- Temps réel SNCF (GTFS-RT ouvert, via edge function)
+type RtTrain = { c: boolean; s: [number, number, number][] };
+async function sncfRealtime(nums: string[]): Promise<Record<string, RtTrain>> {
+  const local = import.meta.env?.DEV && typeof location !== "undefined" && location.search.includes("rtlocal");
+  let url = "http://localhost:8787/";
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (!local) {
+    const s = await import("./session");
+    url = `${s.SUPABASE_URL}/functions/v1/hdar-sncf-rt`;
+    headers.apikey = s.SUPABASE_KEY;
+    headers.authorization = `Bearer ${await s.accessToken()}`;
+  }
+  const r = await fetch(url, { method: "POST", headers, body: JSON.stringify({ nums }), signal: AbortSignal.timeout(8000) });
+  if (!r.ok) return {}; // fonction non déployée : tableau inchangé
+  return ((await r.json()) as { trains?: Record<string, RtTrain> }).trains ?? {};
+}
+/** Applique retards / suppressions SNCF : même numéro + horaire prévu à ±2 min à cette gare. */
+export async function mergeSncf(rows: BoardRow[]) {
+  const nums = [...new Set(rows.filter((r) => r.sncf && r.num).map((r) => r.num))].slice(0, 80);
+  if (!nums.length) return;
+  const rt = await sncfRealtime(nums);
+  for (const r of rows) {
+    const t = rt[r.num];
+    if (!t) continue;
+    const at = (iso?: string) => {
+      if (!iso) return null;
+      const sec = new Date(iso).getTime() / 1000;
+      let best: [number, number, number] | null = null;
+      for (const x of t.s) if (Math.abs(x[0] - sec) <= 120 && (!best || Math.abs(x[0] - sec) < Math.abs(best[0] - sec))) best = x;
+      return best;
+    };
+    const d = at(r.schedDep), a = at(r.schedArr);
+    if (!d && !a && !t.c) continue;
+    const delay = (d ?? a)![1] ?? 0;
+    const shift = (iso: string | undefined, x: [number, number, number] | null) => (iso && x ? new Date((x[0] + x[1]) * 1000).toISOString() : iso);
+    if (r.schedDep) r.dep = shift(r.schedDep, d) ?? r.dep;
+    if (r.schedArr) r.arr = shift(r.schedArr, a) ?? r.arr;
+    r.delayMin = Math.max(0, Math.round(delay / 60));
+    r.cancelled = r.cancelled || t.c || !!(d?.[2] || a?.[2]);
+    r.realTime = true;
+    r.rtSource = "sncf";
+  }
 }
