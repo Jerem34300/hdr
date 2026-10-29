@@ -87,7 +87,7 @@ function classify(t: Record<string, string>): TransitKind | null {
 
 const cache = new Map<string, TransitStop[]>();
 /** Arrêts dans la zone : aéroports dès le zoom 8, gares et métro dès 12, arrêts de tram dès 14. */
-export async function fetchTransit(b: { s: number; w: number; n: number; e: number }, zoom: number, signal?: AbortSignal) {
+export async function fetchTransit(b: { s: number; w: number; n: number; e: number }, zoom: number, signal?: AbortSignal, onPartial?: (s: TransitStop[]) => void) {
   const g = zoom >= 12 ? 0.05 : 0.5;
   const r = (v: number, up: boolean) => (up ? Math.ceil(v / g) : Math.floor(v / g)) * g;
   const bb = `${r(b.s, false).toFixed(2)},${r(b.w, false).toFixed(2)},${r(b.n, true).toFixed(2)},${r(b.e, true).toFixed(2)}`;
@@ -103,6 +103,28 @@ export async function fetchTransit(b: { s: number; w: number; n: number; e: numb
     cache.set(key, db);
     return db;
   }
+  // Secours rapide (≈1 s) pendant qu'Overpass répond (ou pas) : arrêts Transitous de la zone.
+  let opDone = false;
+  const tr = zoom >= 12 ? transitousStops(b, signal).catch(() => [] as TransitStop[]) : Promise.resolve([] as TransitStop[]);
+  void tr.then((x) => !opDone && x.length && onPartial?.(x));
+  let out: TransitStop[];
+  try {
+    out = await overpassStops(bb, zoom, signal);
+  } catch (e) {
+    opDone = true;
+    const x = await tr;
+    if (!x.length) throw e;
+    cache.set(key, x); // mémoire seulement : on retentera Overpass au prochain lancement
+    return x;
+  }
+  opDone = true;
+  const merged = mergeStops(out, await tr);
+  cache.set(key, merged);
+  lsSet(key, merged);
+  return merged;
+}
+
+async function overpassStops(bb: string, zoom: number, signal?: AbortSignal) {
   const parts = [`nwr["aeroway"="aerodrome"]["iata"](${bb});`];
   if (zoom >= 12) parts.push(`nwr["railway"~"^(station|halt)$"]["name"](${bb});`);
   if (zoom >= 14) parts.push(`node["railway"="tram_stop"]["name"](${bb});`);
@@ -121,9 +143,57 @@ export async function fetchTransit(b: { s: number; w: number; n: number; e: numb
     seen.add(dk);
     out.push({ ref: `osm:${el.type}/${el.id}`, kind, name, lat, lng, iata: t.iata });
   }
-  cache.set(key, out);
-  lsSet(key, out);
   return out;
+}
+
+// ---------------------------------------------------------------- Secours Transitous (GTFS ouverts, sans clé)
+const RAIL_MODES = ["HIGHSPEED_RAIL", "LONG_DISTANCE", "NIGHT_RAIL", "REGIONAL_FAST_RAIL", "REGIONAL_RAIL", "RAIL"];
+const URBAN_MODES = ["SUBWAY", "METRO", "TRAM"];
+type TrPlace = { name: string; stopId: string; parentId?: string; lat: number; lon: number; modes?: string[]; importance?: number };
+function normName(n: string) {
+  return n
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\b(gare( de| d')?|station|hall \d.*|bahnhof|bhf|hbf|stazione( di)?|estacion( de)?)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const x = (b.lng - a.lng) * Math.cos(((a.lat + b.lat) / 2) * (Math.PI / 180));
+  return Math.hypot(x, b.lat - a.lat) * 111.2;
+}
+function titleCase(n: string) {
+  return n === n.toUpperCase() ? n.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase()) : n;
+}
+/** Gares et stations métro/tram de la zone via Transitous, dédupliquées (plusieurs flux GTFS par gare). */
+async function transitousStops(b: { s: number; w: number; n: number; e: number }, signal?: AbortSignal): Promise<TransitStop[]> {
+  const ctl = AbortSignal.timeout(8000);
+  const r = await fetch(`https://api.transitous.org/api/v1/map/stops?min=${b.s},${b.w}&max=${b.n},${b.e}`, { signal: signal ? AbortSignal.any([signal, ctl]) : ctl });
+  if (!r.ok) throw new Error(String(r.status));
+  const rows = ((await r.json()) as TrPlace[]).sort((x, y) => (y.importance ?? 0) - (x.importance ?? 0));
+  const out: (TransitStop & { nn: string })[] = [];
+  for (const p of rows) {
+    const rail = p.modes?.some((m) => RAIL_MODES.includes(m));
+    const urban = p.modes?.some((m) => URBAN_MODES.includes(m));
+    if (!rail && !urban) continue;
+    const kind: TransitKind = rail ? "station" : "metro";
+    const nn = normName(p.name);
+    const at = { lat: p.lat, lng: p.lon };
+    // Même nom (ou presque) à moins de 400 m = même arrêt.
+    const same = (o: { nn: string }) => o.nn === nn || (nn.length > 3 && o.nn.length > 3 && (o.nn.includes(nn) || nn.includes(o.nn)));
+    const dup = out.find((o) => (km(o, at) < 0.8 && same(o)) || (km(o, at) < 0.12 && o.kind === kind));
+    if (dup) {
+      if (kind === "station") dup.kind = "station";
+      continue;
+    }
+    out.push({ ref: `tr:${p.parentId || p.stopId}`, kind, name: titleCase(p.name).replace(/\s+Hall\s.*$/i, ""), lat: p.lat, lng: p.lon, nn });
+  }
+  return out.slice(0, 300).map(({ nn: _nn, ...x }) => x);
+}
+/** OSM d'abord ; on ajoute les arrêts Transitous sans équivalent OSM à 300 m. */
+function mergeStops(osm: TransitStop[], tr: TransitStop[]) {
+  return [...osm, ...tr.filter((t) => !osm.some((o) => o.kind !== "airport" && km(o, t) < 0.3))];
 }
 
 /** Arrêts importés en base (v99, comme les toilettes) ; vide tant que l'import n'a pas couvert la zone. */
@@ -132,6 +202,14 @@ async function fromDb(b: { s: number; w: number; n: number; e: number }, zoom: n
     p_s: b.s, p_w: b.w, p_n: b.n, p_e: b.e, p_zoom: Math.floor(zoom),
   });
   return rows.map((r) => ({ ...r, iata: r.iata ?? undefined }));
+}
+
+const LAYER = "hdar-transit-layer";
+export function transitLayerOn() {
+  return typeof localStorage === "undefined" || localStorage.getItem(LAYER) !== "off";
+}
+export function setTransitLayer(on: boolean) {
+  localStorage.setItem(LAYER, on ? "on" : "off");
 }
 
 export function useTransit(on: boolean, b: { s: number; w: number; n: number; e: number }, zoom: number) {
@@ -146,7 +224,7 @@ export function useTransit(on: boolean, b: { s: number; w: number; n: number; e:
     }
     const ac = new AbortController();
     const t = window.setTimeout(() => {
-      void fetchTransit(box.current, zoom, ac.signal).then(setStops).catch(() => undefined);
+      void fetchTransit(box.current, zoom, ac.signal, setStops).then(setStops).catch(() => undefined);
     }, 700);
     return () => {
       ac.abort();

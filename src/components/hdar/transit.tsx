@@ -100,11 +100,12 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
         </p>
         <div className="mt-2 space-y-2">
           {trips === null && !err && <p className="text-xs text-muted">Chargement…</p>}
+          {err && trips === null && <p className="text-xs text-muted">—</p>}
           {trips?.length === 0 && <p className="text-xs text-muted">Personne pour l'instant. Lance le salon de ton trajet.</p>}
           {trips?.map((t) => <TripChip key={t.id} t={t} onOpen={() => openSalon(t.id, t.name)} />)}
         </div>
       </div>
-      {err && <p className="mt-3 text-xs text-red-300">{err}</p>}
+      {err && <p className="mt-3 text-xs text-muted">Chat de cet arrêt indisponible pour l'instant ({err}). Le salon à bord fonctionne quand même.</p>}
       {place && <PlaceChat place={place} />}
       <p className="mt-3 text-[11px] text-muted">Données © OpenStreetMap contributors (ODbL).</p>
       {joining && (

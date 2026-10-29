@@ -7,7 +7,8 @@ import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { TransitPin, TransitSheet } from "./transit";
-import { useTransit, type TransitStop } from "@/lib/hdar/transit";
+import { setTransitLayer, transitLayerOn, useTransit, type TransitStop } from "@/lib/hdar/transit";
+import { TrainFront } from "lucide-react";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
@@ -91,6 +92,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   }, []);
   const [placesOn, setPlacesOn] = useState(true);
   const [toiletsOn, setToiletsOn] = useState(true);
+  const [transitOn, setTransitOn] = useState(true);
+  useEffect(() => setTransitOn(transitLayerOn()), []);
   const [adsOn, setAdsOn] = useState(false);
   useEffect(() => setAdsOn(adsLayerOn()), []);
   useEffect(() => {
@@ -375,7 +378,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     zoom,
   );
   const transit = useTransit(
-    toiletsOn || placesOn,
+    transitOn,
     {
       s: latFromY((top + size.h) / scale, z),
       n: latFromY(top / scale, z),
@@ -1002,6 +1005,20 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 onChange={(e) => {
                   setToiletsOn(e.target.checked);
                   setToiletsLayer(e.target.checked);
+                }}
+              />
+            </label>
+            <label className="flex h-10 items-center justify-between px-2">
+              <span className="flex items-center gap-1.5">
+                <TrainFront className="size-4 text-sky-400" /> Gares et transports <span className="text-xs text-muted">(zoom proche)</span>
+              </span>
+              <input
+                type="checkbox"
+                data-act="layer-transit"
+                checked={transitOn}
+                onChange={(e) => {
+                  setTransitOn(e.target.checked);
+                  setTransitLayer(e.target.checked);
                 }}
               />
             </label>
