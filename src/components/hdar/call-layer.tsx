@@ -66,7 +66,7 @@ export function CallLayer() {
         stream={local}
         muted
         className={
-          "absolute top-4 right-4 aspect-[3/4] w-28 rounded-2xl border border-line bg-surface object-cover " +
+          "absolute top-4 end-4 aspect-[3/4] w-28 rounded-2xl border border-line bg-surface object-cover " +
           (facing === "user" ? "-scale-x-100" : "")
         }
       />

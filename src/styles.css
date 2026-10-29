@@ -392,3 +392,11 @@
 }
 .vis-tip.vis-tip-x { animation-name: vis-tip-x; }
 @keyframes vis-tip-x { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+
+/* Arabe (RTL) : flèches et chevrons dans le sens de lecture ; la carte reste en LTR. */
+[dir="rtl"] :is(.lucide-chevron-left, .lucide-chevron-right, .lucide-arrow-left, .lucide-arrow-right, .lucide-send, .lucide-send-horizontal, .lucide-chevrons-left, .lucide-chevrons-right) {
+  transform: scaleX(-1);
+}
+[dir="rtl"] .maplibregl-map {
+  direction: ltr;
+}

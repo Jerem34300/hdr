@@ -112,7 +112,7 @@ function Bar({ label, n, max, hint }: { label: string; n: number; max: number; h
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-sm" title={`${label} : ${n}${hint ? ` (${hint})` : ""}`}>
       <span className="truncate">{label}</span>
-      <span className="text-right font-display font-bold tabular-nums">
+      <span className="text-end font-display font-bold tabular-nums">
         {n} <span className="text-xs font-normal text-muted">{hint}</span>
       </span>
       <span className="col-span-2 h-2 overflow-hidden rounded-full bg-white/5">
@@ -420,7 +420,7 @@ function Salons({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) =
         {data?.map((s) => (
           <li key={s.id} className={"rounded-2xl border border-line bg-surface p-3 text-sm " + (s.removed ? "opacity-50" : "")}>
             <div className="flex items-start justify-between gap-2">
-              <button type="button" className="min-w-0 text-left" onClick={() => setOpen(s)}>
+              <button type="button" className="min-w-0 text-start" onClick={() => setOpen(s)}>
                 <p className="font-bold">
                   {s.emoji || "💬"} {s.name} {s.official && <span className="text-xs text-signal">officiel</span>} {s.removed && <span className="text-xs">· fermé</span>}
                 </p>
@@ -486,7 +486,7 @@ export function RatingsSummary({ adminKey }: { adminKey: string }) {
                 {p.last ? ` · dernier ${when(p.last)}` : ""}
               </span>
             </span>
-            <span className="text-right">
+            <span className="text-end">
               <span className="font-display text-lg font-extrabold text-amber-400">{p.avg != null ? `${Number(p.avg).toFixed(1)} ★` : "—"}</span>
               <span className="block text-xs text-muted">
                 {p.n} note{p.n > 1 ? "s" : ""} · {p.comments} avis
@@ -541,10 +541,10 @@ export function LiveNowTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id
             <li key={u.id} className={"rounded-2xl border border-line bg-surface px-4 py-3 text-sm " + (u.banned ? "opacity-50" : "")}>
               <div className="flex items-center justify-between gap-2">
                 <span className="min-w-0 truncate">
-                  <span className="mr-1.5 inline-block size-2 rounded-full bg-online" />
+                  <span className="me-1.5 inline-block size-2 rounded-full bg-online" />
                   <Name id={u.id} pseudo={u.pseudo} />
-                  {!u.profile && <span className="ml-1 text-xs text-muted">(sans profil)</span>}
-                  {u.banned && <span className="ml-1 text-xs text-signal">banni</span>}
+                  {!u.profile && <span className="ms-1 text-xs text-muted">(sans profil)</span>}
+                  {u.banned && <span className="ms-1 text-xs text-signal">banni</span>}
                 </span>
                 <span className="shrink-0 text-xs text-muted">{ago(u.last)}</span>
               </div>
@@ -625,7 +625,7 @@ export function UserReportsAndIps({ adminKey, id, pseudo }: { adminKey: string; 
         {threads.data?.length === 0 && <li className="text-sm text-muted">Aucune conversation signalée.</li>}
         {threads.data?.map((t) => (
           <li key={t.other}>
-            <button type="button" className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-left text-sm" onClick={() => setOpen(open?.other === t.other ? null : t)}>
+            <button type="button" className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-start text-sm" onClick={() => setOpen(open?.other === t.other ? null : t)}>
               <span className="font-bold">{t.pseudo}</span>
               <span className="text-muted">
                 {" "}· {t.reported_by_other && t.reported_other ? "signalements croisés" : t.reported_by_other ? `a signalé ${pseudo}` : `signalé par ${pseudo}`} · {t.n} message{t.n > 1 ? "s" : ""}
@@ -647,7 +647,7 @@ export function UserReportsAndIps({ adminKey, id, pseudo }: { adminKey: string; 
           <li key={c.ip} className="rounded-2xl border border-line px-4 py-3 text-sm">
             <p className="font-mono font-bold">
               {c.ip}
-              {c.others > 0 && <span className="ml-2 font-sans text-xs text-amber-400">partagée avec {c.others} autre{c.others > 1 ? "s" : ""} compte{c.others > 1 ? "s" : ""}</span>}
+              {c.others > 0 && <span className="ms-2 font-sans text-xs text-amber-400">partagée avec {c.others} autre{c.others > 1 ? "s" : ""} compte{c.others > 1 ? "s" : ""}</span>}
             </p>
             <p className="text-xs text-muted">
               du {when(c.first)} au {when(c.last)} · {c.hits} fois
@@ -734,15 +734,15 @@ function RefTable({ title, rows, conv, day }: { title: string; rows: (RefRow & {
         <p className="text-sm text-muted">Aucune visite par lien ?ref= sur la période.</p>
       ) : (
         <table className="w-full whitespace-nowrap text-xs">
-          <thead className="text-left text-xs text-muted">
+          <thead className="text-start text-xs text-muted">
             <tr>
               {day && <th className="py-1">Jour</th>}
               <th className="py-1">Ref</th>
-              <th className="py-1 pl-1.5 text-right">Visites</th>
-              <th className="py-1 pl-1.5 text-right">App.</th>
-              <th className="py-1 pl-1.5 text-right">Profils</th>
-              <th className="py-1 pl-1.5 text-right">FIRST</th>
-              <th className="py-1 pl-1.5 text-right">Conv.</th>
+              <th className="py-1 ps-1.5 text-end">Visites</th>
+              <th className="py-1 ps-1.5 text-end">App.</th>
+              <th className="py-1 ps-1.5 text-end">Profils</th>
+              <th className="py-1 ps-1.5 text-end">FIRST</th>
+              <th className="py-1 ps-1.5 text-end">Conv.</th>
             </tr>
           </thead>
           <tbody>
@@ -750,11 +750,11 @@ function RefTable({ title, rows, conv, day }: { title: string; rows: (RefRow & {
               <tr key={(r.day ?? "") + r.ref} className="border-t border-line/60">
                 {day && <td className="py-1.5 text-muted">{r.day ? new Date(`${r.day}T12:00:00`).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "numeric" }) : ""}</td>}
                 <td className="max-w-[7rem] truncate py-1.5 font-bold">{r.ref}</td>
-                <td className="py-1.5 pl-1.5 text-right">{r.visits}</td>
-                <td className="py-1.5 pl-1.5 text-right">{r.devices ?? "—"}</td>
-                <td className="py-1.5 pl-1.5 text-right">{r.profiles}</td>
-                <td className="py-1.5 pl-1.5 text-right">{r.first_uses ?? "—"}</td>
-                <td className="py-1.5 pl-1.5 text-right">{conv(r)}</td>
+                <td className="py-1.5 ps-1.5 text-end">{r.visits}</td>
+                <td className="py-1.5 ps-1.5 text-end">{r.devices ?? "—"}</td>
+                <td className="py-1.5 ps-1.5 text-end">{r.profiles}</td>
+                <td className="py-1.5 ps-1.5 text-end">{r.first_uses ?? "—"}</td>
+                <td className="py-1.5 ps-1.5 text-end">{conv(r)}</td>
               </tr>
             ))}
           </tbody>
@@ -789,8 +789,8 @@ export function RefNetwork({ adminKey, demo }: { adminKey: string; demo?: RefNet
       <p className="mb-2 text-xs text-muted">Source = lien par lequel le parrain est arrivé. Boosts = filleuls avec un profil créé ; validés = photo approuvée (hdar+).</p>
       {!rows ? <p className="text-xs text-muted">Chargement…</p> : !rows.length ? <p className="text-xs text-muted">Aucun parrainage sur la période.</p> : (
         <table className="w-full whitespace-nowrap text-xs">
-          <thead className="text-left text-muted"><tr><th className="py-1">Source</th><th className="text-right">Parrains</th><th className="pl-1.5 text-right">Filleuls</th><th className="pl-1.5 text-right">Boosts</th><th className="pl-1.5 text-right">Validés</th></tr></thead>
-          <tbody>{rows.map((r) => <tr key={r.source} className="border-t border-line/60"><td className="max-w-[8rem] truncate py-1.5 font-bold">{r.source}</td><td className="text-right">{r.parrains}</td><td className="pl-1.5 text-right font-bold">{r.filleuls}</td><td className="pl-1.5 text-right">{r.boosts}</td><td className="pl-1.5 text-right">{r.valides}</td></tr>)}</tbody>
+          <thead className="text-start text-muted"><tr><th className="py-1">Source</th><th className="text-end">Parrains</th><th className="ps-1.5 text-end">Filleuls</th><th className="ps-1.5 text-end">Boosts</th><th className="ps-1.5 text-end">Validés</th></tr></thead>
+          <tbody>{rows.map((r) => <tr key={r.source} className="border-t border-line/60"><td className="max-w-[8rem] truncate py-1.5 font-bold">{r.source}</td><td className="text-end">{r.parrains}</td><td className="ps-1.5 text-end font-bold">{r.filleuls}</td><td className="ps-1.5 text-end">{r.boosts}</td><td className="ps-1.5 text-end">{r.valides}</td></tr>)}</tbody>
         </table>
       )}
     </div>

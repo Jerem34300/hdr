@@ -420,7 +420,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur">
         <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#FA6F6C]/40 bg-night p-6 text-center text-ink shadow-[0_0_60px_#FA6F6C55]">
-          <span aria-hidden className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-[#FA6F6C] opacity-30 blur-3xl" />
+          <span aria-hidden className="pointer-events-none absolute -top-16 -end-10 size-48 rounded-full bg-[#FA6F6C] opacity-30 blur-3xl" />
           <span className="relative text-5xl">👀</span>
           <h2 className="relative mt-3 font-display text-2xl font-bold">Vous êtes trop proches</h2>
           <p className="relative mt-2 text-sm text-ink/80">Le Live, c'est pour rencontrer des gens plus loin. Cette personne est juste à côté : écris-lui directement en privé, et passez en appel vidéo à deux. Plus intime, et rien que pour vous deux.</p>
@@ -450,12 +450,12 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   if (phase === "intro") {
     return (
       <div className="relative flex min-h-dvh flex-col items-center justify-center gap-5 overflow-hidden bg-night px-6 text-center text-ink">
-        <span aria-hidden className="pointer-events-none absolute -top-10 -left-10 size-56 rounded-full bg-[#FA6F6C] opacity-40 blur-3xl" />
-        <span aria-hidden className="pointer-events-none absolute right-0 bottom-20 size-64 rounded-full bg-[#A1E3C3] opacity-25 blur-3xl" />
+        <span aria-hidden className="pointer-events-none absolute -top-10 -start-10 size-56 rounded-full bg-[#FA6F6C] opacity-40 blur-3xl" />
+        <span aria-hidden className="pointer-events-none absolute end-0 bottom-20 size-64 rounded-full bg-[#A1E3C3] opacity-25 blur-3xl" />
         <span className="relative flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] shadow-[0_0_40px_#FA6F6C]"><Video className="size-9 text-night" /></span>
         <h1 className="relative font-display text-3xl font-bold">Live</h1>
         <p className="relative max-w-xs text-sm text-ink/80">Des gens au hasard, en vidéo. Glisse vers le haut pour passer au suivant.</p>
-        <div className="relative max-w-xs space-y-2 rounded-2xl bg-white/5 p-4 text-left text-sm text-ink/90">
+        <div className="relative max-w-xs space-y-2 rounded-2xl bg-white/5 p-4 text-start text-sm text-ink/90">
           <p>Ta caméra est envoyée en direct à la personne en face, <b>floutée sur ton téléphone avant l'envoi</b>. Ton image nette n'est jamais envoyée tant que tu n'appuies pas sur « te montrer ».</p>
           <p>Personne ne peut te déflouter à ta place. Rien n'est enregistré par hdar. Jamais personne à moins de 2 km, aucune distance affichée.</p>
           <p className="font-semibold text-[#FA6F6C]">Interdit : mineurs, exhibition non désirée, enregistrer ou capturer l'autre.</p>
@@ -494,7 +494,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         {peer && <PeerPhoto id={peer.id} />}
         <div className="min-w-0 flex-1">
-          {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ml-1 text-sm">👑+</span>}</p>}
+          {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ms-1 text-sm">👑+</span>}</p>}
           {peer?.pro && <PartnerBadge name={peer.pro.name} />}
           {pro && !peer && <PartnerBadge name={proPlace?.name ?? "Live Pro"} />}
           {peer && !peer.pro && <p className="text-xs text-white/80">{label(peer)}</p>}
@@ -511,7 +511,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       </div>
       {peer && theyBlur && !broadcasting && (
         <button type="button" onClick={() => void ask()} disabled={askSent} className="absolute top-[62%] left-1/2 z-[5] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold text-night shadow-[0_0_20px_#fbbf24] disabled:opacity-60">
-          {askSent ? "Demande envoyée 👀" : <>Demande à se voir 👀{!premium && <Crown className="ml-1 inline size-4" />}</>}
+          {askSent ? "Demande envoyée 👀" : <>Demande à se voir 👀{!premium && <Crown className="ms-1 inline size-4" />}</>}
         </button>
       )}
       {asked && (
@@ -530,7 +530,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         </span>
       )}
       <div ref={prevBox}
-        data-testid="self-preview" role="button" aria-label={blurred ? "Me montrer" : "Me flouter"} className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big && !broadcasting ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 left-3" : corner === "tr" ? "top-28 right-3" : corner === "bl" ? "left-3" : "right-3"}`}
+        data-testid="self-preview" role="button" aria-label={blurred ? "Me montrer" : "Me flouter"} className={`absolute z-10 touch-none overflow-hidden rounded-2xl border border-white/20 bg-night shadow-xl ${drag ? "" : "transition-all duration-200"} ${big && !broadcasting ? "h-60 w-44" : "h-36 w-24"} ${drag ? "" : corner === "tl" ? "top-28 start-3" : corner === "tr" ? "top-28 end-3" : corner === "bl" ? "start-3" : "end-3"}`}
         style={drag ? { left: drag.x, top: drag.y } : corner[0] === "b" ? { bottom: "calc(var(--live-bb, 11rem) + 0.5rem)" } : undefined}
         onPointerDown={(e) => { const r = prevBox.current!.getBoundingClientRect(); dragStart.current = { x: e.clientX, y: e.clientY, ox: r.left, oy: r.top, moved: false }; (e.target as Element).setPointerCapture?.(e.pointerId); e.stopPropagation(); }}
         onPointerMove={(e) => { const d = dragStart.current; if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.moved && Math.hypot(dx, dy) < 8) return; d.moved = true; setDrag({ x: d.ox + dx, y: d.oy + dy }); }}
@@ -554,7 +554,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <Round label={p2pChat ? "Fermer le chat" : "Chat privé"} on={p2pChat} onClick={() => setP2pChat(!p2pChat)}><MessageCircle className="size-5" /></Round>
           <Round label="Envoyer un cœur" on={false} onClick={() => void sendHeart()}>
             <span className="text-lg">❤️</span>
-            <span className="absolute -top-1 -right-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts === Infinity ? "∞" : hearts ?? "·"}</span>
+            <span className="absolute -top-1 -end-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts === Infinity ? "∞" : hearts ?? "·"}</span>
           </Round>
           <Round label="Plus d'options" on={more} onClick={() => setMore(true)}><MoreHorizontal className="size-5" /></Round>
         </div>
@@ -567,12 +567,12 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         co={coWith} onState={(n, names) => bc.room && p2pSend({ bc: { room: bc.room, n, names } })} />}
       {hostBc && !co.room && !broadcasting && coNo !== hostBc.room && peer && <CoInvite pseudo={peer.pseudo ?? "?"} n={hostBc.n} names={hostBc.names} busy={co.busy} onYes={() => void coJoin()} onNo={() => setCoNo(hostBc.room)} />}
       {hostBc && co.room && (
-        <div data-testid="co-badge" className="absolute top-[8.75rem] left-3 z-20 flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div data-testid="co-badge" className="absolute top-[8.75rem] start-3 z-20 flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <span className="rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">● Tu diffuses avec {peer?.pseudo} · 👁 {hostBc.n}</span>
           <button type="button" data-testid="co-stop" onClick={coLeave} className="rounded-full bg-black/60 px-3 py-1 text-xs font-bold">Revenir en privé</button>
         </div>
       )}
-      {hostBc && !co.room && !broadcasting && coNo === hostBc.room && <button type="button" data-testid="co-reopen" onClick={() => setCoNo(null)} className="absolute top-[8.75rem] left-3 z-20 rounded-full border border-[#FA6F6C] bg-black/60 px-3 py-1 text-xs font-bold text-[#FA6F6C]">📣 {peer?.pseudo} diffuse · 👁 {hostBc.n}</button>}
+      {hostBc && !co.room && !broadcasting && coNo === hostBc.room && <button type="button" data-testid="co-reopen" onClick={() => setCoNo(null)} className="absolute top-[8.75rem] start-3 z-20 rounded-full border border-[#FA6F6C] bg-black/60 px-3 py-1 text-xs font-bold text-[#FA6F6C]">📣 {peer?.pseudo} diffuse · 👁 {hostBc.n}</button>}
       {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
@@ -592,7 +592,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setReporting(false)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display font-bold">Signaler {peer?.pseudo} — il sera bloqué tout de suite</p>
-            {["Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => void report(r)} className="block w-full rounded-xl bg-night px-4 py-3 text-left text-sm">{r}</button>)}
+            {["Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => void report(r)} className="block w-full rounded-xl bg-night px-4 py-3 text-start text-sm">{r}</button>)}
           </div>
         </div>
       )}
@@ -600,7 +600,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setFilterOpen(false)}>
           <div className="w-full space-y-4 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display text-lg font-bold">Filtres Live 👑+</p>
-            <div className="grid grid-cols-2 gap-2 pr-32">{GENDERS.map(({ id: g, short }) => { const on = filters.iam.includes(g); return <button key={g} type="button" onClick={() => setFilters({ ...filters, iam: on ? filters.iam.filter((x) => x !== g) : [...filters.iam, g] })} className={`flex-1 rounded-full py-2 font-bold ${on ? "bg-[#FA6F6C] text-night" : "bg-night"}`}>{short}</button>; })}</div>
+            <div className="grid grid-cols-2 gap-2 pe-32">{GENDERS.map(({ id: g, short }) => { const on = filters.iam.includes(g); return <button key={g} type="button" onClick={() => setFilters({ ...filters, iam: on ? filters.iam.filter((x) => x !== g) : [...filters.iam, g] })} className={`flex-1 rounded-full py-2 font-bold ${on ? "bg-[#FA6F6C] text-night" : "bg-night"}`}>{short}</button>; })}</div>
             <div className="flex items-center gap-2 text-sm">Âge
               <input type="number" min={18} max={99} placeholder="18" value={filters.minAge ?? ""} onChange={(e) => setFilters({ ...filters, minAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /> à
               <input type="number" min={18} max={99} placeholder="99" value={filters.maxAge ?? ""} onChange={(e) => setFilters({ ...filters, maxAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /></div>
@@ -617,7 +617,7 @@ function Round({ children, label: l, on, onClick }: { children: React.ReactNode;
   return <button type="button" aria-label={l} title={l} onClick={onClick} className={`relative flex size-11 items-center justify-center rounded-full backdrop-blur ${on ? "bg-white text-night" : "bg-black/35"}`}>{children}</button>;
 }
 function MoreItem({ icon, label: l, crown, danger, onClick }: { icon: React.ReactNode; label: string; crown?: boolean; danger?: boolean; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold ${danger ? "bg-red-500/15 text-red-400" : "bg-night text-white"}`}>{icon}<span className="flex-1">{l}</span>{crown && <Crown className="size-4 text-[#fbbf24]" />}</button>;
+  return <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-start text-sm font-semibold ${danger ? "bg-red-500/15 text-red-400" : "bg-night text-white"}`}>{icon}<span className="flex-1">{l}</span>{crown && <Crown className="size-4 text-[#fbbf24]" />}</button>;
 }
 
 

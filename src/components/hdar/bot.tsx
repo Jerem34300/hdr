@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 /** Badge du robot d'accueil : bien identifié, jamais confondu avec un membre. */
 export function BotBadge({ className = "" }: { className?: string }) {
   return (
-    <span className={"ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#A1E3C3] px-1.5 py-px align-middle font-sans text-[10px] font-extrabold tracking-wide text-night uppercase " + className} title="Compte officiel hdar (robot d'accueil)">
+    <span className={"ms-1.5 inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#A1E3C3] px-1.5 py-px align-middle font-sans text-[10px] font-extrabold tracking-wide text-night uppercase " + className} title="Compte officiel hdar (robot d'accueil)">
       ✓ Officiel · Robot
     </span>
   );

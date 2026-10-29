@@ -66,12 +66,12 @@ export function InstallPrompt() {
         <button
           type="button"
           aria-label="Fermer"
-          className="absolute top-2 right-2 flex size-10 items-center justify-center"
+          className="absolute top-2 end-2 flex size-10 items-center justify-center"
           onClick={dismiss}
         >
           <X className="size-5" />
         </button>
-        <div className="flex items-center gap-4 pr-8">
+        <div className="flex items-center gap-4 pe-8">
           <img
             src="/icon-192.png"
             alt=""

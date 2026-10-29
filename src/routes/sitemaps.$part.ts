@@ -10,6 +10,7 @@ export const Route = createFileRoute("/sitemaps/$part")({
         const m = /^villes-(\d+)\.xml$/.exec(params.part);
         let urls: string[];
         if (params.part === "core.xml") urls = ["/", "/faq", "/pro", "/ambassadeur", "/live-coquin", "/webcam-gay-live", "/alternative-chatroulette", "/alternative-omegle", "/tchat-webcam-aleatoire", "/cam-to-cam", "/fr/sortir-rencontrer-cap-d-agde", ...u.lists, ...u.themes, ...u.annonces];
+        else if (params.part === "intl.xml") urls = u.intl;
         else if (m) urls = u.cities.slice((+m[1] - 1) * 10000, +m[1] * 10000);
         else urls = [];
         // villes-2..4 ont été soumis avant la réduction : on garde un sitemap vide valide plutôt qu'une 404.

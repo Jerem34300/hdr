@@ -69,7 +69,7 @@ export function ReplyQuote({ reply, mine, onJump }: { reply: { pseudo: string; b
         e.stopPropagation();
         onJump();
       }}
-      className={"my-1 block cursor-pointer rounded-lg border-l-[3px] px-2 py-1 text-left text-[13px] " + (mine ? "border-current/60 bg-black/10" : "border-signal bg-white/5")}
+      className={"my-1 block cursor-pointer rounded-lg border-s-[3px] px-2 py-1 text-start text-[13px] " + (mine ? "border-current/60 bg-black/10" : "border-signal bg-white/5")}
     >
       <span className="block truncate font-bold">{reply.pseudo}</span>
       <span className="line-clamp-2 opacity-80">{reply.body}</span>
@@ -82,7 +82,7 @@ export function ReplyDraft({ title, color, text, onJump, onCancel, edit }: { tit
   return (
     <div className="mb-2 flex items-center gap-2 rounded-xl bg-surface px-3 py-2 text-sm">
       {edit ? <Pencil className="size-4 shrink-0 text-signal" /> : <CornerUpLeft className="size-4 shrink-0 text-signal" />}
-      <button type="button" className="min-w-0 flex-1 text-left" onClick={onJump}>
+      <button type="button" className="min-w-0 flex-1 text-start" onClick={onJump}>
         <span className="block truncate text-xs font-bold" style={color ? { color } : undefined}>
           {title}
         </span>

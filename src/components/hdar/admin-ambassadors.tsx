@@ -42,7 +42,7 @@ export function AmbassadorsTab({ adminKey, preview }: { adminKey: string; previe
         <p className="text-sm font-bold">Inviter un ambassadeur</p>
         <button type="button" onClick={() => void (preview ? Promise.resolve("demo") : adminAmbInvite(adminKey)).then((t) => setInvite(`https://hdar.chat/ambassadeur?i=${t}`)).catch((e: Error) => toast(e.message))}
           className="mt-2 rounded-full bg-[#3EE08F] px-4 py-2 text-sm font-bold text-night">Créer un lien d'invitation (1 usage, 7 j)</button>
-        {invite && <button type="button" onClick={() => void navigator.clipboard?.writeText(invite).then(() => toast("Lien copié"))} className="mt-2 block w-full truncate rounded-xl bg-night px-3 py-2 text-left font-mono text-xs">{invite} 📋</button>}
+        {invite && <button type="button" onClick={() => void navigator.clipboard?.writeText(invite).then(() => toast("Lien copié"))} className="mt-2 block w-full truncate rounded-xl bg-night px-3 py-2 text-start font-mono text-xs">{invite} 📋</button>}
         <p className="mt-3 text-sm font-bold">… ou donner le rôle à un profil existant</p>
         <div className="mt-2 flex gap-2"><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pseudo" className="flex-1 rounded-xl border border-line bg-night px-3 py-2 text-sm" />
           <button type="button" className="rounded-xl border border-line px-3 text-sm" onClick={() => void adminAmbSearch(adminKey, q).then(setHits).catch((e: Error) => toast(e.message))}>Chercher</button></div>
@@ -54,12 +54,12 @@ export function AmbassadorsTab({ adminKey, preview }: { adminKey: string; previe
       <SignedContracts adminKey={adminKey} demo={!!preview} />
       <div className="flex flex-wrap items-center gap-2">{PERIODS.map(([k, l]) => (
         <button key={k} type="button" onClick={() => setPeriod(k)} className={"rounded-full px-3 py-1 text-sm " + (period === k ? "bg-[#3EE08F] font-bold text-night" : "border border-line")}>{l}</button>))}
-        <button type="button" onClick={csv} className="ml-auto rounded-full border border-line px-3 py-1 text-sm">⬇︎ CSV</button></div>
+        <button type="button" onClick={csv} className="ms-auto rounded-full border border-line px-3 py-1 text-sm">⬇︎ CSV</button></div>
       {!rows ? <p className="text-sm text-muted">Chargement…</p> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted">Aucun ambassadeur pour l'instant.</p> : rows.map((r) => (
         <section key={r.user_id} className="rounded-2xl border border-line p-3">
-          <button type="button" onClick={() => setOpen(open === r.user_id ? null : r.user_id)} className="flex w-full items-center justify-between text-left">
+          <button type="button" onClick={() => setOpen(open === r.user_id ? null : r.user_id)} className="flex w-full items-center justify-between text-start">
             <span><b>{r.pseudo}</b> <span className="font-mono text-xs text-muted">{r.code}</span> {!r.active && <span className="text-xs text-signal">retiré</span>}{r.active && !r.terms_at && <span className="text-xs text-[#fbbf24]">charte non acceptée</span>}</span>
-            <span className="text-right text-xs">{r.stats.validated} validés · <b className="text-sm">{eur(r.stats.commission)}</b><br /><span className={r.due_total >= r.min_payout_cents ? "text-[#3EE08F]" : "text-muted"}>dû {eur(r.due_total)}</span></span>
+            <span className="text-end text-xs">{r.stats.validated} validés · <b className="text-sm">{eur(r.stats.commission)}</b><br /><span className={r.due_total >= r.min_payout_cents ? "text-[#3EE08F]" : "text-muted"}>dû {eur(r.due_total)}</span></span>
           </button>
           {open === r.user_id && <Detail r={r} adminKey={adminKey} onDone={load} demo={!!preview} />}
         </section>))}
@@ -82,7 +82,7 @@ function Detail({ r, adminKey, onDone, demo }: { r: AdminAmb; adminKey: string; 
       <p className="text-xs text-muted">Validé = photo approuvée et profil encore actif 7 jours après l'inscription. CA net = après remboursements et frais Stripe estimés.</p>
       <div className="rounded-xl bg-night p-3 text-xs">
         <p className="mb-1 font-bold">Contrat</p>
-        {r.contract ? <p>✍️ Signé par {r.contract.name} le {new Date(r.contract.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {r.contract.version} <button type="button" className="ml-1 underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, r.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button></p> : <p className="text-muted">Non signé</p>}
+        {r.contract ? <p>✍️ Signé par {r.contract.name} le {new Date(r.contract.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} · {r.contract.version} <button type="button" className="ms-1 underline" onClick={() => demo ? toast("Aperçu") : void adminAmbContractPdf(adminKey, r.user_id).catch((e: Error) => toast(e.message))}>⬇︎ PDF</button></p> : <p className="text-muted">Non signé</p>}
         <p className="mt-2 mb-1 font-bold">Versements Stripe Connect</p>
         <p>{!r.stripe_account ? "⚪ Compte Stripe non créé" : r.payouts_enabled ? `✅ Compte prêt (${r.stripe_account})` : `🟡 Inscription Stripe incomplète (${r.stripe_account})`}{r.paused ? " · ⏸️ en pause" : ""}{r.hold_next ? " · prochain versement suspendu" : ""}</p>
         <p className="mt-1 text-muted">Virement automatique le 1er du mois si dû ≥ seuil. Identité, IBAN et SIRET : chez Stripe uniquement.</p>
@@ -187,10 +187,10 @@ function Applications({ adminKey, demo, onChange }: { adminKey: string; demo: bo
   const done = rows?.filter((r) => r.status !== "pending") ?? [];
   return (
     <section className="rounded-2xl border border-[#3EE08F]/60 p-3">
-      <p className="text-sm font-bold">📝 Candidatures {pending.length > 0 && <span className="ml-1 rounded-full bg-[#3EE08F] px-2 text-xs text-night">{pending.length}</span>}</p>
+      <p className="text-sm font-bold">📝 Candidatures {pending.length > 0 && <span className="ms-1 rounded-full bg-[#3EE08F] px-2 text-xs text-night">{pending.length}</span>}</p>
       {!rows ? <p className="mt-2 text-sm text-muted">Chargement…</p> : pending.length === 0 ? <p className="mt-2 text-sm text-muted">Aucune candidature en attente.</p> : pending.map((a) => (
         <div key={a.id} className="mt-3 rounded-xl bg-night p-3 text-sm">
-          <p><b>{a.pseudo}</b>{a.age ? ` · ${a.age} ans` : ""} · 📍 {a.city} <span className="text-xs text-muted">· {new Date(a.at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}</span>{!a.photo_ok && <span className="ml-1 text-xs text-[#fbbf24]">📸 photo non validée</span>}{a.already_amb && <span className="ml-1 text-xs text-[#3EE08F]">déjà ambassadeur</span>}</p>
+          <p><b>{a.pseudo}</b>{a.age ? ` · ${a.age} ans` : ""} · 📍 {a.city} <span className="text-xs text-muted">· {new Date(a.at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}</span>{!a.photo_ok && <span className="ms-1 text-xs text-[#fbbf24]">📸 photo non validée</span>}{a.already_amb && <span className="ms-1 text-xs text-[#3EE08F]">déjà ambassadeur</span>}</p>
           <p className="mt-1"><span className="text-xs text-muted">Motivation :</span> {a.motivation}</p>
           <p className="mt-1"><span className="text-xs text-muted">Promotion :</span> {a.promote}</p>
           {a.audience && <p className="mt-1"><span className="text-xs text-muted">Audience :</span> {a.audience}</p>}

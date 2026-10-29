@@ -87,7 +87,7 @@ export function SoundToast({ show, onTap }: { show: boolean; onTap: () => void }
   if (!show) return null;
   return (
     <button type="button" data-testid="sound-toast" onClick={onTap} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
-      className="absolute top-[5.5rem] right-3 z-20 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-night shadow-lg">
+      className="absolute top-[5.5rem] end-3 z-20 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-night shadow-lg">
       🔇 Son coupé par le navigateur · <u>activer</u>
     </button>
   );
@@ -118,14 +118,14 @@ function Chat({ room, lines, pops, show, canReport, reserve, onP2P, onSent }: { 
   };
   return (
     <>
-      <div className="pointer-events-none absolute right-3 z-10 flex flex-col items-center gap-1" style={{ bottom: "calc(var(--live-bb, 9rem) + 6rem)" }}>
+      <div className="pointer-events-none absolute end-3 z-10 flex flex-col items-center gap-1" style={{ bottom: "calc(var(--live-bb, 9rem) + 6rem)" }}>
         {pops.map((p) => <span key={p.k} className="animate-[ping_1.2s_ease-out_1] text-3xl">{p.e}</span>)}
       </div>
       {show && (
-        <div data-testid="chat" className={`absolute inset-x-0 z-10 ${reserve === "l" ? "pl-[7.5rem]" : "pl-3"} ${reserve === "r" ? "pr-[7.5rem]" : "pr-3"}`} style={{ bottom: "calc(var(--live-bb, 9rem) + 0.5rem)" }} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <div data-testid="chat" className={`absolute inset-x-0 z-10 ${reserve === "l" ? "ps-[7.5rem]" : "ps-3"} ${reserve === "r" ? "pe-[7.5rem]" : "pe-3"}`} style={{ bottom: "calc(var(--live-bb, 9rem) + 0.5rem)" }} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <ul ref={list} className="mb-2 max-h-40 space-y-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,black_25%)]">
             {lines.map((m) => (
-              <li key={m.key} data-testid="chat-line"><button type="button" onClick={() => canReport && m.room && setRep(m.room)} className="max-w-full rounded-2xl bg-black/50 px-3 py-1 text-left text-sm backdrop-blur">
+              <li key={m.key} data-testid="chat-line"><button type="button" onClick={() => canReport && m.room && setRep(m.room)} className="max-w-full rounded-2xl bg-black/50 px-3 py-1 text-start text-sm backdrop-blur">
                 <b className={m.mine ? "text-[#A1E3C3]" : "text-[#FA6F6C]"}>{m.pseudo ?? "?"}</b> {m.body}</button></li>
             ))}
           </ul>
@@ -147,7 +147,7 @@ function Chat({ room, lines, pops, show, canReport, reserve, onP2P, onSent }: { 
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setRep(null)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display font-bold">Signaler le message de {rep.pseudo}</p>
-            {["Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => { void roomReportMsg(rep.id, r).then(() => toast("Signalé, merci")).catch(() => toast("Signalement impossible")); setRep(null); }} className="block w-full rounded-xl bg-night px-4 py-3 text-left text-sm">{r}</button>)}
+            {["Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => { void roomReportMsg(rep.id, r).then(() => toast("Signalé, merci")).catch(() => toast("Signalement impossible")); setRep(null); }} className="block w-full rounded-xl bg-night px-4 py-3 text-start text-sm">{r}</button>)}
           </div>
         </div>
       )}
@@ -370,7 +370,7 @@ export function BarBtn({ label, on, danger, wide, onClick, children, testid }: {
 /** Petite flèche « suivant » sur le bord droit (accessibilité) : hors de la zone de glissement centrale. */
 export function NextChevron({ onClick, testid }: { onClick: () => void; testid?: string }) {
   return <button type="button" data-testid={testid ?? "next"} aria-label="Live suivant" onClick={onClick} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
-    className="absolute top-1/2 right-1.5 z-[9] flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/80 backdrop-blur"><ChevronUp className="size-4" /></button>;
+    className="absolute top-1/2 end-1.5 z-[9] flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/80 backdrop-blur"><ChevronUp className="size-4" /></button>;
 }
 
 /** Indice « ↑ glisse pour la suite » : les 3 premières fois seulement, s'efface tout seul. */
@@ -438,7 +438,7 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, res
   return (
     <>
       <div ref={audios} className="hidden" />
-      <button type="button" data-testid="bc-badge" onClick={() => setList(true)} className="absolute top-[8.75rem] left-3 z-20 rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">
+      <button type="button" data-testid="bc-badge" onClick={() => setList(true)} className="absolute top-[8.75rem] start-3 z-20 rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">
         ● En diffusion{co ? ` avec ${co.pseudo}` : ""} · 👁 {nView}/{st?.cap ?? 12}
       </button>
       <ViewerStrip viewers={viewers} onOpen={(id) => setList(id)} />
@@ -612,7 +612,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           {coTiles.map((c) => (
             <div key={c.id} className="relative overflow-hidden bg-night">
               {c.video ? <TrackVideo track={c.video} /> : <Avatar id={c.id} pseudo={c.pseudo} />}
-              {c.pseudo && <span className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold">{c.pseudo}</span>}
+              {c.pseudo && <span className="absolute top-2 end-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold">{c.pseudo}</span>}
             </div>
           ))}
         </div>
@@ -627,7 +627,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       <SoundToast show={needTap} onTap={() => { void lk.current?.startAudio(); setNeedTap(false); }} />
       <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-xl font-bold">{st?.host_pseudo ?? "…"}{st?.host_premium && <span className="ml-1 text-sm">👑+</span>}</p>
+          <p className="truncate font-display text-xl font-bold">{st?.host_pseudo ?? "…"}{st?.host_premium && <span className="ms-1 text-sm">👑+</span>}</p>
           <p className="text-xs text-white/80">📣 Diffuse en direct{coTiles.length ? ` avec ${coTiles.map((c) => c.pseudo || "?").join(", ")}` : ""} · {myCam || myMic ? `seul·e ${st?.host_pseudo ?? "la personne qui diffuse"} te ${myCam ? "voit" : "entend"}` : "tu regardes, personne ne te voit"}</p>
           <span className="mt-1 inline-block rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80">{RULES}</span>
         </div>
@@ -649,12 +649,12 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       {more && (
         <div data-testid="w-more-sheet" className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setMore(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => { setMore(false); setReporting(true); }} className="flex w-full items-center gap-3 rounded-xl bg-red-500/15 px-4 py-3 text-left text-sm font-semibold text-red-400"><Flag className="size-5" /> Signaler {st?.host_pseudo ?? ""}</button>
+            <button type="button" onClick={() => { setMore(false); setReporting(true); }} className="flex w-full items-center gap-3 rounded-xl bg-red-500/15 px-4 py-3 text-start text-sm font-semibold text-red-400"><Flag className="size-5" /> Signaler {st?.host_pseudo ?? ""}</button>
           </div>
         </div>
       )}
       {preview && (
-        <button type="button" data-testid="w-self" aria-label={myBlur ? "Me montrer" : "Me flouter"} onClick={() => void toggleBlur()} className="absolute top-28 left-3 z-20 h-36 w-24 overflow-hidden rounded-2xl border-2 border-[#A1E3C3]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+        <button type="button" data-testid="w-self" aria-label={myBlur ? "Me montrer" : "Me flouter"} onClick={() => void toggleBlur()} className="absolute top-28 start-3 z-20 h-36 w-24 overflow-hidden rounded-2xl border-2 border-[#A1E3C3]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <TrackVideo track={preview} mirror />
           <span className={`absolute inset-x-1 bottom-1 rounded-full py-0.5 text-[9px] font-bold ${myBlur ? "bg-black/70" : "bg-[#A1E3C3] text-night"}`}>{myBlur ? "Flouté · toucher" : "Visible"}</span>
         </button>
@@ -673,7 +673,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setReporting(false)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>
             <p className="font-display font-bold">Signaler {st?.host_pseudo} — il sera bloqué tout de suite</p>
-            {["Nudité", "Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => { setReporting(false); if (st) void rouletteReport(st.host, `Live à plusieurs — ${r}`).then(() => toast("Signalé et bloqué")).catch(() => undefined); leave(); onNext(); }} className="block w-full rounded-xl bg-night px-4 py-3 text-left text-sm">{r}</button>)}
+            {["Nudité", "Exhibition non désirée", ...REPORT_REASONS].map((r) => <button key={r} type="button" onClick={() => { setReporting(false); if (st) void rouletteReport(st.host, `Live à plusieurs — ${r}`).then(() => toast("Signalé et bloqué")).catch(() => undefined); leave(); onNext(); }} className="block w-full rounded-xl bg-night px-4 py-3 text-start text-sm">{r}</button>)}
           </div>
         </div>
       )}

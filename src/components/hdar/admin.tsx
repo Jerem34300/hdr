@@ -66,7 +66,7 @@ export function AdminApp() {
   return (
     <AdultGate>
       <AdminInner />
-      <p className="fixed bottom-1 left-2 text-[10px] text-muted">auth.uid : {uid ?? "…"}</p>
+      <p className="fixed bottom-1 start-2 text-[10px] text-muted">auth.uid : {uid ?? "…"}</p>
     </AdultGate>
   );
 }
@@ -465,7 +465,7 @@ function Reports({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) 
           <li key={r.target_id}>
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left"
+              className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-start"
               onClick={() => onOpen(r.target_id)}
             >
               <Avatar
@@ -486,7 +486,7 @@ function Reports({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) 
                   {r.reasons || "Sans motif"}
                 </span>
               </span>
-              <span className="shrink-0 text-right">
+              <span className="shrink-0 text-end">
                 <span className="block font-display text-xl font-extrabold text-signal">
                   {r.reports}
                 </span>
@@ -514,7 +514,7 @@ function Bans({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string) => 
           <li key={b.user_id}>
             <button
               type="button"
-              className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-left"
+              className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-start"
               onClick={() => onOpen(b.user_id)}
             >
               <span className="font-display font-bold">{b.pseudo}</span>
@@ -864,7 +864,7 @@ function ProposedPlaces({ adminKey, onOpen }: { adminKey: string; onOpen: (id: s
             <p className="text-xs text-muted">
               {p.kind} · {when(p.at)}
               {p.submitted_by && (
-                <button type="button" className="ml-2 underline" onClick={() => onOpen(p.submitted_by!)}>
+                <button type="button" className="ms-2 underline" onClick={() => onOpen(p.submitted_by!)}>
                   auteur
                 </button>
               )}
@@ -927,7 +927,7 @@ function UsersTab({ adminKey, onOpen }: { adminKey: string; onOpen: (id: string)
       </div>
       {err && <p className="text-signal">{err}</p>}
       <div className="overflow-x-auto rounded-2xl border border-line">
-        <table className="w-full text-left text-xs">
+        <table className="w-full text-start text-xs">
           <thead className="bg-surface text-muted"><tr>{["Pseudo", "Ville", "Âge", "Genre", "Inscrit", "Actif", "hdar+", "Boosts", "❤️ solde/reçus", "Dépensé", "Signal.", "Statut"].map((h) => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
           <tbody>
             {(data?.rows ?? []).map((r) => (
@@ -1118,10 +1118,10 @@ function PartnersTab({ adminKey }: { adminKey: string }) {
       <div className="flex gap-2 text-xs">Trier : {(["revenue", "views"] as const).map((k) => <button key={k} type="button" onClick={() => setSort(k)} className={"rounded-full px-3 py-1 " + (sort === k ? "bg-[#3EE08F] font-bold text-night" : "border border-line")}>{k === "revenue" ? "CA" : "Vues"}</button>)}</div>
       {list.length === 0 && <p className="text-sm text-muted">Aucun partenaire pour l'instant.</p>}
       {list.map((r) => (
-        <button key={r.id} type="button" onClick={() => setOpen(r)} className="flex w-full items-center gap-3 rounded-2xl border border-line p-3 text-left text-sm">
+        <button key={r.id} type="button" onClick={() => setOpen(r)} className="flex w-full items-center gap-3 rounded-2xl border border-line p-3 text-start text-sm">
           <span className="min-w-0 flex-1"><b className="block truncate">{r.name}</b>
             <span className="text-xs text-muted">{r.active ? `✅ actif jusqu'au ${new Date(r.until!).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : "⏸️ inactif"}{r.sub ? ` · abo ${r.sub}` : ""}{r.pro_boost_until && new Date(r.pro_boost_until) > new Date() ? " · ⭐ boosté" : ""}</span></span>
-          <span className="text-right text-xs"><b className="block text-sm">{eur(r.revenue)}</b>{r.views} vues · {r.boosts} boost(s)</span>
+          <span className="text-end text-xs"><b className="block text-sm">{eur(r.revenue)}</b>{r.views} vues · {r.boosts} boost(s)</span>
         </button>))}
     </div>
   );
@@ -1137,7 +1137,7 @@ function LiveQualityTab({ adminKey }: { adminKey: string }) {
     <div className="space-y-4">
       <LiveRoomsPanel adminKey={adminKey} />
       <p className="text-sm text-muted">Chaque mise en relation Live envoie un événement anonyme : vidéo reçue (avec délai), échec, ou abandon avant l'image.</p>
-      <table className="w-full text-sm"><thead><tr className="text-left text-muted"><th>Jour</th><th>Vidéo</th><th>Échecs</th><th>Abandons</th><th>Délai médian</th><th>Via relais</th></tr></thead>
+      <table className="w-full text-sm"><thead><tr className="text-start text-muted"><th>Jour</th><th>Vidéo</th><th>Échecs</th><th>Abandons</th><th>Délai médian</th><th>Via relais</th></tr></thead>
         <tbody>{d.days.length === 0 ? <tr><td colSpan={6} className="py-2 text-muted">Aucun Live mesuré pour l'instant.</td></tr> : d.days.map((x) => { const tot = x.video + x.failed + x.abandon; return <tr key={x.day} className="border-t border-white/10"><td>{x.day}</td><td>{x.video}{tot ? ` (${Math.round((x.video / tot) * 100)} %)` : ""}</td><td>{x.failed}</td><td>{x.abandon}</td><td>{sec(x.median_ms)}</td><td>{x.relay}</td></tr>; })}</tbody></table>
       <h3 className="font-display font-bold">30 derniers</h3>
       <ul className="space-y-1 text-sm">{d.last.map((e, i) => <li key={i} className="flex justify-between border-b border-white/5 py-1"><span>{new Date(e.at).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}</span><span>{L[e.outcome] ?? e.outcome}</span><span>{sec(e.ms)}</span><span className="text-muted">{e.ice === "relay" ? "relais" : e.ice === "direct" ? "direct" : "?"}</span></li>)}</ul>
@@ -1214,13 +1214,13 @@ export function AdsTab({ adminKey, onOpen, preview }: { adminKey: string; onOpen
               {a.boost_scope && <span className="rounded-full bg-[#fbbf24] px-2 py-0.5 font-bold text-night">Boost {a.boost_scope} · fin {when(a.boost_until ?? "")}</span>}
               <span className="rounded-full bg-white/10 px-2 py-0.5">💬 {a.replies ?? 0} réponse{(a.replies ?? 0) > 1 ? "s" : ""}</span>
               {a.reports > 0 && <span className="rounded-full bg-signal/20 px-2 py-0.5 text-signal">{a.reports} signalement{a.reports > 1 ? "s" : ""}{a.open_reports ? ` (${a.open_reports} à traiter)` : ""}</span>}
-              <span className="ml-auto text-muted">{a.city} · {when(a.created_at)} → {when(a.expires_at)}</span>
+              <span className="ms-auto text-muted">{a.city} · {when(a.created_at)} → {when(a.expires_at)}</span>
             </div>
             <p className="mt-1 font-bold">{a.title}</p>
             <p className="mt-0.5 whitespace-pre-wrap text-muted">{a.body}</p>
             {!!a.tags?.length && (
               <div className="mt-1.5 flex flex-wrap gap-1">{a.tags.map((t) => (
-                <span key={t} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#8b7cff]/15 pl-2.5 text-xs text-[#c4b5fd]">
+                <span key={t} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#8b7cff]/15 ps-2.5 text-xs text-[#c4b5fd]">
                   <button type="button" onClick={() => setTag(t)}>#{t}</button>
                   <button type="button" aria-label={`Retirer le tag ${t}`} title="Retirer ce tag" disabled={busy === a.id} className="grid size-7 place-items-center rounded-full hover:bg-signal/30" onClick={() => { if (confirm(`Retirer le tag « ${t} » ?`)) act(a.id, adminAds.untag(adminKey, a.id, t)); }}>×</button>
                 </span>

@@ -36,7 +36,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
           <button
             type="button"
             data-act="city"
-            className="min-w-0 truncate text-right text-sm text-muted"
+            className="min-w-0 truncate text-end text-sm text-muted"
             {...bindTap(openCity)}
           >
             📍 {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
@@ -103,10 +103,10 @@ function OnlinePill() {
 }
 
 /** Les 4 boutons du haut de la carte : même taille, même forme, une teinte de la palette chacun. */
-const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[12px] font-semibold whitespace-nowrap ring-1";
+const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[12px] font-semibold overflow-hidden whitespace-nowrap ring-1";
 function Badge({ n, cls }: { n: number; cls: string }) {
   return (
-    <span className={`absolute -top-1.5 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-night px-1 text-[10px] font-bold text-night ${cls}`}>
+    <span className={`absolute -top-1.5 -end-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-night px-1 text-[10px] font-bold text-night ${cls}`}>
       {n > 99 ? "99+" : n}
     </span>
   );
@@ -186,7 +186,7 @@ function AdTicker({ lat, lng, city, demo }: { lat: number; lng: number; city: st
   const row = (k: string) => items.map((a) => (
     <button key={k + a.id} type="button" tabIndex={k === "b" ? -1 : 0} aria-hidden={k === "b" || undefined} onClick={() => openAnnonces(a.id)} className="mx-3 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
       {a.boost_scope && <span className="rounded-full bg-[#fbbf24] px-1.5 text-[10px] font-bold text-night">Boostée</span>}
-      <span>📌 {a.title}{a.photos?.length > 0 ? <span className="ml-1 opacity-80" role="img" aria-label="avec photos" title="Avec photos">📷</span> : null}</span><span className="text-muted">· {a.city}</span>
+      <span>📌 {a.title}{a.photos?.length > 0 ? <span className="ms-1 opacity-80" role="img" aria-label="avec photos" title="Avec photos">📷</span> : null}</span><span className="text-muted">· {a.city}</span>
     </button>
   ));
   return (
@@ -195,7 +195,7 @@ function AdTicker({ lat, lng, city, demo }: { lat: number; lng: number; city: st
       <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]">
         <div className="ad-ticker-track flex w-max" style={{ ["--ticker-dur" as string]: `${Math.max(20, items.length * 7)}s` }}>{row("a")}{row("b")}</div>
       </div>
-      <button type="button" aria-label="Masquer le bandeau des annonces (24 h)" onClick={() => { try { localStorage.setItem(TICKER_KEY, String(Date.now())); } catch { /* privé */ } setOff(true); }} className="z-10 grid h-full w-8 shrink-0 place-items-center border-l border-line bg-night text-ink"><X className="size-4" /></button>
+      <button type="button" aria-label="Masquer le bandeau des annonces (24 h)" onClick={() => { try { localStorage.setItem(TICKER_KEY, String(Date.now())); } catch { /* privé */ } setOff(true); }} className="z-10 grid h-full w-8 shrink-0 place-items-center border-s border-line bg-night text-ink"><X className="size-4" /></button>
     </div>
   );
 }

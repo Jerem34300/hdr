@@ -11,9 +11,9 @@ const GOLD = "#fbbf24";
 function Bokeh() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <span className="absolute -top-16 -left-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: MINT }} />
-      <span className="absolute top-24 -right-16 size-64 rounded-full opacity-25 blur-3xl" style={{ background: CORAL }} />
-      <span className="absolute bottom-0 left-1/3 size-40 rounded-full opacity-20 blur-3xl" style={{ background: "#a78bfa" }} />
+      <span className="absolute -top-16 -start-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: MINT }} />
+      <span className="absolute top-24 -end-16 size-64 rounded-full opacity-25 blur-3xl" style={{ background: CORAL }} />
+      <span className="absolute bottom-0 start-1/3 size-40 rounded-full opacity-20 blur-3xl" style={{ background: "#a78bfa" }} />
     </div>
   );
 }
@@ -58,7 +58,7 @@ function Simulator() {
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         {ex.map(([t, en, ep]) => (
-          <button type="button" key={t} onClick={() => { setN(en); setP(ep); }} className="rounded-2xl border border-line p-3 text-left text-sm">
+          <button type="button" key={t} onClick={() => { setN(en); setP(ep); }} className="rounded-2xl border border-line p-3 text-start text-sm">
             <b className="block">{t}</b><span className="text-muted">{en} inscrits{ep ? ` + ${ep} lieu` : ""}/mois</span><b className="mt-1 block" style={{ color: MINT }}>≈ {fmt(simulate(en, ep).total)}/mois</b>
           </button>
         ))}

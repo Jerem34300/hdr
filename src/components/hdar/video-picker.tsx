@@ -12,8 +12,8 @@ export function VideoPicker({ files, max, maxSec, onChange }: { files: File[]; m
       {previews.map((u, i) => (
         <button key={u} type="button" aria-label="Retirer la vidéo" onClick={() => onChange(files.filter((_, j) => j !== i))} className="relative h-20 w-28 overflow-hidden rounded-xl bg-black">
           <video src={u} muted playsInline preload="metadata" className="size-full object-cover" />
-          <Film className="absolute bottom-1 left-1 size-4 text-white" />
-          <span className="absolute top-1 right-1 rounded-full bg-black/70 p-0.5"><X className="size-3" /></span>
+          <Film className="absolute bottom-1 start-1 size-4 text-white" />
+          <span className="absolute top-1 end-1 rounded-full bg-black/70 p-0.5"><X className="size-3" /></span>
         </button>
       ))}
       {files.length < max && (

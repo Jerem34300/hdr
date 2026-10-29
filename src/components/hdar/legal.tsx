@@ -9,7 +9,7 @@ export const ContactLink = () => (
 export function LegalPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="h-dvh overflow-y-auto bg-night px-5 py-10 text-ink">
-      <article className="mx-auto max-w-2xl space-y-4 text-sm leading-relaxed [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc">
+      <article className="mx-auto max-w-2xl space-y-4 text-sm leading-relaxed [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_li]:ms-5 [&_li]:list-disc">
         <a href="/" className="text-muted underline">
           ← Retour à hdar.
         </a>

@@ -42,7 +42,7 @@ function aboardText(n: number) {
 
 export function TripChip({ t, onOpen }: { t: Trip; onOpen: () => void }) {
   return (
-    <button type="button" {...bindTap(onOpen)} className="flex h-10 w-full items-center gap-2 rounded-2xl border border-line bg-night px-3 text-left text-sm">
+    <button type="button" {...bindTap(onOpen)} className="flex h-10 w-full items-center gap-2 rounded-2xl border border-line bg-night px-3 text-start text-sm">
       <TransitIcon kind={t.trip_kind} className="size-4 shrink-0 text-signal" />
       <span className="min-w-0 flex-1 truncate font-semibold">{t.name}</span>
       <span className="shrink-0 text-xs text-muted">{aboardText(t.aboard)}</span>
@@ -77,14 +77,14 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
     : null;
   return (
     <div className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[80%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
-      <button type="button" aria-label="Fermer" className="absolute top-3 right-3 flex size-10 items-center justify-center" onClick={onClose}>
+      <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
         <X className="size-5" />
       </button>
       <p className="flex items-center gap-1.5 text-sm" style={{ color: k.color }}>
         <TransitIcon kind={stop.kind} /> {k.label}
         {stop.iata ? ` · ${stop.iata}` : ""}
       </p>
-      <h2 className="mt-1 pr-10 font-display text-2xl font-extrabold">{stop.name}</h2>
+      <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{stop.name}</h2>
       <button
         type="button"
         data-act="trip-join"
@@ -223,7 +223,7 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
                   disabled={busy}
                   data-act="trip-line"
                   onClick={() => join(l.label, l.network)}
-                  className="flex w-full items-start gap-3 rounded-2xl border border-line bg-night px-3 py-2.5 text-left text-sm"
+                  className="flex w-full items-start gap-3 rounded-2xl border border-line bg-night px-3 py-2.5 text-start text-sm"
                 >
                   <span className="mt-0.5 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white" style={{ background: l.colour || "#7c3aed" }}>
                     {l.label.replace(/^(Métro|Tram|Bus) /, "")}
@@ -231,7 +231,7 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold">
                       {l.label}
-                      {l.network && <span className="ml-1.5 text-xs font-normal text-muted">{l.network}</span>}
+                      {l.network && <span className="ms-1.5 text-xs font-normal text-muted">{l.network}</span>}
                     </span>
                     {l.directions.length > 0 && <span className="block truncate text-xs text-muted">Direction {l.directions.slice(0, 2).join(" ou ")}</span>}
                     {l.next.length > 0 && (
@@ -467,7 +467,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
       <div className="max-h-80 divide-y divide-line overflow-y-auto">
         {urban
           ? groups.map(({ r, next }) => (
-              <button key={r.label + r.to} type="button" disabled={busy === r.id} onClick={() => join(r)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm">
+              <button key={r.label + r.to} type="button" disabled={busy === r.id} onClick={() => join(r)} className="flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm">
                 <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white" style={{ background: r.colour || "#7c3aed" }}>
                   {r.line || r.label}
                 </span>
@@ -481,7 +481,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
           : list.slice(0, 40).map((r) => {
               const t = tab === "dep" ? r.dep! : r.arr!;
               return (
-                <button key={r.id} type="button" data-act="board-row" disabled={busy === r.id} onClick={() => join(r)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm">
+                <button key={r.id} type="button" data-act="board-row" disabled={busy === r.id} onClick={() => join(r)} className="flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm">
                   <span className="w-12 shrink-0">
                     <span className={"block font-display font-bold tabular-nums " + (r.cancelled ? "text-muted line-through" : r.delayMin ? "text-amber-300" : "")}>{hhmm(t)}</span>
                     {r.delayMin > 0 && !r.cancelled && <span className="block text-[10px] text-amber-300">+{r.delayMin} min</span>}

@@ -9,9 +9,9 @@ const euros = (c: number) => (c / 100).toLocaleString("fr-FR", { style: "currenc
 function Bokeh({ className = "" }: { className?: string }) {
   return (
     <div aria-hidden className={"pointer-events-none absolute inset-0 overflow-hidden " + className}>
-      <span className="absolute -top-16 -left-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: CORAL }} />
-      <span className="absolute top-24 -right-16 size-64 rounded-full opacity-25 blur-3xl" style={{ background: MINT }} />
-      <span className="absolute bottom-0 left-1/3 size-40 rounded-full opacity-20 blur-3xl" style={{ background: "#f472b6" }} />
+      <span className="absolute -top-16 -start-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: CORAL }} />
+      <span className="absolute top-24 -end-16 size-64 rounded-full opacity-25 blur-3xl" style={{ background: MINT }} />
+      <span className="absolute bottom-0 start-1/3 size-40 rounded-full opacity-20 blur-3xl" style={{ background: "#f472b6" }} />
     </div>
   );
 }
@@ -34,8 +34,8 @@ export function MapSnippet() {
       {[["18%", "30%", "M"], ["70%", "72%", "J"], ["38%", "22%", "L"], ["86%", "60%", "K"]].map(([l, t, n]) => (
         <span key={n} className="absolute flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-online bg-surface text-xs font-bold" style={{ left: l, top: t }}>{n}</span>
       ))}
-      <span className="absolute top-3 left-3 rounded-full bg-night/85 px-3 py-1 text-[11px] font-bold">Exemple · Montpellier</span>
-      <span className="absolute right-3 bottom-3 rounded-full bg-night/85 px-3 py-1 text-[11px]" style={{ color: "#f472b6" }}>✨ votre lieu brille sur la carte</span>
+      <span className="absolute top-3 start-3 rounded-full bg-night/85 px-3 py-1 text-[11px] font-bold">Exemple · Montpellier</span>
+      <span className="absolute end-3 bottom-3 rounded-full bg-night/85 px-3 py-1 text-[11px]" style={{ color: "#f472b6" }}>✨ votre lieu brille sur la carte</span>
     </div>
   );
 }
@@ -50,9 +50,9 @@ export function SampleFiche() {
   ] as const;
   return (
     <div className="relative rounded-3xl border border-line bg-surface p-5 shadow-2xl">
-      <span className="absolute top-3 right-3 rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">Exemple</span>
+      <span className="absolute top-3 end-3 rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">Exemple</span>
       <p className="text-sm" style={{ color: k.color }}>{k.icon} {k.label}</p>
-      <h3 className="mt-1 pr-16 font-display text-2xl font-extrabold">Le Néon Imaginaire</h3>
+      <h3 className="mt-1 pe-16 font-display text-2xl font-extrabold">Le Néon Imaginaire</h3>
       <p className="mt-2 text-sm">Bar cocktails & DJ sets du jeudi au samedi, 18 h – 2 h. Happy hour jusqu'à 21 h.</p>
       <div className="mt-3 flex gap-2 overflow-hidden">
         {["from-[#FA6F6C] to-[#7c3aed]", "from-[#A1E3C3] to-[#0ea5e9]", "from-[#f472b6] to-[#fbbf24]"].map((g, i) => (
@@ -82,7 +82,7 @@ export function SampleFiche() {
       <div className="mt-2 space-y-1.5 rounded-2xl bg-night p-3 text-sm">
         <p><span className="text-xs font-bold text-muted">Alex</span> Quelqu'un ce soir ? 🙂</p>
         <p><span className="text-xs font-bold text-muted">Le Néon</span> Soirée DJ à 22 h, shot offert avant minuit !</p>
-        <p className="text-right"><span className="text-xs font-bold text-muted">Sam</span> J'arrive vers 23 h 🍹</p>
+        <p className="text-end"><span className="text-xs font-bold text-muted">Sam</span> J'arrive vers 23 h 🍹</p>
       </div>
       <p className="mt-3 text-[11px] text-muted">Établissement fictif, pseudos et avis de démonstration.</p>
     </div>
@@ -194,7 +194,7 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
               const best = i === 1;
               return (
                 <div key={p.product} className="relative rounded-3xl border bg-surface p-5" style={{ borderColor: best ? CORAL : "var(--color-line)" }}>
-                  {best && <span className="absolute -top-3 left-5 rounded-full px-3 py-0.5 text-[11px] font-bold text-night" style={{ background: CORAL }}>Le plus choisi</span>}
+                  {best && <span className="absolute -top-3 start-5 rounded-full px-3 py-0.5 text-[11px] font-bold text-night" style={{ background: CORAL }}>Le plus choisi</span>}
                   <p className="font-display font-bold">{p.label}</p>
                   <p className="mt-1 font-display text-3xl font-extrabold">{euros(p.price_cents)}</p>
                   <p className="mt-2 text-xs text-muted">Halo sur la carte · chat · avis · stats</p>
@@ -218,7 +218,7 @@ export function ProLanding({ prices, boostPrices = [], onCreate }: { prices: Pri
         <table className="mt-4 w-full text-sm">
           <tbody>
             {(boostPrices.length ? boostPrices.map((p) => [p.label, euros(p.price_cents)]) : [["24 heures", "4,99 €"], ["7 jours", "19,99 €"], ["30 jours", "59,99 €"]]).map(([l, e]) => (
-              <tr key={l} className="border-t border-line"><td className="py-2">{l}</td><td className="py-2 text-right font-display text-lg font-extrabold text-[#fbbf24]">{e}</td></tr>
+              <tr key={l} className="border-t border-line"><td className="py-2">{l}</td><td className="py-2 text-end font-display text-lg font-extrabold text-[#fbbf24]">{e}</td></tr>
             ))}
           </tbody>
         </table>

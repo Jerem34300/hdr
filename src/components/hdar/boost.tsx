@@ -37,9 +37,9 @@ export function useActiveBoost() {
 export function Bokeh() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <span className="absolute -top-16 -left-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: CORAL }} />
-      <span className="absolute top-40 -right-16 size-64 rounded-full opacity-25 blur-3xl" style={{ background: MINT }} />
-      <span className="absolute top-[38rem] left-1/4 size-48 rounded-full opacity-20 blur-3xl" style={{ background: "#f472b6" }} />
+      <span className="absolute -top-16 -start-10 size-56 rounded-full opacity-40 blur-3xl" style={{ background: CORAL }} />
+      <span className="absolute top-40 -end-16 size-64 rounded-full opacity-25 blur-3xl" style={{ background: MINT }} />
+      <span className="absolute top-[38rem] start-1/4 size-48 rounded-full opacity-20 blur-3xl" style={{ background: "#f472b6" }} />
     </div>
   );
 }
@@ -80,7 +80,7 @@ function MapPreview({ boosted, label }: { boosted: boolean; label: string }) {
       <span className={"absolute -translate-x-1/2 -translate-y-1/2 " + (boosted ? "z-10" : "")} style={{ left: "50%", top: "50%" }}>
         <Pin boosted={boosted} size={boosted ? 50 : 36} />
       </span>
-      <span className={"absolute left-2 top-2 rounded-full px-3 py-1 text-[11px] font-bold " + (boosted ? "text-night" : "bg-night/80 text-muted")} style={boosted ? { background: `linear-gradient(90deg, ${CORAL}, #f472b6, #fbbf24)` } : undefined}>{label}</span>
+      <span className={"absolute start-2 top-2 rounded-full px-3 py-1 text-[11px] font-bold " + (boosted ? "text-night" : "bg-night/80 text-muted")} style={boosted ? { background: `linear-gradient(90deg, ${CORAL}, #f472b6, #fbbf24)` } : undefined}>{label}</span>
     </div>
   );
 }
@@ -148,8 +148,8 @@ export function BoostPage() {
           <div className="relative mx-auto mt-8 flex size-48 items-center justify-center">
             <span className="absolute inset-0 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(${CORAL}, transparent 70%)` }} />
             <Pin boosted size={92} />
-            <Sparkles className="sparkle absolute top-6 right-8 size-5" style={{ color: "#fbbf24" }} />
-            <Sparkles className="sparkle absolute bottom-8 left-7 size-4" style={{ color: MINT, animationDelay: ".8s" }} />
+            <Sparkles className="sparkle absolute top-6 end-8 size-5" style={{ color: "#fbbf24" }} />
+            <Sparkles className="sparkle absolute bottom-8 start-7 size-4" style={{ color: MINT, animationDelay: ".8s" }} />
           </div>
           {active ? (
             <ActiveCard b={active} now={now} />
@@ -198,9 +198,9 @@ export function BoostPage() {
                   type="button"
                   disabled={!!busy}
                   onClick={() => pay(p.product)}
-                  className={"relative flex items-center justify-between rounded-3xl border p-5 " + (f ? "pt-8 " : "") + " text-left transition active:scale-[.98] disabled:opacity-60 " + (f ? "boost-card border-transparent" : "border-line bg-surface/70")}
+                  className={"relative flex items-center justify-between rounded-3xl border p-5 " + (f ? "pt-8 " : "") + " text-start transition active:scale-[.98] disabled:opacity-60 " + (f ? "boost-card border-transparent" : "border-line bg-surface/70")}
                 >
-                  {f && <span className="absolute top-2 right-3 rounded-full bg-night/80 !text-[#fbbf24] px-3 py-0.5 text-[11px] font-extrabold text-night" >⭐ Le plus choisi</span>}
+                  {f && <span className="absolute top-2 end-3 rounded-full bg-night/80 !text-[#fbbf24] px-3 py-0.5 text-[11px] font-extrabold text-night" >⭐ Le plus choisi</span>}
                   <span>
                     <b className="block font-display text-lg">{p.label}</b>
                     <span className={"text-xs " + (f ? "text-white/85" : "text-muted")}>{!PAYMENTS_ENABLED ? "Offert au lancement" : busy === p.product ? "Redirection vers Stripe…" : payOk ? "Payer avec Stripe" : "Bientôt disponible"}</span>
@@ -316,7 +316,7 @@ function SpotBoost({ prices, payOk, now }: { prices: PriceRow[]; payOk: boolean 
         <span className="absolute flex h-8 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-spot bg-night/90 px-3 text-xs text-ink opacity-70" style={{ left: "24%", top: "28%" }}>Plage du soir</span>
         <span className="absolute flex h-8 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-spot bg-night/90 px-3 text-xs text-ink opacity-70" style={{ left: "76%", top: "76%" }}>Apéro chez moi</span>
         <span className="partner-glow absolute z-10 flex h-9 -translate-x-1/2 -translate-y-1/2 items-center rounded-full border-2 border-spot bg-night/90 px-4 text-sm font-bold text-ink" style={{ left: "52%", top: "52%" }}>✨ {cur?.title ?? "Ton lieu"}</span>
-        <span className="absolute left-2 top-2 rounded-full px-3 py-1 text-[11px] font-bold text-night" style={{ background: `linear-gradient(90deg, ${CORAL}, #f472b6, #fbbf24)` }}>✨ Lieu boosté</span>
+        <span className="absolute start-2 top-2 rounded-full px-3 py-1 text-[11px] font-bold text-night" style={{ background: `linear-gradient(90deg, ${CORAL}, #f472b6, #fbbf24)` }}>✨ Lieu boosté</span>
       </div>
       {spots && spots.length === 0 ? (
         <p className="mt-4 rounded-2xl border border-line bg-surface/70 p-4 text-center text-sm text-muted">
@@ -338,7 +338,7 @@ function SpotBoost({ prices, payOk, now }: { prices: PriceRow[]; payOk: boolean 
           <div className="mt-4 grid grid-cols-2 gap-3">
             {prices.map((p, i) => (
               <button key={p.product} type="button" disabled={!!busy} onClick={() => pay(p.product)}
-                className={"rounded-3xl border p-4 text-left transition active:scale-[.98] disabled:opacity-60 " + (i === prices.length - 1 ? "boost-card border-transparent" : "border-line bg-surface/70")}>
+                className={"rounded-3xl border p-4 text-start transition active:scale-[.98] disabled:opacity-60 " + (i === prices.length - 1 ? "boost-card border-transparent" : "border-line bg-surface/70")}>
                 <b className="block font-display">{p.label}</b>
                 <span className="relative z-10 font-display text-2xl font-extrabold" style={{ color: i === prices.length - 1 ? "#fff" : CORAL }}>{euros(p.price_cents)}</span>
                 <span className={"block text-[11px] " + (i === prices.length - 1 ? "text-white/85" : "text-muted")}>{busy === p.product ? "Redirection…" : cur ? `pour « ${cur.title} »` : "Paiement unique"}</span>

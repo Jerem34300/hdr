@@ -40,6 +40,7 @@ import { Route as PetitesAnnoncesSlugRouteImport } from './routes/petites-annonc
 import { Route as RencontreIndexRouteImport } from './routes/rencontre/index'
 import { Route as RencontreSlugRouteImport } from './routes/rencontre/$slug'
 import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
+import { Route as LangCitySlugRouteImport } from './routes/$lang/city.$slug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as RencontreSlugThemeRouteImport } from './routes/rencontre/$slug_.$theme'
 import { Route as RencontreDepartementSlugRouteImport } from './routes/rencontre/departement.$slug'
@@ -201,6 +202,11 @@ const SitemapsPartRoute = SitemapsPartRouteImport.update({
   path: '/sitemaps/$part',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangCitySlugRoute = LangCitySlugRouteImport.update({
+  id: '/$lang/city/$slug',
+  path: '/$lang/city/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/annonces/': typeof AnnoncesIndexRoute
   '/petites-annonces/': typeof PetitesAnnoncesIndexRoute
   '/rencontre/': typeof RencontreIndexRoute
+  '/$lang/city/$slug': typeof LangCitySlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/annonces': typeof AnnoncesIndexRoute
   '/petites-annonces': typeof PetitesAnnoncesIndexRoute
   '/rencontre': typeof RencontreIndexRoute
+  '/$lang/city/$slug': typeof LangCitySlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/annonces/': typeof AnnoncesIndexRoute
   '/petites-annonces/': typeof PetitesAnnoncesIndexRoute
   '/rencontre/': typeof RencontreIndexRoute
+  '/$lang/city/$slug': typeof LangCitySlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/rencontre/$slug_/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/annonces/'
     | '/petites-annonces/'
     | '/rencontre/'
+    | '/$lang/city/$slug'
     | '/api/auth/$'
     | '/rencontre/$slug/$theme'
     | '/rencontre/departement/$slug'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/annonces'
     | '/petites-annonces'
     | '/rencontre'
+    | '/$lang/city/$slug'
     | '/api/auth/$'
     | '/rencontre/$slug/$theme'
     | '/rencontre/departement/$slug'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/annonces/'
     | '/petites-annonces/'
     | '/rencontre/'
+    | '/$lang/city/$slug'
     | '/api/auth/$'
     | '/rencontre/$slug_/$theme'
     | '/rencontre/departement/$slug'
@@ -481,6 +493,7 @@ export interface RootRouteChildren {
   AnnoncesIndexRoute: typeof AnnoncesIndexRoute
   PetitesAnnoncesIndexRoute: typeof PetitesAnnoncesIndexRoute
   RencontreIndexRoute: typeof RencontreIndexRoute
+  LangCitySlugRoute: typeof LangCitySlugRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   RencontreSlugThemeRoute: typeof RencontreSlugThemeRoute
   RencontreDepartementSlugRoute: typeof RencontreDepartementSlugRoute
@@ -706,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapsPartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/city/$slug': {
+      id: '/$lang/city/$slug'
+      path: '/$lang/city/$slug'
+      fullPath: '/$lang/city/$slug'
+      preLoaderRoute: typeof LangCitySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -770,6 +790,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnnoncesIndexRoute: AnnoncesIndexRoute,
   PetitesAnnoncesIndexRoute: PetitesAnnoncesIndexRoute,
   RencontreIndexRoute: RencontreIndexRoute,
+  LangCitySlugRoute: LangCitySlugRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   RencontreSlugThemeRoute: RencontreSlugThemeRoute,
   RencontreDepartementSlugRoute: RencontreDepartementSlugRoute,

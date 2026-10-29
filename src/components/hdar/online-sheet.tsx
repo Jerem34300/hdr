@@ -107,23 +107,23 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
           {data && rows.length === 0 && <li className="p-6 text-center text-sm text-muted">Personne pour l'instant avec ces critères.</li>}
           {rows.map((x) => x.kind === "profile" ? (
             <li key={x.p.id}>
-              <button type="button" onClick={() => open(x)} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left active:bg-surface">
+              <button type="button" onClick={() => open(x)} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-start active:bg-surface">
                 <span className="relative size-12 shrink-0 overflow-hidden rounded-full border border-line bg-surface">
                   {x.p.photo ? <img src={x.p.photo} alt="" className="size-full object-cover" /> : <span className="flex size-full items-center justify-center font-display font-bold">{x.p.pseudo.slice(0, 1).toUpperCase()}</span>}
-                  {x.p.min <= 5 && <span className="absolute right-0 bottom-0 size-3 rounded-full border-2 border-night bg-online" />}
+                  {x.p.min <= 5 && <span className="absolute end-0 bottom-0 size-3 rounded-full border-2 border-night bg-online" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-bold">{x.p.pseudo}{x.p.age ? <span className="font-normal text-muted"> · {x.p.age} ans</span> : null}{x.p.premium ? " 👑" : ""}{x.p.new ? <span className="ml-1.5 rounded-full bg-[#3EE08F]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#3EE08F]">Nouveau</span> : null}</span>
+                  <span className="block truncate font-bold">{x.p.pseudo}{x.p.age ? <span className="font-normal text-muted"> · {x.p.age} ans</span> : null}{x.p.premium ? " 👑" : ""}{x.p.new ? <span className="ms-1.5 rounded-full bg-[#3EE08F]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#3EE08F]">Nouveau</span> : null}</span>
                   <span className="block truncate text-xs text-muted">{[genderShort(x.p.iam ?? ""), distLabel(x.km), ago(x.p.min)].filter(Boolean).join(" · ")}</span>
                 </span>
               </button>
             </li>
           ) : (
             <li key={x.v.id}>
-              <button type="button" onClick={() => open(x)} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left active:bg-surface">
+              <button type="button" onClick={() => open(x)} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-start active:bg-surface">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-dashed border-line bg-surface text-xl">👀</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-bold">{x.v.name} <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-muted">sans profil</span></span>
+                  <span className="block truncate font-bold">{x.v.name} <span className="ms-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-muted">sans profil</span></span>
                   <span className="block truncate text-xs text-muted">{distLabel(x.km)} · {ago(x.v.min)}{onboarded ? " · touche pour écrire" : ""}</span>
                 </span>
               </button>

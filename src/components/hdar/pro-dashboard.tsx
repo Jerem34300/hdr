@@ -119,7 +119,7 @@ function Review({ r, onDone, demo }: { r: ProDash["reviews"][number]; onDone: ()
     <li className="rounded-2xl bg-night p-3 text-sm">
       <p className="text-xs text-muted">{r.stars ? <span style={{ color: GOLD }}>{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</span> : "Sans note"} · {new Date(r.at).toLocaleDateString("fr-FR")}</p>
       <p className="mt-1 break-words">{r.body}</p>
-      {r.reply ? <p className="mt-2 rounded-xl border-l-2 border-[#fbbf24] bg-surface px-3 py-2 text-xs"><b>Votre réponse :</b> {r.reply}</p> : open ? (
+      {r.reply ? <p className="mt-2 rounded-xl border-s-2 border-[#fbbf24] bg-surface px-3 py-2 text-xs"><b>Votre réponse :</b> {r.reply}</p> : open ? (
         <div className="mt-2 flex gap-2"><input value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={500} placeholder="Votre réponse publique (une seule fois)" className="min-w-0 flex-1 rounded-full bg-surface px-3 py-2 text-xs" />
           <button type="button" disabled={!txt.trim()} onClick={() => void reply()} className="rounded-full bg-[#fbbf24] px-3 text-xs font-bold text-night disabled:opacity-50">Publier</button></div>
       ) : (

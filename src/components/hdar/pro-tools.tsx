@@ -90,7 +90,7 @@ export function ProSettings() {
 
 export function GiftCard({ g }: { g: ProGift }) {
   return (
-    <div className="rounded-2xl bg-night p-3 text-left text-sm">
+    <div className="rounded-2xl bg-night p-3 text-start text-sm">
       <p className="font-bold">🎁 {g.title} <span className="font-normal text-muted">· {g.place}</span></p>
       {g.description && <p className="text-xs text-muted">{g.description}</p>}
       {g.code && <p className="mt-1 font-mono text-lg font-extrabold tracking-widest text-[#A1E3C3]">{g.code}</p>}

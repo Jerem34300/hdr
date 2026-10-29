@@ -115,7 +115,7 @@ export function BotTab({ adminKey, demo, demoAnnounce }: { adminKey: string; dem
             <p className="text-xs font-bold uppercase tracking-wide text-muted">Aperçu</p>
             <div className="mt-2 flex gap-2">
               <BotAvatar className="size-8 shrink-0 rounded-full" />
-              <div className="rounded-2xl rounded-tl-md bg-surface px-3 py-2 text-sm whitespace-pre-wrap">📣 {ann}</div>
+              <div className="rounded-2xl rounded-ss-md bg-surface px-3 py-2 text-sm whitespace-pre-wrap">📣 {ann}</div>
             </div>
             <p className="mt-3 text-sm">
               {target !== "dm" && <>Publié dans <b>{preview.salon ?? "Général"}</b>. </>}

@@ -1275,7 +1275,7 @@ export type AdminAmbContract = { user_id: string; pseudo: string; name: string; 
 export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });
 
 // Salons (v58) : discussions ouvertes à tous, sans limite de distance ---------------------------
-export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro" | "bus"; expires_at?: string; aboard?: number; me_aboard?: boolean };
+export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; country?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro" | "bus"; expires_at?: string; aboard?: number; me_aboard?: boolean };
 /** Une ligne de discussion de groupe (salon ou chat du quartier). */
 export type GroupLine = {
   id: string;
@@ -1334,7 +1334,22 @@ export async function salonsInbox(seen: Record<string, string>): Promise<InboxSa
     return listSalons();
   }
 }
+/** Salon « Général » d'un pays (v102, créé au premier passage). Démo locale : ?countrydemo. */
+export async function countrySalon(cc: string): Promise<Salon> {
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("countrydemo")) return demoCountry(cc);
+  try {
+    return await rpc<Salon>("hdar_country_salon", { p_cc: cc });
+  } catch (e) {
+    // Base pas encore en v102 : l'ancien salon « Général ».
+    const g = missingFn(e) ? (await listSalons()).find((s) => s.official && !s.region && s.name.startsWith("Général")) : null;
+    if (!g) throw e;
+    return g;
+  }
+}
+const demoCountry = (cc: string): Salon => ({ id: "demo-country-" + cc, name: "Général " + cc, description: null, emoji: null, official: true, country: cc, mine: false,
+  last_at: new Date().toISOString(), recent: 12, people: 5 });
 export const getSalon = (id: string) => {
+  if (import.meta.env.DEV && id.startsWith("demo-country-")) return Promise.resolve(demoCountry(id.slice(13)));
   if (import.meta.env.DEV && id.startsWith("demo-trip-")) {
     const k = id.includes("Bus") ? "bus" : id.includes("Vol") ? "flight" : id.includes("Mtro") || id.includes("Tram") ? "metro" : "train";
     return Promise.resolve<Salon>({ id, name: "", description: new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), emoji: null, official: false, mine: false,
@@ -1345,6 +1360,14 @@ export const getSalon = (id: string) => {
 export const createSalon = (name: string, description: string, emoji: string) =>
   rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
 export const salonMessages = async (id: string) => {
+  if (import.meta.env.DEV && id.startsWith("demo-country-")) {
+    const t = (m: number) => Date.now() - m * 60_000;
+    const base = { kind: "text" as const, mine: false, replyTo: null, reply: null };
+    return [
+      { ...base, id: "c1", fromId: "x1", pseudo: "Sam", body: "Hello from Chicago, anyone around tonight?", at: t(25) },
+      { ...base, id: "c2", fromId: "x2", pseudo: "Discret", body: "Miami here, sunny as always", at: t(9) },
+    ] satisfies GroupLine[];
+  }
   if (import.meta.env.DEV && id.startsWith("demo-trip-")) {
     const t = (m: number) => Date.now() - m * 60_000;
     const base = { kind: "text" as const, mine: false, replyTo: null, reply: null };

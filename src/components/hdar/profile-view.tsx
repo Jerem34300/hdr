@@ -50,7 +50,7 @@ function GradientAvatar({ name, online }: { name: string; online: boolean }) {
       <div className="flex size-full items-center justify-center rounded-full" style={{ background: `radial-gradient(circle at 30% 25%, ${b}, ${a} 55%, #0b0b10 120%)` }}>
         <span className="font-display text-7xl font-extrabold text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.35)]">{name.slice(0, 1).toUpperCase()}</span>
       </div>
-      {online && <span className="absolute right-5 bottom-5 size-6 rounded-full border-4 border-night bg-[#A1E3C3]" aria-label="En ligne" />}
+      {online && <span className="absolute end-5 bottom-5 size-6 rounded-full border-4 border-night bg-[#A1E3C3]" aria-label="En ligne" />}
     </div>
   );
 }
@@ -128,8 +128,8 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
       <div className="min-h-0 flex-1 overflow-y-auto pb-6">
         {/* En-tête : photo plein cadre ou avatar dégradé, halos coral / vert comme sur la carte. */}
         <div className="relative overflow-hidden">
-          <span aria-hidden className="pointer-events-none absolute -top-16 -left-16 size-56 rounded-full bg-[#FA6F6C]/35 blur-3xl" />
-          <span aria-hidden className="pointer-events-none absolute -top-10 -right-20 size-56 rounded-full bg-[#A1E3C3]/25 blur-3xl" />
+          <span aria-hidden className="pointer-events-none absolute -top-16 -start-16 size-56 rounded-full bg-[#FA6F6C]/35 blur-3xl" />
+          <span aria-hidden className="pointer-events-none absolute -top-10 -end-20 size-56 rounded-full bg-[#A1E3C3]/25 blur-3xl" />
           <div className="relative px-5 pt-5">
             {extras && extras.album.length > 0 ? (
               <Album photos={extras.album} />
@@ -141,7 +141,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
             <h1 className="font-display text-[34px] leading-tight font-extrabold tracking-tight">
               {name}
               {profile?.age ? <span className="font-bold text-[#A1E3C3]">, {profile.age}</span> : null}
-              {profile?.premium && <PremiumBadge className="ml-2 align-middle" />}
+              {profile?.premium && <PremiumBadge className="ms-2 align-middle" />}
               {bot && <BotBadge className="!text-xs" />}
             </h1>
             {bot && <p className="mx-auto mt-2 max-w-xs text-sm text-muted">Compte officiel de l'équipe hdar. C'est un robot : il accueille les nouveaux membres et ne lit pas les messages.</p>}

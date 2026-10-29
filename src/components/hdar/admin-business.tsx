@@ -135,11 +135,11 @@ export function RoiTab({ adminKey }: { adminKey: string }) {
       <ul className="space-y-2">
         {data?.map((p) => (
           <li key={p.id} className="rounded-2xl border border-line bg-surface p-3 text-sm">
-            <button type="button" className="flex w-full items-center gap-2 text-left" onClick={() => setOpen(open === p.id ? null : p.id)}>
+            <button type="button" className="flex w-full items-center gap-2 text-start" onClick={() => setOpen(open === p.id ? null : p.id)}>
               <span className="text-xl">{PLACE_KINDS[p.kind as keyof typeof PLACE_KINDS]?.icon ?? "📌"}</span>
               <span className="min-w-0 flex-1">
                 <b className="block truncate">
-                  {p.name} {p.partner && <span className={"ml-1 rounded-full px-2 text-[10px] text-night " + (p.active ? "bg-[#f472b6]" : "bg-muted")}>{p.active ? "PARTENAIRE" : "INACTIF"}</span>}
+                  {p.name} {p.partner && <span className={"ms-1 rounded-full px-2 text-[10px] text-night " + (p.active ? "bg-[#f472b6]" : "bg-muted")}>{p.active ? "PARTENAIRE" : "INACTIF"}</span>}
                 </b>
                 <span className="text-xs text-muted">{nearestCity(p.lat, p.lng)} · {p.avg_stars ?? "—"}★ ({p.ratings}) · {p.comments} avis</span>
               </span>
@@ -241,10 +241,10 @@ function PriceEditor({ p, onSave }: { p: PricingRow; onSave: (label: string, cen
     <li className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-surface p-3 text-sm">
       <span className="w-32 text-xs text-muted">{p.kind === "boost" ? "✨ Boost" : p.kind === "pro_boost" ? "⭐ Boost Pro" : p.kind === "place_boost" ? "🌟 Boost de lieu" : p.kind === "premium" ? "👑 hdar+" : p.kind === "hearts" ? "❤️ Cœurs" : "📍 Lieu partenaire"}<br />{p.product}</span>
       <input className="h-10 w-32 rounded-xl border border-line bg-night px-3" value={label} onChange={(e) => setLabel(e.target.value)} />
-      <input className="h-10 w-24 rounded-xl border border-line bg-night px-3 text-right" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+      <input className="h-10 w-24 rounded-xl border border-line bg-night px-3 text-end" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
       <span>€{p.kind === "listing" || p.kind === "premium" ? " / période (renouvelé)" : ""}</span>
       <label className="flex items-center gap-1"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> En vente</label>
-      <button type="button" disabled={!Number.isFinite(cents) || cents < 0} className="ml-auto h-9 rounded-full bg-signal px-4 font-bold text-night disabled:opacity-50" onClick={() => onSave(label, cents, active)}>
+      <button type="button" disabled={!Number.isFinite(cents) || cents < 0} className="ms-auto h-9 rounded-full bg-signal px-4 font-bold text-night disabled:opacity-50" onClick={() => onSave(label, cents, active)}>
         Enregistrer
       </button>
     </li>

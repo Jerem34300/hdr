@@ -44,7 +44,7 @@ function Close() {
   return (
     <button
       type="button"
-      className="absolute top-3 right-3 z-20 flex size-11 items-center justify-center rounded-full border border-line bg-night text-ink"
+      className="absolute top-3 end-3 z-20 flex size-11 items-center justify-center rounded-full border border-line bg-night text-ink"
       aria-label="Fermer"
       data-act="close"
       {...bindTap(() => useHdar.getState().closeSheet())}
@@ -257,7 +257,7 @@ function Cities() {
         <li>
           <button type="button"
             onClick={() => { const h = useHdar.getState().here; useHdar.getState().locate(); useHdar.setState({ sheet: null }); if (h) flyTo(h.lat, h.lng, 15, true); else useHdar.getState().setTab("around"); }}
-            className={"flex h-14 w-full items-center gap-3 rounded-2xl border px-4 text-left " + (cityId === "ici" ? "border-signal" : "border-line")}>
+            className={"flex h-14 w-full items-center gap-3 rounded-2xl border px-4 text-start " + (cityId === "ici" ? "border-signal" : "border-line")}>
             <span className="text-xl">📍</span>
             <span><span className="block font-display font-bold">Autour de moi</span><span className="text-xs text-muted">Ma position (arrondie)</span></span>
           </button>
@@ -268,7 +268,7 @@ function Cities() {
               type="button"
               onClick={() => { setCity(city.slug); flyTo(city.lat, city.lng, 14); }}
               className={
-                "flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-left " +
+                "flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-start " +
                 (cityId === city.slug ? "border-signal" : "border-line")
               }
             >

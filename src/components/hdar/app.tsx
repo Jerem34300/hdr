@@ -126,7 +126,7 @@ export function App() {
       <IntroVideo />
       {cover && <Cover />}
       <div className={cn("app-frame text-ink", cover && "hidden")}>
-        <aside className="hidden flex-col justify-between border-r border-line px-10 py-12 lg:flex">
+        <aside className="hidden flex-col justify-between border-e border-line px-10 py-12 lg:flex">
           <div>
             <div className="flex items-center gap-3">
               <Mark className="size-12" />
@@ -223,12 +223,12 @@ function DockButton({
       {label}
       {typeof badge === "number" ? (
         badge > 0 && (
-          <span className="absolute top-1 right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">
+          <span className="absolute top-1 end-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">
             {badge > 99 ? "99+" : badge}
           </span>
         )
       ) : (
-        badge && <span className="absolute top-2 right-5 size-2 rounded-full bg-signal" />
+        badge && <span className="absolute top-2 end-5 size-2 rounded-full bg-signal" />
       )}
     </button>
   );

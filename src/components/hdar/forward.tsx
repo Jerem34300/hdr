@@ -43,7 +43,7 @@ export function ForwardSheet({ src, id, preview, onClose, demo }: { src: FwdSour
   const dms = list.filter((t) => t.scope === "dm"), salons = list.filter((t) => t.scope === "salon");
   const row = (t: Target) => (
     <li key={t.scope + t.id}>
-      <button type="button" disabled={!!busy} onClick={() => send(t)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left active:bg-white/5 disabled:opacity-60">
+      <button type="button" disabled={!!busy} onClick={() => send(t)} className="flex w-full items-center gap-3 px-4 py-2.5 text-start active:bg-white/5 disabled:opacity-60">
         {t.scope === "dm" ? <UserAvatar id={t.id} name={t.name} className="size-10 rounded-full" /> : <span className="flex size-10 items-center justify-center rounded-full bg-surface text-xl">{t.emoji || <Users className="size-5" />}</span>}
         <span className="min-w-0 flex-1"><span className="block truncate text-[15px] font-semibold">{t.name}</span><span className="block text-xs text-muted">{t.hint}</span></span>
         <span className="rounded-full bg-signal px-3 py-1 text-xs font-bold text-night">{busy === t.id ? "…" : "Envoyer"}</span>

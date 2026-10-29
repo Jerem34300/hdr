@@ -121,7 +121,7 @@ function LivePreview({ code, demo }: { code: string; demo?: LiveShareView }) {
         {v.pins.map((p, i) => (
           <span key={i} className={`absolute size-10 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 ${p.live ? "border-red-500" : "border-white"} bg-gradient-to-br from-[#FA6F6C] to-[#7c5cff]`} style={at(p.lat, p.lng)}>
             <span className="block size-full bg-white/30 blur-sm" />
-            {p.live && <span className="absolute -right-0.5 -top-0.5 text-[9px]">🎥</span>}
+            {p.live && <span className="absolute -end-0.5 -top-0.5 text-[9px]">🎥</span>}
           </span>
         ))}
       </div>

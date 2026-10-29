@@ -16,7 +16,7 @@ export function AttachButton({
   onCamera?: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const item = "flex h-11 items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/5";
+  const item = "flex h-11 items-center gap-3 rounded-xl px-3 text-start text-sm hover:bg-white/5";
   const input = (accept: string, kind: MediaKind, capture?: boolean) => (
     <input
       type="file"
@@ -49,7 +49,7 @@ export function AttachButton({
       {open && (
         <>
           <button type="button" aria-label="Fermer" className="fixed inset-0 z-40 cursor-default" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-14 left-0 z-50 grid w-56 gap-0.5 rounded-2xl border border-line bg-surface p-1.5 shadow-2xl">
+          <div className="absolute bottom-14 start-0 z-50 grid w-56 gap-0.5 rounded-2xl border border-line bg-surface p-1.5 shadow-2xl">
             {onCamera ? (
               <button type="button" className={item} onClick={() => (setOpen(false), onCamera())}>
                 <Camera className="size-5 text-signal" /> Prendre une photo
@@ -199,13 +199,13 @@ export function MediaView({ kind, path, duration, reportable, blur = reportable 
         ) : (
         <video controls autoPlay={blur && revealed} playsInline preload="metadata" src={src} poster={poster} className="max-h-72 max-w-full rounded-xl bg-black" />
         )}
-        {duration ? <span className="pointer-events-none absolute top-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white">{fmtDur(duration)}</span> : null}
+        {duration ? <span className="pointer-events-none absolute top-1.5 start-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white">{fmtDur(duration)}</span> : null}
         {reportable && (
           <button
             type="button"
             aria-label="Signaler cette vidéo"
             disabled={reported}
-            className="absolute top-1.5 right-1.5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white disabled:opacity-50"
+            className="absolute top-1.5 end-1.5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white disabled:opacity-50"
             onClick={() =>
               void reportVideo(path)
                 .then(() => (setReported(true), toast("Merci, vidéo signalée")))
@@ -254,7 +254,7 @@ export function RoomMedia({ scope, id, mine }: { scope: MediaScope; id: string; 
           type="button"
           aria-label="Signaler ce média"
           disabled={reported}
-          className="absolute top-1.5 right-1.5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white disabled:opacity-50"
+          className="absolute top-1.5 end-1.5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white disabled:opacity-50"
           onClick={() =>
             void mediaReport(scope, id)
               .then(() => (setReported(true), toast("Merci, média signalé")))
@@ -268,7 +268,7 @@ export function RoomMedia({ scope, id, mine }: { scope: MediaScope; id: string; 
         <button
           type="button"
           disabled={reported}
-          className="ml-1 text-xs text-muted"
+          className="ms-1 text-xs text-muted"
           onClick={() => void mediaReport(scope, id).then(() => (setReported(true), toast("Merci, vocal signalé")))}
         >
           <Flag className="inline size-3" />

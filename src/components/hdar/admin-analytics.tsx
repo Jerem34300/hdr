@@ -102,7 +102,7 @@ function Bars({ rows, series }: { rows: { label: string; values: number[] }[]; s
             <span className="size-2 rounded-sm" style={{ background: s.color }} /> {s.name}
           </span>
         ))}
-        <span className="ml-auto">max {fmt(max)}</span>
+        <span className="ms-auto">max {fmt(max)}</span>
       </div>
     </div>
   );
@@ -303,7 +303,7 @@ export function HeatMapView({ points, height = 380 }: { points: Spot[]; height?:
       {points.length === 0 && (
         <p className="pointer-events-none absolute inset-x-0 top-1/2 text-center text-sm text-muted">Pas encore de données sur cette période.</p>
       )}
-      <div className="absolute right-2 bottom-2 flex flex-col gap-1">
+      <div className="absolute end-2 bottom-2 flex flex-col gap-1">
         <button type="button" aria-label="Zoom avant" className="flex size-9 items-center justify-center rounded-full bg-night/90" onPointerDown={(e) => e.stopPropagation()} onClick={() => zoomBy(1)}>
           <Plus className="size-4" />
         </button>
@@ -311,7 +311,7 @@ export function HeatMapView({ points, height = 380 }: { points: Spot[]; height?:
           <Minus className="size-4" />
         </button>
       </div>
-      <p className="pointer-events-none absolute bottom-1 left-2 text-[10px] text-white/70">© OpenStreetMap contributors</p>
+      <p className="pointer-events-none absolute bottom-1 start-2 text-[10px] text-white/70">© OpenStreetMap contributors</p>
     </div>
   );
 }
@@ -357,7 +357,7 @@ export function Heat({ adminKey }: { adminKey: string }) {
             <li key={a.name} className="text-sm">
               <div className="flex justify-between gap-2">
                 <span>
-                  <span className="mr-2 text-muted">{i + 1}.</span>
+                  <span className="me-2 text-muted">{i + 1}.</span>
                   <b>{a.name}</b>
                 </span>
                 <span className="text-xs text-muted tabular-nums">pic {a.peak} simultanés · {pct(a.presence, total)}</span>
@@ -419,7 +419,7 @@ export function Week({ adminKey }: { adminKey: string }) {
             <tbody>
               {grid.map((row, d) => (
                 <tr key={d}>
-                  <td className="pr-1 text-muted">{DOW[d]}</td>
+                  <td className="pe-1 text-muted">{DOW[d]}</td>
                   {row.map((v, h) => (
                     <td key={h} title={`${DOW[d]} ${h} h : ${v}`} className="h-6 rounded-sm" style={{ background: v ? `rgba(255,90,95,${0.15 + 0.85 * (v / max)})` : "rgba(255,255,255,0.04)" }} />
                   ))}
@@ -458,7 +458,7 @@ export function TopPlaces({ adminKey }: { adminKey: string }) {
               <span className="text-xl">{k?.icon ?? "📌"}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-bold">
-                  {p.name} {p.partner && <span className="ml-1 rounded-full bg-[#f472b6] px-2 text-[10px] text-night">PARTENAIRE</span>}
+                  {p.name} {p.partner && <span className="ms-1 rounded-full bg-[#f472b6] px-2 text-[10px] text-night">PARTENAIRE</span>}
                 </span>
                 <span className="text-xs text-muted">{k?.label ?? p.kind} · {nearestCity(p.lat, p.lng)}</span>
               </span>
@@ -507,7 +507,7 @@ export function Influencers({ adminKey, onOpen, onBoost }: { adminKey: string; o
             <div className="flex items-center gap-3">
               <span className="w-6 font-display font-extrabold text-muted">{i + 1}</span>
               <Avatar src={u.photo ?? ""} name={u.pseudo} className="size-11 shrink-0 rounded-full" />
-              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onOpen(u.user_id)}>
+              <button type="button" className="min-w-0 flex-1 text-start" onClick={() => onOpen(u.user_id)}>
                 <span className="flex items-center gap-2">
                   <span className="truncate font-display font-bold underline">{u.pseudo}</span>
                   {u.online && <span className="size-2 rounded-full bg-online" title="visible sur la carte" />}
@@ -616,8 +616,8 @@ function Boosts({ adminKey, prefill, onOpen }: { adminKey: string; prefill: Infl
         {data?.length === 0 && <li className="text-sm text-muted">Aucun boost pour l'instant.</li>}
         {data?.map((b) => (
           <li key={b.id} className={"flex items-center gap-2 rounded-xl bg-night px-3 py-2 text-sm " + (b.active ? "" : "opacity-50")}>
-            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onOpen(b.user_id)}>
-              <span className="font-bold underline">{b.pseudo}</span> {b.active && <span className="partner-glow ml-1 inline-block size-2 rounded-full bg-[#f472b6]" />}
+            <button type="button" className="min-w-0 flex-1 text-start" onClick={() => onOpen(b.user_id)}>
+              <span className="font-bold underline">{b.pseudo}</span> {b.active && <span className="partner-glow ms-1 inline-block size-2 rounded-full bg-[#f472b6]" />}
               <span className="block text-xs text-muted">
                 {dt(b.starts_at)} → {dt(b.ends_at)} · {euros(b.price_cents)}{b.note ? ` · ${b.note}` : ""}{b.cancelled ? " · annulé" : ""}
               </span>
@@ -712,7 +712,7 @@ function Partners({ adminKey }: { adminKey: string }) {
           <li key={p.id} className={"rounded-xl bg-night px-3 py-2 text-sm " + (p.active ? "" : "opacity-60")}>
             <p className="font-bold">
               {PLACE_KINDS[p.kind as keyof typeof PLACE_KINDS]?.icon} {p.name}{" "}
-              <span className={"ml-1 rounded-full px-2 text-[10px] " + (p.active ? "bg-[#f472b6] text-night" : "border border-line")}>
+              <span className={"ms-1 rounded-full px-2 text-[10px] " + (p.active ? "bg-[#f472b6] text-night" : "border border-line")}>
                 {p.active ? `en ligne jusqu'au ${dt(p.partner_until)}` : "hors ligne"}
               </span>
             </p>
@@ -722,7 +722,7 @@ function Partners({ adminKey }: { adminKey: string }) {
                 <li key={l.id} className={l.cancelled ? "line-through" : ""}>
                   {dt(l.starts_at)} → {dt(l.ends_at)} · {euros(l.price_cents)}{l.contact ? ` · ${l.contact}` : ""}{l.note ? ` · ${l.note}` : ""}
                   {!l.cancelled && (
-                    <button type="button" className="ml-2 text-signal" onClick={() => void analytics.listingCancel(adminKey, l.id).then(reload)}>
+                    <button type="button" className="ms-2 text-signal" onClick={() => void analytics.listingCancel(adminKey, l.id).then(reload)}>
                       annuler
                     </button>
                   )}

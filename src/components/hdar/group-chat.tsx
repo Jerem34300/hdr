@@ -233,9 +233,9 @@ export function GroupChat(p: Props) {
                       onClick={() => setMenu(m)}
                       style={m.mine ? undefined : (authorBubble(m.bubble) as CSSProperties | undefined)}
                       className={
-                        "relative max-w-[80%] min-w-[84px] px-3 pt-1.5 pb-1 text-left leading-snug break-words whitespace-pre-wrap shadow-sm transition-colors rounded-[18px] " +
+                        "relative max-w-[80%] min-w-[84px] px-3 pt-1.5 pb-1 text-start leading-snug break-words whitespace-pre-wrap shadow-sm transition-colors rounded-[18px] " +
                         (m.mine ? "bubble-mine" : (m.bubble ? "bubble-other bubble-author" : "bubble-other")) +
-                        (tail ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
+                        (tail ? (m.mine ? " tail-mine rounded-ee-[4px]" : " tail-other rounded-es-[4px]") : "") +
                         (flash === m.id ? " ring-2 ring-amber-300" : "")
                       }
                     >
@@ -248,7 +248,7 @@ export function GroupChat(p: Props) {
                       <FwdHeader fwd={m.fwd} />
                       {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
                       <span className="msg-text">{m.kind === "text" ? <RichText text={bodyOf(m)} /> : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}</span>
-                      <span className="bubble-meta float-right mt-1.5 ml-2 translate-y-0.5 text-[11px]">
+                      <span className="bubble-meta float-right mt-1.5 ms-2 translate-y-0.5 text-[11px]">
                         {extra ? `${extra} · ` : ""}
                         {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
                         {hhmm(m.at)}
@@ -263,7 +263,7 @@ export function GroupChat(p: Props) {
                       <Smile className="size-4" />
                     </button>
                   </div>
-                  <div className={m.mine ? "" : "pl-10"}>
+                  <div className={m.mine ? "" : "ps-10"}>
                     <ReactionChips list={reactionsOf(m)} mine={m.mine} onToggle={(e) => react(m, e)} />
                   </div>
                 </Row>
@@ -276,11 +276,11 @@ export function GroupChat(p: Props) {
             type="button"
             aria-label="Aller aux derniers messages"
             onClick={toBottom}
-            className="absolute right-3 bottom-3 flex size-11 items-center justify-center rounded-full border border-line bg-night shadow-lg"
+            className="absolute end-3 bottom-3 flex size-11 items-center justify-center rounded-full border border-line bg-night shadow-lg"
           >
             <ArrowDown className="size-5" />
             {unseen > 0 && (
-              <span className="absolute -top-2 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">
+              <span className="absolute -top-2 -end-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">
                 {unseen > 99 ? "99+" : unseen}
               </span>
             )}
@@ -477,7 +477,7 @@ function MessageMenu({
   onHide: () => void;
   onReport: () => void;
 }) {
-  const item = "flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5";
+  const item = "flex h-12 w-full items-center gap-3 px-5 text-start text-[15px] active:bg-white/5";
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div className="dock w-full max-w-md rounded-t-3xl border border-line bg-night pt-2" onClick={(e) => e.stopPropagation()}>

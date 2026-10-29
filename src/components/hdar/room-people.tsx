@@ -65,7 +65,7 @@ function PeopleSheet({ presence, onClose }: { presence: RoomPresence; onClose: (
         <div className="mx-auto mb-1 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
         <div className="flex items-center justify-between px-5 py-2">
           <h2 className="font-display text-lg font-extrabold">
-            <span className="mr-2 inline-block size-2.5 rounded-full bg-online align-middle" />
+            <span className="me-2 inline-block size-2.5 rounded-full bg-online align-middle" />
             {presence.n} en ligne
           </h2>
           <button type="button" aria-label="Fermer" className="flex size-10 items-center justify-center" onClick={onClose}>
@@ -79,7 +79,7 @@ function PeopleSheet({ presence, onClose }: { presence: RoomPresence; onClose: (
                 type="button"
                 disabled={p.mine || !p.profile}
                 aria-label={p.mine ? undefined : `Voir le profil de ${p.pseudo}`}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+                className="flex min-w-0 flex-1 items-center gap-3 text-start disabled:cursor-default"
                 onClick={() => {
                   onClose();
                   openProfile(p.id, p.pseudo);
@@ -87,7 +87,7 @@ function PeopleSheet({ presence, onClose }: { presence: RoomPresence; onClose: (
               >
                 <span className="relative shrink-0">
                   <UserAvatar id={p.id} name={p.pseudo} className="size-11 rounded-full" />
-                  <span className={"absolute right-0 bottom-0 size-3 rounded-full border-2 border-night " + ((p.ago ?? 0) < 60 || p.mine ? "bg-online" : "bg-amber-400")} />
+                  <span className={"absolute end-0 bottom-0 size-3 rounded-full border-2 border-night " + ((p.ago ?? 0) < 60 || p.mine ? "bg-online" : "bg-amber-400")} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold">{p.mine ? "Toi" : p.pseudo}</span>

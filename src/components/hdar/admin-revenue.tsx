@@ -47,7 +47,7 @@ export function RevenueTab({ adminKey, preview }: { adminKey: string; preview?: 
           <p className="mb-2 text-sm font-bold">Sources de revenus</p>
           {rows.map((x) => { const pct = base > 0 ? (x.cents / base) * 100 : 0; return (
             <div key={x.l} className="py-1.5 text-sm">
-              <div className="flex justify-between gap-2"><span>{x.l}</span><span className="text-right"><b>{eur(x.cents)}</b> <span className="text-xs text-muted">· {x.n} · {pct.toFixed(1)} %</span></span></div>
+              <div className="flex justify-between gap-2"><span>{x.l}</span><span className="text-end"><b>{eur(x.cents)}</b> <span className="text-xs text-muted">· {x.n} · {pct.toFixed(1)} %</span></span></div>
               <div className="mt-1 h-1.5 rounded-full bg-night"><div className="h-full rounded-full bg-[#3EE08F]" style={{ width: `${pct}%` }} /></div>
             </div>); })}
         </section>

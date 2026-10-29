@@ -123,8 +123,8 @@ export function InviteCard({ demo, onAction }: { demo?: string; onAction?: () =>
   return (
     <div {...glowOuter("relative overflow-hidden bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#3EE08F]", "rgba(250,111,108,.35)")}>
       <div className={glowInner}>
-        <span aria-hidden className="pointer-events-none absolute -top-10 -right-8 size-32 rounded-full bg-[#3EE08F]/25 blur-2xl" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-10 size-36 rounded-full bg-[#FA6F6C]/30 blur-2xl" />
+        <span aria-hidden className="pointer-events-none absolute -top-10 -end-8 size-32 rounded-full bg-[#3EE08F]/25 blur-2xl" />
+        <span aria-hidden className="pointer-events-none absolute -bottom-12 -start-10 size-36 rounded-full bg-[#FA6F6C]/30 blur-2xl" />
         <CardHead icon="🎁" accent="#FA6F6C" chevron={false} title="Invite un ami" sub={`+3 j hdar+ à deux · 1 boost pour toi${n.rewarded > 0 ? ` · ${n.rewarded} réussi(s)` : ""}`} />
         <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-dashed border-white/20 bg-black/30 px-4 py-2.5">
           <div><p className="text-[10px] font-bold tracking-[0.25em] text-muted uppercase">Ton code</p>
@@ -227,7 +227,7 @@ export function MapGiftButton({ demoOpen }: { demoOpen?: boolean }) {
       {open && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 p-3 pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={hide}>
           <div className="relative w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <button type="button" aria-label="Fermer" onClick={hide} className="absolute -top-3 right-2 z-10 flex size-9 items-center justify-center rounded-full bg-night text-lg shadow">✕</button>
+            <button type="button" aria-label="Fermer" onClick={hide} className="absolute -top-3 end-2 z-10 flex size-9 items-center justify-center rounded-full bg-night text-lg shadow">✕</button>
             {firstOpen ? <FirstGiftCard remaining={firstLeft} onAction={hide} /> : <InviteCard demo={demoOpen ? "E610477" : undefined} onAction={hide} />}
           </div>
         </div>

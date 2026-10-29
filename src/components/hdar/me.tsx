@@ -20,6 +20,7 @@ import { askConfirm } from "@/lib/hdar/confirm";
 import { DESIRES, type Desire } from "@/lib/hdar/data";
 import { deviceId } from "@/lib/hdar/device";
 import { VideoSection } from "./video-section";
+import { LangSetting } from "./lang-setting";
 import { goDark, saveProfile, setProfileNote } from "@/lib/hdar/live";
 import { readImage } from "@/lib/hdar/media";
 import { myPhotos, useHdar } from "@/lib/hdar/store";
@@ -128,7 +129,7 @@ export function Me() {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-xl font-extrabold">{me.pseudo || "Sans pseudo"}{me.age ? <span className="font-normal text-muted"> · {me.age} ans</span> : null}{isPrem && <PremiumBadge className="ml-1.5 align-middle" />}</p>
+          <p className="truncate font-display text-xl font-extrabold">{me.pseudo || "Sans pseudo"}{me.age ? <span className="font-normal text-muted"> · {me.age} ans</span> : null}{isPrem && <PremiumBadge className="ms-1.5 align-middle" />}</p>
           <HeartsCount id={deviceId()} className="mt-0.5" />
           {identityLine(iam, seeking) && <p className="text-xs font-bold text-ink/80">{identityLine(iam, seeking)}</p>}
           <p className={"mt-0.5 text-sm break-words " + (me.note ? "italic" : "text-muted")}>{me.note ? `💬 « ${me.note} »` : "Ajoute ta phrase du moment ci-dessous"}</p>
@@ -223,14 +224,14 @@ export function Me() {
                 <img src={src} alt="" className="size-full object-cover" />
               </button>
               {i === 0 && (
-                <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded-full bg-signal px-2 py-0.5 text-[10px] font-bold text-night">
+                <span className="pointer-events-none absolute bottom-1.5 start-1.5 rounded-full bg-signal px-2 py-0.5 text-[10px] font-bold text-night">
                   Principale
                 </span>
               )}
               <button
                 type="button"
                 aria-label="Retirer cette photo"
-                className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-night/85"
+                className="absolute top-1.5 end-1.5 flex size-7 items-center justify-center rounded-full bg-night/85"
                 onClick={() => patchMe({ photos: photos.filter((_, j) => j !== i) })}
               >
                 <X className="size-4" />
@@ -506,7 +507,7 @@ function Favorites() {
             <li key={f.id}>
               <button
                 type="button"
-                className="flex h-12 w-full items-center justify-between text-left"
+                className="flex h-12 w-full items-center justify-between text-start"
                 onClick={() => openProfile(f.id, f.pseudo)}
               >
                 <span className="truncate">★ {f.pseudo}</span>
@@ -544,17 +545,18 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10">
       <div className="flex items-center gap-2">
-        <button type="button" aria-label="Retour au profil" onClick={onBack} className="-ml-2 flex size-11 items-center justify-center">
+        <button type="button" aria-label="Retour au profil" onClick={onBack} className="-ms-2 flex size-11 items-center justify-center">
           <ChevronLeft className="size-6" />
         </button>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Paramètres</h1>
       </div>
       <RedeemCode />
-      <button type="button" onClick={() => setAppearance(true)} className="mt-6 flex h-14 w-full items-center gap-3 rounded-2xl border border-line px-4 text-left">
+      <button type="button" onClick={() => setAppearance(true)} className="mt-6 flex h-14 w-full items-center gap-3 rounded-2xl border border-line px-4 text-start">
         <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#ff5a4e] via-[#7c5cff] to-[#2f7cf6] text-base">🎨</span>
         <span className="flex-1"><span className="block text-sm font-bold">Apparence</span><span className="block text-xs text-muted">Couleur des bulles, police, taille, fond</span></span>
         <span className="text-muted">›</span>
       </button>
+      <LangSetting />
       <NotifySettings />
       <section className="mt-6"><p className="mb-1 text-xs font-bold tracking-[0.2em] text-muted uppercase">Carte</p><MapPrivacyToggle /></section>
       <ProSettings />

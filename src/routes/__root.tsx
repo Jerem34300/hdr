@@ -4,6 +4,7 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { useEffect } from "react";
 import { rememberLanding } from "@/lib/hdar/track";
 import { captureSourceRef } from "@/lib/hdar/source-ref";
+import { startI18n } from "@/lib/hdar/i18n";
 import { FounderCelebration, LaunchOfferSheet, WelcomeFirst } from "@/components/hdar/launch-offer";
 import appCss from "../styles.css?url";
 
@@ -12,6 +13,7 @@ function LandingMemo() {
   useEffect(() => {
     rememberLanding();
     captureSourceRef();
+    startI18n();
   }, []);
   return null;
 }

@@ -707,7 +707,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       })}
       {pins.length === 0 && !finding && (
         <div
-          className="absolute top-3 right-3 left-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-3xl border border-line bg-night/90 px-3 py-2.5 text-center shadow-xl backdrop-blur"
+          className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-3xl border border-line bg-night/90 px-3 py-2.5 text-center shadow-xl backdrop-blur"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <p className="font-display text-sm font-bold">
@@ -817,11 +817,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             </button>
             {card === pin.id && (
               <span className="absolute z-[30] -translate-x-1/2 -translate-y-full" style={{ left: c.x, top: c.y - face / 2 - 10 }} onPointerDown={(e) => e.stopPropagation()}>
-                <span className="relative flex items-center gap-2 rounded-2xl border border-[#A1E3C3]/60 bg-night/95 py-1.5 pr-1.5 pl-3 whitespace-nowrap shadow-[0_0_24px_rgba(161,227,195,.45)]">
+                <span className="relative flex items-center gap-2 rounded-2xl border border-[#A1E3C3]/60 bg-night/95 py-1.5 pe-1.5 ps-3 whitespace-nowrap shadow-[0_0_24px_rgba(161,227,195,.45)]">
                   <b className="font-display text-sm">{pin.pseudo}</b>
                   <button type="button" className="rounded-full bg-signal px-2.5 py-1 text-xs font-bold text-night" onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}>Voir le profil</button>
                   <button type="button" aria-label="Fermer" className="px-1 text-muted" onClick={() => setCard(null)}>✕</button>
-                  <span className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 border-r border-b border-[#A1E3C3]/60 bg-night/95" />
+                  <span className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 border-e border-b border-[#A1E3C3]/60 bg-night/95" />
                 </span>
               </span>
             )}
@@ -885,7 +885,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             >
               {c.items.length}
               {c.items.some((x) => act.places.has(x.id)) && (
-                <span className="absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-night bg-signal" />
+                <span className="absolute -top-0.5 -end-0.5 size-3 rounded-full border-2 border-night bg-signal" />
               )}
             </button>
           );
@@ -903,7 +903,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             onClick={() => setPlaceId(pl.id)}
           >
             {k.icon}
-            {act.places.has(pl.id) && <span className="absolute -top-1 -right-1 size-3 rounded-full border-2 border-night bg-signal" />}
+            {act.places.has(pl.id) && <span className="absolute -top-1 -end-1 size-3 rounded-full border-2 border-night bg-signal" />}
           </button>
         );
       })}
@@ -953,17 +953,17 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           >
             {compact ? "📍" : <span className="truncate">{glow ? "✨ " : ""}{spot.title}</span>}
             {act.fresh.has(spot.id) && !compact && (
-              <span className="ml-1.5 shrink-0 rounded-full bg-spot px-1.5 text-[10px] font-bold text-night">nouveau</span>
+              <span className="ms-1.5 shrink-0 rounded-full bg-spot px-1.5 text-[10px] font-bold text-night">nouveau</span>
             )}
             {act.unread.has(spot.id) && (
-              <span className="absolute -top-1 -right-1 size-3 rounded-full border-2 border-night bg-signal" />
+              <span className="absolute -top-1 -end-1 size-3 rounded-full border-2 border-night bg-signal" />
             )}
           </button>
         );
       })}
       <button
         type="button"
-        className="absolute top-3 left-3 z-30 flex size-11 items-center justify-center rounded-full bg-night/90 text-ink"
+        className="absolute top-3 start-3 z-30 flex size-11 items-center justify-center rounded-full bg-night/90 text-ink"
         aria-label={located ? "Recentrer" : "Me localiser"}
         onClick={askLocation}
       >
@@ -972,7 +972,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       {layersOpen && (
         <button type="button" aria-label="Fermer les calques" className="absolute inset-0 z-[34] cursor-default bg-transparent" onClick={() => setLayersOpen(false)} />
       )}
-      <div className={`absolute top-16 left-3 ${layersOpen ? "z-[35]" : "z-30"}`}>
+      <div className={`absolute top-16 start-3 ${layersOpen ? "z-[35]" : "z-30"}`}>
         <button
           type="button"
           aria-label="Calques de la carte"
@@ -1028,7 +1028,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             </label>
             <button
               type="button"
-              className="flex h-10 w-full items-center rounded-xl px-2 text-left hover:bg-surface"
+              className="flex h-10 w-full items-center rounded-xl px-2 text-start hover:bg-surface"
               onClick={() => {
                 setLayersOpen(false);
                 setProposing(true);
@@ -1039,12 +1039,12 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </div>
         )}
       </div>
-      <div className="absolute top-[7.25rem] left-3 z-30">
+      <div className="absolute top-[7.25rem] start-3 z-30">
         <FilterButton onClick={() => setFiltersOpen(true)} />
       </div>
       {filtersOpen && <FilterSheet onClose={() => setFiltersOpen(false)} />}
       {places.length > 0 && (
-        <p className="pointer-events-none absolute bottom-1 left-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
+        <p className="pointer-events-none absolute bottom-1 start-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
       )}
       {transitStop && (
         <Safe key={transitStop.ref} onError={() => setTransitStop(null)}>
@@ -1064,7 +1064,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       {proposing && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-3xl">⌖</span>
       )}
-      <div className="absolute right-3 bottom-6 z-30 flex flex-col gap-2">
+      <div className="absolute end-3 bottom-6 z-30 flex flex-col gap-2">
         <MapGiftButton />
         <Link to="/live" data-tip="live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
           <Video className="size-5" />
@@ -1111,12 +1111,12 @@ function LiveBadge() {
     return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); window.removeEventListener("focus", tick); };
   }, []);
   return n > 0 ? (
-    <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-night px-1.5 py-0.5 text-[10px] font-bold text-white">
+    <span className="absolute -top-1.5 -end-1.5 flex items-center gap-0.5 rounded-full bg-night px-1.5 py-0.5 text-[10px] font-bold text-white">
       <span className="relative flex size-1.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-1.5 rounded-full bg-red-500" /></span>
       {n}
     </span>
   ) : (
-    <span className="absolute -top-1 -right-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]/70">LIVE</span>
+    <span className="absolute -top-1 -end-1 rounded-full bg-night px-1 text-[8px] font-bold text-[#FA6F6C]/70">LIVE</span>
   );
 }
 

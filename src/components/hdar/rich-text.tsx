@@ -110,7 +110,7 @@ export function RichText({ text, mentions = true, className }: { text: string; m
       </a>
     );
   });
-  return <span className={className}>{nodes}</span>;
+  return <span translate="no" className={className}>{nodes}</span>;
 }
 
 /** Suggestions @pseudo au-dessus d'un champ de saisie : membres du fil d'abord, puis recherche serveur. */
@@ -152,7 +152,7 @@ export function MentionList({ list, onPick }: { list: { pseudo: string }[]; onPi
   return (
     <div role="listbox" aria-label="Suggestions de pseudos" className="mx-3 mb-2 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg">
       {list.map((x) => (
-        <button key={x.pseudo} type="button" role="option" aria-selected={false} onMouseDown={(e) => e.preventDefault()} onClick={() => onPick(x.pseudo)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-night">
+        <button key={x.pseudo} type="button" role="option" aria-selected={false} onMouseDown={(e) => e.preventDefault()} onClick={() => onPick(x.pseudo)} className="flex w-full items-center gap-3 px-4 py-2.5 text-start hover:bg-night">
           <span className="flex size-8 items-center justify-center rounded-full bg-night text-sm font-bold">{x.pseudo[0]?.toUpperCase()}</span>
           <span className="font-medium">@{x.pseudo}</span>
         </button>

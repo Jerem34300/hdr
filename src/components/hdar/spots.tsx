@@ -31,7 +31,7 @@ export function Spots() {
       <button type="button" data-act="create" {...bindTap(openCreate)} className="mt-4 h-12 w-full rounded-full bg-spot text-night">
         Créer un lieu
       </button>
-      <button type="button" data-act="annonces" onClick={() => useHdar.getState().openAnnonces()} className="mt-3 flex w-full items-center gap-3 rounded-3xl border border-line bg-surface px-4 py-3 text-left">
+      <button type="button" data-act="annonces" onClick={() => useHdar.getState().openAnnonces()} className="mt-3 flex w-full items-center gap-3 rounded-3xl border border-line bg-surface px-4 py-3 text-start">
         <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-signal/15 text-xl">📌</span>
         <span className="min-w-0 flex-1"><b className="block font-display text-lg">Petites annonces</b><span className="text-xs text-muted">Rencontres, sorties, kink… par ville, elles restent en ligne jusqu'à 7 jours</span></span>
         <span aria-hidden className="text-muted">›</span>
@@ -47,7 +47,7 @@ export function Spots() {
         <section className="mt-4">
           <p className="text-xs font-bold tracking-[0.2em] text-[#fbbf24] uppercase">⭐ À la une</p>
           <ul className="mt-2 space-y-2">{featured.map((p) => (
-            <li key={p.id}><button type="button" onClick={() => flyTo(p.lat, p.lng, 16)} className="partner-glow flex w-full items-center gap-3 rounded-2xl border border-[#fbbf24] bg-surface px-4 py-3 text-left">
+            <li key={p.id}><button type="button" onClick={() => flyTo(p.lat, p.lng, 16)} className="partner-glow flex w-full items-center gap-3 rounded-2xl border border-[#fbbf24] bg-surface px-4 py-3 text-start">
               <span className="text-2xl">{PLACE_KINDS[p.kind]?.icon ?? "📍"}</span>
               <span className="min-w-0 flex-1"><b className="block truncate">{p.name}</b><span className="text-xs text-[#fbbf24]">🏷️ Partenaire · Voir sur la carte</span></span>
             </button></li>))}</ul>
@@ -62,7 +62,7 @@ export function Spots() {
               data-act="join"
               data-id={spot.id}
               {...bindTap(() => joinSpot(spot.id))}
-              className={"min-w-0 flex-1 rounded-2xl border px-4 py-3 text-left " + ((spot.boostedUntil ?? 0) > Date.now() ? "partner-glow border-[#f472b6] bg-surface" : "border-line bg-surface")}
+              className={"min-w-0 flex-1 rounded-2xl border px-4 py-3 text-start " + ((spot.boostedUntil ?? 0) > Date.now() ? "partner-glow border-[#f472b6] bg-surface" : "border-line bg-surface")}
             >
               <span className="flex items-center gap-2">
                 {(spot.boostedUntil ?? 0) > Date.now() && <span className="shrink-0 rounded-full bg-[#f472b6] px-2 text-xs font-bold text-night">✨ à la une</span>}
@@ -71,7 +71,7 @@ export function Spots() {
                   <span className="shrink-0 rounded-full bg-spot px-2 text-xs font-bold text-night">nouveau</span>
                 )}
                 {act.unread.has(spot.id) && (
-                  <span className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-signal">
+                  <span className="ms-auto flex shrink-0 items-center gap-1 text-xs font-bold text-signal">
                     <span className="size-2.5 rounded-full bg-signal" /> nouveaux messages
                   </span>
                 )}
@@ -151,7 +151,7 @@ export function SpotRoom() {
           </button>
         )}
         {spot.creator && spot.live && (
-          <a href={`/boost?spot=${spot.id}#lieux`} className="boost-cta mr-1 flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-extrabold text-night">
+          <a href={`/boost?spot=${spot.id}#lieux`} className="boost-cta me-1 flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-extrabold text-night">
             ✨ {(spot.boostedUntil ?? 0) > Date.now() ? "Boosté" : "Booster ce lieu"}
           </a>
         )}
@@ -159,7 +159,7 @@ export function SpotRoom() {
       </header>
       <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.map((msg) => (
-          <li key={msg.id} className={msg.mine ? "text-right" : "text-left"}>
+          <li key={msg.id} className={msg.mine ? "text-end" : "text-start"}>
             <p className="text-xs text-muted">{msg.mine ? "Toi" : msg.from}</p>
             <p className={"inline-block rounded-2xl px-3 py-2 text-sm " + (msg.mine ? "bg-spot text-night" : "bg-surface")}>
               {msg.text}
@@ -279,11 +279,11 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
       </header>
       <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {lines.map((msg) => (
-          <li key={msg.id} className={msg.mine ? "text-right" : "text-left"}>
+          <li key={msg.id} className={msg.mine ? "text-end" : "text-start"}>
             <p className="text-xs text-muted">{msg.mine ? "Toi" : msg.pseudo}</p>
             <p
               className={
-                "inline-block max-w-[85%] rounded-2xl px-3 py-2 text-left text-sm break-words " +
+                "inline-block max-w-[85%] rounded-2xl px-3 py-2 text-start text-sm break-words " +
                 (msg.mine ? "bg-spot text-night" : "bg-surface")
               }
             >

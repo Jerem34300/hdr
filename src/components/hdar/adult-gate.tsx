@@ -309,7 +309,7 @@ function DevPreview() {
   if (location.search.includes("ambspace")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-md"><h1 className="mb-4 font-display text-3xl font-extrabold">🎯 Espace ambassadeur</h1><AmbassadorSpace demo={demoAmb()} /></div></main>;
   if (location.search.includes("revenus")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-2xl"><RevenueTab adminKey="" preview={{ gross: 0, refunds: 0, fees: 0, net: 0, count: 0, fees_estimated: true, series: [], sources: [], partners: [], spenders: [] }} /></div></main>;
   if (location.search.includes("dash")) return <main className="min-h-dvh bg-night px-5 py-6 text-ink"><div className="mx-auto max-w-2xl"><ProDashboard id="demo" name="Le Néon (démo)" onBack={() => undefined} demo={demoDash()} /></div></main>;
-  if (location.search.includes("gift")) return <div className="h-dvh bg-[#1a1a24]"><div className="absolute right-3 bottom-6"><MapGiftButton demoOpen /></div></div>;
+  if (location.search.includes("gift")) return <div className="h-dvh bg-[#1a1a24]"><div className="absolute end-3 bottom-6"><MapGiftButton demoOpen /></div></div>;
   if (location.search.includes("premium")) return <PremiumPage demo={{ admirers: { views: 42, favs: 7, viewers: [], fans: [] } as never, hits: [], premium: true }} />;
   const pin = location.search.includes("pin");
   if (pin) return (
@@ -362,7 +362,7 @@ function GateAdTicker({ onPick }: { onPick: (id: string) => void }) {
   const row = (k: string) => ads.map((a) => (
     <button key={k + a.id} type="button" tabIndex={k === "b" ? -1 : 0} aria-hidden={k === "b" || undefined} onClick={() => onPick(a.id)} className="mx-3 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
       {a.boosted && <span className="rounded-full bg-[#fbbf24] px-1.5 text-[10px] font-bold text-night">Boostée</span>}
-      <span>📌 {a.title}{a.has_photos ? <span className="ml-1 opacity-80" role="img" aria-label="avec photos" title="Avec photos">📷</span> : null}</span><span className="text-muted">· {a.city}</span>
+      <span>📌 {a.title}{a.has_photos ? <span className="ms-1 opacity-80" role="img" aria-label="avec photos" title="Avec photos">📷</span> : null}</span><span className="text-muted">· {a.city}</span>
     </button>
   ));
   return (

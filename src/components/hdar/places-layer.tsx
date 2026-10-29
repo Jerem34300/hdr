@@ -99,7 +99,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
   const k = p ? PLACE_KINDS[p.kind] : null;
   return (
     <div className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
-      <button type="button" aria-label="Fermer" className="absolute top-3 right-3 flex size-10 items-center justify-center" onClick={onClose}>
+      <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
         <X className="size-5" />
       </button>
       {!p ? (
@@ -109,7 +109,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
           <p className="text-sm" style={{ color: k!.color }}>
             {k!.icon} {k!.label}
           </p>
-          <h2 className="mt-1 pr-10 font-display text-2xl font-extrabold">{p.name}</h2>
+          <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{p.name}</h2>
           {p.description && <p className="mt-2 text-sm">{p.description}</p>}
           {p.kind !== "toilets" && <PlaceExtras id={p.id} />}
           <a
@@ -127,7 +127,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
           ) : (
           <div className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
             <p className="font-bold text-ink">Avant d'y aller</p>
-            <ul className="mt-1 list-disc space-y-1 pl-4">
+            <ul className="mt-1 list-disc space-y-1 ps-4">
               <li>Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.</li>
               <li>La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.</li>
               <li>Consentement toujours, et uniquement entre adultes.</li>
@@ -160,7 +160,7 @@ export function ProposePlaceSheet({ at, onClose }: { at: { lat: number; lng: num
   const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
   return (
     <div className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[85%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
-      <button type="button" aria-label="Fermer" className="absolute top-3 right-3 flex size-10 items-center justify-center" onClick={onClose}>
+      <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
         <X className="size-5" />
       </button>
       <h2 className="font-display text-xl font-extrabold">Proposer un lieu</h2>
@@ -262,14 +262,14 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
       <div className="mt-2 max-h-80 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
         {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">Aucun message pour l'instant.</p>}
         {lines.map((l) => (
-          <p key={l.id} className={l.mine ? "text-right" : ""}>
+          <p key={l.id} className={l.mine ? "text-end" : ""}>
             <span className="text-xs font-bold text-muted">{l.mine ? "Toi" : l.pseudo}</span>{" "}
             {l.body ? <span className="break-words">{l.body}</span> : <span className="mt-1 block"><RoomMedia scope="place" id={l.id} mine={l.mine} /></span>}
             {(l.mine || isAdmin) && (
               <button
                 type="button"
                 aria-label="Supprimer"
-                className="ml-1 text-xs text-muted"
+                className="ms-1 text-xs text-muted"
                 onClick={() => void placeHide(l.id).then(() => setLines((x) => x.filter((y) => y.id !== l.id)))}
               >
                 ×
@@ -405,8 +405,8 @@ function PlaceExtras({ id }: { id: string }) {
                   <b className="text-ink">{c.mine ? "Toi" : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString("fr-FR")}
                 </p>
                 <p className="mt-1 break-words">{c.body}</p>
-                {c.reply && <p className="mt-1.5 rounded-xl border-l-2 border-[#fbbf24] bg-night px-3 py-1.5 text-xs"><b className="text-[#fbbf24]">Réponse du lieu :</b> {c.reply}</p>}
-                <div className="mt-1 text-right text-xs text-muted">
+                {c.reply && <p className="mt-1.5 rounded-xl border-s-2 border-[#fbbf24] bg-night px-3 py-1.5 text-xs"><b className="text-[#fbbf24]">Réponse du lieu :</b> {c.reply}</p>}
+                <div className="mt-1 text-end text-xs text-muted">
                   {c.mine ? (
                     <button type="button" className="underline" onClick={() => void placeCommentDelete(c.id).then(load)}>Supprimer</button>
                   ) : (

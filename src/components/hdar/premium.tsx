@@ -115,7 +115,7 @@ export function FilterButton({ onClick }: { onClick: () => void }) {
     <button type="button" aria-label="Filtres" onClick={onClick}
       className={"relative flex size-11 items-center justify-center rounded-full text-ink " + (on ? "premium-cta !text-night" : "bg-night/90")}>
       <SlidersHorizontal className="size-5" />
-      {on && <span className="absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-night bg-signal" />}
+      {on && <span className="absolute -top-0.5 -end-0.5 size-3 rounded-full border-2 border-night bg-signal" />}
     </button>
   );
 }
@@ -123,7 +123,7 @@ export function FilterButton({ onClick }: { onClick: () => void }) {
 function PersonRow({ p, sub, go }: { p: { id: string; pseudo: string; live: boolean; premium?: boolean }; sub?: string; go: (id: string, ps: string) => void }) {
   return (
     <li>
-      <button type="button" onClick={() => go(p.id, p.pseudo)} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface/70 p-2.5 text-left">
+      <button type="button" onClick={() => go(p.id, p.pseudo)} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface/70 p-2.5 text-start">
         <span className="size-10 shrink-0 overflow-hidden rounded-full border-2 border-white bg-night"><PinFace id={p.id} pseudo={p.pseudo} /></span>
         <span className="min-w-0 flex-1">
           <b className="flex items-center gap-1.5 truncate">{p.pseudo} {p.premium && <PremiumBadge />}</b>
@@ -198,9 +198,9 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
             <span className="absolute inset-0 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(${GOLD}, transparent 70%)` }} />
             <span className="premium-ring relative flex size-24 items-center justify-center rounded-full"><Crown className="size-10" style={{ color: GOLD }} /></span>
           </div>
-          {!PAYMENTS_ENABLED && <FounderCard className="mx-auto mt-6 max-w-sm text-left" />}
+          {!PAYMENTS_ENABLED && <FounderCard className="mx-auto mt-6 max-w-sm text-start" />}
           {premium ? (
-            <div className="premium-card mx-auto mt-6 max-w-sm rounded-3xl p-5 text-left">
+            <div className="premium-card mx-auto mt-6 max-w-sm rounded-3xl p-5 text-start">
               <p className="text-xs font-bold tracking-widest text-white/80 uppercase">👑 Tu es hdar+</p>
               <p className="mt-1 text-sm text-white/90">
                 {store.until ? `${cancelling ? "Actif jusqu'au" : "Prochain renouvellement vers le"} ${new Date(store.until).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : "Abonnement actif"}
@@ -222,8 +222,8 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
           <p className="mt-1 text-center text-xs text-muted">Vidéo au hasard, floutée par défaut. Avec hdar+, tu prends la main.</p>
           <div className="relative mx-auto mt-4 h-80 max-w-xs overflow-hidden rounded-[2rem] border border-line bg-[radial-gradient(circle_at_50%_40%,#3b2a3a,#0b0b10)]">
             <div className="absolute inset-0 blur-[14px]"><div className="absolute top-[18%] left-1/2 size-28 -translate-x-1/2 rounded-full bg-[#c9a58c]/70" /><div className="absolute top-[52%] left-1/2 h-56 w-56 -translate-x-1/2 rounded-t-full bg-[#2b3a55]" /></div>
-            <span className="absolute top-3 left-3 rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[10px] font-bold">● LIVE</span>
-            <span className="absolute top-3 right-3 rounded-full bg-black/50 px-2 py-0.5 text-[10px]">Flouté</span>
+            <span className="absolute top-3 start-3 rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[10px] font-bold">● LIVE</span>
+            <span className="absolute top-3 end-3 rounded-full bg-black/50 px-2 py-0.5 text-[10px]">Flouté</span>
             <span className="absolute top-[46%] left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold whitespace-nowrap text-night shadow-[0_0_20px_#fbbf24]">Demande à se voir 👀</span>
             <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
               {["↩︎", "🎚️", "⚡"].map((x) => <span key={x} className="flex size-10 items-center justify-center rounded-full bg-white/15 backdrop-blur">{x}</span>)}
@@ -241,10 +241,10 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
         <section className="mt-12">
           <h2 className="text-center font-display text-2xl font-extrabold">Ils s'intéressent à toi</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => setTab("viewers")} className={"rounded-3xl border p-4 text-left " + (tab === "viewers" ? "border-[#fbbf24] bg-surface" : "border-line bg-surface/70")}>
+            <button type="button" onClick={() => setTab("viewers")} className={"rounded-3xl border p-4 text-start " + (tab === "viewers" ? "border-[#fbbf24] bg-surface" : "border-line bg-surface/70")}>
               <Eye className="size-5" style={{ color: GOLD }} /><b className="mt-1 block font-display text-3xl">{adm?.views ?? "–"}</b><span className="text-xs text-muted">vues de ton profil (30 j)</span>
             </button>
-            <button type="button" onClick={() => setTab("fans")} className={"rounded-3xl border p-4 text-left " + (tab === "fans" ? "border-[#fbbf24] bg-surface" : "border-line bg-surface/70")}>
+            <button type="button" onClick={() => setTab("fans")} className={"rounded-3xl border p-4 text-start " + (tab === "fans" ? "border-[#fbbf24] bg-surface" : "border-line bg-surface/70")}>
               <Heart className="size-5" style={{ color: CORAL }} /><b className="mt-1 block font-display text-3xl">{adm?.favs ?? "–"}</b><span className="text-xs text-muted">t'ont mis en favori</span>
             </button>
           </div>
@@ -300,13 +300,13 @@ export function PremiumPage({ demo }: { demo?: { admirers: Admirers; hits: Searc
                 const f = i === prices.length - 1;
                 return (
                   <button key={p.product} type="button" disabled={!!busy} onClick={() => pay(p.product)}
-                    className={"relative flex items-center justify-between rounded-3xl border p-5 text-left transition active:scale-[.98] disabled:opacity-60 " + (f ? "premium-card border-transparent pt-8" : "border-line bg-surface/70")}>
-                    {f && <span className="absolute top-2 right-3 rounded-full bg-night/80 px-3 py-0.5 text-[11px] font-extrabold" style={{ color: GOLD }}>⭐ Meilleur prix</span>}
+                    className={"relative flex items-center justify-between rounded-3xl border p-5 text-start transition active:scale-[.98] disabled:opacity-60 " + (f ? "premium-card border-transparent pt-8" : "border-line bg-surface/70")}>
+                    {f && <span className="absolute top-2 end-3 rounded-full bg-night/80 px-3 py-0.5 text-[11px] font-extrabold" style={{ color: GOLD }}>⭐ Meilleur prix</span>}
                     <span>
                       <b className="block font-display text-lg">{p.label}</b>
                       <span className={"text-xs " + (f ? "text-white/85" : "text-muted")}>{!PAYMENTS_ENABLED ? "Offert avec le code FIRST" : busy === p.product ? "Redirection vers Stripe…" : "Renouvelé automatiquement"}</span>
                     </span>
-                    <span className="text-right">
+                    <span className="text-end">
                       <b className="block font-display text-2xl font-extrabold" style={{ color: f ? "#fff" : GOLD }}>{euros(p.price_cents)}</b>
                       <span className={"text-[11px] " + (f ? "text-white/85" : "text-muted")}>{per(p)}</span>
                     </span>

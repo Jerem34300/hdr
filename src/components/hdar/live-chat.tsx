@@ -342,7 +342,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         </button>
         <button
           type="button"
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-1 py-1 text-left active:bg-surface"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-1 py-1 text-start active:bg-surface"
           aria-label={`Voir le profil de ${pseudo}`}
           onClick={() => openProfile(userId, pseudo)}
         >
@@ -352,7 +352,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               {pseudo}
               {isBot(userId) && <BotBadge />}
               {favs.some((f) => f.id === userId) && (
-                <span className="ml-1 text-amber-400" aria-label="Favori">★</span>
+                <span className="ms-1 text-amber-400" aria-label="Favori">★</span>
               )}
             </span>
             <span className="flex items-center text-xs text-muted">
@@ -381,17 +381,17 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           <MoreVertical className="size-5" />
         </button>
         {menu && (
-          <div className="absolute top-full right-2 z-30 mt-1 w-56 overflow-hidden rounded-2xl border border-line bg-surface text-sm shadow-2xl">
+          <div className="absolute top-full end-2 z-30 mt-1 w-56 overflow-hidden rounded-2xl border border-line bg-surface text-sm shadow-2xl">
             <button
               type="button"
-              className="block w-full px-4 py-3 text-left"
+              className="block w-full px-4 py-3 text-start"
               onClick={() => openProfile(userId, pseudo)}
             >
               Voir le profil
             </button>
             <button
               type="button"
-              className="block w-full border-t border-line px-4 py-3 text-left"
+              className="block w-full border-t border-line px-4 py-3 text-start"
               onClick={() => {
                 setMenu(false);
                 if (!onboarded) return openGate();
@@ -402,7 +402,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             </button>
             <button
               type="button"
-              className="block w-full border-t border-line px-4 py-3 text-left"
+              className="block w-full border-t border-line px-4 py-3 text-start"
               onClick={() => {
                 setMenu(false);
                 void askConfirm({
@@ -417,7 +417,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             </button>
             {!isBot(userId) && <button
               type="button"
-              className="block w-full border-t border-line px-4 py-3 text-left text-signal"
+              className="block w-full border-t border-line px-4 py-3 text-start text-signal"
               onClick={() => {
                 setMenu(false);
                 void reportUser(userId, pseudo).then((sent) => sent && closeView());
@@ -427,7 +427,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             </button>}
             <button
               type="button"
-              className="block w-full border-t border-line px-4 py-3 text-left text-signal"
+              className="block w-full border-t border-line px-4 py-3 text-start text-signal"
               onClick={() => {
                 void blockLive({ data: { self: deviceId(), other: userId } })
                   .then(() => {
@@ -456,7 +456,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
                   className={
                     "max-w-[80%] min-w-[4.5rem] rounded-[18px] px-3 pt-1.5 pb-1 shadow-sm select-none transition-shadow md:select-text " +
                     (m.mine ? "bubble-mine" : (m.bubble ? "bubble-other bubble-author" : "bubble-other")) +
-                    ((msgs[i + 1]?.mine ?? !m.mine) !== m.mine ? (m.mine ? " tail-mine rounded-br-[4px]" : " tail-other rounded-bl-[4px]") : "") +
+                    ((msgs[i + 1]?.mine ?? !m.mine) !== m.mine ? (m.mine ? " tail-mine rounded-ee-[4px]" : " tail-other rounded-es-[4px]") : "") +
                     (flash === m.id ? " ring-2 ring-amber-300" : "")
                   }
                 >
@@ -516,23 +516,23 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               <span className="block text-xs font-bold text-muted">{msgMenu.mine ? "Toi" : pseudo}</span>
               <span className="block max-h-[5.75rem] overflow-y-auto break-words whitespace-pre-wrap text-muted">{msgPreview(msgMenu)}</span>
             </div>
-            <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => reply(msgMenu)}>
+            <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-start text-[15px] active:bg-white/5" onClick={() => reply(msgMenu)}>
               <CornerUpLeft className="size-5" /> Répondre
             </button>
             {msgMenu.kind !== "location" && (
-              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => { setFwd(msgMenu); setMsgMenu(null); }}>
+              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-start text-[15px] active:bg-white/5" onClick={() => { setFwd(msgMenu); setMsgMenu(null); }}>
                 <Forward className="size-5" /> Transférer
               </button>
             )}
             {canEditMsg(msgMenu.mine, msgMenu.kind, pgTime(msgMenu.at)) && msgMenu.fwd == null && (
-              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5" onClick={() => startEdit(msgMenu)}>
+              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-start text-[15px] active:bg-white/5" onClick={() => startEdit(msgMenu)}>
                 <Pencil className="size-5" /> Modifier
               </button>
             )}
             {msgMenu.kind === "text" && (
               <button
                 type="button"
-                className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] active:bg-white/5"
+                className="flex h-12 w-full items-center gap-3 px-5 text-start text-[15px] active:bg-white/5"
                 onClick={() => {
                   void navigator.clipboard?.writeText(msgMenu.body).then(() => toast("Copié"));
                   setMsgMenu(null);
@@ -542,7 +542,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               </button>
             )}
             {msgMenu.mine && (
-              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-left text-[15px] text-signal active:bg-white/5" onClick={() => removeMine(msgMenu)}>
+              <button type="button" className="flex h-12 w-full items-center gap-3 px-5 text-start text-[15px] text-signal active:bg-white/5" onClick={() => removeMine(msgMenu)}>
                 <Trash2 className="size-5" /> Retirer le message
               </button>
             )}
@@ -788,7 +788,7 @@ function AdQuoteBody({ body, mine }: { body: string; mine: boolean }) {
   if (!q) return <p className="break-words whitespace-pre-wrap"><RichText text={body} /></p>;
   return (
     <>
-      <button type="button" onClick={() => useHdar.getState().openAnnonces(q.id)} className={"mb-1 block w-full rounded-xl border-l-4 px-2 py-1 text-left text-xs " + (mine ? "border-night/50 bg-night/10" : "border-signal bg-night/40")}>
+      <button type="button" onClick={() => useHdar.getState().openAnnonces(q.id)} className={"mb-1 block w-full rounded-xl border-s-4 px-2 py-1 text-start text-xs " + (mine ? "border-night/50 bg-night/10" : "border-signal bg-night/40")}>
         <span className="opacity-70">📌 Réponse à l'annonce</span>
         <span className="block font-bold break-words">{q.title || "Annonce"} ›</span>
       </button>

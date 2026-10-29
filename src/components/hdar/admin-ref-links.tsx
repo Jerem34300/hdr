@@ -42,12 +42,12 @@ const day = (d: string) => new Date(d).toLocaleDateString("fr-FR", { timeZone: "
 function PersonRow({ p, onOpen }: { p: RefPerson; onOpen?: (id: string) => void }) {
   return (
     <li>
-      <button type="button" disabled={!p.id} onClick={() => p.id && onOpen?.(p.id)} className="flex w-full items-center gap-2 py-1.5 text-left disabled:opacity-60">
+      <button type="button" disabled={!p.id} onClick={() => p.id && onOpen?.(p.id)} className="flex w-full items-center gap-2 py-1.5 text-start disabled:opacity-60">
         <Avatar src={p.photo ?? ""} name={p.pseudo} className="size-8 shrink-0 rounded-full" />
         <span className="min-w-0 flex-1 truncate text-sm font-bold">{p.pseudo}</span>
         {p.rewarded && <span className="rounded bg-signal/20 px-1 text-[10px] text-signal">récompensé</span>}
         <span className={"rounded-full px-2 py-0.5 text-[10px] " + (p.active ? "bg-emerald-500/20 text-emerald-300" : "bg-line text-muted")}>{p.active ? "actif" : "inactif"}</span>
-        <span className="w-12 text-right text-xs text-muted">{day(p.created)}</span>
+        <span className="w-12 text-end text-xs text-muted">{day(p.created)}</span>
       </button>
     </li>
   );
@@ -88,14 +88,14 @@ export function Referrers({ adminKey, demo, onOpen }: { adminKey: string; demo?:
             <li key={r.id} className="py-2">
               <div className="flex items-center gap-2">
                 <span className="w-5 text-center text-sm font-bold text-muted">{i + 1}</span>
-                <button type="button" onClick={() => onOpen?.(r.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                <button type="button" onClick={() => onOpen?.(r.id)} className="flex min-w-0 flex-1 items-center gap-2 text-start">
                   <Avatar src={r.photo ?? ""} name={r.pseudo} className="size-9 shrink-0 rounded-full" />
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-bold underline-offset-2 hover:underline">{r.pseudo}</span>
                     <span className="block text-xs text-muted">dernier : {day(r.last)} · {r.rewarded} récompensé{r.rewarded > 1 ? "s" : ""}</span>
                   </span>
                 </button>
-                <span className="text-right text-lg font-bold">{r.count}<span className="block text-[10px] font-normal text-muted">profils</span></span>
+                <span className="text-end text-lg font-bold">{r.count}<span className="block text-[10px] font-normal text-muted">profils</span></span>
                 <button type="button" aria-label="Voir les filleuls" onClick={() => setOpen(open === r.id ? null : r.id)} className="rounded-full border border-line px-2 py-1 text-xs">{open === r.id ? "▲" : "▼"}</button>
               </div>
               {open === r.id && (
@@ -169,14 +169,14 @@ export function RefLinks({ adminKey, demo, demoPeople, onOpen }: { adminKey: str
         <ul className="divide-y divide-line/60">
           {list.map((l) => (
             <li key={l.ref} className={"py-2 " + (l.archived ? "opacity-50" : "")}>
-              <button type="button" onClick={() => setOpen(open === l.ref ? null : l.ref)} className="flex w-full items-center gap-2 text-left">
+              <button type="button" onClick={() => setOpen(open === l.ref ? null : l.ref)} className="flex w-full items-center gap-2 text-start">
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1 text-sm font-bold"><span className="truncate">{l.ref}</span>{l.with_code && <span className="shrink-0 rounded bg-amber-400/20 px-1 text-[10px] text-amber-300">FIRST</span>}</span>
                   <span className="block truncate text-xs text-muted">{l.label || "—"}{l.created_at ? ` · ${new Date(l.created_at).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" })}` : ""}</span>
                 </span>
-                <span className="w-12 text-right text-sm">{l.visits}<span className="block text-[10px] text-muted">visites</span></span>
-                <span className="w-12 text-right text-sm font-bold">{l.profiles}<span className="block text-[10px] font-normal text-muted">profils</span></span>
-                <span className="w-12 text-right text-sm">{conv(l)}<span className="block text-[10px] text-muted">conv.</span></span>
+                <span className="w-12 text-end text-sm">{l.visits}<span className="block text-[10px] text-muted">visites</span></span>
+                <span className="w-12 text-end text-sm font-bold">{l.profiles}<span className="block text-[10px] font-normal text-muted">profils</span></span>
+                <span className="w-12 text-end text-sm">{conv(l)}<span className="block text-[10px] text-muted">conv.</span></span>
               </button>
               {open === l.ref && (
                 <div className="mt-2 space-y-2 rounded-xl bg-night p-3">

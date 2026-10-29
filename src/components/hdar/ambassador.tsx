@@ -93,8 +93,8 @@ export function AmbassadorSpace({ demo }: { demo?: AmbMe }) {
         </div>
       </section>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => setView("code")} className="rounded-3xl bg-gradient-to-br from-[#fbbf24] to-[#FA6F6C] p-4 text-left text-night"><span className="text-2xl">🎁</span><b className="block font-display">Code cadeau</b><span className="text-xs">{me.codes_left}/{me.codes_per_week} restants cette semaine</span></button>
-        <button type="button" onClick={() => setView("place")} className="rounded-3xl bg-gradient-to-br from-[#3EE08F] to-[#22d3ee] p-4 text-left text-night"><span className="text-2xl">🏷️</span><b className="block font-display">Fiche partenaire</b><span className="text-xs">Créer un lieu + lien à envoyer</span></button>
+        <button type="button" onClick={() => setView("code")} className="rounded-3xl bg-gradient-to-br from-[#fbbf24] to-[#FA6F6C] p-4 text-start text-night"><span className="text-2xl">🎁</span><b className="block font-display">Code cadeau</b><span className="text-xs">{me.codes_left}/{me.codes_per_week} restants cette semaine</span></button>
+        <button type="button" onClick={() => setView("place")} className="rounded-3xl bg-gradient-to-br from-[#3EE08F] to-[#22d3ee] p-4 text-start text-night"><span className="text-2xl">🏷️</span><b className="block font-display">Fiche partenaire</b><span className="text-xs">Créer un lieu + lien à envoyer</span></button>
       </div>
       <section className="mt-4 rounded-3xl border border-line bg-surface p-4">
         <p className="text-sm font-bold">Ce mois-ci</p>
@@ -122,7 +122,7 @@ export function AmbassadorSpace({ demo }: { demo?: AmbMe }) {
       {me.codes.length > 0 && <section className="mt-4 rounded-3xl border border-line bg-surface p-4">
         <p className="text-sm font-bold">Derniers codes</p>
         {me.codes.map((c) => (
-          <button key={c.code} type="button" disabled={c.used} onClick={() => setShown(c.code)} className="mt-1 flex w-full justify-between rounded-xl px-2 py-1.5 text-left text-sm disabled:opacity-40">
+          <button key={c.code} type="button" disabled={c.used} onClick={() => setShown(c.code)} className="mt-1 flex w-full justify-between rounded-xl px-2 py-1.5 text-start text-sm disabled:opacity-40">
             <span className="font-mono">{c.code}</span><span className="text-xs text-muted">{label(c.kind, c.amount)} · {c.used ? "utilisé" : "dispo"}</span>
           </button>))}
       </section>}
@@ -245,7 +245,7 @@ function Onboard({ token, onDone }: { token: string; onDone: () => void }) {
       {!info.photo_ok && <p className="rounded-2xl border border-[#fbbf24] px-4 py-3 text-sm text-[#fbbf24]">📸 Il faut d'abord un profil avec une photo validée. <a href="/" className="underline">Compléter mon profil</a></p>}
       {token && !info.valid && <p className="rounded-2xl border border-signal px-4 py-3 text-sm text-signal">Ce lien d'invitation est expiré ou déjà utilisé.</p>}
       <section className="rounded-3xl border border-line bg-surface p-4"><p className="font-bold">Charte ambassadeur</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{CHARTE.map((c) => <li key={c}>{c}</li>)}</ul></section>
+        <ul className="mt-2 list-disc space-y-1 ps-5 text-sm">{CHARTE.map((c) => <li key={c}>{c}</li>)}</ul></section>
       <section className="rounded-3xl border border-line bg-surface p-4">
         <div className="flex items-center justify-between"><p className="font-bold">📄 Contrat ambassadeur (v2)</p><a href="/ambassadeur/contrat-v2.pdf" target="_blank" rel="noreferrer" className="text-xs underline">PDF</a></div>
         <div className="amb-contract mt-2 max-h-[55vh] overflow-y-auto rounded-2xl bg-white p-4 text-[13px] leading-relaxed text-[#111]" dangerouslySetInnerHTML={{ __html: html || "Chargement du contrat…" }} />

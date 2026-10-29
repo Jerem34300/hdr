@@ -18,7 +18,7 @@ export function CardHead({ icon, title, sub, accent, chevron = true }: { icon: R
   );
 }
 
-export const cardCls = "mt-3 block w-full rounded-3xl border bg-surface p-4 text-left transition active:scale-[.98]";
+export const cardCls = "mt-3 block w-full rounded-3xl border bg-surface p-4 text-start transition active:scale-[.98]";
 export const cardStyle = (accent: string) => ({ borderColor: `${accent}40`, backgroundImage: `linear-gradient(135deg, ${accent}14, transparent 60%)` });
 
 /* ── Ambassadeur : lien discret dans le Profil + popup occasionnel ── */

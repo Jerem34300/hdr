@@ -70,7 +70,7 @@ function PriceButtons({ prices, payOk, onPick }: { prices: PriceRow[]; payOk: bo
             setBusy(p.product);
             onPick(p.product).catch((e: Error) => toast(e.message)).finally(() => setBusy(""));
           }}
-          className="rounded-2xl border border-line bg-surface px-4 py-3 text-left disabled:opacity-50"
+          className="rounded-2xl border border-line bg-surface px-4 py-3 text-start disabled:opacity-50"
         >
           <b className="block">{p.label}</b>
           <span className="text-signal">{euros(p.price_cents)}</span>
@@ -216,7 +216,7 @@ function PlaceForm({ init, onDone }: { init: PartnerInput; onDone: () => void })
         <label className="flex items-center gap-2"><input type="checkbox" checked={p.ratings_on} onChange={(e) => set({ ratings_on: e.target.checked })} /> Accepter les notes (étoiles)</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={p.comments_on} onChange={(e) => set({ comments_on: e.target.checked })} /> Accepter les commentaires</label>
         {p.comments_on && (
-          <div className="ml-6 space-y-1">
+          <div className="ms-6 space-y-1">
             <label className="flex items-center gap-2"><input type="radio" checked={p.comments_public} onChange={() => set({ comments_public: true })} /> Publics, affichés sur la fiche</label>
             <label className="flex items-center gap-2"><input type="radio" checked={!p.comments_public} onChange={() => set({ comments_public: false })} /> Privés, visibles seulement par moi</label>
           </div>

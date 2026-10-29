@@ -187,8 +187,8 @@ export function MapTips() {
       : arrow === "up"
         ? "-translate-x-1/2 pt-2"
         : arrow === "right"
-          ? "-translate-x-full -translate-y-1/2 pr-2"
-          : "-translate-y-1/2 pl-2";
+          ? "-translate-x-full -translate-y-1/2 pe-2"
+          : "-translate-y-1/2 ps-2";
 
   return (
     <div className={`pointer-events-none absolute z-[45] ${wrap}`} style={{ left: pos.left + (pos.shift ?? 0), top: pos.top }}>

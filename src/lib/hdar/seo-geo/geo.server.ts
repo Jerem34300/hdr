@@ -73,6 +73,8 @@ export function allUrls() {
     cities: D.cities.filter((c) => STRONG.has(c.s)).map((c) => `/rencontre/${c.s}`),
     // Annonces par ville (≈400 mots, gabarit) et sous-pages thème (quasi-doublons de la page ville) : hors sitemap.
     annonces: ["/petites-annonces"],
+    // Pages villes traduites (en, es, de, it, pt, ar) : les 300 plus grandes villes.
+    intl: D.cities.slice(0, 300).filter((c) => STRONG.has(c.s)).flatMap((c) => ["en", "es", "de", "it", "pt", "ar"].map((l) => `/${l}/city/${c.s}`)),
     themes: D.cities.slice(0, 30).map((c) => `/rencontre/${c.s}/live-coquin`),
     // Départements : restent indexables (maillage) mais hors sitemap.
     lists: ["/rencontre", ...regs.map((s) => `/rencontre/region/${s}`)],

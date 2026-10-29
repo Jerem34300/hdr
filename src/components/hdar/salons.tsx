@@ -1,10 +1,13 @@
 import { useMyName } from "@/lib/hdar/discret";
 import { mentionNotify, salonReportNote } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, Plus, X } from "lucide-react";
+import { Check, ChevronLeft, Globe, Plus, X } from "lucide-react";
+import { COUNTRIES, currentCountry, detectCountry, useCountry } from "@/lib/hdar/country";
+import { countryName, useLang } from "@/lib/hdar/i18n";
 import { toast } from "sonner";
 import { askConfirm } from "@/lib/hdar/confirm";
 import {
+  countrySalon,
   createSalon,
   getSalon,
   pgTime,
@@ -62,11 +65,18 @@ export function SalonDiscover() {
   const [creating, setCreating] = useState(false);
   const [allRegions, setAllRegions] = useState(false);
 
+  const pos = useMyPos();
+  useEffect(() => { void detectCountry(pos.lat, pos.lng); }, [pos.lat, pos.lng]);
+  const cc = useCountry(currentCountry);
+  useLang((s) => s.lang);
+  const [pickCountry, setPickCountry] = useState(false);
+  const openCountry = (code: string) =>
+    void countrySalon(code).then((s) => openSalon(s.id, s.name)).catch((e) => toast(e instanceof Error ? e.message : "Salon indisponible"));
   const regions = (salons ?? []).filter((s) => s.region);
   const mine = regions.find((s) => s.region === myRegion);
   const others = regions.filter((s) => s !== mine).sort((x, y) => y.recent - x.recent || x.name.localeCompare(y.name, "fr"));
   // Salons à découvrir : ceux qu'on ne suit pas encore (les suivis sont dans la liste des discussions).
-  const topics = (salons ?? []).filter((s) => !s.region && !followed.includes(s.id));
+  const topics = (salons ?? []).filter((s) => !s.region && !s.country && s.name !== "Général" && !followed.includes(s.id));
 
   const chip = "flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-sm whitespace-nowrap";
   // Pastille verte = en ligne maintenant, sinon grise = messages des dernières 24 h.
@@ -88,6 +98,14 @@ export function SalonDiscover() {
         <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " border-signal/60"}>
           📍 Quartier <OnlineCount n={online?.area} />
         </button>
+        <span className={chip + " gap-0 border-signal/60 p-0"}>
+          <button type="button" data-act="country-salon" onClick={() => openCountry(cc)} className="flex h-full items-center gap-1.5 ps-3 pe-2">
+            <Globe className="size-4 text-signal" /> Général {countryName(cc)}
+          </button>
+          <button type="button" aria-label="Choisir un autre pays" onClick={() => setPickCountry(true)} className="flex h-full items-center border-s border-line px-2 text-xs text-muted">
+            Pays
+          </button>
+        </span>
         {mine && !followed.includes(mine.id) && (
           <button type="button" data-act="salon" data-id={mine.id} {...bindTap(() => openSalon(mine.id, mine.name))} className={chip + " border-signal/60"}>
             {mine.emoji} {mine.name} {count(mine)}
@@ -127,6 +145,7 @@ export function SalonDiscover() {
         </div>
       )}
       <TripsSection />
+      {pickCountry && <CountryPicker current={cc} onClose={() => setPickCountry(false)} onPick={(code) => { setPickCountry(false); openCountry(code); }} />}
       {creating && (
         <CreateSalon
           onClose={() => setCreating(false)}
@@ -164,7 +183,7 @@ export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean 
         data-act="salon"
         data-id={s.id}
         {...bindTap(() => openSalon(s.id, s.name))}
-        className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
+        className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-start"
       >
         <span className="relative flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">
           {s.emoji || "💬"}
@@ -237,7 +256,7 @@ export function AreaInboxRow({ a }: { a: ReturnType<typeof useAreaInbox> }) {
         type="button"
         data-act="pocket"
         {...bindTap(openPocket)}
-        className="flex h-20 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
+        className="flex h-20 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-start"
       >
         <span className="relative flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-2xl">
           📍
@@ -271,7 +290,7 @@ export function AreaInboxRow({ a }: { a: ReturnType<typeof useAreaInbox> }) {
 function ActiveDot({ at }: { at: number }) {
   if (!at || Date.now() - at > 15 * 60_000) return null;
   return (
-    <span className="absolute -top-0.5 -right-0.5 flex size-3.5" aria-label="Ça parle en ce moment">
+    <span className="absolute -top-0.5 -end-0.5 flex size-3.5" aria-label="Ça parle en ce moment">
       <span className="absolute inline-flex size-full animate-ping rounded-full bg-online opacity-60" />
       <span className="relative inline-flex size-3.5 rounded-full border-2 border-surface bg-online" />
     </span>
@@ -432,10 +451,10 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
           {info?.trip_kind ? (
             <span className="flex size-8 items-center justify-center text-signal"><TransitIcon kind={info.trip_kind} className="size-6" /></span>
           ) : (
-            <span className="text-2xl">{info?.emoji || "💬"}</span>
+            info?.country ? <span className="flex size-8 items-center justify-center text-signal"><Globe className="size-6" /></span> : <span className="text-2xl">{info?.emoji || "💬"}</span>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display font-bold">{info?.name || name}</p>
+            <p className="truncate font-display font-bold">{info?.country ? `Général ${countryName(info.country)}` : info?.name || name}</p>
             <p className="truncate text-xs text-muted">
               {info?.trip_kind
                 ? `Salon à bord · ${info.description ?? ""} · effacé après le trajet`
@@ -468,5 +487,41 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
         </>
       }
     />
+  );
+}
+
+/** Choix du pays du salon « Général » (par défaut : pays de ta position). */
+function CountryPicker({ current, onClose, onPick }: { current: string; onClose: () => void; onPick: (cc: string) => void }) {
+  const auto = useCountry((s) => s.auto);
+  const chosen = useCountry((s) => s.chosen);
+  const choose = useCountry((s) => s.choose);
+  const lang = useLang((s) => s.lang);
+  const [q, setQ] = useState("");
+  const list = COUNTRIES.map((c) => ({ c, n: countryName(c, lang) }))
+    .filter((x) => !q || x.n.toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => a.n.localeCompare(b.n, lang));
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose} data-act="country-picker">
+      <div className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-t-3xl border border-line bg-night p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Salon général par pays</h2>
+          <button type="button" aria-label="Fermer" onClick={onClose} className="flex size-10 items-center justify-center"><X className="size-5" /></button>
+        </div>
+        <p className="text-xs text-muted">Par défaut, le pays où tu te trouves. Les salons ville, gare et train restent locaux.</p>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un pays" className="mt-3 h-11 rounded-full border border-line bg-surface px-4 text-sm outline-none" />
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
+          {auto && (
+            <button type="button" onClick={() => { choose(null); onPick(auto); }} className="flex h-11 w-full items-center gap-3 px-2 text-start text-sm">
+              <Globe className="size-4 text-signal" /><span className="flex-1">Ma position · {countryName(auto, lang)}</span>{!chosen && <Check className="size-4 text-signal" />}
+            </button>
+          )}
+          {list.map(({ c, n }) => (
+            <button key={c} type="button" onClick={() => { choose(c === auto ? null : c); onPick(c); }} className="flex h-11 w-full items-center gap-3 px-2 text-start text-sm">
+              <span className="w-7 text-xs text-muted">{c}</span><span translate="no" className="flex-1">{n}</span>{chosen === c && current === c && <Check className="size-4 text-signal" />}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

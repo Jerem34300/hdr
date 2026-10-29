@@ -1,6 +1,7 @@
 import type { CityPayload } from "@/lib/hdar/seo-geo/types";
 import { SITE_URL } from "@/lib/hdar/seo";
 import { LOCAL } from "@/lib/hdar/seo-local";
+import { cityAlternates } from "./seo-city-intl";
 import { CityChips, Count, Crumbs, Cta, Faq, Feature, Hero, Ld, SeoShell, fmt, pick, seoHead } from "./seo-pages";
 
 export type Theme = "tchat-gay" | "sortir-ce-soir" | null;
@@ -17,7 +18,8 @@ export function cityHead(c: CityPayload | undefined, t: Theme, og?: string) {
     : t === "sortir-ce-soir" ? `Envie de sortir ce soir ${a(c.n)} ? La carte hdar montre qui est visible autour de toi et les lieux du moment. Gratuit, sans compte, 18+.`
     : `Rencontres ${a(c.n)} et autour (${c.dep.n}) : amour, amitié, tchat en ligne ou sortie ce soir. Carte en direct, chat du quartier, pour tout le monde et LGBT-friendly. Gratuit, discret, 18+.`;
     // Sous-pages thème = quasi-doublon de la page ville ; petites communes = gabarit : noindex, follow.
-  return seoHead({ title, desc, path: path(c, t), og, noindex: !!t || c.strong === false });
+  const h = seoHead({ title, desc, path: path(c, t), og, noindex: !!t || c.strong === false });
+  return t ? h : { ...h, links: [...h.links, ...cityAlternates(c.s)] };
 }
 
 function intro(c: CityPayload) {

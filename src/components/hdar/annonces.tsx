@@ -248,7 +248,7 @@ function AdPhotos({ photos }: { photos: string[] }) {
             aria-label={on ? "Agrandir la photo" : "Voir la photo"} className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-night">
             {urls[k] && <img src={urls[k]} alt="" className={cn("size-full object-cover transition", !on && "scale-110 blur-xl")} />}
             {!on ? <span className="absolute inset-0 grid place-items-center text-center text-[11px] font-bold text-white drop-shadow">🔞<br />Toucher<br />pour voir</span>
-              : <span className="absolute right-1 bottom-1 rounded-full bg-black/60 px-1.5 text-[10px] text-white">⤢</span>}
+              : <span className="absolute end-1 bottom-1 rounded-full bg-black/60 px-1.5 text-[10px] text-white">⤢</span>}
           </button>
         );
       })}
@@ -271,7 +271,7 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
         {ad.boost_scope && <span className="rounded-full bg-[#fbbf24] px-2 py-0.5 font-bold text-night">✨ Boostée</span>}
         {ad.premium && <span className="rounded-full bg-gradient-to-r from-[#8b7cff] to-[#f472b6] px-2 py-0.5 font-bold text-night">👑 hdar+</span>}
         {ad.hidden && <span className="rounded-full bg-signal/20 px-2 py-0.5 text-signal">masquée par la modération</span>}
-        <span className="ml-auto text-muted">{ad.km != null && (near || ad.km < 30) ? `📍 ${kmLabel(ad.km)} · ` : ""}{ad.city}</span>
+        <span className="ms-auto text-muted">{ad.km != null && (near || ad.km < 30) ? `📍 ${kmLabel(ad.km)} · ` : ""}{ad.city}</span>
       </div>
       <h2 className="mt-2 font-display text-lg font-bold leading-snug break-words">{ad.title}</h2>
       <p className="mt-1 text-sm break-words whitespace-pre-wrap text-ink/90"><RichText text={ad.body} mentions={false} /></p>
@@ -429,7 +429,7 @@ function CreateSheet({ approx, active, status, onClose, onDone }: { approx: { ci
       <div className="mt-1 flex gap-2">
         {previews.map((u, i) => (
           <button key={u} type="button" aria-label="Retirer la photo" onClick={() => setFiles(files.filter((_, j) => j !== i))} className="relative size-20 overflow-hidden rounded-xl">
-            <img src={u} alt="" className="size-full object-cover blur-md" /><span className="absolute top-1 right-1 rounded-full bg-black/70 p-0.5"><X className="size-3" /></span>
+            <img src={u} alt="" className="size-full object-cover blur-md" /><span className="absolute top-1 end-1 rounded-full bg-black/70 p-0.5"><X className="size-3" /></span>
           </button>
         ))}
         {files.length < 3 && (
@@ -453,7 +453,7 @@ function ReplySheet({ ad, onClose }: { ad: Ad; onClose: () => void }) {
   const openLive = useHdar((s) => s.openLive);
   return (
     <Sheet title={`Répondre à ${ad.pseudo}`} onClose={onClose}>
-      <div className="mt-3 rounded-2xl border-l-4 border-signal bg-night px-3 py-2 text-sm"><p className="text-xs text-muted">📌 Annonce</p><p className="font-bold">{ad.title}</p></div>
+      <div className="mt-3 rounded-2xl border-s-4 border-signal bg-night px-3 py-2 text-sm"><p className="text-xs text-muted">📌 Annonce</p><p className="font-bold">{ad.title}</p></div>
       <textarea autoFocus className={cn(field, "mt-3 h-28 py-3")} maxLength={380} value={text} onChange={(e) => setText(e.target.value)} placeholder="Ton message…" />
       <p className="mt-1 text-[11px] text-muted">Ta réponse arrive dans ses Messages, avec le titre de l'annonce.</p>
       <button type="button" disabled={busy || !text.trim()} onClick={() => {
@@ -484,7 +484,7 @@ function BoostSheet({ ad, free, onClose, onFree }: { ad: Ad; free: boolean; onCl
       )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         {AD_BOOSTS.map((x) => (
-          <button key={x.scope} type="button" aria-pressed={scope === x.scope} onClick={() => setScope(x.scope)} className={cn("rounded-2xl border p-3 text-left", scope === x.scope ? "border-[#fbbf24] bg-[#fbbf24]/10" : "border-line")}>
+          <button key={x.scope} type="button" aria-pressed={scope === x.scope} onClick={() => setScope(x.scope)} className={cn("rounded-2xl border p-3 text-start", scope === x.scope ? "border-[#fbbf24] bg-[#fbbf24]/10" : "border-line")}>
             <b className="block">{x.label}</b><span className="text-xs text-muted">dès {euros(x.d24)}</span>
           </button>
         ))}

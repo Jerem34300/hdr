@@ -55,7 +55,7 @@ export function DailyTab({ adminKey, onOpen, demo, note }: { adminKey: string; o
               <ul className="divide-y divide-line/50">
                 {d.profiles.map((p) => (
                   <li key={p.id}>
-                    <button type="button" onClick={() => onOpen?.(p.id)} className="flex w-full items-center gap-2 py-2 text-left">
+                    <button type="button" onClick={() => onOpen?.(p.id)} className="flex w-full items-center gap-2 py-2 text-start">
                       <Avatar src={p.photo ?? ""} name={p.pseudo} className="size-9 shrink-0 rounded-full" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-bold">{p.pseudo}{p.age ? `, ${p.age} ans` : ""}</span>
@@ -73,9 +73,9 @@ export function DailyTab({ adminKey, onOpen, demo, note }: { adminKey: string; o
             <h3 className="mb-2 font-display font-bold">D'où ils viennent</h3>
             {!d?.sources.length ? <p className="text-sm text-muted">Rien ce jour-là.</p> : (
               <table className="w-full whitespace-nowrap text-xs">
-                <thead className="text-left text-muted"><tr><th className="py-1">Source</th><th className="text-right">Visites</th><th className="pl-1.5 text-right">App.</th><th className="pl-1.5 text-right">Profils</th><th className="pl-1.5 text-right">Revenus</th></tr></thead>
+                <thead className="text-start text-muted"><tr><th className="py-1">Source</th><th className="text-end">Visites</th><th className="ps-1.5 text-end">App.</th><th className="ps-1.5 text-end">Profils</th><th className="ps-1.5 text-end">Revenus</th></tr></thead>
                 <tbody>{d.sources.map((s) => (
-                  <tr key={s.ref} className="border-t border-line/60"><td className="max-w-[8rem] truncate py-1.5 font-bold">{s.ref}</td><td className="text-right">{s.ref === "(sans lien)" ? "—" : s.visits}</td><td className="pl-1.5 text-right">{s.ref === "(sans lien)" ? "—" : s.devices}</td><td className="pl-1.5 text-right">{s.profiles}</td><td className="pl-1.5 text-right">{eur(s.revenue_cents)}</td></tr>
+                  <tr key={s.ref} className="border-t border-line/60"><td className="max-w-[8rem] truncate py-1.5 font-bold">{s.ref}</td><td className="text-end">{s.ref === "(sans lien)" ? "—" : s.visits}</td><td className="ps-1.5 text-end">{s.ref === "(sans lien)" ? "—" : s.devices}</td><td className="ps-1.5 text-end">{s.profiles}</td><td className="ps-1.5 text-end">{eur(s.revenue_cents)}</td></tr>
                 ))}</tbody>
               </table>
             )}
@@ -93,10 +93,10 @@ export function DailyTab({ adminKey, onOpen, demo, note }: { adminKey: string; o
             <h3 className="mb-1 font-display font-bold">30 derniers jours</h3>
             <p className="mb-2 text-xs text-muted">Total : {sum("signups")} inscrits · {sum("visits")} visites · {sum("departures")} départs · {eur(sum("revenue_cents"))}. Touche une ligne pour voir le jour.</p>
             <table className="w-full whitespace-nowrap text-xs">
-              <thead className="text-left text-muted"><tr><th className="py-1">Jour</th><th className="text-right">Inscrits</th><th className="pl-1.5 text-right">Visites</th><th className="pl-1.5 text-right">App.</th><th className="pl-1.5 text-right">Départs</th><th className="pl-1.5 text-right">€</th></tr></thead>
+              <thead className="text-start text-muted"><tr><th className="py-1">Jour</th><th className="text-end">Inscrits</th><th className="ps-1.5 text-end">Visites</th><th className="ps-1.5 text-end">App.</th><th className="ps-1.5 text-end">Départs</th><th className="ps-1.5 text-end">€</th></tr></thead>
               <tbody>{data.days.map((r) => (
                 <tr key={r.day} onClick={() => setDay(r.day)} className={"cursor-pointer border-t border-line/60 " + (r.day === day ? "bg-signal/15" : "")}>
-                  <td className="py-1.5 text-muted">{dayLabel(r.day)}</td><td className="text-right font-bold">{r.signups}</td><td className="pl-1.5 text-right">{r.visits}</td><td className="pl-1.5 text-right">{r.devices}</td><td className="pl-1.5 text-right">{r.departures}</td><td className="pl-1.5 text-right">{r.revenue_cents ? eur(r.revenue_cents) : "—"}</td>
+                  <td className="py-1.5 text-muted">{dayLabel(r.day)}</td><td className="text-end font-bold">{r.signups}</td><td className="ps-1.5 text-end">{r.visits}</td><td className="ps-1.5 text-end">{r.devices}</td><td className="ps-1.5 text-end">{r.departures}</td><td className="ps-1.5 text-end">{r.revenue_cents ? eur(r.revenue_cents) : "—"}</td>
                 </tr>
               ))}</tbody>
             </table>

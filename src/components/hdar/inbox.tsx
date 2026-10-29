@@ -53,7 +53,7 @@ export function Inbox() {
           data-act="live-chat"
           data-id={c.otherId}
           {...bindTap(() => openLive(c.otherId, c.pseudo))}
-          className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left"
+          className="flex h-20 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-start"
         >
           <UserAvatar id={c.otherId} name={c.pseudo} className="size-12 shrink-0 rounded-full" />
           <span className="min-w-0 flex-1">
@@ -62,7 +62,7 @@ export function Inbox() {
                 {c.pseudo}
                 {isBot(c.otherId) && <BotBadge />}
                 {favIds.has(c.otherId) && (
-                  <span className="ml-1 text-amber-400" aria-label="Favori">★</span>
+                  <span className="ms-1 text-amber-400" aria-label="Favori">★</span>
                 )}
               </span>
               <span className="shrink-0 text-xs text-muted">{when(c.lastAt)}</span>

@@ -45,7 +45,7 @@ export function BoostNudge() {
   if (!show) return null;
   return (
     <div role="dialog" aria-label="Booster mon profil" className="boost-nudge absolute inset-x-3 top-16 z-40 mx-auto max-w-sm">
-      <div className="boost-card relative flex items-center gap-3 rounded-3xl p-3 pr-10 shadow-2xl">
+      <div className="boost-card relative flex items-center gap-3 rounded-3xl p-3 pe-10 shadow-2xl">
         <span className="partner-glow relative block size-12 shrink-0 overflow-hidden rounded-full border-2 border-white bg-surface">
           <PinFace id={deviceId()} pseudo={pseudo || "Toi"} />
         </span>
@@ -54,7 +54,7 @@ export function BoostNudge() {
           <span className="block text-xs text-white/90">Ton pin brille sur la carte et passe devant tout le monde. Dès 1,99 €.</span>
           <span className="mt-1.5 inline-block rounded-full bg-night/85 px-3 py-1 text-xs font-bold text-[#fbbf24]">Booster mon profil →</span>
         </a>
-        <button type="button" aria-label="Fermer" className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-night/40 text-white" onClick={() => setShow(false)}>
+        <button type="button" aria-label="Fermer" className="absolute top-2 end-2 flex size-8 items-center justify-center rounded-full bg-night/40 text-white" onClick={() => setShow(false)}>
           <X className="size-4" />
         </button>
       </div>

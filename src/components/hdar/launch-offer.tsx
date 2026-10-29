@@ -107,7 +107,7 @@ export function LaunchOfferSheet() {
     <div className="fixed inset-0 z-[85] flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Offert pendant le lancement">
       <button type="button" aria-label="Fermer" className="absolute inset-0 bg-black/60" onClick={close} />
       <div className="relative mx-auto max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-[#fbbf24]/40 bg-surface px-5 pt-5 pb-7">
-        <button type="button" aria-label="Fermer" onClick={close} className="absolute top-3 right-3 grid size-9 place-items-center rounded-full"><X className="size-5" /></button>
+        <button type="button" aria-label="Fermer" onClick={close} className="absolute top-3 end-3 grid size-9 place-items-center rounded-full"><X className="size-5" /></button>
         <p className="text-4xl">🎁</p>
         <p className="mt-1 font-display text-2xl font-extrabold">Offert pendant le lancement</p>
         <p className="mt-1 text-sm text-muted">Pas de paiement sur hdar pour l'instant. Les <b className="text-ink">5000 premiers profils</b> reçoivent tout, à vie, avec le code <b className="font-mono text-[#fbbf24]">FIRST</b>.</p>
