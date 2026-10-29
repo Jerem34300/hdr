@@ -103,7 +103,7 @@ function OnlinePill() {
 }
 
 /** Les 4 boutons du haut de la carte : même taille, même forme, une teinte de la palette chacun. */
-const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1.5 text-[12px] font-semibold overflow-hidden whitespace-nowrap ring-1";
+const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1.5 text-[12px] font-semibold whitespace-nowrap ring-1";
 function Badge({ n, cls }: { n: number; cls: string }) {
   return (
     <span className={`absolute -top-1.5 -end-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-night px-1 text-[10px] font-bold text-night ${cls}`}>

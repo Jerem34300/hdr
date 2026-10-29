@@ -1,4 +1,5 @@
 import { CompressionBar, VideoSection } from "./video-section";
+import { useLang } from "@/lib/hdar/i18n";
 import { BOT_DEFAULTS } from "./bot-demo";
 import { LiveChat } from "./live-chat";
 import { BotTab } from "./admin-bot";
@@ -124,7 +125,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
         widget.current = ts.render(box.current, {
           sitekey: TURNSTILE_SITE_KEY,
           theme: "dark",
-          language: "fr",
+          language: ({ pt: "pt-br" } as Record<string, string>)[useLang.getState().lang] ?? useLang.getState().lang,
           callback: (t: string) => {
             setToken(t);
             setError("");

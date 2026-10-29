@@ -113,7 +113,7 @@ export function SalonDiscover() {
         <h2 className="shrink-0 whitespace-nowrap font-display text-lg font-bold">Salons</h2>
         <p className="min-w-0 text-end text-xs text-muted">Ouverts à tous · effacés après 24 h</p>
       </div>
-      <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 mt-0.5 flex gap-2 overflow-x-auto px-4 pt-1.5 pb-1">
         <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " border-signal/60"}>
           <MapPin className="size-4 text-signal" /> Quartier <OnlineCount n={online?.area} />
         </button>

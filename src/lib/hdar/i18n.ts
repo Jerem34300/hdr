@@ -38,8 +38,11 @@ type Dict = Record<string, string>;
 const dicts: Partial<Record<Lang, Dict>> = { fr: {} };
 const loaders = import.meta.glob<{ default: Dict }>("./i18n/*.json");
 
+// Premier rendu client = rendu serveur (français) pour une hydratation identique (pas d'erreur React #418) ;
+// la vraie langue est posée par startI18n(), juste après le montage.
 export const useLang = create<{ lang: Lang; forced: boolean; ready: number; setLang: (l: Lang | null) => void }>((set) => ({
-  ...initial(),
+  lang: "fr",
+  forced: false,
   ready: 0,
   setLang: (l) => {
     try {
@@ -215,6 +218,7 @@ function applyDoc(lang: Lang) {
 const SEO_FR = /^\/(rencontre|fr|petites-annonces|annonces|cam-to-cam|alternative-|live-coquin|tchat-|webcam-|cgu|confidentialite|faq|contact)/;
 export function startI18n() {
   if (typeof window === "undefined" || observer) return;
+  useLang.setState(initial());
   if (/bot|crawl|spider|slurp|lighthouse/i.test(navigator.userAgent) && !useLang.getState().forced) useLang.setState({ lang: "fr" });
   const run = async (lang: Lang) => {
     await load(lang);
