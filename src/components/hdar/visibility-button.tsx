@@ -45,6 +45,27 @@ function burst(canvas: HTMLCanvasElement) {
 }
 
 /**
+ * Œil au trait (même style que les icônes lucide de la barre : 24×24, trait 2, bouts ronds).
+ * Fermé : paupière en arc vers le bas + cils ; il cligne / s'entrouvre de temps en temps.
+ * Ouvert : la paupière remonte (transform, fluide aussi sur Safari), pupille + reflet apparaissent.
+ */
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={cn("eye size-7", open ? "eye-open" : "eye-closed")} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path className="eye-lower" d="M2.5 12 Q12 20 21.5 12" />
+      <g className="eye-ball">
+        <circle cx="12" cy="12" r="3.2" fill="currentColor" />
+        <circle className="eye-glint" cx="13.3" cy="10.7" r="1" fill="#fff" stroke="none" />
+      </g>
+      <path className="eye-lid" d="M2.5 12 Q12 4 21.5 12" />
+      <g className="eye-lashes">
+        <path d="M6 15.2 L4.8 17.2" /><path d="M12 17.1 V19.4" /><path d="M18 15.2 L19.2 17.2" />
+      </g>
+    </svg>
+  );
+}
+
+/**
  * Bouton central de la barre du bas : interrupteur de visibilité.
  * Caché (corail, « Se montrer ») ↔ Visible (vert hdar, « Visible »). La mise en ligne reste celle
  * d'avant : le toucher ouvre la même feuille (durée, envies) ou la gestion de la session en cours.
@@ -77,7 +98,7 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
       {tip && (
         <button type="button" onClick={closeTip} data-testid="vis-tip"
           className="vis-tip absolute bottom-full z-30 mb-3 w-52 rounded-2xl border border-signal/50 bg-night/95 px-3 py-2 text-center text-sm font-bold text-ink shadow-[0_0_28px_rgba(250,111,108,.45)]">
-          Touche pour te montrer sur la carte 👇
+          Touche pour te montrer sur la carte
           <span className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 border-r border-b border-signal/50 bg-night/95" />
         </button>
       )}
@@ -87,14 +108,10 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
         aria-label={visible ? "Tu es visible sur la carte. Touche pour gérer ou te cacher" : "Se montrer sur la carte"}
         className="hit relative flex flex-col items-center">
         <span key={fx} className={cn("vis-btn relative flex size-16 items-center justify-center overflow-hidden rounded-full", visible ? "vis-on" : "vis-off", fx > 0 && visible && "vis-pop")}>
-          {visible ? (
-            <span className="relative z-10 flex flex-col items-center leading-none text-night">
-              <span className="text-xl">👀</span>
-              {label && <span className="mt-0.5 font-display text-[10px] font-extrabold">{label}</span>}
-            </span>
-          ) : (
-            <span className="relative z-10 text-2xl text-white">🙈</span>
-          )}
+          <span className={cn("relative z-10 flex flex-col items-center leading-none", visible ? "text-night" : "text-white")}>
+            <EyeIcon open={visible} />
+            {visible && label && <span className="mt-0.5 font-display text-[10px] font-extrabold">{label}</span>}
+          </span>
           <span className="vis-shine" />
         </span>
         {!visible && <span className="vis-halo pointer-events-none absolute top-0 size-16 rounded-full" />}

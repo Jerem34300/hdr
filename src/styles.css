@@ -368,3 +368,25 @@
   .vis-off, .vis-off .vis-shine, .vis-spark { animation: none !important; }
   .vis-spark { opacity: .6; }
 }
+/* Œil du bouton « Se montrer » */
+.eye .eye-lid { transform-box: view-box; transform-origin: 12px 12px; transition: transform .55s cubic-bezier(.3,1.4,.5,1); }
+.eye .eye-ball { transform-box: view-box; transform-origin: 12px 12px; transition: transform .45s .12s cubic-bezier(.3,1.6,.5,1), opacity .3s .1s; }
+.eye .eye-lower, .eye .eye-lashes { transition: opacity .35s ease; }
+.eye-closed .eye-lid { transform: scaleY(-.75); animation: eye-blink 5.5s ease-in-out infinite; }
+.eye-closed .eye-ball { transform: scale(0); opacity: 0; animation: eye-peek 5.5s ease-in-out infinite; }
+.eye-closed .eye-lower { opacity: 0; animation: eye-peek-lower 5.5s ease-in-out infinite; }
+.eye-closed .eye-lashes { opacity: 1; animation: eye-lash 5.5s ease-in-out infinite; }
+.eye-open .eye-lid { transform: scaleY(1); }
+.eye-open .eye-ball { transform: scale(1); opacity: 1; }
+.eye-open .eye-lower { opacity: 1; }
+.eye-open .eye-lashes { opacity: 0; }
+.eye-open .eye-glint { animation: eye-glint 3.2s ease-in-out infinite; }
+/* Clin d'œil : s'entrouvre brièvement vers 80 % du cycle */
+@keyframes eye-blink { 0%,74%,92%,100% { transform: scaleY(-.75); } 80%,86% { transform: scaleY(.35); } }
+@keyframes eye-peek { 0%,76%,90%,100% { transform: scale(0); opacity: 0; } 81%,85% { transform: scale(.75); opacity: 1; } }
+@keyframes eye-peek-lower { 0%,76%,90%,100% { opacity: 0; } 81%,85% { opacity: 1; } }
+@keyframes eye-lash { 0%,74%,92%,100% { opacity: 1; } 80%,86% { opacity: 0; } }
+@keyframes eye-glint { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  .eye .eye-lid, .eye .eye-ball, .eye .eye-lower, .eye .eye-lashes, .eye .eye-glint { animation: none !important; transition: none !important; }
+}

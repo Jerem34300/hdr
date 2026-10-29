@@ -404,7 +404,7 @@ export const useHdar = create<State>()(
           expiresAt: Date.now() + hours * 3_600_000,
         };
         set({ me: { ...get().me, tonight }, sheet: null, now: Date.now() });
-        toast(`Tu es visible 👀 pendant ${hours} h`);
+        toast(`Tu es visible pendant ${hours} h`);
       },
       clearTonight: () => set({ me: { ...get().me, tonight: null }, sheet: null }),
       signal: (id, kind) => {
