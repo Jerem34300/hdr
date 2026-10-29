@@ -369,7 +369,7 @@ function Stats({ adminKey, onReports }: { adminKey: string; onReports: (n: numbe
       </div>
       <Section title="En ce moment">
         <Stat label="Appli ouverte" value={s.active_now} hint="dans les 5 dernières min" accent />
-        <Stat label="Visibles sur la carte" value={s.visible_now} hint="ont touché Connexion" />
+        <Stat label="Visibles sur la carte" value={s.visible_now} hint="ont touché « Se montrer »" />
         <Stat label="Signalements à traiter" value={s.reports_open} accent={s.reports_open > 0} />
         <Stat label="Lieux ouverts" value={s.spots_open} />
       </Section>

@@ -34,6 +34,7 @@ import { InstallPrompt } from "./install-prompt";
 import { ProfileView } from "./profile-view";
 import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
+import { VisibilityButton } from "./visibility-button";
 import { track } from "@/lib/hdar/track";
 import { SalonRoom } from "./salons";
 import { Annonces } from "./annonces";
@@ -169,17 +170,7 @@ export function App() {
               <nav className="dock relative z-20 grid shrink-0 grid-cols-5 items-end border-t border-line bg-night px-1 pt-1">
                 <DockButton id="around" label="Carte" current={tab} icon={<Radar className="size-5" />} onClick={setTab} />
                 <DockButton id="spots" label="Lieux" tip="spots" current={tab} badge={act.unread.size + act.fresh.size + act.places.size > 0} icon={<MapPin className="size-5" />} onClick={setTab} />
-                <button type="button" data-act="tonight" data-tip="connect" {...bindTap(openTonight)} className="hit relative -mt-5 flex flex-col items-center pb-1">
-                  <span className={cn("relative flex size-14 items-center justify-center rounded-full bg-signal text-night", !tonight && "shadow-[0_0_22px_rgba(250,111,108,.75)]")}>
-                    {tonight ? (
-                      <span className="font-display text-sm font-bold">{remainingLabel(tonight.expiresAt, now).replace(" ", "")}</span>
-                    ) : (
-                      <span className="size-3 rounded-full bg-night" />
-                    )}
-                    <span className="ping-ring rounded-full" />
-                  </span>
-                  <span className={cn("mt-1 text-xs", !tonight && "font-bold text-signal")}>{tonight ? "En ligne" : "Connexion"}</span>
-                </button>
+                <VisibilityButton visible={!!tonight} label={tonight ? remainingLabel(tonight.expiresAt, now).replace(" ", "") : undefined} bind={bindTap(openTonight)} />
                 <DockButton
                   id="inbox"
                   label="Messages"

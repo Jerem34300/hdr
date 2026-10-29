@@ -177,7 +177,7 @@ function Tonight() {
       }}
     >
       <Close />
-      <h2 className="font-display text-2xl font-extrabold tracking-tight">Connexion</h2>
+      <h2 className="font-display text-2xl font-extrabold tracking-tight">Se montrer</h2>
       <p className="text-sm text-muted">Tu apparais sur la carte pendant le temps choisi.</p>
       <div className="flex gap-2">
         {LENGTHS.map((item) => (

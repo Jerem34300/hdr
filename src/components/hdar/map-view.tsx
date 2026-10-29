@@ -149,6 +149,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const mapFilters = usePremium((s) => (s.premium ? s.filters : null));
   const filterKey = JSON.stringify(mapFilters);
   const visible = useHdar((s) => !!(s.me.tonight && s.me.tonight.expiresAt > s.now));
+  const mePseudo = useHdar((s) => s.me.pseudo);
 
   useEffect(() => {
     let stop = false;
@@ -701,7 +702,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 : "Sois le premier à t'afficher ici ce soir"}
           </p>
           <p className="mt-0.5 text-xs text-muted">
-            {approx ? `📍 Position approximative : ${approx}. ` : ""}Personne en ligne maintenant, connecte-toi pour être vu en premier.
+            {approx ? `📍 Position approximative : ${approx}. ` : ""}Personne en ligne maintenant, touche « Se montrer » pour être vu en premier.
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
             {recent?.nearest && !(recent.near > 0) && (
@@ -751,8 +752,18 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       {ring && <svg key={ring.k} aria-hidden className="press-ring pointer-events-none absolute z-40 size-16 -translate-x-1/2 -translate-y-1/2" style={{ left: ring.x, top: ring.y }} viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.25)" strokeWidth="4" /><circle cx="32" cy="32" r="26" fill="none" stroke="#FA6F6C" strokeWidth="4" strokeLinecap="round" strokeDasharray="164" strokeDashoffset="164" transform="rotate(-90 32 32)" /></svg>}
       {located && pulseAt > 0 && <span key={pulseAt} aria-hidden className="me-pulse pointer-events-none absolute z-10 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-signal" style={{ left: youPx.x, top: youPx.y }} />}
       <div className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: youPx.x, top: youPx.y }}>
-        <span className="radar-sweep block size-48" />
-        <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-signal" />
+        <span className={"radar-sweep block size-48 " + (visible ? "radar-green" : "radar-red")} />
+        {visible ? (
+          <>
+            <span className="radar-wave" /><span className="radar-wave w2" />
+            <span data-testid="me-pin" className="pop-in absolute top-1/2 left-1/2 size-11 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[3px] border-[#3ddc97] bg-surface shadow-[0_0_18px_rgba(61,220,151,.8)]">
+              <PinFace id={deviceId()} pseudo={mePseudo || "Moi"} />
+            </span>
+          </>
+        ) : (
+          // Caché : pas de pin, juste un repère discret de ta position (visible par toi seul).
+          <span className="absolute top-1/2 left-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-400/80" />
+        )}
       </div>
       {clusters.map((c) => {
         if (c.x < -40 || c.y < -40 || c.x > size.w + 40 || c.y > size.h + 40) return null;

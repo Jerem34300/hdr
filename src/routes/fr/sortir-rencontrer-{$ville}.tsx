@@ -54,7 +54,7 @@ function CityPage() {
   const faq = [
     {
       q: `Comment sortir et faire des rencontres à ${city.name} avec hdar ?`,
-      a: `Ouvre hdar, autorise ta position et touche Connexion : tu apparais sur la carte de ${city.name} pour quelques heures. Touche un profil pour le voir, puis écris-lui, envoie une photo, un vocal ou lance un appel vidéo.`,
+      a: `Ouvre hdar, autorise ta position et touche « Se montrer » : tu apparais sur la carte de ${city.name} pour quelques heures. Touche un profil pour le voir, puis écris-lui, envoie une photo, un vocal ou lance un appel vidéo.`,
     },
     {
       q: "Faut-il créer un compte ?",

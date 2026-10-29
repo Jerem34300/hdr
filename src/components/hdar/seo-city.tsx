@@ -48,7 +48,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
     : theme === "sortir-ce-soir" ? <>Sortir ce soir <span className="text-[#FA6F6C]">{a(c.n)}</span></>
     : <>Rencontres et sorties <span className="text-[#FA6F6C]">{a(c.n)}</span></>;
   const faq = [
-    { q: `Comment faire des rencontres ${a(c.n)} avec hdar ?`, a: `Ouvre hdar.chat, autorise ta position et touche Connexion : tu apparais sur la carte autour de ${c.n} pour 1 h, 3 h ou 12 h. Touche un profil pour lui écrire, envoyer une photo, un vocal ou lancer un appel vidéo.` },
+    { q: `Comment faire des rencontres ${a(c.n)} avec hdar ?`, a: `Ouvre hdar.chat, autorise ta position et touche « Se montrer » : tu apparais sur la carte autour de ${c.n} pour 1 h, 3 h ou 12 h. Touche un profil pour lui écrire, envoyer une photo, un vocal ou lancer un appel vidéo.` },
     { q: "hdar est-il gratuit ?", a: "Oui. La carte, le chat du quartier, les messages privés et les lieux sont gratuits. Une option payante (hdar+) ajoute des extras, mais elle n'est pas nécessaire." },
     { q: "Faut-il créer un compte ou donner son e-mail ?", a: "Non. Tu choisis un pseudo et tu confirmes avoir 18 ans. Pas d'e-mail, pas de mot de passe, pas de photo obligatoire." },
     { q: "Ma position exacte est-elle visible ?", a: "Non. Les autres voient une position arrondie à environ 110 mètres et une distance approximative, jamais ton adresse." },
@@ -79,7 +79,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
         <h2 className="seo-reveal mt-12 font-display text-2xl font-bold">Comment ça marche</h2>
         <ol className="seo-reveal mt-4 space-y-2 text-sm leading-relaxed">
           <li><strong className="text-[#FA6F6C]">1.</strong> Ouvre hdar.chat et confirme que tu as 18 ans. Pas d'e-mail.</li>
-          <li><strong className="text-[#FA6F6C]">2.</strong> Touche Connexion : tu apparais sur la carte {c.p < 2000 ? `du secteur de ${c.n}` : `de ${c.n}`} pour 1 h, 3 h ou 12 h.</li>
+          <li><strong className="text-[#FA6F6C]">2.</strong> Touche « Se montrer » : tu apparais sur la carte {c.p < 2000 ? `du secteur de ${c.n}` : `de ${c.n}`} pour 1 h, 3 h ou 12 h.</li>
           <li><strong className="text-[#FA6F6C]">3.</strong> Écris dans le chat du quartier, crée un lieu ou envoie un message privé.</li>
         </ol>
         {theme === null && local?.body}

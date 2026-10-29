@@ -96,7 +96,7 @@ export const LOCAL: Record<string, LocalContent> = {
         <h2 className="mt-10 font-display text-xl font-bold">Comment marche hdar à Montpellier</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">
           <li>Ouvre hdar.chat (ou installe-la sur ton écran d'accueil), confirme que tu as 18 ans. Pas de compte, pas d'e-mail.</li>
-          <li>Touche Connexion et choisis 1 h, 3 h ou 12 h : tu apparais sur la carte, position arrondie.</li>
+          <li>Touche « Se montrer » et choisis 1 h, 3 h ou 12 h : tu apparais sur la carte, position arrondie.</li>
           <li>Regarde qui est autour, écris dans le chat du quartier (effacé après 24 h) ou crée un « lieu » pour ta soirée.</li>
           <li>Pour les messages privés, crée un pseudo : texte, photos, vocaux, appel vidéo et partage de position exacte facultatif (1 h).</li>
           <li>Ajoute des favoris : tu es prévenu quand ils se connectent à Montpellier.</li>

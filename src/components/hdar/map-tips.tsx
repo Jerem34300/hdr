@@ -14,7 +14,7 @@ type TipDef = {
 };
 
 const TIPS: TipDef[] = [
-  { id: "connect", target: "connect", text: "Montre aux autres que tu es là", sub: "Connecte-toi", arrow: "down" },
+  { id: "connect", target: "connect", text: "Touche pour te montrer sur la carte", sub: "Se montrer", arrow: "down" },
   { id: "live", target: "live", text: "Tente un Live, rencontre en vidéo", sub: "", arrow: "right" },
   { id: "pocket", target: "pocket", text: "Dis bonjour au quartier", sub: "", arrow: "up" },
   { id: "spots", target: "spots", text: "Trouve où sortir ce soir", sub: "", arrow: "down" },
@@ -98,7 +98,7 @@ export function MapTips() {
 
       const eligible = TIPS.filter((t) => {
         if (!notSnoozed(t.id)) return false;
-        if (t.id === "connect") return !visible;
+        if (t.id === "connect") return false; // remplacée par la bulle unique du bouton « Se montrer »
         if (t.id === "photo") return !hasPhoto;
         if (t.id === "boost") return visible && !boosted;
         return true;
