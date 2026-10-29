@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
+import { TipBubble } from "./tip-bubble";
 
 /** Paillettes autour du bouton caché : [x, y depuis le centre, délai, taille]. */
 const SPARKS: [number, number, number, number][] = [[-40, -18, 0, 7], [34, -30, 0.7, 6], [42, 6, 1.4, 8], [-36, 14, 1.9, 5], [-8, -42, 1.1, 6]];
@@ -96,11 +97,9 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
   return (
     <div className="relative -mt-6 flex flex-col items-center pb-1">
       {tip && (
-        <button type="button" onClick={closeTip} data-testid="vis-tip"
-          className="vis-tip absolute bottom-full z-30 mb-3 w-52 rounded-2xl border border-signal/50 bg-night/95 px-3 py-2 text-center text-sm font-bold text-ink shadow-[0_0_28px_rgba(250,111,108,.45)]">
-          Touche pour te montrer sur la carte
-          <span className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 border-r border-b border-signal/50 bg-night/95" />
-        </button>
+        <div className="absolute bottom-full z-30 mb-2 w-52">
+          <TipBubble arrow="down" onClick={closeTip} testId="vis-tip">Touche pour te montrer sur la carte</TipBubble>
+        </div>
       )}
       <canvas ref={canvas} aria-hidden className="pointer-events-none absolute top-1/2 left-1/2 z-30 size-56 -translate-x-1/2 -translate-y-[60%]" />
       <button type="button" data-act="tonight" data-tip="connect" {...bind} onPointerDown={tip ? closeTip : undefined}

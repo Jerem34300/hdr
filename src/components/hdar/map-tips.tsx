@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { myPhotos, useHdar } from "@/lib/hdar/store";
 import { useActiveBoost } from "./boost";
+import { TipBubble } from "./tip-bubble";
 
 type TipId = "connect" | "live" | "pocket" | "spots" | "photo" | "boost";
 type Arrow = "up" | "down" | "left" | "right";
@@ -53,15 +54,23 @@ function notSnoozed(id: TipId) {
   return Date.now() - at > SNOOZE;
 }
 
-type Pos = { left: number; top: number; arrow: Arrow };
+type Pos = { left: number; top: number; arrow: Arrow; shift?: number };
 
+/** Largeur de la bulle (w-52) : sert à la garder dans l'écran, la pointe restant sur la cible. */
+const BUBBLE_W = 208;
+function clampShift(cx: number, rootW: number) {
+  const half = BUBBLE_W / 2, m = 8;
+  return Math.max(m + half - cx, Math.min(0, rootW - m - half - cx)) || 0;
+}
 function placeNear(root: DOMRect, el: DOMRect, arrow: Arrow): Pos {
   const pad = 10;
   if (arrow === "down") {
-    return { left: el.left - root.left + el.width / 2, top: el.top - root.top - pad, arrow };
+    const cx = el.left - root.left + el.width / 2;
+    return { left: cx, top: el.top - root.top - pad, arrow, shift: clampShift(cx, root.width) };
   }
   if (arrow === "up") {
-    return { left: el.left - root.left + el.width / 2, top: el.bottom - root.top + pad, arrow };
+    const cx = el.left - root.left + el.width / 2;
+    return { left: cx, top: el.bottom - root.top + pad, arrow, shift: clampShift(cx, root.width) };
   }
   if (arrow === "right") {
     return { left: el.left - root.left - pad, top: el.top - root.top + el.height / 2, arrow };
@@ -69,9 +78,6 @@ function placeNear(root: DOMRect, el: DOMRect, arrow: Arrow): Pos {
   return { left: el.right - root.left + pad, top: el.top - root.top + el.height / 2, arrow };
 }
 
-function arrowGlyph(a: Arrow) {
-  return a === "down" ? "↓" : a === "up" ? "↑" : a === "right" ? "→" : "←";
-}
 
 /** One coral tip bubble at a time on the map / dock. */
 export function MapTips() {
@@ -86,9 +92,17 @@ export function MapTips() {
   // Drop photo tip immediately if a photo appears while it's open.
   useEffect(() => {
     if (hasPhoto && active?.id === "photo") setActive(null);
+    // Captures de dev : ?tip=<id> affiche une bulle précise.
+    const forced = import.meta.env.DEV ? new URLSearchParams(location.search).get("tip") : null;
+    if (forced) {
+      const t = TIPS.find((x) => x.id === forced);
+      if (t) setActive(t);
+      return;
+    }
   }, [hasPhoto, active]);
 
   useEffect(() => {
+    if (import.meta.env.DEV && location.search.includes("tip=")) return;
     let stop = false;
     let hideTimer = 0;
     const pick = () => {
@@ -169,42 +183,18 @@ export function MapTips() {
   const arrow = pos.arrow;
   const wrap =
     arrow === "down"
-      ? "flex -translate-x-1/2 -translate-y-full flex-col items-center"
+      ? "-translate-x-1/2 -translate-y-full pb-2"
       : arrow === "up"
-        ? "flex -translate-x-1/2 flex-col items-center"
+        ? "-translate-x-1/2 pt-2"
         : arrow === "right"
-          ? "flex -translate-x-full -translate-y-1/2 flex-row items-center"
-          : "flex -translate-y-1/2 flex-row items-center";
-
-  const tri =
-    arrow === "down"
-      ? "-mt-1 size-0 border-x-[10px] border-t-[12px] border-x-transparent border-t-[#FA6F6C]"
-      : arrow === "up"
-        ? "order-first -mb-1 size-0 border-x-[10px] border-b-[12px] border-x-transparent border-b-[#FA6F6C]"
-        : arrow === "right"
-          ? "-mr-1 size-0 border-y-[10px] border-l-[12px] border-y-transparent border-l-[#FA6F6C]"
-          : "order-first -ml-1 size-0 border-y-[10px] border-r-[12px] border-y-transparent border-r-[#FA6F6C]";
+          ? "-translate-x-full -translate-y-1/2 pr-2"
+          : "-translate-y-1/2 pl-2";
 
   return (
-    <div
-      className={`pointer-events-none absolute z-[45] animate-bounce ${wrap}`}
-      style={{ left: pos.left, top: pos.top }}
-    >
-      <div className="pointer-events-auto relative max-w-[14rem] whitespace-normal rounded-2xl bg-[#FA6F6C] py-2 pl-4 pr-8 text-center font-display text-sm font-bold text-night shadow-[0_0_24px_rgba(250,111,108,0.7)]">
+    <div className={`pointer-events-none absolute z-[45] ${wrap}`} style={{ left: pos.left + (pos.shift ?? 0), top: pos.top }}>
+      <TipBubble arrow={arrow} pointerShift={pos.shift ?? 0} onClose={close} testId={`tip-${active.id}`}>
         {active.text}
-        <span className="block text-xs font-semibold">
-          {active.sub ? `${active.sub} ${arrowGlyph(arrow)}` : arrowGlyph(arrow)}
-        </span>
-        <button
-          type="button"
-          aria-label="Fermer"
-          onClick={close}
-          className="absolute top-1 right-1 grid size-6 place-items-center rounded-full text-night/70 hover:bg-black/10"
-        >
-          ✕
-        </button>
-      </div>
-      <span className={tri} />
+      </TipBubble>
     </div>
   );
 }
