@@ -360,8 +360,8 @@ export async function spotMessages(self: string, id: string): Promise<SpotLine[]
   }));
 }
 
-export async function sendSpotMessage(self: string, id: string, pseudo: string, body: string) {
-  await rpc("hdar_spot_send", { p_self: selfId(self), p_id: id, p_pseudo: pseudo, p_body: body });
+export async function sendSpotMessage(_self: string, id: string, pseudo: string, body: string, lat: number | null, lng: number | null) {
+  await rpc("hdar_spot_send2", { p_id: id, p_pseudo: pseudo, p_body: body, p_lat: lat, p_lng: lng });
   track("msg_spot");
 }
 
@@ -777,6 +777,11 @@ export function placeMessages(id: string) {
   }
   return rpc<PlaceLine[]>("hdar_place_messages", { p_id: id });
 }
+/** Distance max pour écrire dans le chat d'un lieu (même règle que le serveur, v104). */
+export function placeWriteKm(kind: string): number {
+  return kind === "station" || kind === "metro" || kind === "bus" || kind === "tram" ? 0.3 : 1;
+}
+export const distLabel = (km: number) => (km < 1 ? `${Math.round(km * 1000)} m` : `${km < 10 ? km.toFixed(1).replace(/\.0$/, "") : Math.round(km)} km`);
 export async function placeSend(id: string, body: string, lat: number | null, lng: number | null) {
   await rpc("hdar_place_send", { p_id: id, p_body: body, p_lat: lat, p_lng: lng });
   track("msg_place");
@@ -1019,8 +1024,8 @@ export function roomMedia(scope: "area" | "place" | "spot" | "salon", id: string
 }
 export const areaSendMedia = (lat: number, lng: number, pseudo: string, kind: string, path: string, duration: number | null) =>
   rpc("hdar_area_send_media", { p_lat: lat, p_lng: lng, p_pseudo: pseudo, p_kind: kind, p_path: path, p_duration: duration });
-export const spotSendMedia = (id: string, pseudo: string, kind: string, path: string, duration: number | null) =>
-  rpc("hdar_spot_send_media", { p_id: id, p_pseudo: pseudo, p_kind: kind, p_path: path, p_duration: duration });
+export const spotSendMedia = (id: string, pseudo: string, kind: string, path: string, duration: number | null, lat: number | null, lng: number | null) =>
+  rpc("hdar_spot_send_media2", { p_id: id, p_pseudo: pseudo, p_kind: kind, p_path: path, p_duration: duration, p_lat: lat, p_lng: lng });
 export const placeSendMedia = (id: string, kind: string, path: string, duration: number | null, lat: number, lng: number) =>
   rpc("hdar_place_send_media", { p_id: id, p_kind: kind, p_path: path, p_duration: duration, p_lat: lat, p_lng: lng });
 export const mediaReport = (scope: "area" | "place" | "spot" | "salon", id: string) => rpc("hdar_media_report", { p_scope: scope, p_id: id });

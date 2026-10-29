@@ -77,7 +77,7 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
     };
   }, [stop.ref]);
   const place: PlaceDetail | null = placeId
-    ? { id: placeId, kind: "other", name: stop.name, lat: stop.lat, lng: stop.lng, partner: false, description: "", source: "osm", source_ref: stop.ref }
+    ? { id: placeId, kind: stop.kind as PlaceDetail["kind"], name: stop.name, lat: stop.lat, lng: stop.lng, partner: false, description: "", source: "osm", source_ref: stop.ref }
     : null;
   return (
     <div ref={sheetRef} className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[80%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">

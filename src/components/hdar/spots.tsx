@@ -1,9 +1,10 @@
+import { haversine } from "@/lib/hdar/rules";
 import { useEffect, useRef, useState } from "react";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deviceId } from "@/lib/hdar/device";
-import { hideSpotMessage, listSpots, sendSpotMessage, spotSendMedia, spotMessages, type SpotLine } from "@/lib/hdar/live";
+import { distLabel, hideSpotMessage, listSpots, sendSpotMessage, spotSendMedia, spotMessages, type SpotLine } from "@/lib/hdar/live";
 import { remainingLabel } from "@/lib/hdar/rules";
 import { resolvePlace, useScene, type LiveSpot } from "@/lib/hdar/scene";
 import { useHdar, type SpotMsg } from "@/lib/hdar/store";
@@ -230,6 +231,10 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
   const closeView = useHdar((s) => s.closeView);
   const report = useHdar((s) => s.report);
   const pseudo = useHdar((s) => s.me.pseudo);
+  const registered = useHdar((s) => s.me.onboarded);
+  const here = useHdar((s) => s.here);
+  const distKm = here ? haversine(here, { lat: spot.lat, lng: spot.lng }) / 1000 : null;
+  const canPost = registered && (spot.creator || (distKm != null && distKm <= 1));
   const [lines, setLines] = useState<SpotLine[]>([]);
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
@@ -309,6 +314,15 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
         ))}
         <div ref={end} />
       </ul>
+      {!canPost ? (
+        <p className="dock border-t border-line px-4 pt-2 pb-2 text-xs text-muted">
+          {!registered
+            ? "Crée ton profil pour écrire dans le chat d'un lieu."
+            : distKm == null
+              ? "Active ta localisation (bouton viseur) pour écrire ici."
+              : `Tu es à ${distLabel(distKm)} : rapproche-toi à moins de ${distLabel(1)} pour écrire.`}
+        </p>
+      ) : (
       <form
         className="dock flex items-center gap-2 border-t border-line px-3 pt-2"
         onSubmit={(e) => {
@@ -316,7 +330,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
           const body = text.trim();
           if (!body) return;
           setText("");
-          void sendSpotMessage(deviceId(), spot.id, pseudo || "Anonyme", body)
+          void sendSpotMessage(deviceId(), spot.id, pseudo || "Anonyme", body, here?.lat ?? null, here?.lng ?? null)
             .then(refresh)
             .catch((err) => {
               setText((t) => t || body);
@@ -324,7 +338,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
             });
         }}
       >
-        <RoomAttach send={(k, path, d) => spotSendMedia(spot.id, pseudo || "Anonyme", k, path, d).then(refresh)} />
+        <RoomAttach send={(k, path, d) => spotSendMedia(spot.id, pseudo || "Anonyme", k, path, d, here?.lat ?? null, here?.lng ?? null).then(refresh)} />
         <input
           className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 outline-none focus-visible:border-spot"
           value={text}
@@ -336,6 +350,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
           Envoyer
         </button>
       </form>
+      )}
     </div>
   );
 }

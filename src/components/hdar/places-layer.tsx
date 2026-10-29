@@ -5,7 +5,7 @@ import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, placeWriteKm, distLabel, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
 import { RoomAttach, RoomMedia } from "./media-composer";
@@ -221,10 +221,11 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
+  const registered = useHdar((s) => s.me.onboarded);
   const distKm = here ? haversine(here, { lat: place.lat, lng: place.lng }) / 1000 : null;
-  // Les admins écrivent partout (modération, annonces), sans limite de distance.
-  const canPost = isAdmin || (distKm != null && distKm <= 2);
-  const at = here ?? { lat: place.lat, lng: place.lng };
+  // Même règle que le serveur (v104), pour tout le monde : profil + position + distance selon le type de lieu.
+  const maxKm = placeWriteKm(place.kind);
+  const canPost = registered && distKm != null && distKm <= maxKm;
   useEffect(() => {
     let stop = false;
     const load = () => {
@@ -251,7 +252,7 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
     const b = text.trim();
     if (!b || !canPost) return;
     setBusy(true);
-    placeSend(place.id, b, at.lat, at.lng)
+    placeSend(place.id, b, here?.lat ?? null, here?.lng ?? null)
       .then(() => placeMessages(place.id))
       .then((r) => {
         setLines(r);
@@ -263,7 +264,7 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
   return (
     <div className="mt-4">
       <h3 className="font-display font-bold">Chat du lieu</h3>
-      <p className="text-xs text-muted">Lisible par tous · messages effacés après 24 h · écrire : à moins de 2 km.</p>
+      <p className="text-xs text-muted">{`Lisible par tous · messages effacés après 24 h · écrire : à moins de ${distLabel(maxKm)}.`}</p>
       <div className="mt-2 max-h-80 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
         {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">Aucun message pour l'instant.</p>}
         {lines.map((l) => (
@@ -294,7 +295,7 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
         >
           <RoomAttach
             send={(k, path, d) =>
-              placeSendMedia(place.id, k, path, d, at.lat, at.lng).then(() => placeMessages(place.id)).then(setLines)
+              placeSendMedia(place.id, k, path, d, here!.lat, here!.lng).then(() => placeMessages(place.id)).then(setLines)
             }
           />
           <input
@@ -310,9 +311,11 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
         </form>
       ) : (
         <p className="mt-2 rounded-2xl border border-line px-3 py-2 text-xs text-muted">
-          {distKm == null
-            ? "Active ta localisation (bouton viseur) pour écrire ici."
-            : `Tu es à ${distKm < 10 ? distKm.toFixed(1) : Math.round(distKm)} km : rapproche-toi à moins de 2 km pour écrire.`}
+          {!registered
+            ? "Crée ton profil pour écrire dans le chat d'un lieu."
+            : distKm == null
+              ? "Active ta localisation (bouton viseur) pour écrire ici."
+              : `Tu es à ${distLabel(distKm)} : rapproche-toi à moins de ${distLabel(maxKm)} pour écrire.`}
         </p>
       )}
     </div>
