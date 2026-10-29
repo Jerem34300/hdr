@@ -1275,7 +1275,7 @@ export type AdminAmbContract = { user_id: string; pseudo: string; name: string; 
 export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });
 
 // Salons (v58) : discussions ouvertes à tous, sans limite de distance ---------------------------
-export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro"; expires_at?: string; aboard?: number; me_aboard?: boolean };
+export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro" | "bus"; expires_at?: string; aboard?: number; me_aboard?: boolean };
 /** Une ligne de discussion de groupe (salon ou chat du quartier). */
 export type GroupLine = {
   id: string;
@@ -1336,7 +1336,7 @@ export async function salonsInbox(seen: Record<string, string>): Promise<InboxSa
 }
 export const getSalon = (id: string) => {
   if (import.meta.env.DEV && id.startsWith("demo-trip-")) {
-    const k = id.includes("Vol") ? "flight" : id.includes("Mtro") || id.includes("Tram") ? "metro" : "train";
+    const k = id.includes("Bus") ? "bus" : id.includes("Vol") ? "flight" : id.includes("Mtro") || id.includes("Tram") ? "metro" : "train";
     return Promise.resolve<Salon>({ id, name: "", description: new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), emoji: null, official: false, mine: false,
       last_at: new Date().toISOString(), recent: 4, people: 3, trip_kind: k, aboard: k === "metro" ? 7 : k === "flight" ? 4 : 3, me_aboard: true });
   }

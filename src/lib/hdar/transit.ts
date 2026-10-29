@@ -6,7 +6,7 @@ import type { Salon } from "./live";
 
 export type TransitKind = "station" | "metro" | "airport";
 export type TransitStop = { ref: string; kind: TransitKind; name: string; lat: number; lng: number; iata?: string };
-export type TripKind = "train" | "flight" | "metro";
+export type TripKind = "train" | "flight" | "metro" | "bus";
 export type Trip = Salon & { trip_kind: TripKind; expires_at: string; aboard: number; me_aboard: boolean };
 export type TransitLine = { ref: string; label: string; network: string; colour?: string };
 
@@ -15,6 +15,7 @@ export const TRIP_LABEL: Record<TripKind, string> = {
   train: "Je suis dans le train",
   flight: "Je suis dans l'avion",
   metro: "Je suis dans le métro",
+  bus: "Je suis dans le bus",
 };
 export const TRANSIT_KINDS: Record<TransitKind, { label: string; color: string }> = {
   station: { label: "Gare", color: "#60a5fa" },
@@ -180,6 +181,7 @@ export function normalizeTrip(kind: TripKind, code: string) {
 }
 export function validTrip(kind: TripKind, code: string) {
   const c = normalizeTrip(kind, code);
+  if (kind === "metro" || kind === "bus") return c.length >= 1;
   if (kind === "flight") return /^[A-Z0-9]{2}[A-Z]?[0-9]{1,4}[A-Z]?$/.test(c);
   if (kind === "train") return /^([A-Z]{1,10} ?)?[0-9]{1,6}[A-Z]?$/.test(c);
   return c.length >= 1;
@@ -197,7 +199,7 @@ export async function ensureStop(s: TransitStop): Promise<string> {
 export async function tripJoin(kind: TripKind, code: string, day: string, placeId: string | null, network: string | null): Promise<Trip> {
   if (isTransitDemo()) {
     const c = normalizeTrip(kind, code);
-    const name = kind === "flight" ? `Vol ${c}` : kind === "metro" ? `${code}${network ? " · " + network : ""}` : c;
+    const name = kind === "flight" ? `Vol ${c}` : kind === "metro" || kind === "bus" ? `${code}${network ? " · " + network : ""}` : c;
     const t = { ...demoTrip(name, kind, 1), me_aboard: true, aboard: kind === "flight" ? 4 : kind === "metro" ? 7 : 3 };
     demoMine = [t, ...demoMine.filter((x) => x.name !== name)];
     return t;

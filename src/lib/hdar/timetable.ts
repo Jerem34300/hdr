@@ -76,18 +76,20 @@ export async function lookupTrain(code: string, at: { lat: number; lng: number }
   return null;
 }
 
-export type LineDirections = { label: string; mode: "Métro" | "Tram"; colour?: string; network: string; directions: string[]; next: string[] };
+export type LineDirections = { label: string; mode: "Métro" | "Tram" | "Bus"; colour?: string; network: string; directions: string[]; next: string[] };
 /** Lignes de métro / tram à la station, avec leurs directions (terminus) et prochains passages. */
-export async function stationLines(at: { lat: number; lng: number }, network = ""): Promise<LineDirections[]> {
-  if (isTransitDemo()) return DEMO_DIRS;
-  const stops = await stopsNear(at.lat, at.lng, 0.0025, URBAN.split(","));
+export async function stationLines(at: { lat: number; lng: number }, network = "", bus = false): Promise<LineDirections[]> {
+  if (isTransitDemo()) return bus ? DEMO_BUS : DEMO_DIRS;
+  const modes = bus ? "BUS,COACH" : URBAN;
+  const stops = await stopsNear(at.lat, at.lng, bus ? 0.003 : 0.0025, modes.split(","));
   if (!stops.length) return [];
-  const r = await get<{ stopTimes: StopTime[] }>(`/stoptimes?stopId=${encodeURIComponent(stops[0].stopId)}&n=120&radius=250&mode=${URBAN}`);
+  // Bus : rayon de 400 m autour de l'arrêt le plus important (plusieurs arrêts proches).
+  const r = await get<{ stopTimes: StopTime[] }>(`/stoptimes?stopId=${encodeURIComponent(stops[0].stopId)}&n=${bus ? 200 : 120}&radius=${bus ? 400 : 250}&mode=${modes}`);
   const m = new Map<string, LineDirections>();
   for (const x of r.stopTimes) {
     const ref = x.routeShortName?.trim();
     if (!ref) continue;
-    const mode = x.mode === "TRAM" ? "Tram" : "Métro";
+    const mode = bus ? "Bus" : x.mode === "TRAM" ? "Tram" : "Métro";
     const label = /^\d/.test(ref) ? `${mode} ${ref}` : ref; // « Métro 14 », « T3 », « U5 », « S1 »
     const l = m.get(label) ?? { label, mode, colour: x.routeColor ? "#" + x.routeColor : undefined, network: (x.agencyName || network).slice(0, 40), directions: [], next: [] };
     if (x.headsign && !l.directions.includes(x.headsign)) l.directions.push(x.headsign);
@@ -98,7 +100,7 @@ export async function stationLines(at: { lat: number; lng: number }, network = "
 }
 
 /** Jour du trajet sans le demander : celui du train trouvé, sinon aujourd'hui (la veille entre minuit et 4 h pour un train). */
-export function autoDay(kind: "train" | "flight" | "metro", info: TrainInfo | null, now = new Date()) {
+export function autoDay(kind: "train" | "flight" | "metro" | "bus", info: TrainInfo | null, now = new Date()) {
   if (info) return info.day;
   const d = new Date(now);
   if (kind === "train" && d.getHours() < 4) d.setDate(d.getDate() - 1);
@@ -120,6 +122,11 @@ function demoTrain(code: string): TrainInfo | null {
   return { label: `TGV INOUI ${n}`, from: "Paris Gare de Lyon", to: "Marseille Saint-Charles", stop: "Paris Gare de Lyon", time: t.toISOString(), day: autoDay("train", null), realTime: false, cancelled: false };
 }
 const soon = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
+const DEMO_BUS: LineDirections[] = [
+  { label: "Bus 24", mode: "Bus", colour: "#8c6b32", network: "RATP", directions: ["École Vétérinaire de Maisons-Alfort", "Panthéon"], next: [soon(2), soon(9), soon(16)] },
+  { label: "Bus 87", mode: "Bus", colour: "#00a88f", network: "RATP", directions: ["Porte de Reuilly", "Invalides"], next: [soon(4), soon(12), soon(20)] },
+  { label: "Bus 61", mode: "Bus", colour: "#5c9ad2", network: "Transdev", directions: ["Place d'Italie", "Église de Pantin - Métro"], next: [soon(6), soon(18), soon(30)] },
+];
 const DEMO_DIRS: LineDirections[] = [
   { label: "Métro 6", mode: "Métro", colour: "#82dc73", network: "RATP", directions: ["Charles de Gaulle - Étoile", "Nation"], next: [soon(2), soon(5), soon(8)] },
   { label: "Métro 14", mode: "Métro", colour: "#640082", network: "RATP", directions: ["Saint-Denis - Pleyel", "Aéroport d'Orly"], next: [soon(1), soon(3), soon(4)] },

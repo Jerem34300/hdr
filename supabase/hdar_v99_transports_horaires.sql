@@ -1,5 +1,9 @@
 -- v99 — Transports : salon train par numéro (quel que soit le libellé saisi), arrêts importés en base.
 
+-- 0) Bus : salon par ligne + opérateur/ville, comme le métro (pas d'arrêts de bus sur la carte).
+alter table hdar.salons drop constraint if exists salons_trip_kind_check;
+alter table hdar.salons add constraint salons_trip_kind_check check (trip_kind in ('train','flight','metro','bus'));
+
 -- 1) Train : la clé ne garde que le numéro (« 6223 », « TGV 6223 », « TGV INOUI 6223 » = même salon).
 --    Le nom du salon est le libellé du premier arrivé (ex. libellé officiel trouvé dans les horaires).
 create or replace function public.hdar_trip_join(p_kind text, p_code text, p_day date, p_place uuid, p_network text)
@@ -18,13 +22,13 @@ begin
   elsif p_kind = 'flight' then
     if c !~ '^[A-Z0-9]{2}[A-Z]?[0-9]{1,4}[A-Z]?$' then raise exception 'Numéro de vol invalide (ex. AF1234)'; end if;
     num := c; nm := 'Vol ' || c;
-  elsif p_kind = 'metro' then
+  elsif p_kind in ('metro', 'bus') then
     if length(c) < 1 then raise exception 'Choisis ta ligne'; end if;
     num := c;
     nm := btrim(left(initcap(lower(c)) || case when net <> '' then ' · ' || net else '' end, 60));
   else raise exception 'Type de trajet inconnu'; end if;
   if d not between current_date - 1 and current_date + 1 then raise exception 'Date : hier, aujourd''hui ou demain'; end if;
-  k := p_kind || '|' || case when p_kind = 'metro' then upper(net) || '|' else '' end || num || '|' || d::text;
+  k := p_kind || '|' || case when p_kind in ('metro', 'bus') then upper(net) || '|' else '' end || num || '|' || d::text;
   perform hdar.rate_check(s, 'trip_join', 20, interval '1 hour');
   select x.id into v from hdar.salons x where x.trip_key = k and not x.removed;
   if v is null then

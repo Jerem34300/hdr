@@ -1,6 +1,6 @@
 // Transports : pins gares / métro-tram / aéroports, fiche de l'arrêt (chat + « Je suis dans… »), salons à bord.
 import { useEffect, useState } from "react";
-import { Plane, TrainFront, TramFront, Users, X } from "lucide-react";
+import { Bus, Plane, TrainFront, TramFront, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import type { PlaceDetail } from "@/lib/hdar/live";
 import { useHdar } from "@/lib/hdar/store";
@@ -16,6 +16,7 @@ import { bindTap } from "./tap";
 export function TransitIcon({ kind, className = "size-4" }: { kind: TransitKind | TripKind; className?: string }) {
   if (kind === "airport" || kind === "flight") return <Plane className={className} />;
   if (kind === "metro") return <TramFront className={className} />;
+  if (kind === "bus") return <Bus className={className} />;
   return <TrainFront className={className} />;
 }
 
@@ -122,15 +123,15 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
   );
 }
 
-const PLACEHOLDER: Record<TripKind, string> = { train: "ex. TGV 6201, ICE 597, TER 87512", flight: "ex. AF1234, U24812", metro: "ex. Métro 1, Tram T3" };
+const PLACEHOLDER: Record<TripKind, string> = { train: "ex. TGV 6201, ICE 597, TER 87512", flight: "ex. AF1234, U24812", metro: "ex. Métro 1, Tram T3", bus: "ex. 24, 87, N31" };
 
 /** Saisie du numéro (train / vol) ou choix de la ligne (métro, lignes OSM sinon saisie) + date. */
-export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
-  kind?: TripKind; stop?: TransitStop; placeId?: string | null; onClose: () => void; onJoined: (t: Trip) => void;
+export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoined }: {
+  kind?: TripKind; start?: TripKind; stop?: TransitStop; placeId?: string | null; onClose: () => void; onJoined: (t: Trip) => void;
 }) {
   const onboarded = useHdar((s) => s.me.onboarded);
   const setTab = useHdar((s) => s.setTab);
-  const [kind, setKind] = useState<TripKind>(k0 ?? "train");
+  const [kind, setKind] = useState<TripKind>(k0 ?? start ?? "train");
   const [code, setCode] = useState("");
   const [network, setNetwork] = useState("");
   const here = useHdar((s) => s.here);
@@ -139,11 +140,12 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
   const [train, setTrain] = useState<TrainInfo | null | "loading">(null);
   const at = stop ? { lat: stop.lat, lng: stop.lng } : here;
   useEffect(() => {
-    if (kind !== "metro" || !at) return;
+    if ((kind !== "metro" && kind !== "bus") || !at) return;
+    setLines(null);
     // Directions et prochains passages (Transitous), sinon lignes OSM, sinon saisie.
-    void stationLines(at)
+    void stationLines(at, "", kind === "bus")
       .catch(() => [] as LineDirections[])
-      .then((r) => (r.length || !stop ? r : stopLines(stop).then((o) => o.map<LineDirections>((l) => ({ label: l.label, mode: "Métro", colour: l.colour, network: l.network, directions: [], next: [] })))))
+      .then((r) => (r.length || !stop || kind === "bus" ? r : stopLines(stop).then((o) => o.map<LineDirections>((l) => ({ label: l.label, mode: "Métro", colour: l.colour, network: l.network, directions: [], next: [] })))))
       .then(setLines)
       .catch(() => setLines([]));
   }, [kind, stop?.ref, !!at]);
@@ -173,7 +175,7 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
       return;
     }
     setBusy(true);
-    tripJoin(kind, kind === "train" && info && c === code ? info.label : c, day, placeId ?? null, kind === "metro" ? net.trim() || null : null)
+    tripJoin(kind, kind === "train" && info && c === code ? info.label : c, day, placeId ?? null, kind === "metro" || kind === "bus" ? net.trim() || null : null)
       .then(onJoined)
       .catch((e: Error) => toast(e.message))
       .finally(() => setBusy(false));
@@ -189,8 +191,8 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
           Tu rejoins le salon de ton trajet : on voit combien de personnes sont à bord, jamais où elles sont. Le salon s'efface après le trajet.
         </p>
         {!k0 && (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {(["train", "flight", "metro"] as TripKind[]).map((t) => (
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {(["train", "flight", "metro", "bus"] as TripKind[]).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -200,15 +202,15 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
                 }}
                 className={"flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-sm " + (kind === t ? "border-signal bg-signal/15 font-bold text-signal" : "border-line")}
               >
-                <TransitIcon kind={t} /> {t === "train" ? "Train" : t === "flight" ? "Avion" : "Métro"}
+                <TransitIcon kind={t} /> {t === "train" ? "Train" : t === "flight" ? "Avion" : t === "metro" ? "Métro" : "Bus"}
               </button>
             ))}
           </div>
         )}
-        {kind === "metro" && lines === null && at && <p className="mt-4 text-xs text-muted">Recherche des lignes…</p>}
-        {kind === "metro" && lines && lines.length > 0 && (
+        {(kind === "metro" || kind === "bus") && lines === null && at && <p className="mt-4 text-xs text-muted">Recherche des lignes…</p>}
+        {(kind === "metro" || kind === "bus") && lines && lines.length > 0 && (
           <>
-            <p className="mt-4 text-xs font-bold text-muted">Lignes à cette station</p>
+            <p className="mt-4 text-xs font-bold text-muted">{kind === "bus" ? "Lignes de bus autour de toi" : "Lignes à cette station"}</p>
             <div className="mt-2 max-h-72 space-y-2 overflow-y-auto">
               {lines.map((l) => (
                 <button
@@ -220,7 +222,7 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
                   className="flex w-full items-start gap-3 rounded-2xl border border-line bg-night px-3 py-2.5 text-left text-sm"
                 >
                   <span className="mt-0.5 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white" style={{ background: l.colour || "#7c3aed" }}>
-                    {l.label.replace(/^(Métro|Tram) /, "")}
+                    {l.label.replace(/^(Métro|Tram|Bus) /, "")}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold">
@@ -250,7 +252,7 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
             className="mt-1 h-12 w-full rounded-2xl border border-line bg-night px-4 text-base font-semibold text-ink uppercase placeholder:font-normal placeholder:normal-case"
           />
         </label>
-        {kind === "metro" && (
+        {(kind === "metro" || kind === "bus") && (
           <label className="mt-2 block text-xs font-bold text-muted">
             Ville / réseau
             <input value={network} onChange={(e) => setNetwork(e.target.value.slice(0, 40))} placeholder="ex. Paris, Lyon, London" className="mt-1 h-11 w-full rounded-2xl border border-line bg-night px-4 text-sm text-ink" />
@@ -288,7 +290,7 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
           onClick={() => join()}
           className="mt-4 h-12 w-full rounded-2xl bg-signal font-bold text-night disabled:opacity-40"
         >
-          {busy ? "…" : code && ok ? `Rejoindre ${kind === "flight" ? "le vol " : ""}${kind === "metro" ? code.trim() : normalizeTrip(kind, code)}` : "Rejoindre"}
+          {busy ? "…" : code && ok ? `Rejoindre ${kind === "flight" ? "le vol " : ""}${kind === "metro" || kind === "bus" ? code.trim() : normalizeTrip(kind, code)}` : "Rejoindre"}
         </button>
         <p className="mt-2 text-center text-[11px] text-muted">Réservé aux 18 ans et plus · Signaler reste disponible dans le salon</p>
       </div>
@@ -300,7 +302,7 @@ export function TripJoinSheet({ kind: k0, stop, placeId, onClose, onJoined }: {
 export function TripsSection() {
   const openSalon = useHdar((s) => s.openSalon);
   const [mine, setMine] = useState<Trip[]>([]);
-  const [joining, setJoining] = useState(false);
+  const [joining, setJoining] = useState<TripKind | null>(null);
   useEffect(() => {
     void tripsMine().then(setMine).catch(() => undefined);
   }, [joining]);
@@ -308,18 +310,27 @@ export function TripsSection() {
     <section className="mt-4">
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-lg font-bold">À bord</h2>
-        <p className="text-xs text-muted">Train, avion, métro · effacé après le trajet</p>
+        <p className="text-xs text-muted">Train, avion, métro, bus · effacé après le trajet</p>
       </div>
       <button
         type="button"
         data-act="trip-open"
-        onClick={() => setJoining(true)}
+        onClick={() => setJoining("train")}
         className="mt-2 flex h-11 w-full items-center justify-center gap-3 rounded-2xl border border-signal/60 bg-surface text-sm font-semibold"
       >
         <TrainFront className="size-4 text-signal" />
         <Plane className="size-4 text-signal" />
         <TramFront className="size-4 text-signal" />
         Je suis dans le train, l'avion ou le métro
+      </button>
+      <button
+        type="button"
+        data-act="trip-bus"
+        onClick={() => setJoining("bus")}
+        className="mt-2 flex h-11 w-full items-center justify-center gap-3 rounded-2xl border border-line bg-surface text-sm font-semibold"
+      >
+        <Bus className="size-4 text-signal" />
+        Je suis dans le bus
       </button>
       {mine.length > 0 && (
         <div className="mt-2 space-y-2">
@@ -330,9 +341,10 @@ export function TripsSection() {
       )}
       {joining && (
         <TripJoinSheet
-          onClose={() => setJoining(false)}
+          start={joining}
+          onClose={() => setJoining(null)}
           onJoined={(t) => {
-            setJoining(false);
+            setJoining(null);
             openSalon(t.id, t.name);
           }}
         />
