@@ -1,5 +1,5 @@
 import { isBot } from "@/lib/hdar/live";
-import { locale } from "@/lib/hdar/i18n";
+import { locale, tBot, useLang } from "@/lib/hdar/i18n";
 import { BotAvatar, BotBadge, BotComposer } from "./bot";
 import { typingText, useTyping } from "@/lib/hdar/typing";
 import { TypingBar } from "./rich-text";
@@ -115,7 +115,8 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
     setOver({});
     setEdits({});
   }, [msgs]);
-  const bodyOf = (m: LiveMsg) => edits[m.id] ?? m.body;
+  const bodyOf = (m: LiveMsg) => edits[m.id] ?? (isBot(userId) && !m.mine ? tBot(m.body) : m.body);
+  useLang((s) => s.lang + ":" + s.ready);
   const startEdit = (m: LiveMsg) => {
     setMsgMenu(null);
     setReplyTo(null);

@@ -1,5 +1,5 @@
 import { BOT_DEFAULTS } from "./bot-demo";
-import { locale } from "@/lib/hdar/i18n";
+import { locale, tBot, useLang } from "@/lib/hdar/i18n";
 import { BOT_ID, isBot } from "@/lib/hdar/live";
 import { BotBadge } from "./bot";
 import { typingText, useTyping, type Typer } from "@/lib/hdar/typing";
@@ -96,7 +96,8 @@ export function GroupChat(p: Props) {
     setOver({});
     setEdits({});
   }, [p.lines]);
-  const bodyOf = (m: GroupLine) => edits[m.id] ?? m.body;
+  const bodyOf = (m: GroupLine) => edits[m.id] ?? (isBot(m.fromId) ? tBot(m.body) : m.body);
+  useLang((s) => s.lang + ":" + s.ready);
   const startEdit = (m: GroupLine) => {
     setMenu(null);
     setReplyTo(null);

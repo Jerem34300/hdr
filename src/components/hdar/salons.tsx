@@ -1,13 +1,16 @@
 import { useMyName } from "@/lib/hdar/discret";
 import { mentionNotify, salonReportNote } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
-import { Check, ChevronLeft, Globe, Plus, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronUp, Globe, Map as MapIcon, MapPin, MessageCircle, Plus, X } from "lucide-react";
 import { COUNTRIES, currentCountry, detectCountry, useCountry } from "@/lib/hdar/country";
 import { countryName, useLang } from "@/lib/hdar/i18n";
 import { toast } from "sonner";
 import { askConfirm } from "@/lib/hdar/confirm";
 import {
   countrySalon,
+  regionsOf,
+  regionSalon,
+  type RegionRow,
   createSalon,
   getSalon,
   pgTime,
@@ -72,11 +75,27 @@ export function SalonDiscover() {
   const [pickCountry, setPickCountry] = useState(false);
   const openCountry = (code: string) =>
     void countrySalon(code).then((s) => openSalon(s.id, s.name)).catch((e) => toast(e instanceof Error ? e.message : "Salon indisponible"));
-  const regions = (salons ?? []).filter((s) => s.region);
-  const mine = regions.find((s) => s.region === myRegion);
-  const others = regions.filter((s) => s !== mine).sort((x, y) => y.recent - x.recent || x.name.localeCompare(y.name, "fr"));
-  // Salons à découvrir : ceux qu'on ne suit pas encore (les suivis sont dans la liste des discussions).
-  const topics = (salons ?? []).filter((s) => !s.region && !s.country && s.name !== "Général" && !followed.includes(s.id));
+  // Régions du pays choisi seulement (v103) ; avant v103, liste française d'origine.
+  const autoRegion = useCountry((s) => s.autoRegion);
+  const [ccRegions, setCcRegions] = useState<RegionRow[] | null | undefined>(undefined);
+  useEffect(() => {
+    let live = true;
+    setCcRegions(undefined);
+    regionsOf(cc).then((r) => live && setCcRegions(r)).catch(() => live && setCcRegions(null));
+    return () => { live = false; };
+  }, [cc]);
+  const legacy = (salons ?? []).filter((s) => s.region && (s.cc ?? "FR") === cc) as RegionRow[];
+  const regions: RegionRow[] = ccRegions ?? (cc === "FR" ? legacy : []);
+  const myCode = cc === "FR" ? myRegion : autoRegion;
+  const mine = regions.find((s) => s.region === myCode || s.code === myCode);
+  const others = regions.filter((s) => s !== mine).sort((x, y) => y.recent - x.recent || x.name.localeCompare(y.name));
+  const openRegion = (r: RegionRow) => {
+    if (r.id) return openSalon(r.id, r.name);
+    if (!onboarded) return void toast("Crée ton profil pour ouvrir un salon", { action: { label: "Créer", onClick: () => setTab("me") } });
+    void regionSalon(r.code).then((s) => { refreshSalonInbox(); openSalon(s.id, s.name); }).catch((e) => toast(e instanceof Error ? e.message : "Salon indisponible"));
+  };
+  // Salons à découvrir : ceux du pays choisi qu'on ne suit pas encore (les suivis sont dans la liste des discussions).
+  const topics = (salons ?? []).filter((s) => !s.region && !s.country && !s.trip_kind && (s.cc ?? "FR") === cc && s.name !== "Général" && !followed.includes(s.id));
 
   const chip = "flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-sm whitespace-nowrap";
   // Pastille verte = en ligne maintenant, sinon grise = messages des dernières 24 h.
@@ -96,7 +115,7 @@ export function SalonDiscover() {
       </div>
       <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
         <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " border-signal/60"}>
-          📍 Quartier <OnlineCount n={online?.area} />
+          <MapPin className="size-4 text-signal" /> Quartier <OnlineCount n={online?.area} />
         </button>
         <span className={chip + " gap-0 border-signal/60 p-0"}>
           <button type="button" data-act="country-salon" onClick={() => openCountry(cc)} className="flex h-full items-center gap-1.5 ps-3 pe-2">
@@ -106,19 +125,19 @@ export function SalonDiscover() {
             Pays
           </button>
         </span>
-        {mine && !followed.includes(mine.id) && (
-          <button type="button" data-act="salon" data-id={mine.id} {...bindTap(() => openSalon(mine.id, mine.name))} className={chip + " border-signal/60"}>
-            {mine.emoji} {mine.name} {count(mine)}
+        {mine && !(mine.id && followed.includes(mine.id)) && (
+          <button type="button" data-act="salon" data-id={mine.id ?? mine.code} {...bindTap(() => openRegion(mine))} className={chip + " border-signal/60"}>
+            <span translate="no">{mine.name}</span> {mine.id ? count(mine as Salon) : null}
           </button>
         )}
         {salons === null && [0, 1, 2].map((i) => <span key={i} className={chip + " w-24 animate-pulse opacity-50"} />)}
         {topics.map((s) => (
           <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={chip}>
-            {s.emoji || "💬"} {s.name} {count(s)}
+            {s.emoji ? <span aria-hidden>{s.emoji}</span> : <MessageCircle className="size-4 text-muted" />} {s.name} {count(s)}
           </button>
         ))}
         <button type="button" aria-expanded={allRegions} onClick={() => setAllRegions((v) => !v)} className={chip}>
-          🗺️ Régions {allRegions ? "▴" : "▾"}
+          <MapIcon className="size-4 text-muted" /> Régions {allRegions ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
         </button>
         <button
           type="button"
@@ -137,17 +156,20 @@ export function SalonDiscover() {
       </div>
       {allRegions && (
         <div className="mt-2 flex flex-wrap gap-2">
+          {ccRegions === undefined && !legacy.length && [0, 1, 2].map((i) => <span key={i} className={chip + " w-24 animate-pulse opacity-50"} />)}
+          {ccRegions !== undefined && (ccRegions !== null || salons !== null) && !regions.length && <p className="text-xs text-muted">Pas encore de régions pour ce pays : le salon Général est ouvert.</p>}
           {[...(mine ? [mine] : []), ...others].map((s) => (
-            <button key={s.id} type="button" data-act="salon" data-id={s.id} {...bindTap(() => openSalon(s.id, s.name))} className={chip}>
-              {s.emoji || "🗺️"} {s.name} {count(s)}
+            <button key={s.code ?? s.id} type="button" data-act="region" data-code={s.code ?? s.region ?? ""} {...bindTap(() => openRegion(s))} className={chip + (s.id ? "" : " text-muted")}>
+              <span translate="no">{s.name}</span> {s.id ? count(s as Salon) : null}
             </button>
           ))}
         </div>
       )}
       <TripsSection />
-      {pickCountry && <CountryPicker current={cc} onClose={() => setPickCountry(false)} onPick={(code) => { setPickCountry(false); openCountry(code); }} />}
+      {pickCountry && <CountryPicker current={cc} onClose={() => setPickCountry(false)} onPick={(code) => { setPickCountry(false); useCountry.getState().choose(code); openCountry(code); }} />}
       {creating && (
         <CreateSalon
+          cc={cc}
           onClose={() => setCreating(false)}
           onCreated={(id, name) => {
             setCreating(false);
@@ -299,7 +321,7 @@ function ActiveDot({ at }: { at: number }) {
 
 const EMOJIS = ["💬", "🔥", "🌈", "🍻", "🎉", "🌙", "☀️", "🎮", "🎵", "🏋️", "🍿", "✈️"];
 
-function CreateSalon({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string, name: string) => void }) {
+function CreateSalon({ cc, onClose, onCreated }: { cc: string; onClose: () => void; onCreated: (id: string, name: string) => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [emoji, setEmoji] = useState("💬");
@@ -314,7 +336,7 @@ function CreateSalon({ onClose, onCreated }: { onClose: () => void; onCreated: (
           const n = name.trim();
           if (n.length < 3) return toast("Nom : 3 caractères minimum");
           setBusy(true);
-          createSalon(n, description, emoji)
+          createSalon(n, description, emoji, cc)
             .then((id) => onCreated(id, n))
             .catch((err: Error) => toast(err.message))
             .finally(() => setBusy(false));

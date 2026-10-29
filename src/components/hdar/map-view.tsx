@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { VectorBase } from "./vector-base";
 import { MapPrivacyToggle } from "./notify-settings";
 import { RegionTeaser, useFirstRegion } from "./launch-offer";
 function MapCityTeaser() { const c = useFirstRegion(); return <RegionTeaser c={c} className="mt-2 text-xs" />; }
@@ -307,6 +308,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     };
   }, [rLat, rLng]);
 
+  const [vector, setVector] = useState(() => typeof window !== "undefined" && !location.search.includes("rastermap"));
   const zoom = Math.min(17, Math.max(4, view.zoom));
   const z = Math.round(zoom);
   const scale = 2 ** (zoom - z);
@@ -646,7 +648,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         gesture.current = null;
       }}
     >
-      {tiles.map((tile) => (
+      {vector && <VectorBase lat={view.lat} lng={view.lng} zoom={zoom} w={size.w} h={size.h} onFail={() => setVector(false)} />}
+      {!vector && tiles.map((tile) => (
         <img
           key={`${z}-${tile.x}-${tile.y}`}
           alt=""

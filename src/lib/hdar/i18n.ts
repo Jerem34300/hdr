@@ -100,6 +100,11 @@ function trKey(k: string, lang: Lang): string | undefined {
   const g = /^Général (.+)$/.exec(k);
   if (g && d["Général"]) return `${d["Général"]} ${g[1]}`;
 }
+/** Message du robot hdar (texte source français, stocké en base) dans la langue de l'utilisateur. */
+export function tBot(body: string, lang: Lang = useLang.getState().lang): string {
+  if (lang === "fr" || !dicts[lang]) return body;
+  return trKey(body, lang) ?? trKey(norm(body), lang) ?? body;
+}
 /** Nom d'un pays dans la langue de l'interface (Intl). */
 export function countryName(cc: string, lang: Lang = useLang.getState().lang): string {
   try {

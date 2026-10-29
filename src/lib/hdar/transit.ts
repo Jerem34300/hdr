@@ -261,7 +261,7 @@ export function validTrip(kind: TripKind, code: string) {
   const c = normalizeTrip(kind, code);
   if (kind === "metro" || kind === "bus") return c.length >= 1;
   if (kind === "flight") return /^[A-Z0-9]{2}[A-Z]?[0-9]{1,4}[A-Z]?$/.test(c);
-  if (kind === "train") return /^([A-Z]{1,10} ?)?[0-9]{1,6}[A-Z]?$/.test(c);
+  if (kind === "train") return /^([A-Z][A-Z ]{0,23} ?)?[0-9]{1,6}[A-Z]?$/.test(c);
   return c.length >= 1;
 }
 export function todayISO(d = new Date()) {
@@ -343,11 +343,13 @@ const DEMO_STOPS: TransitStop[] = [
   { ref: "osm:way/air2", kind: "airport", name: "Flughafen Berlin Brandenburg", lat: 52.3667, lng: 13.5033, iata: "BER" },
 ];
 
-/** Clé de salon calculée comme côté serveur (hdar_trip_join, v99). */
+/** Normalisation des clés (v103) : majuscules, sans espaces ni ponctuation (« L 12 » = « l12 »). */
+export const tripNorm = (x: string) => x.toUpperCase().replace(/[^\p{L}\p{N}]/gu, "").slice(0, 40);
+/** Clé de salon calculée comme côté serveur (hdar_trip_join, v103). */
 export function tripKey(kind: TripKind, code: string, day: string, network = "") {
   const c = normalizeTrip(kind, code);
   if (kind === "train") return `train|${(/(\d{1,6})[A-Z]?$/.exec(c) ?? [])[1] ?? c}|${day}`;
-  if (kind === "metro" || kind === "bus") return `${kind}|${network.trim().replace(/\s+/g, " ").slice(0, 40).toUpperCase()}|${c}|${day}`;
+  if (kind === "metro" || kind === "bus") return `${kind}|${tripNorm(network.trim().replace(/\s+/g, " ").slice(0, 40))}|${tripNorm(c)}|${day}`;
   return `${kind}|${c}|${day}`;
 }
 /** Membres à bord par clé (v101) ; vide si la fonction n'est pas encore en prod. */

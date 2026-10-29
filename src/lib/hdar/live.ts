@@ -1275,7 +1275,7 @@ export type AdminAmbContract = { user_id: string; pseudo: string; name: string; 
 export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });
 
 // Salons (v58) : discussions ouvertes à tous, sans limite de distance ---------------------------
-export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; country?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro" | "bus"; expires_at?: string; aboard?: number; me_aboard?: boolean };
+export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; country?: string | null; cc?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro" | "bus"; expires_at?: string; aboard?: number; me_aboard?: boolean };
 /** Une ligne de discussion de groupe (salon ou chat du quartier). */
 export type GroupLine = {
   id: string;
@@ -1348,7 +1348,31 @@ export async function countrySalon(cc: string): Promise<Salon> {
 }
 const demoCountry = (cc: string): Salon => ({ id: "demo-country-" + cc, name: "Général " + cc, description: null, emoji: null, official: true, country: cc, mine: false,
   last_at: new Date().toISOString(), recent: 12, people: 5 });
+/** Région d'un pays : salon ouvert (id) ou subdivision pas encore ouverte (id null). */
+export type RegionRow = Omit<Salon, "id"> & { id: string | null; code: string };
+const regionDemo = () => import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("countrydemo");
+/** Régions du pays choisi (v103). null si la base n'a pas encore v103 (on garde alors l'ancienne liste française). */
+export async function regionsOf(cc: string): Promise<RegionRow[] | null> {
+  if (regionDemo()) {
+    const all = (await import("./subdivisions.json")).default as unknown as Record<string, [string, string][]>;
+    const fr: [string, string][] = [["ARA", "Auvergne-Rhône-Alpes"], ["BFC", "Bourgogne-Franche-Comté"], ["BRE", "Bretagne"], ["CVL", "Centre-Val de Loire"], ["COR", "Corse"], ["GES", "Grand Est"], ["HDF", "Hauts-de-France"], ["IDF", "Île-de-France"], ["NOR", "Normandie"], ["NAQ", "Nouvelle-Aquitaine"], ["OCC", "Occitanie"], ["PDL", "Pays de la Loire"], ["PAC", "Provence-Alpes-Côte d'Azur"]];
+    return (cc === "FR" ? fr : all[cc] ?? []).map(([code, name], i) => ({ id: i === 1 ? "demo-region-" + code : null, code, name, description: null, emoji: null, official: true, region: code, cc, mine: false,
+      last_at: new Date().toISOString(), recent: i === 1 ? 6 : 0, people: 0 }));
+  }
+  try {
+    return await rpc<RegionRow[]>("hdar_regions", { p_cc: cc });
+  } catch (e) {
+    if (missingFn(e)) return null;
+    throw e;
+  }
+}
+/** Ouvre (ou crée au premier passage) le salon d'une région, rattaché à son pays. */
+export async function regionSalon(code: string): Promise<Salon> {
+  if (regionDemo()) return { id: "demo-region-" + code, name: code, description: null, emoji: null, official: true, region: code, cc: code.slice(0, 2), mine: false, last_at: new Date().toISOString(), recent: 0, people: 0 };
+  return rpc<Salon>("hdar_region_salon", { p_code: code });
+}
 export const getSalon = (id: string) => {
+  if (import.meta.env.DEV && id.startsWith("demo-region-")) return Promise.resolve<Salon>({ id, name: id.slice(12), description: null, emoji: null, official: true, region: id.slice(12), cc: id.slice(12, 14), mine: false, last_at: new Date().toISOString(), recent: 0, people: 0 });
   if (import.meta.env.DEV && id.startsWith("demo-country-")) return Promise.resolve(demoCountry(id.slice(13)));
   if (import.meta.env.DEV && id.startsWith("demo-trip-")) {
     const k = id.includes("Bus") ? "bus" : id.includes("Vol") ? "flight" : id.includes("Mtro") || id.includes("Tram") ? "metro" : "train";
@@ -1357,10 +1381,19 @@ export const getSalon = (id: string) => {
   }
   return rpc<Salon | null>("hdar_salon_get", { p_id: id });
 };
-export const createSalon = (name: string, description: string, emoji: string) =>
-  rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
+/** Salon thématique rattaché au pays choisi (v103) ; repli sur l'ancienne création si la base n'est pas à jour. */
+export async function createSalon(name: string, description: string, emoji: string, cc?: string) {
+  if (cc) {
+    try {
+      return await rpc<string>("hdar_salon_create_cc", { p_name: name, p_description: description, p_emoji: emoji, p_cc: cc });
+    } catch (e) {
+      if (!missingFn(e)) throw e;
+    }
+  }
+  return rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
+}
 export const salonMessages = async (id: string) => {
-  if (import.meta.env.DEV && id.startsWith("demo-country-")) {
+  if (import.meta.env.DEV && (id.startsWith("demo-country-") || id.startsWith("demo-region-"))) {
     const t = (m: number) => Date.now() - m * 60_000;
     const base = { kind: "text" as const, mine: false, replyTo: null, reply: null };
     return [
