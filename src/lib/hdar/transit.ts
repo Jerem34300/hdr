@@ -342,3 +342,22 @@ const DEMO_STOPS: TransitStop[] = [
   { ref: "osm:node/2104", kind: "metro", name: "Naturkundemuseum", lat: 52.5309, lng: 13.3812 },
   { ref: "osm:way/air2", kind: "airport", name: "Flughafen Berlin Brandenburg", lat: 52.3667, lng: 13.5033, iata: "BER" },
 ];
+
+/** Clé de salon calculée comme côté serveur (hdar_trip_join, v99). */
+export function tripKey(kind: TripKind, code: string, day: string, network = "") {
+  const c = normalizeTrip(kind, code);
+  if (kind === "train") return `train|${(/(\d{1,6})[A-Z]?$/.exec(c) ?? [])[1] ?? c}|${day}`;
+  if (kind === "metro" || kind === "bus") return `${kind}|${network.trim().replace(/\s+/g, " ").slice(0, 40).toUpperCase()}|${c}|${day}`;
+  return `${kind}|${c}|${day}`;
+}
+/** Membres à bord par clé (v101) ; vide si la fonction n'est pas encore en prod. */
+export async function tripCounts(keys: string[]): Promise<Record<string, number>> {
+  if (!keys.length) return {};
+  if (isTransitDemo()) return { [keys[1] ?? keys[0]]: 3 };
+  try {
+    const rows = await rpcCall<{ key: string; aboard: number }[]>("hdar_trip_counts", { p_keys: keys.slice(0, 60) });
+    return Object.fromEntries(rows.map((r) => [r.key, Number(r.aboard)]));
+  } catch {
+    return {};
+  }
+}

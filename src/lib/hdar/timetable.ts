@@ -131,3 +131,85 @@ const DEMO_DIRS: LineDirections[] = [
   { label: "Métro 6", mode: "Métro", colour: "#82dc73", network: "RATP", directions: ["Charles de Gaulle - Étoile", "Nation"], next: [soon(2), soon(5), soon(8)] },
   { label: "Métro 14", mode: "Métro", colour: "#640082", network: "RATP", directions: ["Saint-Denis - Pleyel", "Aéroport d'Orly"], next: [soon(1), soon(3), soon(4)] },
 ];
+
+// ---------------------------------------------------------------- Tableau de gare (départs / arrivées)
+export type BoardRow = {
+  id: string;
+  time: string; // heure prévue ou estimée à cette gare (départ si départ, sinon arrivée)
+  arr?: string; dep?: string; // heures estimées
+  delayMin: number; // retard estimé (temps réel), 0 sinon
+  label: string; // « TGV INOUI 6260 », « Métro 14 »
+  num: string; // numéro du train (clé du salon)
+  line: string; // ligne (métro/tram/bus)
+  colour?: string;
+  network: string;
+  from: string; to: string;
+  track?: string;
+  cancelled: boolean; realTime: boolean;
+  day: string; // jour de service
+  mode: string;
+};
+const ALL_RAIL = "HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,REGIONAL_FAST_RAIL,REGIONAL_RAIL,RAIL";
+function cleanStop(n: string) {
+  const c = n.replace(/\s+Hall\s.*$/i, "").trim();
+  return c === c.toUpperCase() ? c.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase()) : c;
+}
+/** Prochains passages (≈3 h) à la gare / station, toutes sources GTFS dédupliquées. */
+export async function stationBoard(at: { lat: number; lng: number }, urban: boolean): Promise<BoardRow[]> {
+  if (isTransitDemo()) return demoBoard(urban);
+  const modes = urban ? URBAN : ALL_RAIL;
+  const stops = await stopsNear(at.lat, at.lng, urban ? 0.0025 : 0.004, modes.split(","));
+  if (!stops.length) return [];
+  const since = new Date(Date.now() - 5 * 60_000).toISOString();
+  type BoardST = StopTime & { place: Place & { scheduledDeparture?: string; scheduledArrival?: string; track?: string; scheduledTrack?: string } };
+  const later = new Date(Date.now() + 3 * 3600_000).toISOString();
+  const q = (m: string, n: number, rad: number, arrive = false) =>
+    get<{ stopTimes: BoardST[] }>(`/stoptimes?stopId=${encodeURIComponent(stops[0].stopId)}&time=${arrive ? later : since}${arrive ? "&arriveBy=true" : ""}&n=${n}&radius=${rad}&mode=${m}`, 12_000)
+      .then((x) => x.stopTimes)
+      .catch(() => [] as BoardST[]);
+  // Grandes lignes et régional séparément (sinon les RER / S-Bahn remplissent toute la réponse).
+  const parts = urban ? [await q(URBAN, 120, 250)] : await Promise.all([q(FAST, 120, 250), q(REGIO, 250, 250), q(FAST, 120, 250, true), q(REGIO, 250, 250, true)]); // arrivées : terminus compris
+  const r = { stopTimes: parts.flat() };
+  const until = Date.now() + 3 * 3600_000;
+  const seen = new Set<string>();
+  const out: BoardRow[] = [];
+  for (const x of r.stopTimes) {
+    const p = x.place;
+    const t = p.departure ?? p.arrival;
+    const tArr = p.arrival ?? p.departure;
+    if (tArr && new Date(tArr).getTime() < Date.now() - 60_000 && (!p.departure || new Date(p.departure).getTime() < Date.now() - 60_000)) continue;
+    if (!t || new Date(tArr ?? t).getTime() > until) continue;
+    if (!urban && !ALL_RAIL.split(",").includes(x.mode)) continue;
+    const num = (x.tripShortName ?? "").replace(/\D/g, "") || digits(x.displayName ?? "");
+    const line = x.routeShortName?.trim() || "";
+    const label = urban ? (/^\d/.test(line) ? `${x.mode === "TRAM" ? "Tram" : "Métro"} ${line}` : line) : x.displayName || `${line} ${num}`.trim();
+    // Train « à numéro » seulement (TGV, TER, ICE…) : les RER / S-Bahn (« A », « D ») saturent le tableau.
+    if (!urban && !/\d{3,}/.test(label)) continue;
+    const key = `${label}|${t.slice(0, 16)}|${x.headsign}`;
+    if (seen.has(key)) continue; // même train publié par plusieurs flux
+    seen.add(key);
+    const sched = p.scheduledDeparture ?? p.scheduledArrival ?? t;
+    out.push({
+      id: x.tripId + "|" + t, time: t, arr: p.arrival, dep: p.departure,
+      delayMin: Math.max(0, Math.round((new Date(t).getTime() - new Date(sched).getTime()) / 60_000)),
+      label, num, line, colour: x.routeColor ? "#" + x.routeColor : undefined, network: (x.agencyName ?? "").slice(0, 40),
+      from: cleanStop(x.tripFrom?.name ?? ""), to: cleanStop(x.tripTo?.name ?? x.headsign ?? ""),
+      track: p.track ?? p.scheduledTrack, cancelled: !!(x.cancelled || (x as { tripCancelled?: boolean }).tripCancelled),
+      realTime: !!x.realTime, day: serviceDay(x.tripId, t), mode: x.mode,
+    });
+  }
+  return out.sort((a, b) => a.time.localeCompare(b.time));
+}
+
+function demoBoard(urban: boolean): BoardRow[] {
+  const t = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
+  const base = { arr: undefined, cancelled: false, realTime: true, day: autoDay("train", null), network: "SNCF", colour: undefined, line: "", mode: "REGIONAL_RAIL" };
+  if (urban) return [
+    { ...base, id: "u1", time: t(1), dep: t(1), delayMin: 0, label: "Métro 14", num: "", line: "14", colour: "#640082", network: "RATP", from: "Saint-Denis - Pleyel", to: "Aéroport d'Orly", mode: "SUBWAY" },
+    { ...base, id: "u2", time: t(2), dep: t(2), delayMin: 0, label: "Métro 6", num: "", line: "6", colour: "#82dc73", network: "RATP", from: "Nation", to: "Charles de Gaulle - Étoile", mode: "SUBWAY" },
+  ];
+  return [
+    { ...base, id: "d1", time: t(9), dep: t(9), arr: t(7), delayMin: 0, label: "TER 876620", num: "876620", from: "Narbonne", to: "Nîmes Centre", track: "1" },
+    { ...base, id: "d2", time: t(24), dep: t(24), arr: t(21), delayMin: 5, label: "TGV INOUI 6260", num: "6260", from: "Perpignan", to: "Paris Gare de Lyon", track: "2" },
+  ];
+}

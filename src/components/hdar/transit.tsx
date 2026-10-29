@@ -6,11 +6,11 @@ import type { PlaceDetail } from "@/lib/hdar/live";
 import { useHdar } from "@/lib/hdar/store";
 import {
   TRANSIT_KINDS, TRIP_FOR, TRIP_LABEL, ensureStop, isTransitDemo, normalizeTrip, stopLines, todayISO, tripJoin, tripLeave,
-  tripsAt, tripsMine, validTrip,
+  tripsAt, tripsMine, validTrip, tripCounts, tripKey,
   type TransitKind, type TransitStop, type Trip, type TripKind,
 } from "@/lib/hdar/transit";
 import { PlaceChat } from "./places-layer";
-import { autoDay, hhmm, lookupTrain, stationLines, type LineDirections, type TrainInfo } from "@/lib/hdar/timetable";
+import { autoDay, hhmm, lookupTrain, stationBoard, stationLines, type BoardRow, type LineDirections, type TrainInfo } from "@/lib/hdar/timetable";
 import { bindTap } from "./tap";
 
 export function TransitIcon({ kind, className = "size-4" }: { kind: TransitKind | TripKind; className?: string }) {
@@ -94,6 +94,9 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
         <TransitIcon kind={tk} className="size-5" /> {TRIP_LABEL[tk]}
       </button>
       <p className="mt-1.5 text-center text-[11px] text-muted">Salon à bord temporaire · personne ne voit ta position</p>
+      {stop.kind !== "airport" && (
+        <StationBoard stop={stop} placeId={placeId} onJoined={(t) => openSalon(t.id, t.name)} />
+      )}
       <div className="mt-4">
         <p className="flex items-center gap-1.5 text-xs font-bold tracking-wide text-muted uppercase">
           <Users className="size-3.5" /> {tk === "flight" ? "Vols" : tk === "metro" ? "Lignes" : "Trains"} avec du monde à bord
@@ -369,6 +372,142 @@ export function AboardBar({ id, aboard, kind, onLeft }: { id: string; aboard: nu
       >
         {kind === "flight" ? "J'ai atterri" : "Je descends"}
       </button>
+    </div>
+  );
+}
+
+/** Tableau type écran de gare : Départs / Arrivées (train) ou prochains passages par ligne (métro / tram). */
+function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId: string | null; onJoined: (t: Trip) => void }) {
+  const urban = stop.kind === "metro";
+  const onboarded = useHdar((s) => s.me.onboarded);
+  const setTab = useHdar((s) => s.setTab);
+  const [rows, setRows] = useState<BoardRow[] | null>(null);
+  const [tab, setTabB] = useState<"dep" | "arr">("dep");
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const keyOf = (r: BoardRow) => (urban ? tripKey("metro", r.label, todayISO(), r.network) : tripKey("train", r.label, r.day));
+  useEffect(() => {
+    let stopped = false;
+    const load = () =>
+      void stationBoard({ lat: stop.lat, lng: stop.lng }, urban)
+        .catch(() => [] as BoardRow[])
+        .then((r) => {
+          if (stopped) return;
+          setRows(r);
+          const keys = [...new Set(r.slice(0, 60).map(keyOf))];
+          void tripCounts(keys).then((c) => !stopped && setCounts(c));
+        });
+    load();
+    const id = window.setInterval(() => document.visibilityState === "visible" && load(), 60_000);
+    return () => {
+      stopped = true;
+      window.clearInterval(id);
+    };
+  }, [stop.ref]);
+  const join = (r: BoardRow) => {
+    if (!onboarded && !isTransitDemo()) {
+      toast("Crée ton profil pour rejoindre un salon à bord", { action: { label: "Créer", onClick: () => setTab("me") } });
+      return;
+    }
+    setBusy(r.id);
+    tripJoin(urban ? "metro" : "train", r.label, urban ? todayISO() : r.day, placeId, urban ? r.network || null : null)
+      .then(onJoined)
+      .catch((e: Error) => toast(e.message))
+      .finally(() => setBusy(null));
+  };
+  const now = Date.now() - 60_000;
+  const list = (rows ?? [])
+    .filter((r) => {
+      const t = urban || tab === "dep" ? r.dep : r.arr;
+      return !!t && new Date(t).getTime() >= now;
+    })
+    .sort((a, b) => (urban || tab === "dep" ? a.dep! : a.arr!).localeCompare(urban || tab === "dep" ? b.dep! : b.arr!));
+  // Métro / tram : une ligne par (ligne, direction) avec les 3 prochains passages.
+  const groups = urban
+    ? Object.values(
+        list.reduce<Record<string, { r: BoardRow; next: string[] }>>((m, r) => {
+          const k = r.label + "|" + r.to;
+          (m[k] ??= { r, next: [] }).next.length < 3 && m[k].next.push(r.time);
+          return m;
+        }, {}),
+      ).sort((a, b) => a.r.label.localeCompare(b.r.label, "fr", { numeric: true }))
+    : [];
+  const mins = (iso: string) => Math.max(0, Math.round((new Date(iso).getTime() - Date.now()) / 60_000));
+  const Aboard = ({ r }: { r: BoardRow }) => {
+    const n = counts[keyOf(r)];
+    return n ? (
+      <span className="flex shrink-0 items-center gap-1 rounded-full bg-signal/15 px-2 py-0.5 text-[11px] font-bold text-signal">
+        <Users className="size-3" /> {n}
+      </span>
+    ) : null;
+  };
+  return (
+    <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-night" data-act="station-board">
+      <div className="flex items-center gap-2 border-b border-line px-3 py-2">
+        <TransitIcon kind={urban ? "metro" : "train"} className="size-4 text-signal" />
+        <p className="flex-1 text-xs font-bold tracking-wide uppercase">{urban ? "Prochains passages" : "Tableau des trains"}</p>
+        {!urban && (
+          <div className="flex rounded-full bg-surface p-0.5 text-xs">
+            {(["dep", "arr"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                data-act={`board-${t}`}
+                onClick={() => setTabB(t)}
+                className={"h-7 rounded-full px-3 " + (tab === t ? "bg-signal font-bold text-night" : "text-muted")}
+              >
+                {t === "dep" ? "Départs" : "Arrivées"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      {rows === null && <p className="px-3 py-3 text-xs text-muted">Chargement des horaires…</p>}
+      {rows !== null && list.length === 0 && <p className="px-3 py-3 text-xs text-muted">Aucun passage trouvé dans les 3 prochaines heures.</p>}
+      <div className="max-h-80 divide-y divide-line overflow-y-auto">
+        {urban
+          ? groups.map(({ r, next }) => (
+              <button key={r.label + r.to} type="button" disabled={busy === r.id} onClick={() => join(r)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm">
+                <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white" style={{ background: r.colour || "#7c3aed" }}>
+                  {r.line || r.label}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{r.to}</span>
+                  <span className="block text-xs text-online">{next.map((t) => mins(t) + " min").join(" · ")}</span>
+                </span>
+                <Aboard r={r} />
+              </button>
+            ))
+          : list.slice(0, 40).map((r) => {
+              const t = tab === "dep" ? r.dep! : r.arr!;
+              return (
+                <button key={r.id} type="button" data-act="board-row" disabled={busy === r.id} onClick={() => join(r)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm">
+                  <span className="w-12 shrink-0">
+                    <span className={"block font-display font-bold tabular-nums " + (r.cancelled ? "text-muted line-through" : r.delayMin ? "text-amber-300" : "")}>{hhmm(t)}</span>
+                    {r.delayMin > 0 && !r.cancelled && <span className="block text-[10px] text-amber-300">+{r.delayMin} min</span>}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold">
+                      {tab === "dep" ? r.to : r.from}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-muted">
+                      <TrainFront className="size-3" /> {r.label}
+                      {r.cancelled && <span className="rounded-full bg-red-500/20 px-1.5 text-[10px] font-bold text-red-300">Supprimé</span>}
+                    </span>
+                  </span>
+                  {r.track && (
+                    <span className="shrink-0 rounded-md border border-line px-1.5 text-center text-[10px] leading-tight text-muted">
+                      Voie<br /><b className="text-sm text-ink">{r.track}</b>
+                    </span>
+                  )}
+                  <Aboard r={r} />
+                </button>
+              );
+            })}
+      </div>
+      <p className="border-t border-line px-3 py-1.5 text-[10px] text-muted">
+        Horaires Transitous (données ouvertes){rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"} · touche un train pour rejoindre son salon
+      </p>
     </div>
   );
 }
