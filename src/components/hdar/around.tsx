@@ -106,7 +106,7 @@ function OnlinePill() {
 const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1.5 text-[12px] font-semibold whitespace-nowrap ring-1";
 function Badge({ n, cls }: { n: number; cls: string }) {
   return (
-    <span className={`absolute -top-1.5 -end-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-night px-1 text-[10px] font-bold text-night ${cls}`}>
+    <span className={`flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] leading-none font-bold text-night ${cls}`}>
       {n > 99 ? "99+" : n}
     </span>
   );
@@ -118,6 +118,7 @@ function AdsButton({ lat, lng }: { lat: number; lng: number }) {
   const region = regionFromPos(lat, lng);
   const [n, setN] = useState(0);
   useEffect(() => {
+    if (import.meta.env.DEV && location.search.includes("badgesdemo")) { setN(7); return; }
     let stop = false;
     const t = window.setTimeout(() => void adsCount(region).then((v) => !stop && setN(Number(v) || 0)).catch(() => undefined), 1500);
     return () => { stop = true; window.clearTimeout(t); };

@@ -1,6 +1,6 @@
 // hdar service worker: makes the web app installable and shows a page offline.
 // Never caches API traffic (Supabase) or private data.
-const CACHE = "hdar-v6";
+const CACHE = "hdar-v7";
 const SHELL = ["/", "/offline.html", "/manifest.webmanifest", "/icon-192.png", "/badge-96.png", "/favicon.svg"];
 
 self.addEventListener("install", (e) => {
