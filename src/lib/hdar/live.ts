@@ -116,6 +116,8 @@ async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;
 }
+/** Accès RPC pour les modules annexes (transports). */
+export const rpcCall = rpc;
 
 /** Postgres `timestamptz::text` ("2026-10-10 17:50:31.88+00") to ms; Safari needs strict ISO. */
 export function pgTime(v: string): number {
@@ -765,6 +767,14 @@ export const adminPlaces = {
 
 export type PlaceLine = { id: string; from_id: string; pseudo: string; body: string; at: string; mine: boolean };
 export function placeMessages(id: string) {
+  if (import.meta.env.DEV && id.startsWith("demo-stop-")) {
+    const t = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+    return Promise.resolve<PlaceLine[]>([
+      { id: "d1", from_id: "x1", pseudo: "Max", body: "Quelqu'un dans le 18h12 ?", at: t(22), mine: false },
+      { id: "d2", from_id: "x2", pseudo: "Discret", body: "Voie B, voiture 7", at: t(9), mine: false },
+      { id: "d3", from_id: "x3", pseudo: "Lou", body: "Retard de 15 min annoncé", at: t(3), mine: false },
+    ]);
+  }
   return rpc<PlaceLine[]>("hdar_place_messages", { p_id: id });
 }
 export async function placeSend(id: string, body: string, lat: number | null, lng: number | null) {
@@ -1265,7 +1275,7 @@ export type AdminAmbContract = { user_id: string; pseudo: string; name: string; 
 export const adminAmbContracts = (key: string) => rpc<AdminAmbContract[]>("hdar_admin_amb_contracts", { p_key: key });
 
 // Salons (v58) : discussions ouvertes à tous, sans limite de distance ---------------------------
-export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; mine: boolean; last_at: string; recent: number; people: number };
+export type Salon = { id: string; name: string; description: string | null; emoji: string | null; official: boolean; region?: string | null; mine: boolean; last_at: string; recent: number; people: number; trip_kind?: "train" | "flight" | "metro"; expires_at?: string; aboard?: number; me_aboard?: boolean };
 /** Une ligne de discussion de groupe (salon ou chat du quartier). */
 export type GroupLine = {
   id: string;
@@ -1324,10 +1334,29 @@ export async function salonsInbox(seen: Record<string, string>): Promise<InboxSa
     return listSalons();
   }
 }
-export const getSalon = (id: string) => rpc<Salon | null>("hdar_salon_get", { p_id: id });
+export const getSalon = (id: string) => {
+  if (import.meta.env.DEV && id.startsWith("demo-trip-")) {
+    const k = id.includes("Vol") ? "flight" : id.includes("Mtro") || id.includes("Tram") ? "metro" : "train";
+    return Promise.resolve<Salon>({ id, name: "", description: new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), emoji: null, official: false, mine: false,
+      last_at: new Date().toISOString(), recent: 4, people: 3, trip_kind: k, aboard: k === "metro" ? 7 : k === "flight" ? 4 : 3, me_aboard: true });
+  }
+  return rpc<Salon | null>("hdar_salon_get", { p_id: id });
+};
 export const createSalon = (name: string, description: string, emoji: string) =>
   rpc<string>("hdar_salon_create", { p_name: name, p_description: description, p_emoji: emoji });
-export const salonMessages = async (id: string) => (await rpc<GroupRow[]>("hdar_salon_messages", { p_id: id })).map(toLine);
+export const salonMessages = async (id: string) => {
+  if (import.meta.env.DEV && id.startsWith("demo-trip-")) {
+    const t = (m: number) => Date.now() - m * 60_000;
+    const base = { kind: "text" as const, mine: false, replyTo: null, reply: null };
+    return [
+      { ...base, id: "t1", fromId: "x1", pseudo: "Max", body: "Voiture 12, qui est où ?", at: t(18) },
+      { ...base, id: "t2", fromId: "x2", pseudo: "Discret", body: "Bar, au milieu du train", at: t(11) },
+      { ...base, id: "t3", fromId: "x3", pseudo: "Lou", body: "On arrive dans 40 min", at: t(2) },
+    ] satisfies GroupLine[];
+  }
+  return _salonMessages(id);
+};
+const _salonMessages = async (id: string) => (await rpc<GroupRow[]>("hdar_salon_messages", { p_id: id })).map(toLine);
 export async function salonSend(id: string, body: string, replyTo: string | null = null) {
   const b = body.trim().slice(0, 1000);
   try {

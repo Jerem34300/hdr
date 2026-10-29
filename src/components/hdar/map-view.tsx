@@ -6,6 +6,8 @@ import { MapGiftButton } from "./growth";
 import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
+import { TransitPin, TransitSheet } from "./transit";
+import { useTransit, type TransitStop } from "@/lib/hdar/transit";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
@@ -96,6 +98,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     setToiletsOn(toiletsLayerOn());
   }, []);
   const [placeId, setPlaceId] = useState<string | null>(null);
+  const [transitStop, setTransitStop] = useState<TransitStop | null>(null);
   const [proposing, setProposing] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
@@ -363,6 +366,16 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   );
   const outings = useOutings(
     placesOn,
+    {
+      s: latFromY((top + size.h) / scale, z),
+      n: latFromY(top / scale, z),
+      w: lngFromX(left / scale, z),
+      e: lngFromX((left + size.w) / scale, z),
+    },
+    zoom,
+  );
+  const transit = useTransit(
+    toiletsOn || placesOn,
     {
       s: latFromY((top + size.h) / scale, z),
       n: latFromY(top / scale, z),
@@ -845,6 +858,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </button>
         );
       })}
+      {transit.map((st) => {
+        const pt = project(st.lat, st.lng);
+        if (pt.x < -30 || pt.y < -30 || pt.x > size.w + 30 || pt.y > size.h + 30) return null;
+        return <TransitPin key={st.ref} s={st} x={pt.x} y={pt.y} onOpen={() => setTransitStop(st)} />;
+      })}
       {placeClusters.map((c) => {
         if (c.items.length > 1) {
           const d = Math.min(52, 26 + c.items.length * 2);
@@ -1010,6 +1028,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       {filtersOpen && <FilterSheet onClose={() => setFiltersOpen(false)} />}
       {places.length > 0 && (
         <p className="pointer-events-none absolute bottom-1 left-2 z-30 text-[10px] text-white/70">© OpenStreetMap contributors</p>
+      )}
+      {transitStop && (
+        <Safe key={transitStop.ref} onError={() => setTransitStop(null)}>
+          <TransitSheet stop={transitStop} onClose={() => setTransitStop(null)} />
+        </Safe>
       )}
       {placeId && (
         <Safe key={placeId} onError={() => setPlaceId(null)}>

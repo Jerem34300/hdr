@@ -27,6 +27,7 @@ import { useRoomPresence, useRoomsOnline } from "@/lib/hdar/presence";
 import { GroupChat } from "./group-chat";
 import { OnlineButton, OnlineCount } from "./room-people";
 import { bindTap } from "./tap";
+import { AboardBar, TransitIcon, TripsSection } from "./transit";
 
 function useMyPos() {
   const here = useHdar((s) => s.here);
@@ -125,6 +126,7 @@ export function SalonDiscover() {
           ))}
         </div>
       )}
+      <TripsSection />
       {creating && (
         <CreateSalon
           onClose={() => setCreating(false)}
@@ -422,16 +424,23 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
       mediaLockedHint="Crée ton profil pour envoyer photos, vidéos et vocaux"
       onChanged={refresh}
       header={
+        <>
         <header className="flex items-center gap-2 border-b border-line px-2 py-2">
           <button type="button" className="flex size-11 items-center justify-center" aria-label="Retour" data-act="close-view" onClick={() => setTab("inbox")}>
             <ChevronLeft />
           </button>
-          <span className="text-2xl">{info?.emoji || "💬"}</span>
+          {info?.trip_kind ? (
+            <span className="flex size-8 items-center justify-center text-signal"><TransitIcon kind={info.trip_kind} className="size-6" /></span>
+          ) : (
+            <span className="text-2xl">{info?.emoji || "💬"}</span>
+          )}
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display font-bold">{info?.name ?? name}</p>
+            <p className="truncate font-display font-bold">{info?.name || name}</p>
             <p className="truncate text-xs text-muted">
-              {info && info.people > 0 ? `${info.people} personne${info.people > 1 ? "s" : ""} aujourd'hui · ` : ""}
-              {info?.description || "Ouvert à tous · messages effacés après 24 h"}
+              {info?.trip_kind
+                ? `Salon à bord · ${info.description ?? ""} · effacé après le trajet`
+                : <>{info && info.people > 0 ? `${info.people} personne${info.people > 1 ? "s" : ""} aujourd'hui · ` : ""}
+              {info?.description || "Ouvert à tous · messages effacés après 24 h"}</>}
             </p>
           </div>
           <OnlineButton presence={presence} />
@@ -455,6 +464,8 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
             </button>
           )}
         </header>
+        {info?.trip_kind && <AboardBar id={id} aboard={info.aboard ?? 0} kind={info.trip_kind} onLeft={() => setTab("inbox")} />}
+        </>
       }
     />
   );

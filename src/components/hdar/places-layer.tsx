@@ -209,7 +209,7 @@ export function ProposePlaceSheet({ at, onClose }: { at: { lat: number; lng: num
   );
 }
 
-function PlaceChat({ place }: { place: PlaceDetail }) {
+export function PlaceChat({ place }: { place: PlaceDetail }) {
   const here = useHdar((s) => s.here);
   const isAdmin = useAmAdmin();
   const [lines, setLines] = useState<PlaceLine[]>([]);
