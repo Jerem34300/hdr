@@ -1,4 +1,5 @@
 import { isBot } from "@/lib/hdar/live";
+import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { locale, tBot, useLang } from "@/lib/hdar/i18n";
 import { BotAvatar, BotBadge, BotComposer } from "./bot";
 import { typingText, useTyping } from "@/lib/hdar/typing";
@@ -242,7 +243,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
 
   const lastId = msgs[msgs.length - 1]?.id;
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
+    scrollListEnd(end.current);
     markSeen(userId);
   }, [lastId, markSeen, userId]);
 

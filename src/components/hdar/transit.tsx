@@ -1,5 +1,6 @@
 // Transports : pins gares / métro-tram / aéroports, fiche de l'arrêt (chat + « Je suis dans… »), salons à bord.
-import { useEffect, useState } from "react";
+import { focusNoScroll, useOpenAtTop } from "@/lib/hdar/scroll-end";
+import { useEffect, useRef, useState } from "react";
 import { Bus, Plane, TrainFront, TramFront, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import type { PlaceDetail } from "@/lib/hdar/live";
@@ -59,7 +60,10 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
   const [err, setErr] = useState<string | null>(null);
   const k = TRANSIT_KINDS[stop.kind];
   const tk = TRIP_FOR[stop.kind];
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useOpenAtTop(sheetRef, stop.ref);
   useEffect(() => {
+    if (import.meta.env.DEV && stop.ref === "node/demo") { setPlaceId("demo"); setTrips([]); return; }
     let stopped = false;
     void ensureStop(stop)
       .then((id) => {
@@ -76,7 +80,7 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
     ? { id: placeId, kind: "other", name: stop.name, lat: stop.lat, lng: stop.lng, partner: false, description: "", source: "osm", source_ref: stop.ref }
     : null;
   return (
-    <div className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[80%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
+    <div ref={sheetRef} className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[80%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
       <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
         <X className="size-5" />
       </button>
@@ -249,7 +253,7 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
         <label className="mt-3 block text-xs font-bold text-muted">
           {kind === "flight" ? "Numéro de vol" : kind === "train" ? "Numéro du train" : "Ligne"}
           <input
-            autoFocus
+            ref={focusNoScroll}
             value={code}
             onChange={(e) => setCode(e.target.value.slice(0, 30))}
             placeholder={PLACEHOLDER[kind]}

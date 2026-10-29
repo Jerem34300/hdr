@@ -1,4 +1,5 @@
 import { ChatProBadge } from "./pro-tools";
+import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Flag, Image as ImageIcon, Mic, MoreHorizontal, Send, ShieldBan } from "lucide-react";
 import { toast } from "sonner";
@@ -30,7 +31,7 @@ export function Chat() {
   const recRef = useRef<MediaRecorder | null>(null);
 
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
+    scrollListEnd(end.current);
   }, [match?.messages.length]);
 
   if (!match || !person || isExpired(match.expiresAt, now)) {

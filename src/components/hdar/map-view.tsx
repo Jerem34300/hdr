@@ -104,7 +104,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     setToiletsOn(toiletsLayerOn());
   }, []);
   const [placeId, setPlaceId] = useState<string | null>(null);
-  const [transitStop, setTransitStop] = useState<TransitStop | null>(null);
+  const [transitStop, setTransitStop] = useState<TransitStop | null>(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("stopdemo") ? { ref: "node/demo", kind: "station", name: "La Crau", lat: 43.1497, lng: 6.0735 } : null));
   const [proposing, setProposing] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });

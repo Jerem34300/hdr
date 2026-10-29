@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deviceId } from "@/lib/hdar/device";
@@ -254,7 +255,7 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
 
   const lastId = lines[lines.length - 1]?.id;
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
+    scrollListEnd(end.current);
   }, [lastId]);
 
   return (

@@ -1,5 +1,6 @@
 import { RichText } from "./rich-text";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useOpenAtTop } from "@/lib/hdar/scroll-end";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bell, ChevronLeft, Pencil, Flag, MessageCircle, Plus, Share2, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
@@ -313,10 +314,12 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
 }
 
 function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const panel = useRef<HTMLDivElement>(null);
+  useOpenAtTop(panel, title);
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end" role="dialog" aria-modal="true">
       <button type="button" aria-label="Fermer" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="dock relative mx-auto max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-line bg-surface px-5 pt-5 pb-6">
+      <div ref={panel} className="dock relative mx-auto max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-line bg-surface px-5 pt-5 pb-6">
         <div className="flex items-center justify-between">
           <p className="font-display text-lg font-bold">{title}</p>
           <button type="button" aria-label="Fermer" onClick={onClose} className="grid size-9 place-items-center rounded-full"><X className="size-5" /></button>

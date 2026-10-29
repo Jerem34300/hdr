@@ -1,8 +1,9 @@
 import { RichText } from "./rich-text";
+import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { tf } from "@/lib/hdar/i18n";
 import { setProfileNote } from "@/lib/hdar/live";
 import { flyTo } from "@/lib/hdar/map-focus";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,10 +21,16 @@ export function Sheets() {
   const sheet = useHdar((s) => s.sheet);
   if (!sheet) return null;
   const person = typeof sheet === "object";
+  return <SheetPanel sheet={sheet} person={person} />;
+}
+function SheetPanel({ sheet, person }: { sheet: NonNullable<ReturnType<typeof useHdar.getState>["sheet"]>; person: boolean }) {
+  const panel = useRef<HTMLDivElement>(null);
+  useOpenAtTop(panel, typeof sheet === "object" ? JSON.stringify(sheet) : sheet);
   return (
     <div className="absolute inset-0 z-40 flex flex-col justify-end">
       <button type="button" className="absolute inset-0 bg-night/70" aria-label="Fermer" data-act="close" {...bindTap(() => useHdar.getState().closeSheet())} />
       <div
+        ref={panel}
         className={cn(
           "sheet-panel relative z-10 flex flex-col overflow-hidden border border-line bg-surface",
           person ? "sheet-person" : "overflow-y-auto",
@@ -35,7 +42,7 @@ export function Sheets() {
         {sheet === "city" && <Cities />}
         {sheet === "share" && <Share />}
         {sheet === "create-spot" && <CreateSpot />}
-        {person && <Person id={sheet.id} />}
+        {typeof sheet === "object" && <Person id={sheet.id} />}
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
 import { VideoSection } from "./video-section";
+import { useOpenAtTop } from "@/lib/hdar/scroll-end";
+import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -98,8 +100,10 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
     return () => setOpenPlace(null);
   }, [id]);
   const k = p ? PLACE_KINDS[p.kind] : null;
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useOpenAtTop(sheetRef, id);
   return (
-    <div className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
+    <div ref={sheetRef} className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
       <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
         <X className="size-5" />
       </button>
@@ -241,7 +245,7 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
   }, [place.id]);
   useEffect(() => {
     // scrollIntoView returns a Promise in recent Chrome: never return it from an effect.
-    end.current?.scrollIntoView({ block: "nearest" });
+    scrollListEnd(end.current);
   }, [lines.length]);
   const send = () => {
     const b = text.trim();
