@@ -176,6 +176,30 @@ function walk(root: Node, lang: Lang) {
 }
 
 let observer: MutationObserver | null = null;
+
+// ---------- Libellés qui doivent tenir sur une ligne (boutons, pilules, onglets) ----------
+// Un élément [data-fit] (nowrap + overflow hidden + ellipsis, classe .fit) voit sa police réduite jusqu'à 75 %
+// si le texte traduit déborde ; au-delà, l'ellipsis CSS prend le relais. Recalculé après chaque traduction et au redimensionnement.
+function fitOne(el: HTMLElement) {
+  el.style.fontSize = "";
+  const w = el.clientWidth;
+  if (!w || el.scrollWidth <= w + 1) return;
+  const base = parseFloat(getComputedStyle(el).fontSize) || 12;
+  let k = 1;
+  for (let i = 0; i < 4 && el.scrollWidth > el.clientWidth + 0.5 && k > 0.75; i++) {
+    k = Math.max(0.75, k * (el.clientWidth / el.scrollWidth) * 0.97);
+    el.style.fontSize = (base * k).toFixed(2) + "px";
+  }
+}
+let fitQueued = false;
+export function fitLabels() {
+  if (typeof window === "undefined" || fitQueued) return;
+  fitQueued = true;
+  requestAnimationFrame(() => {
+    fitQueued = false;
+    document.querySelectorAll<HTMLElement>("[data-fit]").forEach(fitOne);
+  });
+}
 async function load(lang: Lang) {
   if (dicts[lang]) return;
   const l = loaders[`./i18n/${lang}.json`];
@@ -197,19 +221,23 @@ export function startI18n() {
     if (useLang.getState().lang !== lang || blocked()) return;
     applyDoc(lang);
     walk(document.body, lang);
+    fitLabels();
     useLang.setState((s) => ({ ready: s.ready + 1 }));
   };
   const blocked = () => SEO_FR.test(location.pathname) || /^\/(en|es|de|it|pt|ar)\//.test(location.pathname);
   observer = new MutationObserver((muts) => {
     if (blocked()) return;
     const lang = useLang.getState().lang;
-    if (lang === "fr" && !document.documentElement.dataset.i18nWas) return;
+    if (lang === "fr" && !document.documentElement.dataset.i18nWas) { fitLabels(); return; }
     for (const m of muts) {
       if (m.type === "characterData") walk(m.target, lang);
       else if (m.type === "attributes") { if (m.target.nodeType === 1 && !(m.target as Element).closest(SKIP)) translateAttrs(m.target as Element, lang); }
       else m.addedNodes.forEach((n) => walk(n, lang));
     }
+    fitLabels();
   });
+  window.addEventListener("resize", fitLabels);
+  void document.fonts?.ready.then(fitLabels);
   observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
   void run(useLang.getState().lang);
   useLang.subscribe((s, p) => {

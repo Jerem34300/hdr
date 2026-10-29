@@ -95,7 +95,7 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
   }, [visible]);
   const closeTip = () => (setTip(false), localStorage.setItem(TIP_KEY, "1"));
   return (
-    <div className="relative -mt-6 flex flex-col items-center pb-1">
+    <div className="relative -mt-6 flex min-w-0 flex-col items-center pb-1">
       {tip && (
         <div className="absolute bottom-full z-30 mb-2 w-52">
           <TipBubble arrow="down" onClick={closeTip} testId="vis-tip">Touche pour te montrer sur la carte</TipBubble>
@@ -117,10 +117,10 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
         {!visible && SPARKS.map(([x, y, d, sz], i) => (
           <span key={i} aria-hidden className="vis-spark" style={{ left: `calc(50% + ${x}px)`, top: `${32 + y}px`, animationDelay: `${d}s`, width: sz, height: sz }} />
         ))}
-        <span className={cn("mt-1 text-xs font-bold leading-tight transition-colors", visible ? "text-[#A1E3C3]" : "text-signal")}>
+        <span data-fit className={cn("fit mt-1 max-w-[4.5rem] text-xs font-bold leading-tight transition-colors", visible ? "text-[#A1E3C3]" : "text-signal")}>
           {visible ? "Visible" : "Se montrer"}
         </span>
-        {visible && <span className="text-[9px] leading-tight text-muted">touche pour te cacher</span>}
+        {visible && <span data-fit className="fit max-w-[4.5rem] text-[9px] leading-tight text-muted">touche pour te cacher</span>}
       </button>
     </div>
   );

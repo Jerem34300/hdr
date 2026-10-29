@@ -47,7 +47,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
           <AdsButton lat={place.lat} lng={place.lng} />
           <button type="button" data-act="salons" {...bindTap(() => { ackSalonsBadge(); setTab("inbox"); })}
             aria-label={salonBadge ? `Salons, ${salonBadge} nouveaux messages` : "Salons"} className={`${TOP_BTN} bg-[#fbbf24]/10 text-[#f5d27a] ring-[#fbbf24]/35`}>
-            Salons
+            <span className="fit" data-fit>Salons</span>
             {salonBadge > 0 && <Badge n={salonBadge} cls="bg-[#fbbf24]" />}
           </button>
           <button
@@ -58,7 +58,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             aria-label={areaUnread ? `Chat du quartier, ${areaUnread} nouveaux messages` : "Chat du quartier"}
             className={`${TOP_BTN} bg-signal/15 text-[#ff8a80] ring-signal/45`}
           >
-            Quartier
+            <span className="fit" data-fit>Quartier</span>
             {areaUnread > 0 && <Badge n={areaUnread} cls="bg-signal" />}
           </button>
         </div>
@@ -95,7 +95,7 @@ function OnlinePill() {
     <>
       <button type="button" onClick={() => setOpen(true)} className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label={`${n} en ligne, voir qui est visible`}>
         <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-online" />
-        {n} en ligne
+        <span className="fit" data-fit>{n} en ligne</span>
       </button>
       {open && <OnlineSheet onClose={() => setOpen(false)} demo={import.meta.env.DEV && location.search.includes("enlignedemo") ? ONLINE_DEMO : undefined} />}
     </>
@@ -103,7 +103,7 @@ function OnlinePill() {
 }
 
 /** Les 4 boutons du haut de la carte : même taille, même forme, une teinte de la palette chacun. */
-const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[12px] font-semibold overflow-hidden whitespace-nowrap ring-1";
+const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1.5 text-[12px] font-semibold overflow-hidden whitespace-nowrap ring-1";
 function Badge({ n, cls }: { n: number; cls: string }) {
   return (
     <span className={`absolute -top-1.5 -end-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-night px-1 text-[10px] font-bold text-night ${cls}`}>
@@ -154,7 +154,7 @@ function AdsButton({ lat, lng }: { lat: number; lng: number }) {
       {...bindTap(open)}
       className={`${TOP_BTN} bg-spot/15 text-[#b3a8ff] ring-spot/40`}
     >
-      📌 Annonces
+      <span className="fit" data-fit>Annonces</span>
       {hits.length > 0 ? <Badge n={hits.length} cls="bg-[#fbbf24]" /> : n > 0 && <Badge n={n} cls="bg-spot" />}
     </button>
   );

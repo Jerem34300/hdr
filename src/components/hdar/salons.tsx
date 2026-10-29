@@ -109,9 +109,9 @@ export function SalonDiscover() {
     ) : null;
   return (
     <section className="mt-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-lg font-bold">Salons</h2>
-        <p className="text-xs text-muted">Ouverts à tous · effacés après 24 h</p>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="shrink-0 whitespace-nowrap font-display text-lg font-bold">Salons</h2>
+        <p className="min-w-0 text-end text-xs text-muted">Ouverts à tous · effacés après 24 h</p>
       </div>
       <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
         <button type="button" data-act="pocket" {...bindTap(openPocket)} className={chip + " border-signal/60"}>

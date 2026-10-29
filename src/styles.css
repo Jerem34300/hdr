@@ -400,3 +400,13 @@
 [dir="rtl"] .maplibregl-map {
   direction: ltr;
 }
+
+/* Libellé sur une ligne : police réduite par fitLabels() puis ellipsis (voir i18n.ts). */
+.fit {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

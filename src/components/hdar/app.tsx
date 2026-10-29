@@ -217,10 +217,10 @@ function DockButton({
       data-id={id}
       {...(tip ? { "data-tip": tip } : {})}
       {...bindTap(() => onClick(id))}
-      className={cn("hit relative flex h-14 flex-col items-center justify-center gap-1 text-xs", on ? "text-ink" : "text-muted")}
+      className={cn("hit relative flex h-14 min-w-0 flex-col items-center justify-center gap-1 text-xs", on ? "text-ink" : "text-muted")}
     >
       {icon}
-      {label}
+      <span className="fit max-w-full px-0.5" data-fit>{label}</span>
       {typeof badge === "number" ? (
         badge > 0 && (
           <span className="absolute top-1 end-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-signal px-1 text-[11px] font-bold text-night">

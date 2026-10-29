@@ -1,5 +1,7 @@
 import { toast } from "sonner";
 import { VectorBase } from "./vector-base";
+import { useLang } from "@/lib/hdar/i18n";
+const areaCache = new Map<string, string>();
 import { MapPrivacyToggle } from "./notify-settings";
 import { RegionTeaser, useFirstRegion } from "./launch-offer";
 function MapCityTeaser() { const c = useFirstRegion(); return <RegionTeaser c={c} className="mt-2 text-xs" />; }
@@ -120,25 +122,40 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
 
   const latKey = view.lat.toFixed(2);
   const lngKey = view.lng.toFixed(2);
+  const uiLang = useLang((s) => s.lang);
   useEffect(() => {
     const lat = Number(latKey);
     const lng = Number(lngKey);
     const ctrl = new AbortController();
+    const key = `${uiLang}:${latKey},${lngKey}`;
+    const hit = areaCache.get(key);
+    if (hit) { onAreaRef.current?.(hit); return; }
+    // Nom de la ville dans la langue de l'appli : Photon (fr/en/de), sinon Nominatim avec accept-language
+    // (1 requête/s max : délai plus long et cache par case de ~1 km).
+    const photon = uiLang === "fr" || uiLang === "en" || uiLang === "de";
     const timer = window.setTimeout(() => {
-      void fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=fr`, { signal: ctrl.signal })
-        .then((r) => r.json())
-        .then((data: { features?: Array<{ properties?: { city?: string; name?: string; county?: string } }> }) => {
-          const props = data.features?.[0]?.properties;
-          const name = props?.city || props?.county || props?.name;
-          if (name) onAreaRef.current?.(name);
-        })
+      const req = photon
+        ? fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=${uiLang}`, { signal: ctrl.signal })
+            .then((r) => r.json())
+            .then((data: { features?: Array<{ properties?: { city?: string; name?: string; county?: string } }> }) => {
+              const props = data.features?.[0]?.properties;
+              return props?.city || props?.county || props?.name;
+            })
+        : fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&lat=${lat}&lon=${lng}&accept-language=${uiLang}`, { signal: ctrl.signal })
+            .then((r) => r.json())
+            .then((d: { name?: string; address?: { city?: string; town?: string; village?: string; county?: string; state?: string } }) => {
+              const a = d.address ?? {};
+              return a.city || a.town || a.village || d.name || a.county || a.state;
+            });
+      void req
+        .then((name) => { if (name) { areaCache.set(key, name); onAreaRef.current?.(name); } })
         .catch(() => undefined);
-    }, 280);
+    }, photon ? 280 : 1100);
     return () => {
       window.clearTimeout(timer);
       ctrl.abort();
     };
-  }, [latKey, lngKey]);
+  }, [latKey, lngKey, uiLang]);
   const viewRef = useRef(view);
   viewRef.current = view;
   const pointers = useRef(new Map<number, { x: number; y: number }>());

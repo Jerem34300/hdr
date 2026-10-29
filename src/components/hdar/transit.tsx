@@ -312,20 +312,20 @@ export function TripsSection() {
   }, [joining]);
   return (
     <section className="mt-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-lg font-bold">À bord</h2>
-        <p className="text-xs text-muted">Train, avion, métro, bus · effacé après le trajet</p>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="shrink-0 whitespace-nowrap font-display text-lg font-bold">À bord</h2>
+        <p className="min-w-0 text-end text-xs text-muted">Train, avion, métro, bus · effacé après le trajet</p>
       </div>
       <button
         type="button"
         data-act="trip-open"
         onClick={() => setJoining("train")}
-        className="mt-2 flex h-11 w-full items-center justify-center gap-3 rounded-2xl border border-signal/60 bg-surface text-sm font-semibold"
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-3 rounded-2xl border border-signal/60 bg-surface px-3 py-2 text-sm font-semibold"
       >
-        <TrainFront className="size-4 text-signal" />
-        <Plane className="size-4 text-signal" />
-        <TramFront className="size-4 text-signal" />
-        Je suis dans le train, l'avion ou le métro
+        <TrainFront className="size-4 shrink-0 text-signal" />
+        <Plane className="size-4 shrink-0 text-signal" />
+        <TramFront className="size-4 shrink-0 text-signal" />
+        <span className="min-w-0 text-center leading-tight">Je suis dans le train, l'avion ou le métro</span>
       </button>
       <button
         type="button"

@@ -11,7 +11,7 @@ let rtlSet = false;
  *  Si WebGL ou le réseau manquent, onFail() rend la main aux tuiles images d'origine. */
 const STYLE = "https://tiles.openfreemap.org/styles/dark";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const label = (lang: string): any => ["coalesce", ["get", "name:" + lang], ["get", "name"]];
+const label = (lang: string): any => lang === "ar" ? ["coalesce", ["get", "name:ar"], ["get", "name"]] : ["coalesce", ["get", "name:" + lang], ["get", "name:latin"], ["get", "name"]];
 
 export function VectorBase({ lat, lng, zoom, w, h, onFail }: { lat: number; lng: number; zoom: number; w: number; h: number; onFail: () => void }) {
   const el = useRef<HTMLDivElement>(null);
