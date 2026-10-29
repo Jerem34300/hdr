@@ -94,6 +94,8 @@ export function MapTips() {
     const pick = () => {
       if (stop) return;
       // Pas encore connecté ou sans photo : les deux bulles clés reviennent plus souvent.
+      // La bulle « Touche pour te montrer » du bouton central passe d'abord, seule.
+      if (!visible && !localStorage.getItem("hdar-visibility-tip")) return;
       if (Date.now() - readTs(LAST_KEY) < (!visible || !hasPhoto ? EVERY_KEY : EVERY)) return;
 
       const eligible = TIPS.filter((t) => {
