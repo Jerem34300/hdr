@@ -5,6 +5,7 @@ import { locale } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { LinkifiedText, PlaceLinkButtons, placeLinks } from "./place-links";
 import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, placeWriteKm, distLabel, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
@@ -115,8 +116,8 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
             {k!.icon} {k!.label}
           </p>
           <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{p.name}</h2>
-          {p.description && <p className="mt-2 whitespace-pre-line text-sm">{p.description}</p>}
-          {p.kind !== "toilets" && <PlaceExtras id={p.id} />}
+          {p.description && <LinkifiedText text={p.description} className="mt-2 whitespace-pre-line text-sm" />}
+          {p.kind !== "toilets" && <PlaceExtras id={p.id} description={p.description} />}
           <a
             className="mt-3 inline-block text-sm text-signal underline"
             href={`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=17/${p.lat}/${p.lng}`}
@@ -340,7 +341,7 @@ export function Stars({ value, onPick, size = "text-2xl" }: { value: number; onP
 }
 
 /** Photos, site, contact (lieux partenaires), puis notes et commentaires selon les réglages du propriétaire. */
-function PlaceExtras({ id }: { id: string }) {
+function PlaceExtras({ id, description = null }: { id: string; description?: string | null }) {
   const onboarded = useHdar((s) => s.me.onboarded);
   const openGate = useHdar((s) => s.openGate);
   const [info, setInfo] = useState<PlaceInfo | null>(null);
@@ -374,22 +375,7 @@ function PlaceExtras({ id }: { id: string }) {
         </div>
       )}
       <VideoSection target="place" id={id} canEdit={info.owner} title="Vidéos du lieu" />
-      {(info.website || info.contact) && (
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          {info.website && (
-            <a
-              className="rounded-full bg-signal px-4 py-2 font-bold text-night"
-              href={info.website}
-              target="_blank"
-              rel="noopener nofollow"
-              onClick={() => void placeClick(id).catch(() => undefined)}
-            >
-              Site web ↗
-            </a>
-          )}
-          {info.contact && <span className="rounded-full border border-line px-4 py-2">{info.contact}</span>}
-        </div>
-      )}
+      <PlaceLinkButtons links={placeLinks(info.website, info.contact, description)} onOpen={(l) => l.kind === "web" && void placeClick(id).catch(() => undefined)} />
       {info.ratings_on && (
         <div className="mt-4">
           <div className="flex items-center gap-2">
