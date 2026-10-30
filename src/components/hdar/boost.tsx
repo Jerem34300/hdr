@@ -31,7 +31,20 @@ export function useNow(ms = 1000) {
 /** Boost actif de l'utilisateur (null si aucun / pas de profil). */
 export function useActiveBoost() {
   const [b, setB] = useState<MyBoost | null>(null);
-  useEffect(() => void myBoosts().then((r) => setB(r.find((x) => x.active) ?? null)).catch(() => undefined), []);
+  useEffect(() => {
+    if (import.meta.env.DEV && location.search.includes("boostdemo")) {
+      const now = Date.now();
+      setB({ id: "demo", starts_at: new Date(now - 2 * 60_000).toISOString(), ends_at: new Date(now + 58 * 60_000 + 30_000).toISOString(), active: true, cancelled: false, views: 4, messages: 1 });
+      return;
+    }
+    // Rafraîchi régulièrement et au retour sur l'appli : un boost activé ailleurs (/boost, FIRST) apparaît vite.
+    const load = () => void myBoosts().then((r) => setB(r.find((x) => x.active) ?? null)).catch(() => undefined);
+    load();
+    const t = window.setInterval(load, 60_000);
+    const vis = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", vis);
+    return () => { window.clearInterval(t); document.removeEventListener("visibilitychange", vis); };
+  }, []);
   return b;
 }
 

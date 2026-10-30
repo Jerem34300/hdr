@@ -6,6 +6,7 @@ import { rememberLanding } from "@/lib/hdar/track";
 import { captureSourceRef } from "@/lib/hdar/source-ref";
 import { startI18n } from "@/lib/hdar/i18n";
 import { hydrateHdar } from "@/lib/hdar/store";
+import { startViewportFix } from "@/lib/hdar/viewport-fix";
 import { FounderCelebration, LaunchOfferSheet, WelcomeFirst } from "@/components/hdar/launch-offer";
 import appCss from "../styles.css?url";
 
@@ -16,6 +17,7 @@ function LandingMemo() {
     captureSourceRef();
     startI18n();
     void hydrateHdar();
+    return startViewportFix();
   }, []);
   return null;
 }

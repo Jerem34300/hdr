@@ -57,8 +57,9 @@
 }
 
 .app-frame {
-  height: 100%;
-  min-height: 100%;
+  /* --app-h : hauteur réelle remesurée au retour d'un sélecteur (Google Photos) / changement de taille. */
+  height: var(--app-h, 100dvh);
+  min-height: 0;
   overflow: hidden;
   display: grid;
   background: var(--color-night);

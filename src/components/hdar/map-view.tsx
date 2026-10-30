@@ -15,7 +15,7 @@ import { TrainFront } from "lucide-react";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
-import { Layers, LocateFixed, Video } from "lucide-react";
+import { Layers, LocateFixed, Rocket, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
@@ -82,7 +82,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const act = useActivity();
   const [boosted, setBoosted] = useState<Set<string>>(new Set());
   const myBoost = useActiveBoost();
-  const meBoosted = !!myBoost && new Date(myBoost.ends_at).getTime() > Date.now();
+  const [tick, setTick] = useState(() => Date.now());
+  useEffect(() => { const t = window.setInterval(() => setTick(Date.now()), 20_000); return () => window.clearInterval(t); }, []);
+  const boostLeft = myBoost ? new Date(myBoost.ends_at).getTime() - tick : 0;
+  const meBoosted = boostLeft > 0;
+  const boostLabel = boostLeft >= 3_600_000 ? (boostLeft >= 86_400_000 ? `${Math.floor(boostLeft / 86_400_000)} j ${Math.floor((boostLeft % 86_400_000) / 3_600_000)} h` : `${Math.floor(boostLeft / 3_600_000)} h ${String(Math.floor((boostLeft % 3_600_000) / 60_000)).padStart(2, "0")}`) : `${Math.max(1, Math.ceil(boostLeft / 60_000))} min`;
   useEffect(() => {
     let stop = false;
     const run = () => void listBoosted().then((ids) => !stop && setBoosted(new Set(ids))).catch(() => undefined);
@@ -463,6 +467,12 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     premium: !!p.premium,
     at: { lat: p.lat, lng: p.lng },
   }));
+  // DEV ?boostdemo : un profil boosté (Sam) et un normal (Léo) autour de toi, pour voir le rendu côté autres.
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("boostdemo")) {
+    pins.push({ id: "demo-boosted", pseudo: "Sam", hot: false, premium: false, at: { lat: you.lat + 0.0018, lng: you.lng + 0.0016 } },
+      { id: "demo-normal", pseudo: "Léo", hot: false, premium: false, at: { lat: you.lat - 0.0016, lng: you.lng - 0.0018 } });
+    if (!boosted.has("demo-boosted")) boosted.add("demo-boosted");
+  }
 
   const youPx = project(you.lat, you.lng);
   const face = zoom >= 10.5 ? 46 : 34;
@@ -792,9 +802,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         {visible ? (
           <>
             <span className="radar-wave" /><span className="radar-wave w2" />
-            <span data-testid="me-pin" className="pop-in absolute top-1/2 left-1/2 size-11 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[3px] border-[#3ddc97] bg-surface shadow-[0_0_18px_rgba(61,220,151,.8)]">
+            <span data-testid="me-pin" className={"pop-in absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[3px] bg-surface " + (meBoosted ? "partner-glow size-14 border-[#fbbf24]" : "size-11 border-[#3ddc97] shadow-[0_0_18px_rgba(61,220,151,.8)]")}>
               <PinFace id={deviceId()} pseudo={mePseudo || "Moi"} />
             </span>
+            {meBoosted && <span className="absolute top-1/2 left-1/2 z-[1] grid size-4 -translate-x-1/2 translate-y-5 place-items-center rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] text-night shadow"><Rocket className="size-2.5" strokeWidth={2.5} /></span>}
           </>
         ) : (
           // Caché : pas de pin, juste un repère discret de ta position (visible par toi seul).
@@ -845,7 +856,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 </span>
               </span>
             )}
-            {boosted.has(pin.id) && <span className="pointer-events-none absolute z-[22] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-1.5 text-[9px] font-extrabold text-night shadow" style={{ left: c.x, top: c.y + face / 2 - 2 }}>🚀</span>}
+            {boosted.has(pin.id) && <span className="pointer-events-none absolute z-[22] grid size-4 -translate-x-1/2 place-items-center rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] text-night shadow" style={{ left: c.x, top: c.y + face / 2 - 2 }}><Rocket className="size-2.5" strokeWidth={2.5} /></span>}
             </span>
           );
         }
@@ -1097,7 +1108,12 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           −
         </button>
       </div>
-      {!pending && <BoostNudge />}
+      {meBoosted && (
+        <a href="/boost" className="absolute top-[7.25rem] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-3 py-1 text-xs font-extrabold text-night shadow-[0_0_16px_rgba(251,191,36,.55)]">
+          <Rocket className="size-3.5" strokeWidth={2.5} aria-hidden /> {`Boosté · ${boostLabel}`}
+        </a>
+      )}
+      {!pending && !meBoosted && <BoostNudge />}
       {pending && (
         <div className="absolute inset-x-3 bottom-24 z-30 flex items-center gap-2 rounded-full bg-spot px-4 py-2 text-sm text-night">
           <span className="min-w-0 flex-1 truncate">Tape la carte pour poser « {pending.title} »</span>
