@@ -173,10 +173,16 @@ export async function stationBoard(at: { lat: number; lng: number }, urban: bool
   // Grandes lignes et régional séparément (sinon les RER / S-Bahn remplissent toute la réponse).
   const parts = urban ? [await q(URBAN, 120, 250)] : await Promise.all([q(FAST, 120, 250), q(REGIO, 250, 250), q(FAST, 120, 250, true), q(REGIO, 250, 250, true)]); // arrivées : terminus compris
   const r = { stopTimes: parts.flat() };
-  const until = Date.now() + 3 * 3600_000;
+  // La nuit, rien dans les 3 h : on montre alors les premiers trains du matin (jusqu'à 12 h).
+  let out = build(r.stopTimes, Date.now() + 3 * 3600_000);
+  if (!out.length) out = build(r.stopTimes, Date.now() + 12 * 3600_000);
+  out.sort((a, b) => a.time.localeCompare(b.time));
+  if (!urban) await mergeSncf(out).catch(() => undefined);
+  return out;
+  function build(sts: BoardST[], until: number) {
   const seen = new Set<string>();
   const out: BoardRow[] = [];
-  for (const x of r.stopTimes) {
+  for (const x of sts) {
     const p = x.place;
     const t = p.departure ?? p.arrival;
     const tArr = p.arrival ?? p.departure;
@@ -203,9 +209,8 @@ export async function stationBoard(at: { lat: number; lng: number }, urban: bool
       sncf: /sncf|^\d{8}_[^_]*_fr-/i.test(x.tripId) || /sncf|ter|ouigo|inoui|intercit/i.test(x.agencyName ?? "") || /^(TER|TGV|OUIGO|IC|INTERCIT)/i.test(x.displayName ?? ""), rtSource: x.realTime ? "transitous" : undefined,
     });
   }
-  out.sort((a, b) => a.time.localeCompare(b.time));
-  if (!urban) await mergeSncf(out).catch(() => undefined);
   return out;
+  }
 }
 
 function demoBoard(urban: boolean): BoardRow[] {
