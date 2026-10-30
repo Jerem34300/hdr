@@ -74,18 +74,30 @@ export function setPlacesLayer(on: boolean) {
 }
 
 let cache: PlacePin[] | null = null;
+let cacheAt = 0;
 let loading: Promise<PlacePin[]> | null = null;
+const PLACES_TTL = 5 * 60_000;
+const loadPlaces = () => (loading ??= listPlaces(-90, -180, 90, 180).then((r) => { cache = r; cacheAt = Date.now(); return r; }).finally(() => (loading = null)));
 
-/** All permanent places (~2 000) are loaded once and clustered on screen at every zoom level. */
+/** All permanent places (~2 000) are loaded once and clustered on screen at every zoom level.
+ *  Rechargés toutes les 5 min et au retour sur l'appli : une fiche créée pendant que l'appli reste ouverte apparaît. */
 export function usePlaces(on: boolean) {
   const [rows, setRows] = useState<PlacePin[]>(cache ?? []);
   useEffect(() => {
-    if (!on || cache) return;
-    loading ??= listPlaces(-90, -180, 90, 180).then((r) => (cache = r)).finally(() => (loading = null));
+    if (!on) return;
     let stop = false;
-    void loading.then((r) => !stop && setRows(r)).catch(() => undefined);
+    const refresh = () => {
+      if (cache && Date.now() - cacheAt < PLACES_TTL) { setRows(cache); return; }
+      void loadPlaces().then((r) => !stop && setRows(r)).catch(() => undefined);
+    };
+    refresh();
+    const t = window.setInterval(refresh, PLACES_TTL);
+    const vis = () => document.visibilityState === "visible" && refresh();
+    document.addEventListener("visibilitychange", vis);
     return () => {
       stop = true;
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", vis);
     };
   }, [on]);
   return on ? rows : [];
