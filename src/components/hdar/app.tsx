@@ -1,5 +1,6 @@
 import { useAppearance } from "@/lib/hdar/appearance";
-import { botSeen } from "@/lib/hdar/live";
+import { botSeen, botWelcomeCc } from "@/lib/hdar/live";
+import { currentCountry, useCountry } from "@/lib/hdar/country";
 import { LeaveConfirm } from "./rich-text";
 import "@/lib/hdar/appearance";
 import { resyncProfileFromServer } from "@/lib/hdar/recover";
@@ -80,15 +81,20 @@ export function App() {
       // Visite pour les relances du robot + préférence serveur « Messages du robot hdar ».
       void botSeen().then((r) => { if (r && typeof r.bot_msgs === "boolean") useAppearance.getState().set({ botMsgs: r.bot_msgs }); }).catch(() => undefined);
     }
+    // Accueil du robot : dans le Général du pays (envoyé un peu après la création du profil, et à chaque ouverture tant qu'il n'est pas fait).
+    const sendCc = () => window.setTimeout(() => void botWelcomeCc(currentCountry(useCountry.getState())), 4000);
+    if (useHdar.getState().me.onboarded) sendCc();
+    const offCc = useHdar.subscribe((st, prev) => { if (st.me.onboarded && !prev.me.onboarded) { sendCc(); window.setTimeout(sendCc, 30_000); } });
     const note = (st: ReturnType<typeof useHdar.getState>) => {
       if (st.view.name === "tabs") track(`tab:${st.tab}`);
       else track(`view:${st.view.name}`);
       if (st.sheet) track(`sheet:${typeof st.sheet === "string" ? st.sheet : st.sheet.type}`);
     };
     note(useHdar.getState());
-    return useHdar.subscribe((st, prev) => {
+    const offNote = useHdar.subscribe((st, prev) => {
       if (st.tab !== prev.tab || st.view !== prev.view || st.sheet !== prev.sheet) note(st);
     });
+    return () => { offNote(); offCc(); };
   }, []);
 
   // Liens directs vers les annonces : /?annonces=1, /?annonce=<id> (citation, retour de paiement).

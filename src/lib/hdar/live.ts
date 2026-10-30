@@ -1632,6 +1632,8 @@ export const adminBotSet = (key: string, s: BotSettings) => rpc("hdar_admin_bot_
 export const adminBotAnnounce = (key: string, text: string, target: "salon" | "dm" | "both", confirm: boolean) =>
   rpc<{ ok?: boolean; dm_count: number; salon?: string | null }>("hdar_admin_bot_announce", { p_key: key, p_text: text, p_target: target, p_confirm: confirm });
 /** Visite (relances) + préférence « Messages du robot hdar ». */
+/** Pays de l'inscrit pour l'accueil du robot dans le bon « Général » (v106 ; ignoré si la base n'est pas à jour). */
+export const botWelcomeCc = (cc: string) => rpc<null>("hdar_bot_welcome_cc", { p_cc: cc }).catch(() => null);
 export const botSeen = () => rpc<{ bot_msgs: boolean } | null>("hdar_bot_seen", {});
 export const botPrefs = (on: boolean) => rpc("hdar_bot_prefs", { p_on: on });
 /** Signalement fait depuis un salon (rappel des règles si plusieurs en peu de temps). */
