@@ -225,7 +225,8 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
   const distKm = here ? haversine(here, { lat: place.lat, lng: place.lng }) / 1000 : null;
   // Même règle que le serveur (v104), pour tout le monde : profil + position + distance selon le type de lieu.
   const maxKm = placeWriteKm(place.kind);
-  const canPost = registered && distKm != null && distKm <= maxKm;
+  // Admins : écrivent partout (pas de limite de distance), les autres selon le type de lieu.
+  const canPost = isAdmin || (registered && distKm != null && distKm <= maxKm);
   useEffect(() => {
     let stop = false;
     const load = () => {

@@ -1,4 +1,5 @@
 import { haversine } from "@/lib/hdar/rules";
+import { useAmAdmin } from "@/lib/hdar/admin-mode";
 import { useEffect, useRef, useState } from "react";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { ChevronLeft, Trash2 } from "lucide-react";
@@ -234,7 +235,8 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
   const registered = useHdar((s) => s.me.onboarded);
   const here = useHdar((s) => s.here);
   const distKm = here ? haversine(here, { lat: spot.lat, lng: spot.lng }) / 1000 : null;
-  const canPost = registered && (spot.creator || (distKm != null && distKm <= 1));
+  const isAdmin = useAmAdmin();
+  const canPost = isAdmin || (registered && (spot.creator || (distKm != null && distKm <= 1)));
   const [lines, setLines] = useState<SpotLine[]>([]);
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
