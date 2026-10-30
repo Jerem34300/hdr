@@ -97,7 +97,7 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
   return (
     <div className="relative -mt-6 flex min-w-0 flex-col items-center pb-1">
       {tip && (
-        <div className="absolute bottom-full z-30 mb-2 w-52">
+        <div className="vis-tip absolute bottom-full z-30 mb-2 w-52">
           <TipBubble arrow="down" onClick={closeTip} testId="vis-tip">Touche pour te montrer sur la carte</TipBubble>
         </div>
       )}

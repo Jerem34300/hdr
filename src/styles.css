@@ -411,3 +411,8 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* Fiche de lieu / d'arrêt ouverte sur la carte : la barre du bas (et le bouton œil qui dépasse) reste au-dessus de la feuille. */
+section:has(.hdar-sheet-up) > .dock,
+:has(.hdar-sheet-up) .dock { z-index: 45; }
+:has(.hdar-sheet-up) .dock .vis-tip { display: none; }
