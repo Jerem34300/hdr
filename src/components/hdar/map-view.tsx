@@ -1110,7 +1110,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       </div>
       {meBoosted && (
         <a href="/boost" className="absolute top-[7.25rem] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] px-3 py-1 text-xs font-extrabold text-night shadow-[0_0_16px_rgba(251,191,36,.55)]">
-          <Rocket className="size-3.5" strokeWidth={2.5} aria-hidden /> {`Boosté · ${boostLabel}`}
+          <Rocket className="size-3.5" strokeWidth={2.5} aria-hidden /> {`Boosté · ${boostLabel}${visible ? "" : " · caché"}`}
         </a>
       )}
       {!pending && !meBoosted && <BoostNudge />}
