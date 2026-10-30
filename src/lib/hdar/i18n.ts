@@ -82,7 +82,15 @@ function templates(lang: Lang) {
     .map((k) => ({ re: new RegExp("^" + k.split("{n}").map(esc).join("(.+?)") + "$", "s"), tr: d[k] }));
   return (tpls[lang] = list);
 }
-function trKey(k: string, lang: Lang): string | undefined {
+// Long morceau capturé par un gabarit (ex. le bloc parrainage ajouté au message d'accueil) : traduit lui aussi.
+// Les courts morceaux (pseudos, villes, liens) restent tels quels.
+function sub(x: string, lang: Lang, depth: number): string {
+  const k = x.trim();
+  if (depth > 1 || k.length < 25 || /^https?:\/\//.test(k)) return x;
+  const r = trKey(k, lang, depth + 1);
+  return r == null ? x : x.replace(k, r);
+}
+function trKey(k: string, lang: Lang, depth = 0): string | undefined {
   const d = dicts[lang];
   if (!d) return;
   const r = d[k];
@@ -97,7 +105,7 @@ function trKey(k: string, lang: Lang): string | undefined {
     const m = re.exec(k);
     if (m) {
       let i = 1;
-      return tr.replace(/\{n\}/g, () => { const x = m[i++] ?? ""; return d[x] ?? x; });
+      return tr.replace(/\{n\}/g, () => { const x = m[i++] ?? ""; return d[x] ?? sub(x, lang, depth); });
     }
   }
   const g = /^Général (.+)$/.exec(k);
@@ -106,6 +114,9 @@ function trKey(k: string, lang: Lang): string | undefined {
 /** Message du robot hdar (texte source français, stocké en base) dans la langue de l'utilisateur. */
 export function tBot(body: string, lang: Lang = useLang.getState().lang): string {
   if (lang === "fr" || !dicts[lang]) return body;
+  // Accueil + bloc parrainage (hdar.welcome_extra, lien unique) : deux textes traduits séparément.
+  const cut = body.indexOf("\n\n🎁 ");
+  if (cut > 0) return tBot(body.slice(0, cut), lang) + "\n\n" + tBot(body.slice(cut + 2), lang);
   return trKey(body, lang) ?? trKey(norm(body), lang) ?? body;
 }
 /** Nom d'un pays dans la langue de l'interface (Intl). */

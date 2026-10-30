@@ -16,6 +16,8 @@ import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLay
 import { useEffect, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
 import { Layers, LocateFixed, Rocket, Video } from "lucide-react";
+import { layerOfPlace, useLayers, type LayerKey } from "@/lib/hdar/map-layers";
+import { LayerRow } from "./map-layer-row";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
@@ -97,16 +99,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       window.clearInterval(id);
     };
   }, []);
-  const [placesOn, setPlacesOn] = useState(true);
-  const [toiletsOn, setToiletsOn] = useState(true);
-  const [transitOn, setTransitOn] = useState(true);
-  useEffect(() => setTransitOn(transitLayerOn()), []);
-  const [adsOn, setAdsOn] = useState(false);
-  useEffect(() => setAdsOn(adsLayerOn()), []);
-  useEffect(() => {
-    setPlacesOn(placesLayerOn());
-    setToiletsOn(toiletsLayerOn());
-  }, []);
+  // Calques individuels (menu « couches ») ; les lieux partenaires sont un calque à part.
+  const layers = useLayers((x) => x.layers);
+  const setLayer = useLayers((x) => x.set);
+  useEffect(() => useLayers.getState().init(), []);
+  const placesOn = layers.partners || layers.beach || layers.nature || layers.public;
+  const toiletsOn = layers.toilets;
+  const transitOn = layers.station || layers.metro || layers.bus || layers.airport;
+  const adsOn = layers.ads;
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [transitStop, setTransitStop] = useState<TransitStop | null>(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("stopdemo") ? { ref: "node/demo", kind: "station", name: "La Crau", lat: 43.1497, lng: 6.0735 } : null));
   const [proposing, setProposing] = useState(false);
@@ -400,7 +400,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     },
     zoom,
   );
-  const transit = useTransit(
+  const transitAll = useTransit(
     transitOn,
     {
       s: latFromY((top + size.h) / scale, z),
@@ -410,12 +410,13 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     },
     zoom,
   );
+  const transit = transitAll.filter((st) => layers[st.kind as LayerKey] ?? true);
   const adsBox = {
     s: latFromY((top + size.h) / scale, z), n: latFromY(top / scale, z),
     w: lngFromX(left / scale, z), e: lngFromX((left + size.w) / scale, z),
   };
   const adsPins = useAdPins(adsOn && zoom >= 9, adsBox);
-  const places = toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces;
+  const places = (toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces).filter((pl) => layers[layerOfPlace(pl.kind, pl.partner)]);
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {
@@ -1015,48 +1016,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         </button>
         {layersOpen && (
           <div className="mt-2 w-56 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
-            <label className="flex h-10 items-center justify-between px-2">
-              Lieux permanents
-              <input
-                type="checkbox"
-                checked={placesOn}
-                onChange={(e) => {
-                  setPlacesOn(e.target.checked);
-                  setPlacesLayer(e.target.checked);
-                }}
-              />
-            </label>
-            <label className="flex h-10 items-center justify-between px-2">
-              <span>
-                🚻 Toilettes <span className="text-xs text-muted">(zoom proche)</span>
-              </span>
-              <input
-                type="checkbox"
-                checked={toiletsOn}
-                onChange={(e) => {
-                  setToiletsOn(e.target.checked);
-                  setToiletsLayer(e.target.checked);
-                }}
-              />
-            </label>
-            <label className="flex h-10 items-center justify-between px-2">
-              <span className="flex items-center gap-1.5">
-                <TrainFront className="size-4 text-sky-400" /> Gares et transports <span className="text-xs text-muted">(zoom proche)</span>
-              </span>
-              <input
-                type="checkbox"
-                data-act="layer-transit"
-                checked={transitOn}
-                onChange={(e) => {
-                  setTransitOn(e.target.checked);
-                  setTransitLayer(e.target.checked);
-                }}
-              />
-            </label>
-            <label className="flex h-10 items-center justify-between px-2">
-              <span>📌 Annonces <span className="text-xs text-muted">(approx.)</span></span>
-              <input type="checkbox" checked={adsOn} onChange={(e) => { setAdsOn(e.target.checked); setAdsLayer(e.target.checked); }} />
-            </label>
+            <LayerRow k="partners" on={layers.partners} set={setLayer} />
+            <p className="mt-1 border-t border-line px-2 pt-2 text-[11px] font-bold tracking-wider text-muted uppercase">Lieux publics</p>
+            {(["station", "metro", "bus", "airport", "beach", "nature", "public", "toilets", "ads"] as const).map((k) => <LayerRow key={k} k={k} on={layers[k]} set={setLayer} />)}
             <button
               type="button"
               className="flex h-10 w-full items-center rounded-xl px-2 text-start hover:bg-surface"

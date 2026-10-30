@@ -1,4 +1,5 @@
 import { isBot } from "@/lib/hdar/live";
+import { tBot, useLang } from "@/lib/hdar/i18n";
 import { BotBadge } from "./bot";
 import { parseAdQuote } from "@/lib/hdar/ads";
 import { useState } from "react";
@@ -42,10 +43,11 @@ export function Inbox() {
     ...(area.show ? [{ kind: "area" as const, at: area.at }] : []),
   ].sort((a, b) => b.at - a.at);
 
+  useLang((x) => x.lang); // aperçus du robot traduits à la volée
   const pmRow = (c: Conversation) => {
     const unread = !c.lastMine && c.lastAt > (seenAt[c.otherId] ?? 0);
     const preview =
-      c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastKind === "video" ? "🎥 Vidéo" : c.lastKind === "location" ? "📍 Position" : (parseAdQuote(c.lastBody) ? "📌 " + parseAdQuote(c.lastBody)!.title + " · " + parseAdQuote(c.lastBody)!.rest : c.lastBody);
+      c.lastKind === "image" ? "📷 Photo" : c.lastKind === "audio" ? "🎤 Vocal" : c.lastKind === "video" ? "🎥 Vidéo" : c.lastKind === "location" ? "📍 Position" : (parseAdQuote(c.lastBody) ? "📌 " + parseAdQuote(c.lastBody)!.title + " · " + parseAdQuote(c.lastBody)!.rest : isBot(c.otherId) && !c.lastMine ? tBot(c.lastBody) : c.lastBody);
     return (
       <li key={c.otherId} className="flex items-stretch gap-2">
         <button

@@ -273,7 +273,7 @@ function Privacy() {
       </p>
 
       <h2>Programme ambassadeur</h2>
-      <p>Quand tu t'inscris via le lien ou QR code d'un ambassadeur, nous enregistrons ce rattachement pour calculer sa commission. L'ambassadeur ne voit <b>que des compteurs agrégés</b> (nombre d'inscrits, de profils validés, de codes utilisés, chiffre d'affaires global) : jamais ton pseudo, ta photo, ta position ni tes achats. Pour les ambassadeurs, l'identité, l'IBAN et le SIRET sont collectés et conservés par <b>Stripe</b> (Stripe Connect), pas par hdar ; nous gardons seulement l'identifiant du compte Stripe, son statut et l'historique des versements (pièces comptables conservées 10 ans).</p>
+      <p>Quand tu t'inscris via le lien ou QR code d'un ambassadeur, nous enregistrons ce rattachement pour lui attribuer ses récompenses (boosts et hdar+, jamais d'argent pendant le lancement). L'ambassadeur ne voit <b>que des compteurs agrégés</b> (nombre d'inscrits, de profils validés, de codes utilisés) : jamais ton pseudo, ta photo, ta position ni tes achats. Pour les ambassadeurs, nous conservons le nom saisi lors de l'acceptation de la charte, sa date, sa version et une empreinte non réversible de l'adresse IP.</p>
 
       <h2>Durées de conservation</h2>
       <ul>

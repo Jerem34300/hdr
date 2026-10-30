@@ -3,7 +3,7 @@ import { mentionNotify, salonReportNote } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronUp, Globe, Map as MapIcon, MapPin, MessageCircle, Plus, X } from "lucide-react";
 import { COUNTRIES, currentCountry, detectCountry, useCountry } from "@/lib/hdar/country";
-import { countryName, useLang } from "@/lib/hdar/i18n";
+import { countryName, tBot, useLang } from "@/lib/hdar/i18n";
 import { toast } from "sonner";
 import { askConfirm } from "@/lib/hdar/confirm";
 import {
@@ -221,7 +221,7 @@ export function SalonInboxRow({ s, editing }: { s: InboxSalon; editing: boolean 
           </span>
           <span className="flex items-center gap-2">
             <span className={"min-w-0 flex-1 truncate text-sm " + (unread ? "text-ink" : "text-muted")}>
-              {s.last ? `${s.last.mine ? "Toi" : s.last.pseudo} : ${s.last.body}` : "Pas de message ces dernières 24 h"}
+              {s.last ? `${s.last.mine ? "Toi" : s.last.pseudo} : ${!s.last.mine && s.last.pseudo === "hdar" ? tBot(s.last.body) : s.last.body}` : "Pas de message ces dernières 24 h"}
             </span>
             {(s.replies ?? 0) > 0 && (
               <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[11px] font-bold text-night" aria-label="On t'a répondu">

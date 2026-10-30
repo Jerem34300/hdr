@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { rpcCall } from "./live";
 import type { Salon } from "./live";
 
-export type TransitKind = "station" | "metro" | "airport";
+export type TransitKind = "station" | "metro" | "bus" | "airport";
 export type TransitStop = { ref: string; kind: TransitKind; name: string; lat: number; lng: number; iata?: string };
 export type TripKind = "train" | "flight" | "metro" | "bus";
 export type Trip = Salon & { trip_kind: TripKind; expires_at: string; aboard: number; me_aboard: boolean };
 export type TransitLine = { ref: string; label: string; network: string; colour?: string };
 
-export const TRIP_FOR: Record<TransitKind, TripKind> = { station: "train", metro: "metro", airport: "flight" };
+export const TRIP_FOR: Record<TransitKind, TripKind> = { station: "train", metro: "metro", bus: "bus", airport: "flight" };
 export const TRIP_LABEL: Record<TripKind, string> = {
   train: "Je suis dans le train",
   flight: "Je suis dans l'avion",
@@ -20,6 +20,7 @@ export const TRIP_LABEL: Record<TripKind, string> = {
 export const TRANSIT_KINDS: Record<TransitKind, { label: string; color: string }> = {
   station: { label: "Gare", color: "#60a5fa" },
   metro: { label: "Station métro / tram", color: "#c084fc" },
+  bus: { label: "Gare routière", color: "#34d399" },
   airport: { label: "Aéroport", color: "#fbbf24" },
 };
 
@@ -78,6 +79,7 @@ type OsmEl = { type: "node" | "way" | "relation"; id: number; lat?: number; lon?
 function classify(t: Record<string, string>): TransitKind | null {
   if (t.aeroway === "aerodrome") return t.iata ? "airport" : null;
   if (t.railway === "tram_stop") return "metro";
+  if (t.amenity === "bus_station") return "bus";
   if (t.railway === "station" || t.railway === "halt") {
     if (/subway|light_rail|monorail/.test(t.station ?? "") || t.subway === "yes") return "metro";
     return "station";

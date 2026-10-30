@@ -1170,7 +1170,9 @@ export const adminRevenue = (key: string, period: string) => rpc<Revenue>("hdar_
 export type AmbStats = { signups: number; validated: number; codes_created: number; codes_redeemed: number; places: number; places_claimed: number; places_active: number; revenue_users: number; revenue_partners: number; commission: number; paid: number; bonuses?: number; signup_bonus?: number };
 export type AmbMe = { needs_terms?: boolean; user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; paid_total: number; connect: "none" | "pending" | "ready"; paused: boolean; contract?: { version: string; at: string; name: string } | null; code: string; codes_per_week: number; codes_left: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number;
   month: AmbStats; total: AmbStats; codes: { code: string; kind: string; amount: number; used: boolean; expires_at: string }[];
-  places: { id: string; name: string; kind: string; claimed: boolean; active: boolean; token: string | null; promo: string | null; promo_status: string | null }[] };
+  places: { id: string; name: string; kind: string; claimed: boolean; active: boolean; token: string | null; promo: string | null; promo_status: string | null }[];
+  /** Lancement (v109) : récompenses en boosts et hdar+, aucune en argent. */
+  rewards?: { boost_cap: number; bonus_at: number; place_days: number; place_cap: number; month: { boosts: number; premium_days: number }; total: { boosts: number; premium_days: number } } };
 export type AdminAmb = { user_pct: number; user_months: number; bonus_cents: number; bonus_at: number; min_payout_cents: number; signup_cap_cents: number | null; terms_at: string | null; contract?: { version: string; at: string; name: string } | null; stripe_account: string | null; payouts_enabled: boolean; paused: boolean; hold_next: boolean; user_id: string; pseudo: string; code: string; active: boolean; codes_per_week: number; max_days: number; max_boost_h: number; max_hearts: number; per_signup_cents: number; partner_pct: number; partner_months: number; note: string | null;
   stats: AmbStats; paid_total: number; due_total: number; payouts: { amount: number; from: string | null; to: string | null; note: string | null; at: string; status?: string; error?: string | null }[]; promos: { id: string; name: string; promo: string; status: string }[] };
 export const ambMe = () => rpc<AmbMe | null>("hdar_amb_me", {});
@@ -1193,7 +1195,7 @@ export async function ambConnect(action: "onboard" | "dashboard" = "onboard"): P
   const res = await fetch(`${SUPABASE_URL}/functions/v1/hdar-amb-connect`, { method: "POST",
     headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ action }) });
   const b = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-  if (b.error === "connect_disabled" || b.error === "not_configured") throw new Error("Les versements Stripe ne sont pas encore activés par hdar. Ton espace fonctionne, tes commissions sont comptées.");
+  if (b.error === "connect_disabled" || b.error === "not_configured") throw new Error("Les versements Stripe ne sont pas encore activés par hdar. Pendant le lancement, les récompenses sont des boosts et du hdar+.");
   if (!res.ok || !b.url) throw new Error(b.error || `Serveur indisponible (${res.status})`);
   return b.url;
 }

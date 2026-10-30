@@ -36,7 +36,7 @@ export function ProfileAmb({ where }: { where: "top" | "bottom" }) {
   if (where === "top") return null;
   return (
     <a href="/ambassadeur" className="mt-6 mb-4 block px-1 text-center text-[13px] text-muted">
-      💸 Gagne de l'argent : <span className="font-bold text-[#3EE08F]">deviens ambassadeur ›</span>
+      🚀 Gagne des boosts et du hdar+ : <span className="font-bold text-[#3EE08F]">deviens ambassadeur ›</span>
     </a>
   );
 }
@@ -62,7 +62,7 @@ export function AmbNudge() {
   const off = () => { const s = JSON.parse(localStorage.getItem(NK) || "{}"); localStorage.setItem(NK, JSON.stringify({ ...s, off: true })); setOpen(false); };
   return (
     <div role="dialog" aria-label="Deviens ambassadeur" className="fixed inset-x-3 bottom-24 z-50 mx-auto max-w-sm rounded-3xl border border-[#3EE08F]/40 bg-[#0b0b10]/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,.6)] backdrop-blur">
-      <CardHead icon="💸" accent="#3EE08F" chevron={false} title="Gagne de l'argent avec hdar" sub="Fais connaître l'appli, touche une commission" />
+      <CardHead icon="🚀" accent="#3EE08F" chevron={false} title="Gagne des boosts et du hdar+" sub="Fais connaître l'appli, gagne des boosts et du hdar+" />
       <div className="mt-3 flex gap-2">
         <a href="/ambassadeur" onClick={() => setOpen(false)} className="flex h-10 flex-1 items-center justify-center rounded-full bg-[#3EE08F] font-display text-sm font-extrabold text-night">Découvrir</a>
         <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-full border border-white/15 px-4 text-sm font-bold">Plus tard</button>
