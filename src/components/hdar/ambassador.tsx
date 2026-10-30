@@ -1,3 +1,4 @@
+import { PAYMENTS_ENABLED } from "@/lib/hdar/payments";
 import { useEffect, useState } from "react";
 import { locale } from "@/lib/hdar/i18n";
 import QRCode from "qrcode";
@@ -116,7 +117,7 @@ export function AmbassadorSpace({ demo }: { demo?: AmbMe }) {
         <p className="text-sm font-bold">Mes fiches partenaires</p>
         {me.places.map((p) => (
           <div key={p.id} className="mt-2 rounded-2xl bg-night p-3 text-sm">
-            <b>{p.name}</b> <span className="text-xs text-muted">· {p.active ? "✅ active" : p.claimed ? "🔑 réclamée, en attente de paiement" : "✉️ à réclamer"}{p.promo ? ` · promo ${p.promo_status === "approved" ? "acceptée" : p.promo_status === "refused" ? "refusée" : "en attente"}` : ""}</span>
+            <b>{p.name}</b> <span className="text-xs text-muted">· {p.active ? "✅ active" : p.claimed ? (PAYMENTS_ENABLED ? "🔑 réclamée, en attente de paiement" : "🔑 réclamée") : "✉️ à réclamer"}{p.promo ? ` · promo ${p.promo_status === "approved" ? "acceptée" : p.promo_status === "refused" ? "refusée" : "en attente"}` : ""}</span>
             {p.token && <button type="button" className="mt-2 block text-xs text-[#3EE08F] underline" onClick={() => void navigator.clipboard?.writeText(`${SITE}/pro?claim=${p.token}`).then(() => toast("Lien du propriétaire copié"))}>Copier le lien pour le propriétaire</button>}
           </div>))}
       </section>}

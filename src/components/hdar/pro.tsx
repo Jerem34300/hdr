@@ -31,7 +31,7 @@ export function ProSpace() {
     if (q.get("cancel")) toast("Paiement annulé.");
     const claim = q.get("claim");
     if (claim) void import("@/lib/hdar/live").then((m) => m.placeClaim(claim)).then((r) => {
-      toast(`Fiche « ${r.name} » ajoutée à votre espace${r.promo ? ` · offre de lancement : ${r.promo}` : ""}. Choisissez votre abonnement pour la mettre en ligne.`, { duration: 9000 });
+      toast(`Fiche « ${r.name} » ajoutée à votre espace${r.promo ? ` · offre de lancement : ${r.promo}` : ""}. ${PAYMENTS_ENABLED ? "Choisissez votre abonnement pour la mettre en ligne." : "Elle est en ligne gratuitement pendant le lancement."}`, { duration: 9000 });
       location.replace("/pro");
     }).catch((e: Error) => toast(e.message));
   }, []);
@@ -121,8 +121,9 @@ function Places({ prices, boostPrices, payOk }: { prices: PriceRow[]; boostPrice
               <PriceButtons prices={boostPrices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />
             </div>
           )}
-          <p className="mt-3 text-sm font-bold">{p.active ? "Prolonger" : "Mettre en ligne"}</p>
-          <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />
+          {!PAYMENTS_ENABLED && p.active && <p className="mt-3 text-sm text-online">Offert pendant le lancement : rien à payer.</p>}
+          {(PAYMENTS_ENABLED || !p.active) && <p className="mt-3 text-sm font-bold">{p.active ? "Prolonger" : "Mettre en ligne"}</p>}
+          {(PAYMENTS_ENABLED || !p.active) && <PriceButtons prices={prices} payOk={payOk} onPick={(prod) => checkoutWithWaiver(prod, p.id)} />}
           {p.sub_status && payOk && (
             <button type="button" className="mt-2 text-xs text-muted underline" onClick={() => void openBillingPortal().catch((e: Error) => toast(e.message))}>
               Gérer / résilier mon abonnement

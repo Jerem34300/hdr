@@ -115,7 +115,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
             {k!.icon} {k!.label}
           </p>
           <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{p.name}</h2>
-          {p.description && <p className="mt-2 text-sm">{p.description}</p>}
+          {p.description && <p className="mt-2 whitespace-pre-line text-sm">{p.description}</p>}
           {p.kind !== "toilets" && <PlaceExtras id={p.id} />}
           <a
             className="mt-3 inline-block text-sm text-signal underline"
