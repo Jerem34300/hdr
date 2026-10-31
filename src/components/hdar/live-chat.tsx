@@ -464,7 +464,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           </div>
         )}
       </header>
-      {!isBot(userId) && <MeetBar pseudo={pseudo} meet={meet} onQuick={(body) => {
+      {!isBot(userId) && <MeetBar pseudo={pseudo} photo={photo || undefined} meet={meet} onQuick={(body) => {
         if (demo) return setMsgs((m) => [...m, { id: "q" + m.length, mine: true, body, at: new Date().toISOString(), kind: "text", duration: null }]);
         void sendLive({ data: { self: deviceId(), to: userId, body } }).then(refresh).catch((err) => toast(err instanceof Error ? err.message : "Message non envoyé"));
       }} />}
