@@ -3,14 +3,21 @@ import { create } from "zustand";
 import { useEffect, useState } from "react";
 import { regionOf } from "./live";
 import { useHdar } from "./store";
+import type { TransitStop } from "./transit";
 
 /** Pins actuellement visibles sur la carte + demande de « Voir sur la carte ». */
-type S = { pins: Record<string, { lat: number; lng: number }>; liveIds: Set<string>; focus: { id: string; lat: number; lng: number; at: number } | null; fly: { lat: number; lng: number; zoom: number; at: number; mine?: boolean } | null };
+type S = { pins: Record<string, { lat: number; lng: number }>; liveIds: Set<string>; focus: { id: string; lat: number; lng: number; at: number } | null; fly: { lat: number; lng: number; zoom: number; at: number; mine?: boolean; glide?: boolean; stop?: TransitStop; placeId?: string } | null };
 export const useMapFocus = create<S>(() => ({ pins: {}, liveIds: new Set(), focus: null, fly: null }));
 
 /** Centre la carte (quartier choisi, ou « autour de moi » si mine). */
 export function flyTo(lat: number, lng: number, zoom = 14, mine = false) {
   useMapFocus.setState({ fly: { lat, lng, zoom, at: Date.now(), mine } });
+  useHdar.getState().setTab("around");
+}
+
+/** Vol « GPS » : dézoome puis rezoome en douceur vers le point, puis ouvre la fiche du lieu s'il y en a une. */
+export function glideTo(lat: number, lng: number, zoom: number, open?: { stop?: TransitStop; placeId?: string }) {
+  useMapFocus.setState({ fly: { lat, lng, zoom, at: Date.now(), glide: true, ...open } });
   useHdar.getState().setTab("around");
 }
 

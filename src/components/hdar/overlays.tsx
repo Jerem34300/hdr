@@ -2,9 +2,10 @@ import { RichText } from "./rich-text";
 import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { tf } from "@/lib/hdar/i18n";
 import { setProfileNote } from "@/lib/hdar/live";
-import { flyTo } from "@/lib/hdar/map-focus";
-import { useRef, useState } from "react";
-import { X } from "lucide-react";
+import { flyTo, glideTo } from "@/lib/hdar/map-focus";
+import { searchAll, type SearchHit } from "@/lib/hdar/search";
+import { useEffect, useRef, useState } from "react";
+import { Building2, Bus, Loader2, LocateFixed, MapPin, MapPinned, Plane, Search, TrainFront, TramFront, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CITIES, DESIRES, LENGTHS, PLACES, type Desire, type PlaceKind, type TonightLen } from "@/lib/hdar/data";
@@ -255,42 +256,81 @@ function Tonight() {
 }
 
 function Cities() {
-  const cityId = useHdar((s) => s.cityId);
   const setCity = useHdar((s) => s.setCity);
+  const { place } = useScene();
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<SearchHit[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => { const t = setTimeout(() => input.current?.focus(), 250); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const v = q.trim();
+    if (v.length < 2) { setHits(null); setBusy(false); return; }
+    const ac = new AbortController();
+    setBusy(true);
+    // Debounce 350 ms : un seul appel quand on arrête de taper (règles d'usage Photon / OSM).
+    const tm = setTimeout(() => {
+      const h = useHdar.getState().here;
+      void searchAll(v, h ?? { lat: place.lat, lng: place.lng }, ac.signal).then((r) => { setHits(r); setBusy(false); }, () => { if (!ac.signal.aborted) { setHits([]); setBusy(false); } });
+    }, 350);
+    return () => { clearTimeout(tm); ac.abort(); };
+  }, [q, place.lat, place.lng]);
+  const close = () => useHdar.setState({ sheet: null });
+  const mine = () => { const h = useHdar.getState().here; useHdar.getState().locate(); close(); if (h) flyTo(h.lat, h.lng, 15, true); else useHdar.getState().setTab("around"); };
+  const pick = (h: SearchHit) => { close(); glideTo(h.lat, h.lng, h.zoom, { stop: h.stop, placeId: h.placeId }); };
   return (
     <div className="px-4 pt-6 pb-8">
       <Close />
-      <h2 className="font-display text-2xl font-extrabold">Quartier</h2>
-      <ul className="mt-4 space-y-2">
-        <li>
-          <button type="button"
-            onClick={() => { const h = useHdar.getState().here; useHdar.getState().locate(); useHdar.setState({ sheet: null }); if (h) flyTo(h.lat, h.lng, 15, true); else useHdar.getState().setTab("around"); }}
-            className={"flex h-14 w-full items-center gap-3 rounded-2xl border px-4 text-start " + (cityId === "ici" ? "border-signal" : "border-line")}>
-            <span className="text-xl">📍</span>
-            <span><span className="block font-display font-bold">Autour de moi</span><span className="text-xs text-muted">Ma position (arrondie)</span></span>
-          </button>
-        </li>
-        {CITIES.map((city) => (
-          <li key={city.slug}>
-            <button
-              type="button"
-              onClick={() => { setCity(city.slug); flyTo(city.lat, city.lng, 14); }}
-              className={
-                "flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-start " +
-                (cityId === city.slug ? "border-signal" : "border-line")
-              }
-            >
-              <span>
-                <span className="block font-display font-bold">{city.area}</span>
-                <span className="text-xs text-muted">{city.name}</span>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <h2 className="font-display text-2xl font-extrabold">Aller à…</h2>
+      <form className="relative mt-4" onSubmit={(e) => { e.preventDefault(); if (hits?.[0]) pick(hits[0]); }}>
+        <Search className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+        <input ref={input} data-act="place-search" type="search" enterKeyHint="go" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Ville, gare, métro, aéroport, lieu…" aria-label="Chercher une ville, une gare, un métro, un aéroport ou un lieu"
+          className="h-12 w-full rounded-2xl border border-line bg-night ps-10 pe-10 text-[15px] text-ink outline-none placeholder:text-muted focus:border-signal" />
+        {busy && <Loader2 className="absolute end-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted" aria-hidden />}
+      </form>
+      <button type="button" data-act="search-mine" onClick={mine} className="mt-3 flex h-12 w-full items-center gap-3 rounded-2xl border border-line px-4 text-start">
+        <LocateFixed className="size-5 shrink-0 text-online" aria-hidden />
+        <span className="min-w-0"><span className="block truncate font-display font-bold">Ma position</span><span className="block truncate text-xs text-muted">Position arrondie, jamais exacte</span></span>
+      </button>
+      {hits === null && (
+        <>
+          <p className="mt-5 text-xs font-semibold tracking-wide text-muted uppercase">Suggestions</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {CITIES.map((c) => (
+              <button key={c.slug} type="button" onClick={() => { setCity(c.slug); close(); glideTo(c.lat, c.lng, 14); }} className="flex h-9 items-center gap-1.5 rounded-full border border-line px-3 text-sm">
+                <Building2 className="size-3.5 text-muted" aria-hidden />{c.area}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {hits && hits.length === 0 && !busy && <p className="mt-5 text-center text-sm text-muted">Aucun résultat. Essaie une ville ou le nom d'une gare.</p>}
+      {hits && hits.length > 0 && (
+        <ul className="mt-3 space-y-1" data-act="search-results">
+          {hits.map((h) => { const I = HIT_ICON[h.type]; return (
+            <li key={h.key}>
+              <button type="button" onClick={() => pick(h)} className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-2 py-1.5 text-start hover:bg-white/5">
+                <span className={"grid size-9 shrink-0 place-items-center rounded-full ring-1 " + HIT_TONE[h.type]}><I className="size-4" strokeWidth={2} aria-hidden /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{h.name}</span>
+                  <span className="block truncate text-xs text-muted"><span>{HIT_LABEL[h.type]}</span>{h.sub ? " · " + h.sub : ""}</span>
+                </span>
+              </button>
+            </li>
+          ); })}
+        </ul>
+      )}
+      <p className="mt-4 text-center text-[10px] text-muted">Recherche : Photon · © OpenStreetMap</p>
     </div>
   );
 }
+const HIT_ICON: Record<SearchHit["type"], typeof Search> = { city: Building2, address: MapPin, station: TrainFront, metro: TramFront, bus: Bus, airport: Plane, place: MapPinned };
+const HIT_TONE: Record<SearchHit["type"], string> = {
+  city: "bg-white/5 text-ink ring-line", address: "bg-white/5 text-muted ring-line", station: "bg-[#a78bfa]/15 text-[#c4b5fd] ring-[#a78bfa]/40",
+  metro: "bg-[#60a5fa]/15 text-[#93c5fd] ring-[#60a5fa]/40", bus: "bg-[#60a5fa]/15 text-[#93c5fd] ring-[#60a5fa]/40", airport: "bg-[#38bdf8]/15 text-[#7dd3fc] ring-[#38bdf8]/40", place: "bg-online/10 text-online ring-online/35",
+};
+const HIT_LABEL: Record<SearchHit["type"], string> = { city: "Ville", address: "Adresse", station: "Gare", metro: "Métro", bus: "Arrêt de bus", airport: "Aéroport", place: "Lieu hdar" };
 
 function Share() {
   const code = useHdar((s) => s.safetyCode);

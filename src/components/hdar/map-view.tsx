@@ -455,9 +455,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     pinned.current = !fly.mine;
     autoFitted.current = true;
     const to = fly.mine ? you : fly;
+    const f = fly;
+    useMapFocus.setState({ fly: null });
+    if (f.glide) {
+      glide(to.lat, to.lng, f.zoom, () => { if (f.stop) setTransitStop(f.stop); else if (f.placeId) setPlaceId(f.placeId); });
+      return;
+    }
     setView((v) => ({ ...v, lat: to.lat, lng: to.lng }));
     animateTo(fly.zoom);
-    useMapFocus.setState({ fly: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fly]);
 
@@ -565,6 +570,32 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     anim.current = requestAnimationFrame(step);
   }
   const cancelPress = () => { setRing(null); if (press.current && !press.current.fired) { clearTimeout(press.current.t); press.current = null; } };
+
+  /** Vol type GPS : centre interpolé, zoom qui « plonge » selon la distance puis remonte (≈1,4 s). */
+  function glide(lat: number, lng: number, nextZoom: number, done?: () => void) {
+    cancelAnimationFrame(anim.current);
+    const a = viewRef.current;
+    const z1 = Math.min(17, Math.max(4, nextZoom));
+    const dKm = Math.hypot((lat - a.lat) * 111, (lng - a.lng) * 111 * Math.cos((lat * Math.PI) / 180));
+    const zMid = Math.max(4, Math.min(a.zoom, z1) - Math.max(0, Math.log2(Math.max(1, dKm)) - 1.5));
+    const dur = dKm < 2 ? 600 : 1400;
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setView((v) => ({ ...v, lat, lng, zoom: z1 }));
+      done?.();
+      return;
+    }
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / dur);
+      const e = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2;
+      const base = a.zoom + (z1 - a.zoom) * e;
+      const dip = Math.sin(Math.PI * k) * Math.max(0, Math.min(a.zoom, z1) - zMid);
+      setView((v) => ({ ...v, lat: a.lat + (lat - a.lat) * e, lng: a.lng + (lng - a.lng) * e, zoom: base - dip }));
+      if (k < 1) anim.current = requestAnimationFrame(step);
+      else done?.();
+    };
+    anim.current = requestAnimationFrame(step);
+  }
 
   function animateTo(nextZoom: number) {
     cancelAnimationFrame(anim.current);
