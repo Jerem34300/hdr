@@ -1,4 +1,5 @@
 import { VideoSection } from "./video-section";
+import { GoButton } from "./go-sheet";
 import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { locale } from "@/lib/hdar/i18n";
@@ -116,7 +117,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
   const sheetRef = useRef<HTMLDivElement>(null);
   useOpenAtTop(sheetRef, id);
   return (
-    <div ref={sheetRef} className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
+    <div ref={sheetRef} data-sheet-root className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
       <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
         <X className="size-5" />
       </button>
@@ -130,14 +131,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
           <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{p.name}</h2>
           {p.description && <LinkifiedText text={p.description} className="mt-2 whitespace-pre-line text-sm" />}
           {p.kind !== "toilets" && <PlaceExtras id={p.id} description={p.description} />}
-          <a
-            className="mt-3 inline-block text-sm text-signal underline"
-            href={`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=17/${p.lat}/${p.lng}`}
-            target="_blank"
-            rel="noopener"
-          >
-            Voir sur la carte / itinéraire
-          </a>
+          <GoButton lat={p.lat} lng={p.lng} />
           {p.kind === "toilets" ? (
             <p className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
               Toilettes publiques issues d'OpenStreetMap : horaires et accès peuvent varier. Respecte les lieux et les autres usagers.

@@ -58,6 +58,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 import { CameraSheet } from "./camera";
 import { AttachButton, BlurredPhoto, MediaView } from "./media-composer";
+import { GoButton } from "./go-sheet";
 import { uploadChatMedia } from "@/lib/hdar/chat-media";
 
 const MAX_VOICE_SEC = 60;
@@ -760,22 +761,7 @@ function LocationBubble({ msg }: { msg: LiveMsg }) {
     <div className="space-y-1">
       <p className="font-bold">📍 {msg.mine ? "Tu as partagé ta position" : "Position exacte"}</p>
       <div className="flex flex-wrap gap-2">
-        <a
-          className="underline"
-          href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Ouvrir dans Maps
-        </a>
-        <a
-          className="underline"
-          href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          OpenStreetMap
-        </a>
+        <GoButton lat={lat} lng={lng} className="inline-flex items-center gap-1.5 font-semibold underline" />
       </div>
       {until && Number.isFinite(until.getTime()) && (
         <p className="text-xs opacity-70">
