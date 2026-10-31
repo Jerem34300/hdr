@@ -96,7 +96,9 @@ export function ReplyDraft({ title, color, text, onJump, onCancel, edit }: { tit
 }
 
 /** Appui long (mobile) ou clic droit (ordinateur) → ouvre le menu du message. */
-export function LongPress({ onLong, children, className, style }: { onLong: () => void; children: ReactNode; className?: string; style?: CSSProperties }) {
+/** Le toucher sur un média (vidéo, photo, vocal, bouton) le contrôle : il n'ouvre jamais le menu de la bulle. */
+const MEDIA = "video, audio, img, button, a, [data-media]";
+export function LongPress({ onLong, onTap, children, className, style }: { onLong: () => void; /** Toucher simple hors média. */ onTap?: () => void; children: ReactNode; className?: string; style?: CSSProperties }) {
   const t = useRef(0);
   const fired = useRef(false);
   const cancel = () => window.clearTimeout(t.current);
@@ -121,6 +123,10 @@ export function LongPress({ onLong, children, className, style }: { onLong: () =
       onContextMenu={(e) => {
         e.preventDefault();
         onLong();
+      }}
+      onClick={(e) => {
+        if (fired.current) return;
+        if (onTap && !(e.target as HTMLElement).closest(MEDIA)) onTap();
       }}
     >
       {children}

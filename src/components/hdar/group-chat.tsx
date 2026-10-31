@@ -13,7 +13,7 @@ import { ArrowDown, Copy, CornerUpLeft, Flag, Forward, MessageCircle, Pencil, Se
 import { toast } from "sonner";
 import type { MediaKind, MediaScope } from "@/lib/hdar/chat-media";
 import { canEditMsg, editMessage, type GroupLine, type Reaction } from "@/lib/hdar/live";
-import { ReactionBar, ReactionChips, ReplyDraft, ReplyQuote, sendReaction } from "./reactions";
+import { LongPress, ReactionBar, ReactionChips, ReplyDraft, ReplyQuote, sendReaction } from "./reactions";
 import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { UserAvatar } from "./avatar";
@@ -230,9 +230,9 @@ export function GroupChat(p: Props) {
                         )}
                       </span>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setMenu(m)}
+                    <LongPress
+                      onLong={() => setMenu(m)}
+                      onTap={() => setMenu(m)}
                       style={m.mine ? undefined : (authorBubble(m.bubble) as CSSProperties | undefined)}
                       className={
                         "relative max-w-[80%] min-w-[84px] px-3 pt-1.5 pb-1 text-start leading-snug break-words whitespace-pre-wrap shadow-sm transition-colors rounded-[18px] " +
@@ -249,13 +249,13 @@ export function GroupChat(p: Props) {
                       )}
                       <FwdHeader fwd={m.fwd} />
                       {m.reply && <ReplyQuote reply={m.reply} mine={m.mine} onJump={() => jumpTo(m.replyTo)} />}
-                      <span className="msg-text">{m.kind === "text" ? <RichText text={bodyOf(m)} /> : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} />}</span>
+                      <span className="msg-text">{m.kind === "text" ? <RichText text={bodyOf(m)} /> : <RoomMedia scope={p.scope} id={m.id} mine={m.mine} forwarded={m.fwd != null} />}</span>
                       <span className="bubble-meta float-right mt-1.5 ms-2 translate-y-0.5 text-[11px]">
                         {extra ? `${extra} · ` : ""}
                         {(m.editedAt || edits[m.id] !== undefined) && "modifié · "}
                         {hhmm(m.at)}
                       </span>
-                    </button>
+                    </LongPress>
                     <button
                       type="button"
                       aria-label="Réagir"
@@ -566,6 +566,7 @@ export function GroupChatDemo() {
     mk(7, "me", "Toi", "Le Live de ce soir commence à 21 h 🎥", 1, { fwd: "Hdar admin" }),
     mk(8, "c90e", "Sam", "D'ici quelques minutes je serai devant la Comédie, côté fontaine des Trois Grâces. Je porte une veste bleue et j'ai un parapluie rouge, vous ne pouvez pas me rater 😄 Si vous êtes en retard écrivez ici, j'attends jusqu'à 22 h 30 au moins.", 0.5),
     mk(9, "b21c", "Nina", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹 et pour les questions hdar.chat/faq", 0.2),
+    ...(location.search.includes("fwdvideo") ? [{ ...mk(15, "me", "Toi", "", 0.05, { fwd: "" }), id: "dfwd", kind: "video" as const }] : []),
     ...(location.search.includes("video") ? [{ ...mk(14, "b21c", "Nina", "", 0.1), id: "dvid", kind: "video" as const }] : []),
     ...(location.search.includes("bot") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31, @Max et @Zoe 👋 Faites-leur bon accueil !", 0.1)] : []),
     ...(location.search.includes("discret") ? [mk(13, "v417", "Discret 417", "Salut tout le monde 👋 quelqu'un connaît un bar sympa vers la Comédie ?", 0.03)] : []),

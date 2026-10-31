@@ -162,13 +162,37 @@ export function HoldMic({ onDone, disabled, onTick }: { onDone: (blob: Blob, sec
 const fmtDur = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 
 /** Renders one stored media from its storage path (signed URL). */
-export function MediaView({ kind, path, duration, reportable, blur = reportable }: { kind: string; path: string; duration?: number | null; /** Bouton « Signaler » sur la vidéo (média d'un autre). */ reportable?: boolean; /** Vidéo floutée jusqu'au toucher (comme les photos des annonces). Par défaut : vidéo d'un autre. */ blur?: boolean }) {
+/** Photo floutée jusqu'au toucher (médias transférés : jamais affichés en clair d'office). */
+export function BlurredPhoto({ src, blur }: { src: string; blur: boolean }) {
+  const [revealed, setRevealed] = useState(false);
+  const [zoom, setZoom] = useState(false);
+  if (blur && !revealed)
+    return (
+      <button type="button" data-act="blurred-media" aria-label="Voir la photo" onClick={() => setRevealed(true)} className="relative block h-48 w-60 max-w-full overflow-hidden rounded-xl bg-night">
+        <img src={src} alt="" className="size-full scale-110 object-cover blur-xl" />
+        <span className="absolute inset-0 grid place-items-center text-center text-[11px] font-bold text-white drop-shadow">🔞<br />Toucher<br />pour voir la photo</span>
+      </button>
+    );
+  return (
+    <>
+      <button type="button" className="block" onClick={() => setZoom(true)} aria-label="Agrandir la photo">
+        <img src={src} alt="Photo" className="max-h-64 rounded-xl" />
+      </button>
+      {zoom && (
+        <button type="button" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={() => setZoom(false)} aria-label="Fermer la photo">
+          <img src={src} alt="Photo" className="max-h-full max-w-full rounded-xl" />
+        </button>
+      )}
+    </>
+  );
+}
+
+export function MediaView({ kind, path, duration, reportable, forwarded = false, blur = reportable || forwarded }: { kind: string; path: string; duration?: number | null; /** Bouton « Signaler » sur la vidéo (média d'un autre). */ reportable?: boolean; /** Média transféré : photo ET vidéo floutées jusqu'au toucher, partout, même pour l'expéditeur. */ forwarded?: boolean; /** Vidéo floutée jusqu'au toucher (comme les photos des annonces). Par défaut : vidéo d'un autre. */ blur?: boolean }) {
   const [revealed, setRevealed] = useState(false);
   const [src, setSrc] = useState("");
   const [poster, setPoster] = useState<string | undefined>(undefined);
   const [reported, setReported] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [zoom, setZoom] = useState(false);
   useEffect(() => {
     let alive = true;
     signedMediaUrl(path)
@@ -191,8 +215,8 @@ export function MediaView({ kind, path, duration, reportable, blur = reportable 
       <span className="relative inline-block max-w-full align-top">
         {blur && !revealed ? (
           // Floutée : seule la vignette (floutée) est affichée, la vidéo n'est même pas chargée.
-          <button type="button" aria-label="Voir la vidéo" onClick={() => setRevealed(true)}
-            className="relative block h-48 w-72 max-w-full overflow-hidden rounded-xl bg-night">
+          <button type="button" data-act="blurred-media" aria-label="Voir la vidéo" onClick={() => setRevealed(true)}
+            className="relative block h-44 w-60 max-w-full overflow-hidden rounded-xl bg-night">
             {poster && <img src={poster} alt="" className="size-full scale-110 object-cover blur-xl" />}
             <span className="absolute inset-0 grid place-items-center text-center text-[11px] font-bold text-white drop-shadow">🔞<br />Toucher<br />pour voir la vidéo</span>
           </button>
@@ -217,22 +241,11 @@ export function MediaView({ kind, path, duration, reportable, blur = reportable 
         )}
       </span>
     );
-  return (
-    <>
-      <button type="button" className="block" onClick={() => setZoom(true)} aria-label="Agrandir la photo">
-        <img src={src} alt="Photo" className="max-h-64 rounded-xl" />
-      </button>
-      {zoom && (
-        <button type="button" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={() => setZoom(false)} aria-label="Fermer la photo">
-          <img src={src} alt="Photo" className="max-h-full max-w-full rounded-xl" />
-        </button>
-      )}
-    </>
-  );
+  return <BlurredPhoto src={src} blur={forwarded} />;
 }
 
 /** Media of a public-room message (body empty), with a report flag for others' media. */
-export function RoomMedia({ scope, id, mine }: { scope: MediaScope; id: string; mine: boolean }) {
+export function RoomMedia({ scope, id, mine, forwarded = false }: { scope: MediaScope; id: string; mine: boolean; forwarded?: boolean }) {
   const [row, setRow] = useState<RoomMediaRow | null | undefined>(undefined);
   const [reported, setReported] = useState(false);
   useEffect(() => {
@@ -248,7 +261,7 @@ export function RoomMedia({ scope, id, mine }: { scope: MediaScope; id: string; 
   if (!row) return <span className="opacity-70">Média retiré</span>;
   return (
     <span className="relative inline-block align-top">
-      <MediaView kind={row.kind} path={row.media} duration={row.duration} blur={!mine} />
+      <MediaView kind={row.kind} path={row.media} duration={row.duration} forwarded={forwarded} blur={!mine || forwarded} />
       {!mine && row.kind !== "audio" && (
         <button
           type="button"

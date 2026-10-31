@@ -1012,7 +1012,7 @@ export function identityLine(iam: string, seeking: string[]) {
 export type RoomMediaRow = { id: string; kind: "image" | "video" | "audio"; media: string; duration: number | null };
 const roomMediaCache = new Map<string, Promise<RoomMediaRow | null>>();
 export function roomMedia(scope: "area" | "place" | "spot" | "salon", id: string): Promise<RoomMediaRow | null> {
-  if (import.meta.env.DEV && id === "dvid") return Promise.resolve({ id, kind: "video", media: "demo/v.mp4", duration: 154 });
+  if (import.meta.env.DEV && (id === "dvid" || id === "dfwd")) return Promise.resolve({ id, kind: "video", media: "demo/v.mp4", duration: 154 });
   const key = `${scope}:${id}`;
   let hit = roomMediaCache.get(key);
   if (!hit) {
@@ -1602,7 +1602,8 @@ export async function forwardMessage(src: FwdSource, id: string, dst: FwdScope, 
   }
 }
 /** Libellé d'en-tête : « Transféré » (d'un privé) ou « Transféré de X » (d'un salon). */
-export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f ? `Transféré de ${f}` : "Transféré");
+// « Toi » (ancien libellé serveur pour son propre message) → simplement « Transféré ».
+export const fwdLabel = (f: string | null | undefined) => (f == null ? null : f && f !== "Toi" ? `Transféré de ${f}` : "Transféré");
 /** Retirer son propre message privé (supprimé côté serveur pour les deux, v81). */
 export const dmRemove = (id: string) => rpc("hdar_dm_remove", { p_id: id });
 /** Couleur de mes bulles, visible par tous (v82). */

@@ -57,7 +57,7 @@ import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { Avatar } from "./avatar";
 import { CameraSheet } from "./camera";
-import { AttachButton, MediaView } from "./media-composer";
+import { AttachButton, BlurredPhoto, MediaView } from "./media-composer";
 import { uploadChatMedia } from "@/lib/hdar/chat-media";
 
 const MAX_VOICE_SEC = 60;
@@ -455,6 +455,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               <div className={"group flex w-full items-center gap-1 " + (m.mine ? "flex-row-reverse" : "")}>
                 <LongPress
                   onLong={() => setMsgMenu(m)}
+                  onTap={() => setMsgMenu(m)}
                   style={m.mine ? undefined : (authorBubble(m.bubble) as CSSProperties | undefined)}
                   className={
                     "max-w-[80%] min-w-[4.5rem] rounded-[18px] px-3 pt-1.5 pb-1 shadow-sm select-none transition-shadow md:select-text " +
@@ -709,7 +710,7 @@ function LiveMedia({ msg }: { msg: LiveMsg }) {
     };
   }, [msg.id]);
 
-  if (src.startsWith("sb:")) return <MediaView kind={msg.kind} path={src.slice(3)} duration={msg.duration} reportable={!msg.mine} />;
+  if (src.startsWith("sb:")) return <MediaView kind={msg.kind} path={src.slice(3)} duration={msg.duration} reportable={!msg.mine} forwarded={msg.fwd != null} />;
   if (failed) return <p>{msg.kind === "image" ? "Photo indisponible" : msg.kind === "video" ? "Vidéo indisponible" : "Vocal indisponible"}</p>;
   if (!src)
     return (
@@ -719,6 +720,7 @@ function LiveMedia({ msg }: { msg: LiveMsg }) {
     );
   if (msg.kind === "audio")
     return <audio controls preload="metadata" src={src} className="h-10 w-60 max-w-full" />;
+  if (msg.fwd != null) return <BlurredPhoto src={src} blur />;
   return (
     <>
       <button
