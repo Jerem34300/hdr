@@ -774,13 +774,13 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         >
           <p className="font-display text-sm font-bold">Sois le premier à te montrer sur la carte</p>
           {approx && <p className="mt-0.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
-          {!located && (
-            <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
-              <button type="button" className="rounded-full border border-line px-3 py-1.5" onClick={askLocation}>
-                Activer ma position
-              </button>
-            </div>
-          )}
+          <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
+            {/* Même action que le gros bouton « Se montrer » de la barre du bas. */}
+            <button type="button" data-act="banner-show" className="rounded-full bg-signal px-4 py-1.5 font-bold whitespace-nowrap text-white"
+              onClick={() => document.querySelector<HTMLElement>('[data-act="tonight"]')?.click()}>
+              Se montrer
+            </button>
+          </div>
           {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
           {!onboardedMe && <MapCityTeaser />}
         </div>
