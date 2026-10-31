@@ -16,7 +16,6 @@ type TipDef = {
 
 const TIPS: TipDef[] = [
   { id: "connect", target: "connect", text: "Touche pour te montrer sur la carte", sub: "Se montrer", arrow: "down" },
-  { id: "live", target: "live", text: "Tente un Live, rencontre en vidéo", sub: "", arrow: "right" },
   { id: "pocket", target: "pocket", text: "Dis bonjour au quartier", sub: "", arrow: "up" },
   { id: "spots", target: "spots", text: "Trouve où sortir ce soir", sub: "", arrow: "down" },
   { id: "photo", target: "me", text: "Ajoute une photo pour plus de messages", sub: "", arrow: "down" },
@@ -81,6 +80,7 @@ function placeNear(root: DOMRect, el: DOMRect, arrow: Arrow): Pos {
 
 /** One coral tip bubble at a time on the map / dock. */
 export function MapTips() {
+  const sheetOpen = useHdar((s) => !!s.sheet);
   const visible = useHdar((s) => !!(s.me.tonight && s.me.tonight.expiresAt > s.now));
   // Strict: any album/main photo means the Profil photo tip must never show.
   const hasPhoto = useHdar((s) => myPhotos(s.me).length > 0);
@@ -172,7 +172,8 @@ export function MapTips() {
     };
   }, [active]);
 
-  if (!active || !pos) return null;
+  // Jamais au-dessus d'une feuille ouverte.
+  if (!active || !pos || sheetOpen) return null;
 
   const close = () => {
     writeTs(snoozeKey(active.id));
@@ -191,7 +192,7 @@ export function MapTips() {
           : "-translate-y-1/2 ps-2";
 
   return (
-    <div className={`pointer-events-none absolute z-[45] ${wrap}`} style={{ left: pos.left + (pos.shift ?? 0), top: pos.top }}>
+    <div className={`pointer-events-none absolute z-[35] ${wrap}`} style={{ left: pos.left + (pos.shift ?? 0), top: pos.top }}>
       <TipBubble arrow={arrow} pointerShift={pos.shift ?? 0} onClose={close} testId={`tip-${active.id}`}>
         {active.text}
       </TipBubble>

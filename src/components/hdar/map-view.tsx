@@ -16,7 +16,7 @@ import { TrainFront } from "lucide-react";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
-import { Layers, LocateFixed, Rocket, Video } from "lucide-react";
+import { Layers, LocateFixed, Rocket } from "lucide-react";
 import { layerOfPlace, useLayers, type LayerKey } from "@/lib/hdar/map-layers";
 import { LayerRow } from "./map-layer-row";
 import { Link } from "@tanstack/react-router";
@@ -768,7 +768,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </span>
         );
       })}
-      {pins.length === 0 && !finding && (
+      {pins.length === 0 && !finding && !visible && (
         <div
           className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
           onPointerDown={(e) => e.stopPropagation()}
@@ -1077,10 +1077,6 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       )}
       <div className="absolute end-3 bottom-6 z-30 flex flex-col gap-2">
         <MapGiftButton />
-        <Link to="/live" data-tip="live" aria-label="Live vidéo" className="relative flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] text-night shadow-[0_0_18px_#FA6F6C]">
-          <Video className="size-5" />
-          <LiveBadge />
-        </Link>
         <button type="button" className="size-11 rounded-full bg-night/90 text-lg text-ink" aria-label="Zoom avant" onClick={() => animateTo(viewRef.current.zoom + 1)}>
           +
         </button>
