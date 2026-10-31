@@ -419,3 +419,8 @@ section:has(.hdar-sheet-up) > .dock,
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* « Se retrouver » : écran qui clignote (2 Hz, sous le seuil photosensible) ; doux si mouvement réduit. */
+@keyframes meet-flash { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.15; } }
+.meet-flash { animation: meet-flash 0.5s steps(1, end) infinite; }
+@media (prefers-reduced-motion: reduce) { .meet-flash { animation: none; } }

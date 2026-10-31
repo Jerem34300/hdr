@@ -59,6 +59,9 @@ import { Avatar } from "./avatar";
 import { CameraSheet } from "./camera";
 import { AttachButton, BlurredPhoto, MediaView } from "./media-composer";
 import { GoButton } from "./go-sheet";
+import { MeetBar, MeetFlash } from "./meetup";
+import { useMeetup, type MeetDemo } from "@/lib/hdar/meetup";
+import { Navigation2 } from "lucide-react";
 import { uploadChatMedia } from "@/lib/hdar/chat-media";
 
 const MAX_VOICE_SEC = 60;
@@ -95,6 +98,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const onboardedMe = useHdar((s) => s.me.onboarded);
   const ty = useTyping("dm", demo || !onboardedMe ? null : userId, myPseudo, demo ? (typeof location !== "undefined" && location.search.includes("typing") ? [{ id: userId, pseudo, kind: location.search.includes("vocal") ? "audio" : "text", at: Date.now() }] : []) : undefined);
   const [msgs, setMsgs] = useState<LiveMsg[]>(demo ?? []);
+  const meet = useMeetup(userId, !demo && onboardedMe && !isBot(userId), demo ? meetDemo() : undefined);
   const [replyTo, setReplyTo] = useState<LiveMsg | null>(null);
   const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
@@ -393,6 +397,20 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             >
               Voir le profil
             </button>
+            {!isBot(userId) && (meet.st?.status !== "active" && meet.st?.status !== "pending") && <button
+              type="button"
+              data-act="meet-propose"
+              disabled={!demo && meet.st?.allowed === false}
+              className="flex w-full items-start gap-2 border-t border-line px-4 py-3 text-start disabled:opacity-60"
+              onClick={() => {
+                setMenu(false);
+                if (!onboarded) return openGate();
+                void meet.propose().catch((e: Error) => toast(e.message));
+              }}
+            >
+              <Navigation2 className="mt-0.5 size-4 shrink-0 text-signal" aria-hidden />
+              <span className="min-w-0"><span className="block">Se retrouver</span><span className="block text-xs text-muted">{!demo && meet.st?.allowed === false ? "Écrivez-vous d'abord tous les deux" : "Boussole à deux · 15 min · avec son accord"}</span></span>
+            </button>}
             <button
               type="button"
               className="block w-full border-t border-line px-4 py-3 text-start"
@@ -446,6 +464,11 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
           </div>
         )}
       </header>
+      {!isBot(userId) && <MeetBar pseudo={pseudo} meet={meet} onQuick={(body) => {
+        if (demo) return setMsgs((m) => [...m, { id: "q" + m.length, mine: true, body, at: new Date().toISOString(), kind: "text", duration: null }]);
+        void sendLive({ data: { self: deviceId(), to: userId, body } }).then(refresh).catch((err) => toast(err instanceof Error ? err.message : "Message non envoyé"));
+      }} />}
+      {meet.flash && <MeetFlash color={meet.flash} pseudo={pseudo} onDone={meet.clearFlash} />}
       <div className="chat-wall min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
         {msgs.length === 0 && (
           <p className="text-center text-sm text-muted">Aucun message. Écris le premier.</p>
@@ -788,6 +811,20 @@ function AdQuoteBody({ body, mine }: { body: string; mine: boolean }) {
   );
 }
 
+/** Aperçu de dev : ?devpreview&dmchat&meet=ask|sent|far|near|flash */
+function meetDemo(): MeetDemo | undefined {
+  if (typeof location === "undefined") return undefined;
+  const k = new URLSearchParams(location.search).get("meet");
+  if (!k) return undefined;
+  const me = { lat: 43.6086, lng: 3.88, acc: 6, at: Date.now() };
+  const exp = new Date(Date.now() + 12 * 60_000 + 40_000).toISOString();
+  if (k === "ask") return { state: { allowed: true, id: "d", status: "pending", mine: false } };
+  if (k === "sent") return { state: { allowed: true, id: "d", status: "pending", mine: true } };
+  const far = k === "far", b = location.search.includes("side=b");
+  const other = far ? { lat: 43.6112, lng: 3.8832, acc: 9, at: Date.now() } : { lat: 43.60876, lng: 3.88015, acc: 5, at: Date.now() };
+  return { state: { allowed: true, id: "d", status: "active", mine: !b, expires_at: exp }, me: b ? other : me, other: b ? me : other, heading: b ? 250 : 20, flash: k === "flash" ? "#FA6F6C" : undefined };
+}
+
 /** Aperçu de dev uniquement (captures d'écran) : conversation privée d'exemple. */
 export function LiveChatDemo() {
   const at = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
@@ -802,7 +839,7 @@ export function LiveChatDemo() {
   ];
   return (
     <div className="flex h-dvh flex-col bg-night text-ink">
-      <LiveChat userId="7f3a0000-0000-4000-8000-000000000000" pseudo="Lucas34" demo={msgs} />
+      <LiveChat userId="7f3a0000-0000-4000-8000-000000000000" pseudo={typeof location !== "undefined" && location.search.includes("side=b") ? "Nina" : "Lucas34"} demo={msgs} />
     </div>
   );
 }

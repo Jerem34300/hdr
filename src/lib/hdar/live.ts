@@ -1694,3 +1694,9 @@ export const placeVideos = (placeId: string) => rpc<StoredVideo[]>("hdar_place_v
 export const placeVideoAdd = (placeId: string, path: string, duration: number) =>
   rpc("hdar_place_video_add", { p_place: placeId, p_path: path, p_duration: duration });
 export const placeVideoRemove = (placeId: string, path: string) => rpc("hdar_place_video_remove", { p_place: placeId, p_path: path });
+/** « Se retrouver » (v117) : session à deux, consentement mutuel, 15 min max. Positions jamais stockées (Realtime Broadcast). */
+export type MeetState = { allowed: boolean; id?: string; status?: "pending" | "active" | "ended"; mine?: boolean; started_at?: string | null; expires_at?: string; ended_by?: "me" | "other" | "timeout" | null; topic?: string | null; me?: string };
+export const meetState = (withId: string) => rpc<MeetState | null>("hdar_meet_state", { p_with: withId });
+export const meetPropose = (to: string) => rpc<MeetState>("hdar_meet_propose", { p_to: to });
+export const meetAccept = (id: string) => rpc<MeetState>("hdar_meet_accept", { p_id: id });
+export const meetStop = (id: string) => rpc("hdar_meet_stop", { p_id: id });
