@@ -114,7 +114,7 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold">{x.p.pseudo}{x.p.age ? <span className="font-normal text-muted"> · {x.p.age} ans</span> : null}{x.p.premium ? " 👑" : ""}{x.p.new ? <span className="ms-1.5 rounded-full bg-[#3EE08F]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#3EE08F]">Nouveau</span> : null}</span>
-                  <span className="block truncate text-xs text-muted">{[genderShort(x.p.iam ?? ""), distLabel(x.km), ago(x.p.min)].filter(Boolean).join(" · ")}</span>
+                  <span className="block truncate text-xs text-muted">{[genderShort(x.p.iam ?? ""), distLabel(x.km)].filter(Boolean).join(" · ")} · <span>{ago(x.p.min)}</span></span>
                 </span>
               </button>
             </li>
@@ -124,7 +124,7 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-dashed border-line bg-surface text-xl">👀</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold">{x.v.name} <span className="ms-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-muted">sans profil</span></span>
-                  <span className="block truncate text-xs text-muted">{distLabel(x.km)} · {ago(x.v.min)}{onboarded ? " · touche pour écrire" : ""}</span>
+                  <span className="block truncate text-xs text-muted">{distLabel(x.km)} · <span>{ago(x.v.min)}</span>{onboarded ? " · touche pour écrire" : ""}</span>
                 </span>
               </button>
             </li>
