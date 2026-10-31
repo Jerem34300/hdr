@@ -50,9 +50,9 @@ function burst(canvas: HTMLCanvasElement) {
  * Fermé : paupière en arc vers le bas + cils ; il cligne / s'entrouvre de temps en temps.
  * Ouvert : la paupière remonte (transform, fluide aussi sur Safari), pupille + reflet apparaissent.
  */
-function EyeIcon({ open }: { open: boolean }) {
+export function EyeIcon({ open, className = "size-7" }: { open: boolean; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className={cn("eye size-7", open ? "eye-open" : "eye-closed")} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" aria-hidden className={cn("eye", className, open ? "eye-open" : "eye-closed")} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path className="eye-lower" d="M2.5 12 Q12 20 21.5 12" />
       <g className="eye-ball">
         <circle cx="12" cy="12" r="3.2" fill="currentColor" />

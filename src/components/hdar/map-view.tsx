@@ -10,6 +10,7 @@ import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { TransitPin, TransitSheet } from "./transit";
+import { EyeIcon } from "./visibility-button";
 import { setTransitLayer, transitLayerOn, useTransit, type TransitStop } from "@/lib/hdar/transit";
 import { TrainFront } from "lucide-react";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
@@ -776,9 +777,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           {approx && <p className="mt-0.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
           <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
             {/* Même action que le gros bouton « Se montrer » de la barre du bas. */}
-            <button type="button" data-act="banner-show" className="rounded-full bg-signal px-4 py-1.5 font-bold whitespace-nowrap text-white"
+            <button type="button" data-act="banner-show" className="vis-btn vis-off relative flex items-center gap-1.5 overflow-hidden rounded-full px-4 py-1.5 font-bold whitespace-nowrap text-white"
               onClick={() => document.querySelector<HTMLElement>('[data-act="tonight"]')?.click()}>
-              Se montrer
+              <EyeIcon open={false} className="relative z-10 size-4 shrink-0" />
+              <span className="relative z-10">Se montrer</span>
+              <span className="vis-shine" />
             </button>
           </div>
           {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
