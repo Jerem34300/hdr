@@ -365,3 +365,9 @@ export async function tripCounts(keys: string[]): Promise<Record<string, number>
     return {};
   }
 }
+
+/** Nom affiché d'un arrêt : une gare routière nommée « Gare SNCF » / « Gare » devient « Arrêt de bus – Gare SNCF ». */
+export function stopName(s: Pick<TransitStop, "kind" | "name">) {
+  if (s.kind === "bus" && /^(gare|gare sncf|gare ferroviaire|station)$/i.test(s.name.trim())) return `Arrêt de bus – ${s.name.trim()}`;
+  return s.name;
+}

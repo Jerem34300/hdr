@@ -8,7 +8,7 @@ import { useHdar } from "@/lib/hdar/store";
 import {
   TRANSIT_KINDS, TRIP_FOR, TRIP_LABEL, ensureStop, isTransitDemo, normalizeTrip, stopLines, todayISO, tripJoin, tripLeave,
   tripsAt, tripsMine, validTrip, tripCounts, tripKey,
-  type TransitKind, type TransitStop, type Trip, type TripKind,
+  stopName, type TransitKind, type TransitStop, type Trip, type TripKind,
 } from "@/lib/hdar/transit";
 import { PlaceChat } from "./places-layer";
 import { autoDay, hhmm, lookupTrain, stationBoard, stationLines, type BoardRow, type LineDirections, type TrainInfo } from "@/lib/hdar/timetable";
@@ -26,7 +26,7 @@ export function TransitPin({ s, x, y, onOpen }: { s: TransitStop; x: number; y: 
   return (
     <button
       type="button"
-      aria-label={`${k.label} : ${s.name}`}
+      aria-label={`${k.label} : ${stopName(s)}`}
       className={"absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 shadow " + (s.kind === "airport" ? "size-9" : "size-8")}
       style={{ left: x, top: y, borderColor: k.color, color: k.color }}
       onPointerDown={(e) => e.stopPropagation()}
@@ -88,7 +88,7 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
         <TransitIcon kind={stop.kind} /> {k.label}
         {stop.iata ? ` · ${stop.iata}` : ""}
       </p>
-      <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{stop.name}</h2>
+      <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{stopName(stop)}</h2>
       <button
         type="button"
         data-act="trip-join"
@@ -103,7 +103,7 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
       )}
       <div className="mt-4">
         <p className="flex items-center gap-1.5 text-xs font-bold tracking-wide text-muted uppercase">
-          <Users className="size-3.5" /> {tk === "flight" ? "Vols" : tk === "metro" ? "Lignes" : "Trains"} avec du monde à bord
+          <Users className="size-3.5" /> {tk === "flight" ? "Vols" : tk === "metro" || tk === "bus" ? "Lignes" : "Trains"} avec du monde à bord
         </p>
         <div className="mt-2 space-y-2">
           {trips === null && !err && <p className="text-xs text-muted">Chargement…</p>}
@@ -382,18 +382,19 @@ export function AboardBar({ id, aboard, kind, onLeft }: { id: string; aboard: nu
 
 /** Tableau type écran de gare : Départs / Arrivées (train) ou prochains passages par ligne (métro / tram). */
 function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId: string | null; onJoined: (t: Trip) => void }) {
-  const urban = stop.kind === "metro";
+  const bus = stop.kind === "bus";
+  const urban = stop.kind === "metro" || bus;
   const onboarded = useHdar((s) => s.me.onboarded);
   const setTab = useHdar((s) => s.setTab);
   const [rows, setRows] = useState<BoardRow[] | null>(null);
   const [tab, setTabB] = useState<"dep" | "arr">("dep");
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState<string | null>(null);
-  const keyOf = (r: BoardRow) => (urban ? tripKey("metro", r.label, todayISO(), r.network) : tripKey("train", r.label, r.day));
+  const keyOf = (r: BoardRow) => (urban ? tripKey(stop.kind === "bus" ? "bus" : "metro", r.label, todayISO(), r.network) : tripKey("train", r.label, r.day));
   useEffect(() => {
     let stopped = false;
     const load = () =>
-      void stationBoard({ lat: stop.lat, lng: stop.lng }, urban)
+      void stationBoard({ lat: stop.lat, lng: stop.lng }, urban, bus)
         .catch(() => [] as BoardRow[])
         .then((r) => {
           if (stopped) return;
@@ -414,7 +415,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
       return;
     }
     setBusy(r.id);
-    tripJoin(urban ? "metro" : "train", r.label, urban ? todayISO() : r.day, placeId, urban ? r.network || null : null)
+    tripJoin(bus ? "bus" : urban ? "metro" : "train", r.label, urban ? todayISO() : r.day, placeId, urban ? r.network || null : null)
       .then(onJoined)
       .catch((e: Error) => toast(e.message))
       .finally(() => setBusy(null));
@@ -448,8 +449,8 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-night" data-act="station-board">
       <div className="flex items-center gap-2 border-b border-line px-3 py-2">
-        <TransitIcon kind={urban ? "metro" : "train"} className="size-4 text-signal" />
-        <p className="flex-1 text-xs font-bold tracking-wide uppercase">{urban ? "Prochains passages" : "Tableau des trains"}</p>
+        <TransitIcon kind={bus ? "bus" : urban ? "metro" : "train"} className="size-4 text-signal" />
+        <p className="flex-1 text-xs font-bold tracking-wide uppercase">{bus ? "Tableau des bus" : urban ? "Prochains passages" : "Tableau des trains"}</p>
         {!urban && (
           <div className="flex rounded-full bg-surface p-0.5 text-xs">
             {(["dep", "arr"] as const).map((t) => (
@@ -467,7 +468,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
         )}
       </div>
       {rows === null && <p className="px-3 py-3 text-xs text-muted">Chargement des horaires…</p>}
-      {rows !== null && list.length === 0 && <p className="px-3 py-3 text-xs text-muted">Aucun passage trouvé dans les 3 prochaines heures.</p>}
+      {rows !== null && list.length === 0 && <p className="px-3 py-3 text-xs text-muted">{bus ? "Aucun bus trouvé à cet arrêt pour le moment (horaires non publiés en données ouvertes ou pas de passage prévu)." : "Aucun passage trouvé dans les 3 prochaines heures."}</p>}
       <div className="max-h-80 divide-y divide-line overflow-y-auto">
         {urban
           ? groups.map(({ r, next }) => (
@@ -510,7 +511,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
             })}
       </div>
       <p className="border-t border-line px-3 py-1.5 text-[10px] text-muted">
-        {rows?.some((r) => r.rtSource === "sncf") ? "Retards et suppressions : temps réel SNCF · horaires Transitous" : `Horaires Transitous (données ouvertes)${rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"}`} · touche un train pour rejoindre son salon
+        {rows?.some((r) => r.rtSource === "sncf") ? "Retards et suppressions : temps réel SNCF · horaires Transitous" : `Horaires Transitous (données ouvertes)${rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"}`}{bus ? " · touche une ligne pour rejoindre son salon" : " · touche un train pour rejoindre son salon"}
       </p>
     </div>
   );

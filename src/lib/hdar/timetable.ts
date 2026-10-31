@@ -9,6 +9,7 @@ const RAIL = "HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,REGIONAL_FAST_RAIL,REGIONA
 const FAST = "HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL";
 const REGIO = "REGIONAL_FAST_RAIL,REGIONAL_RAIL,RAIL";
 const URBAN = "SUBWAY,TRAM,METRO";
+const BUS = "BUS,COACH";
 
 type Place = { name: string; stopId: string; lat: number; lon: number; tz?: string; departure?: string; arrival?: string; modes?: string[]; importance?: number };
 type StopTime = {
@@ -158,10 +159,11 @@ function cleanStop(n: string) {
   return c === c.toUpperCase() ? c.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase()) : c;
 }
 /** Prochains passages (≈3 h) à la gare / station, toutes sources GTFS dédupliquées. */
-export async function stationBoard(at: { lat: number; lng: number }, urban: boolean): Promise<BoardRow[]> {
+export async function stationBoard(at: { lat: number; lng: number }, urban: boolean, bus = false): Promise<BoardRow[]> {
   if (isTransitDemo()) return demoBoard(urban);
-  const modes = urban ? URBAN : ALL_RAIL;
-  const stops = await stopsNear(at.lat, at.lng, urban ? 0.0025 : 0.004, modes.split(","));
+  // Gare routière / arrêt de bus : uniquement les bus et cars, arrêts à ~150 m (sinon on attrape la gare voisine).
+  const modes = bus ? BUS : urban ? URBAN : ALL_RAIL;
+  const stops = await stopsNear(at.lat, at.lng, bus ? 0.0015 : urban ? 0.0025 : 0.004, modes.split(","));
   if (!stops.length) return [];
   const since = new Date(Date.now() - 5 * 60_000).toISOString();
   type BoardST = StopTime & { place: Place & { scheduledDeparture?: string; scheduledArrival?: string; track?: string; scheduledTrack?: string } };
@@ -171,7 +173,7 @@ export async function stationBoard(at: { lat: number; lng: number }, urban: bool
       .then((x) => x.stopTimes)
       .catch(() => [] as BoardST[]);
   // Grandes lignes et régional séparément (sinon les RER / S-Bahn remplissent toute la réponse).
-  const parts = urban ? [await q(URBAN, 120, 250)] : await Promise.all([q(FAST, 120, 250), q(REGIO, 250, 250), q(FAST, 120, 250, true), q(REGIO, 250, 250, true)]); // arrivées : terminus compris
+  const parts = bus ? [await q(BUS, 150, 150)] : urban ? [await q(URBAN, 120, 250)] : await Promise.all([q(FAST, 120, 250), q(REGIO, 250, 250), q(FAST, 120, 250, true), q(REGIO, 250, 250, true)]); // arrivées : terminus compris
   const r = { stopTimes: parts.flat() };
   // La nuit, rien dans les 3 h : on montre alors les premiers trains du matin (jusqu'à 12 h).
   let out = build(r.stopTimes, Date.now() + 3 * 3600_000);
@@ -191,7 +193,7 @@ export async function stationBoard(at: { lat: number; lng: number }, urban: bool
     if (!urban && !ALL_RAIL.split(",").includes(x.mode)) continue;
     const num = (x.tripShortName ?? "").replace(/\D/g, "") || digits(x.displayName ?? "");
     const line = x.routeShortName?.trim() || "";
-    const label = urban ? (/^\d/.test(line) ? `${x.mode === "TRAM" ? "Tram" : "Métro"} ${line}` : line) : x.displayName || `${line} ${num}`.trim();
+    const label = bus ? line || x.displayName || "Bus" : urban ? (/^\d/.test(line) ? `${x.mode === "TRAM" ? "Tram" : "Métro"} ${line}` : line) : x.displayName || `${line} ${num}`.trim();
     // Train « à numéro » seulement (TGV, TER, ICE…) : les RER / S-Bahn (« A », « D ») saturent le tableau.
     if (!urban && !/\d{3,}/.test(label)) continue;
     const key = `${label}|${t.slice(0, 16)}|${x.headsign}`;
