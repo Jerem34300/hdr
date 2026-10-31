@@ -416,3 +416,6 @@
 section:has(.hdar-sheet-up) > .dock,
 :has(.hdar-sheet-up) .dock { z-index: 45; }
 :has(.hdar-sheet-up) .dock .vis-tip { display: none; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

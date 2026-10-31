@@ -774,16 +774,13 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         >
           <p className="font-display text-sm font-bold">Sois le premier à te montrer sur la carte</p>
           {approx && <p className="mt-0.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
-          <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
-            {!located && (
+          {!located && (
+            <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
               <button type="button" className="rounded-full border border-line px-3 py-1.5" onClick={askLocation}>
                 Activer ma position
               </button>
-            )}
-            <button type="button" className="rounded-full border border-line px-3 py-1.5" onClick={() => useHdar.getState().openCity()}>
-              Changer de ville
-            </button>
-          </div>
+            </div>
+          )}
           {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
           {!onboardedMe && <MapCityTeaser />}
         </div>

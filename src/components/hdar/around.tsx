@@ -42,12 +42,12 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             📍 {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
           </button>
         </div>
-        <div className="mt-2 grid grid-cols-[1.5fr_1fr_1fr_1fr_0.95fr] gap-1">
+        <div className="no-scrollbar -mx-3 mt-0.5 flex gap-1 overflow-x-auto px-2 pt-1.5 pb-0.5" data-act="top-row">
           <OnlinePill />
           <AdsButton lat={place.lat} lng={place.lng} />
           <button type="button" data-act="salons" {...bindTap(() => { ackSalonsBadge(); setTab("inbox"); })}
             aria-label={salonBadge ? `Salons, ${salonBadge} nouveaux messages` : "Salons"} className={`${TOP_BTN} bg-[#fbbf24]/10 text-[#f5d27a] ring-[#fbbf24]/35`}>
-            <span className="fit" data-fit>Salons</span>
+            <span>Salons</span>
             {salonBadge > 0 && <Badge n={salonBadge} cls="bg-[#fbbf24]" />}
           </button>
           <button
@@ -58,12 +58,12 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             aria-label={areaUnread ? `Chat du quartier, ${areaUnread} nouveaux messages` : "Chat du quartier"}
             className={`${TOP_BTN} bg-signal/15 text-[#ff8a80] ring-signal/45`}
           >
-            <span className="fit" data-fit>Quartier</span>
+            <span>Quartier</span>
             {areaUnread > 0 && <Badge n={areaUnread} cls="bg-signal" />}
           </button>
           <Link to="/live" data-act="live-chip" aria-label="Live vidéo" className={`${TOP_BTN} bg-[#f472b6]/15 text-[#f9a8d4] ring-[#f472b6]/45`}>
             <Video className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-            <span className="fit" data-fit>Live</span>
+            <span>Live</span>
           </Link>
         </div>
       </header>
@@ -90,7 +90,7 @@ function OnlinePill() {
     <>
       <button type="button" onClick={() => setOpen(true)} className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label="Qui est autour de toi">
         <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-online" />
-        <span className="fit" data-fit>Qui est autour</span>
+        <span>Qui est autour</span>
       </button>
       {open && <OnlineSheet onClose={() => setOpen(false)} demo={import.meta.env.DEV && location.search.includes("enlignedemo") ? ONLINE_DEMO : undefined} />}
     </>
@@ -98,10 +98,11 @@ function OnlinePill() {
 }
 
 /** Les 4 boutons du haut de la carte : même taille, même forme, une teinte de la palette chacun. */
-const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[11.5px] leading-tight font-semibold whitespace-nowrap ring-1";
+// Jamais tronqué : chaque chip garde sa largeur naturelle, s'étire s'il reste de la place, et la rangée défile si besoin.
+const TOP_BTN = "relative flex h-10 flex-[1_0_auto] items-center justify-center gap-1 rounded-full px-[5px] text-[11px] leading-tight font-semibold whitespace-nowrap ring-1";
 function Badge({ n, cls }: { n: number; cls: string }) {
   return (
-    <span className={`flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] leading-none font-bold text-night ${cls}`}>
+    <span className={`pointer-events-none absolute -top-1.5 -end-1 z-10 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-bold text-night ring-2 ring-night ${cls}`}>
       {n > 99 ? "99+" : n}
     </span>
   );
@@ -150,7 +151,7 @@ function AdsButton({ lat, lng }: { lat: number; lng: number }) {
       {...bindTap(open)}
       className={`${TOP_BTN} bg-spot/15 text-[#b3a8ff] ring-spot/40`}
     >
-      <span className="fit" data-fit>Annonces</span>
+      <span>Annonces</span>
       {hits.length > 0 ? <Badge n={hits.length} cls="bg-[#fbbf24]" /> : n > 0 && <Badge n={n} cls="bg-spot" />}
     </button>
   );

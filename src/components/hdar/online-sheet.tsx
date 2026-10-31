@@ -97,7 +97,7 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
             <button key={t} type="button" role="tab" aria-selected={tab === t} data-act={`online-${t}`} onClick={() => setTab(t)}
               className={"flex h-9 items-center justify-center gap-1.5 rounded-full font-bold " + (tab === t ? "bg-ink text-night" : "text-muted")}>
               {t === "now" && <span className="size-2 rounded-full bg-online" />}
-              <span className="truncate">{t === "now" ? "En ligne" : "En ligne récemment"}</span>
+              <span className="text-center leading-tight">{t === "now" ? "En ligne" : "En ligne récemment"}</span>
               <span className="text-xs opacity-70">{counts[t]}</span>
             </button>
           ))}
@@ -113,8 +113,8 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
                   {x.p.min <= 5 && <span className="absolute end-0 bottom-0 size-3 rounded-full border-2 border-night bg-online" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-bold">{x.p.pseudo}{x.p.age ? <span className="font-normal text-muted"> · {x.p.age} ans</span> : null}{x.p.premium ? " 👑" : ""}{x.p.new ? <span className="ms-1.5 rounded-full bg-[#3EE08F]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#3EE08F]">Nouveau</span> : null}</span>
-                  <span className="block truncate text-xs text-muted">{[genderShort(x.p.iam ?? ""), distLabel(x.km)].filter(Boolean).join(" · ")} · <span>{ago(x.p.min)}</span></span>
+                  <span className="block break-words font-bold">{x.p.pseudo}{x.p.age ? <span className="font-normal text-muted"> · {x.p.age} ans</span> : null}{x.p.premium ? " 👑" : ""}{x.p.new ? <span className="ms-1.5 rounded-full bg-[#3EE08F]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#3EE08F]">Nouveau</span> : null}</span>
+                  <span className="block break-words text-xs text-muted">{[genderShort(x.p.iam ?? ""), distLabel(x.km)].filter(Boolean).join(" · ")} · <span>{ago(x.p.min)}</span></span>
                 </span>
               </button>
             </li>
@@ -123,8 +123,8 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
               <button type="button" onClick={() => open(x)} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-start active:bg-surface">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-dashed border-line bg-surface text-xl">👀</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-bold">{x.v.name} <span className="ms-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-muted">sans profil</span></span>
-                  <span className="block truncate text-xs text-muted">{distLabel(x.km)} · <span>{ago(x.v.min)}</span>{onboarded ? " · touche pour écrire" : ""}</span>
+                  <span className="block break-words font-bold">{x.v.name} <span className="ms-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-muted">sans profil</span></span>
+                  <span className="block break-words text-xs text-muted">{distLabel(x.km)} · <span>{ago(x.v.min)}</span>{onboarded ? " · touche pour écrire" : ""}</span>
                 </span>
               </button>
             </li>

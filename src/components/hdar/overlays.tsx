@@ -5,7 +5,7 @@ import { setProfileNote } from "@/lib/hdar/live";
 import { flyTo, glideTo } from "@/lib/hdar/map-focus";
 import { searchAll, type SearchHit } from "@/lib/hdar/search";
 import { useEffect, useRef, useState } from "react";
-import { Building2, Bus, Loader2, LocateFixed, MapPin, MapPinned, Plane, Search, TrainFront, TramFront, X } from "lucide-react";
+import { Building2, Bus, Eye as EyeIcon, Loader2, LocateFixed, MapPin, MapPinned, Plane, Search, TrainFront, TramFront, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CITIES, DESIRES, LENGTHS, PLACES, type Desire, type PlaceKind, type TonightLen } from "@/lib/hdar/data";
@@ -281,17 +281,18 @@ function Cities() {
   return (
     <div className="px-4 pt-6 pb-8">
       <Close />
-      <h2 className="font-display text-2xl font-extrabold">Aller à…</h2>
+      <h2 className="font-display text-2xl font-extrabold">Regarder ailleurs</h2>
+      <p className="mt-1 flex items-start gap-1.5 text-xs text-muted"><EyeIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden /><span>Tu regardes la carte ailleurs : ta position ne change pas, tu n'es jamais localisé·e ailleurs.</span></p>
       <form className="relative mt-4" onSubmit={(e) => { e.preventDefault(); if (hits?.[0]) pick(hits[0]); }}>
         <Search className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
         <input ref={input} data-act="place-search" type="search" enterKeyHint="go" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)}
-          placeholder="Ville, gare, métro, aéroport, lieu…" aria-label="Chercher une ville, une gare, un métro, un aéroport ou un lieu"
+          placeholder="Ville, gare, aéroport…" aria-label="Chercher une ville, une gare, un métro, un aéroport ou un lieu"
           className="h-12 w-full rounded-2xl border border-line bg-night ps-10 pe-10 text-[15px] text-ink outline-none placeholder:text-muted focus:border-signal" />
         {busy && <Loader2 className="absolute end-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted" aria-hidden />}
       </form>
       <button type="button" data-act="search-mine" onClick={mine} className="mt-3 flex h-12 w-full items-center gap-3 rounded-2xl border border-line px-4 text-start">
         <LocateFixed className="size-5 shrink-0 text-online" aria-hidden />
-        <span className="min-w-0"><span className="block truncate font-display font-bold">Ma position</span><span className="block truncate text-xs text-muted">Position arrondie, jamais exacte</span></span>
+        <span className="min-w-0"><span className="block break-words font-display font-bold">Ma position</span><span className="block break-words text-xs text-muted">Position arrondie, jamais exacte</span></span>
       </button>
       {hits === null && (
         <>
@@ -313,8 +314,8 @@ function Cities() {
               <button type="button" onClick={() => pick(h)} className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-2 py-1.5 text-start hover:bg-white/5">
                 <span className={"grid size-9 shrink-0 place-items-center rounded-full ring-1 " + HIT_TONE[h.type]}><I className="size-4" strokeWidth={2} aria-hidden /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{h.name}</span>
-                  <span className="block truncate text-xs text-muted"><span>{HIT_LABEL[h.type]}</span>{h.sub ? " · " + h.sub : ""}</span>
+                  <span className="block break-words font-semibold">{h.name}</span>
+                  <span className="block break-words text-xs text-muted"><span>{HIT_LABEL[h.type]}</span>{h.sub ? " · " + h.sub : ""}</span>
                 </span>
               </button>
             </li>
