@@ -738,25 +738,12 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       })}
       {pins.length === 0 && !finding && (
         <div
-          className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-3xl border border-line bg-night/90 px-3 py-2.5 text-center shadow-xl backdrop-blur"
+          className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <p className="font-display text-sm font-bold">
-            {recent && recent.near > 0
-              ? `🔥 ${recent.near} ${recent.near > 1 ? "personnes actives" : "personne active"} ces dernières 24 h dans le coin`
-              : recent?.nearest
-                ? `🔥 De l'activité à ${recent.nearest.km} km ces dernières 24 h`
-                : "Sois le premier à t'afficher ici ce soir"}
-          </p>
-          <p className="mt-0.5 text-xs text-muted">
-            {approx ? `📍 Position approximative : ${approx}. ` : ""}Personne en ligne maintenant, touche « Se montrer » pour être vu en premier.
-          </p>
+          <p className="font-display text-sm font-bold">Sois le premier à te montrer sur la carte</p>
+          {approx && <p className="mt-0.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
           <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
-            {recent?.nearest && !(recent.near > 0) && (
-              <button type="button" className="rounded-full bg-signal px-3 py-1.5 font-bold text-night" onClick={() => { follow.current = false; setView((v) => ({ ...v, lat: recent.nearest!.lat, lng: recent.nearest!.lng })); animateTo(11); }}>
-                Voir
-              </button>
-            )}
             {!located && (
               <button type="button" className="rounded-full border border-line px-3 py-1.5" onClick={askLocation}>
                 Activer ma position

@@ -8,11 +8,6 @@ import { useHdar } from "@/lib/hdar/store";
 import { approxGeo } from "@/lib/hdar/recent";
 
 type Row = { kind: "profile"; p: OnlinePerson; km: number } | { kind: "discret"; v: OnlineVisitor; km: number };
-type Sort = "near" | "recent" | "photo" | "age" | "new";
-const SORTS: { id: Sort; label: string }[] = [
-  { id: "near", label: "Plus proches" }, { id: "recent", label: "Actifs récemment" }, { id: "photo", label: "Avec photo" },
-  { id: "age", label: "Âge" }, { id: "new", label: "Nouveaux" },
-];
 const NO_F = { minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false };
 
 function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -21,7 +16,7 @@ function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
 }
 /** Distance volontairement grossière : positions arrondies / carreaux, jamais de précision. */
 const distLabel = (k: number) => (k < 1.5 ? "≈ 1 km" : k < 10 ? `≈ ${Math.round(k)} km` : `≈ ${Math.round(k / 5) * 5} km`);
-const ago = (m: number) => (m <= 5 ? "en ligne" : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.floor(m / 60)} h` : `il y a ${Math.floor(m / 1440)} j`);
+const ago = (m: number) => (m < 15 ? "en ligne" : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.floor(m / 60)} h` : `il y a ${Math.floor(m / 1440)} j`);
 
 /** Même personne avec deux profils (deux appareils) : même pseudo + même âge à moins de 5 km → une seule ligne, la plus récente. */
 function dedupe(list: OnlinePerson[]) {
@@ -40,7 +35,7 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
   useEffect(() => { if (!demo && onboarded) void getProfile(deviceId(), deviceId()).then((p) => setMyIam(p?.iam ?? "")).catch(() => undefined); }, [demo, onboarded]);
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(demo?.me ?? null);
   const [data, setData] = useState<{ people: OnlinePerson[]; visitors: OnlineVisitor[] } | null>(demo ? { people: demo.people, visitors: demo.visitors } : null);
-  const [sort, setSort] = useState<Sort>("near");
+  const [tab, setTab] = useState<"now" | "recent">("now");
   const [who, setWho] = useState<"all" | "profiles" | "discrets">("all");
   const [gender, setGender] = useState<string | null>(null);
   const [seekMe, setSeekMe] = useState(false);
@@ -66,15 +61,9 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
     if (gender) r = r.filter((x) => x.kind === "profile" && (x.p.iam ?? "").toLowerCase() === gender);
     if (seekMe && myIam) r = r.filter((x) => x.kind === "profile" && (x.p.seeking ?? "").toLowerCase().split(",").includes(myIam.toLowerCase()));
     const min = (x: Row) => (x.kind === "profile" ? x.p.min : x.v.min);
-    const by: Record<Sort, (a: Row, b: Row) => number> = {
-      near: (a, b) => a.km - b.km,
-      recent: (a, b) => min(a) - min(b),
-      photo: (a, b) => Number(b.kind === "profile" && !!b.p.photo) - Number(a.kind === "profile" && !!a.p.photo) || a.km - b.km,
-      age: (a, b) => (a.kind === "profile" ? a.p.age ?? 999 : 999) - (b.kind === "profile" ? b.p.age ?? 999 : 999),
-      new: (a, b) => (b.kind === "profile" ? (b.p.since ?? "") : "") .localeCompare(a.kind === "profile" ? (a.p.since ?? "") : "") || Number(b.kind === "profile" && b.p.new) - Number(a.kind === "profile" && a.p.new),
-    };
-    return r.sort(by[sort]);
-  }, [data, center, who, sort, gender, seekMe, myIam]);
+    // Onglets : « En ligne » (actif il y a moins de 15 min) / « En ligne récemment » (le reste), du plus proche au plus loin.
+    return r.filter((x) => (tab === "now" ? min(x) < 15 : min(x) >= 15)).sort((a, b) => a.km - b.km);
+  }, [data, center, who, gender, seekMe, myIam, tab]);
   const open = (x: Row) => {
     const st = useHdar.getState();
     if (x.kind === "profile") { onClose(); st.openProfile(x.p.id, x.p.pseudo); return; }
@@ -82,13 +71,17 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
     onClose(); st.openLive(x.v.id, x.v.name);
   };
   const nP = data ? dedupe(data.people).length : 0, nV = data?.visitors.length ?? 0;
+  const counts = useMemo(() => {
+    const all = data ? [...dedupe(data.people).map((p) => p.min), ...data.visitors.map((v) => v.min)] : [];
+    return { now: all.filter((m) => m < 15).length, recent: all.filter((m) => m >= 15).length };
+  }, [data]);
   const chip = (on: boolean) => "h-8 shrink-0 rounded-full border px-3 text-xs font-bold " + (on ? "border-transparent bg-ink text-night" : "border-line text-muted");
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55" onClick={onClose}>
       <div className="flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-3xl border border-line bg-night pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 px-4 pt-4">
           <span className="size-2 animate-pulse rounded-full bg-online" />
-          <p className="flex-1 font-display text-lg font-extrabold">Visibles autour de toi</p>
+          <p className="flex-1 font-display text-lg font-extrabold">Qui est autour</p>
           <button type="button" aria-label="Fermer" onClick={onClose} className="flex size-9 items-center justify-center rounded-full bg-surface"><X className="size-4" /></button>
         </div>
         <p className="px-4 text-xs text-muted">Seulement les personnes déjà visibles sur la carte · distances approximatives</p>
@@ -99,12 +92,19 @@ export function OnlineSheet({ onClose, demo }: { onClose: () => void; demo?: { m
           {GENDERS.map((g) => <button key={g.id} type="button" className={chip(gender === g.id)} onClick={() => setGender(gender === g.id ? null : g.id)}>{g.short}</button>)}
           {myIam && <button type="button" className={chip(seekMe)} onClick={() => setSeekMe(!seekMe)}>Me cherchent</button>}
         </div>
-        <div className="mt-1 flex gap-2 overflow-x-auto px-4 pb-2">
-          {SORTS.map((s) => <button key={s.id} type="button" className={"h-8 shrink-0 rounded-full px-3 text-xs font-bold " + (sort === s.id ? "bg-signal text-night" : "bg-surface text-muted")} onClick={() => setSort(s.id)}>{s.label}</button>)}
+        <div className="mx-4 mt-2 mb-2 grid grid-cols-2 rounded-full bg-surface p-0.5 text-sm" role="tablist">
+          {(["now", "recent"] as const).map((t) => (
+            <button key={t} type="button" role="tab" aria-selected={tab === t} data-act={`online-${t}`} onClick={() => setTab(t)}
+              className={"flex h-9 items-center justify-center gap-1.5 rounded-full font-bold " + (tab === t ? "bg-ink text-night" : "text-muted")}>
+              {t === "now" && <span className="size-2 rounded-full bg-online" />}
+              <span className="truncate">{t === "now" ? "En ligne" : "En ligne récemment"}</span>
+              <span className="text-xs opacity-70">{counts[t]}</span>
+            </button>
+          ))}
         </div>
         <ul className="min-h-0 flex-1 overflow-y-auto px-2">
           {!data && <li className="p-6 text-center text-sm text-muted">Chargement…</li>}
-          {data && rows.length === 0 && <li className="p-6 text-center text-sm text-muted">Personne pour l'instant avec ces critères.</li>}
+          {data && rows.length === 0 && <li className="p-6 text-center text-sm text-muted">{tab === "now" ? "Personne en ligne pour l'instant avec ces critères." : "Personne en ligne récemment avec ces critères."}</li>}
           {rows.map((x) => x.kind === "profile" ? (
             <li key={x.p.id}>
               <button type="button" onClick={() => open(x)} className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-start active:bg-surface">

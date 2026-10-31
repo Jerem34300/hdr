@@ -1,7 +1,6 @@
 import { OnlineSheet } from "./online-sheet";
 import { ONLINE_DEMO } from "./online-demo";
 import { useEffect, useState } from "react";
-import { onlineCount } from "@/lib/hdar/recent";
 import { useScene } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
 import { bindTap } from "./tap";
@@ -12,7 +11,8 @@ import { toast } from "sonner";
 import { ackSalonsBadge, useSalonInbox } from "@/lib/hdar/salon-inbox";
 import { playFavoriteSound } from "@/lib/hdar/sounds";
 import { adsCount, alertHits, listAds, regionFromPos, slugify, type Ad } from "@/lib/hdar/ads";
-import { X } from "lucide-react";
+import { Video, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
   const enterLine = useHdar((s) => s.enterLine);
@@ -42,7 +42,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             📍 {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
           </button>
         </div>
-        <div className="mt-2 grid grid-cols-4 gap-1.5">
+        <div className="mt-2 grid grid-cols-[1.5fr_1fr_1fr_1fr_0.95fr] gap-1">
           <OnlinePill />
           <AdsButton lat={place.lat} lng={place.lng} />
           <button type="button" data-act="salons" {...bindTap(() => { ackSalonsBadge(); setTab("inbox"); })}
@@ -61,6 +61,10 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             <span className="fit" data-fit>Quartier</span>
             {areaUnread > 0 && <Badge n={areaUnread} cls="bg-signal" />}
           </button>
+          <Link to="/live" data-act="live-chip" aria-label="Live vidéo" className={`${TOP_BTN} bg-[#f472b6]/15 text-[#f9a8d4] ring-[#f472b6]/45`}>
+            <Video className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+            <span className="fit" data-fit>Live</span>
+          </Link>
         </div>
       </header>
       <div className="relative min-h-0 flex-1">
@@ -79,23 +83,14 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
   );
 }
 
-/** « ● 3 en ligne » : tout le monde avec l'appli ouverte (5 min), pas seulement les gens visibles sur la carte. */
+/** « Qui est autour » : ouvre la liste des personnes visibles (en ligne / en ligne récemment), sans compteur. */
 function OnlinePill() {
-  const [n, setN] = useState(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("badgesdemo") ? 1 : import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("enlignedemo") ? 7 : 0));
-  useEffect(() => {
-    let stop = false;
-    if (import.meta.env.DEV && location.search.includes("enlignedemo")) return;
-    const run = () => { if (document.visibilityState === "visible") void onlineCount().then((v) => !stop && setN(v)); };
-    run();
-    const id = window.setInterval(run, 60_000);
-    return () => { stop = true; window.clearInterval(id); };
-  }, []);
   const [open, setOpen] = useState(() => import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("enlignedemo"));
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label={`${n} en ligne, voir qui est visible`}>
+      <button type="button" onClick={() => setOpen(true)} className={`${TOP_BTN} bg-online/10 text-online ring-online/35`} aria-label="Qui est autour de toi">
         <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-online" />
-        <span className="fit" data-fit>{n} en ligne</span>
+        <span className="fit" data-fit>Qui est autour</span>
       </button>
       {open && <OnlineSheet onClose={() => setOpen(false)} demo={import.meta.env.DEV && location.search.includes("enlignedemo") ? ONLINE_DEMO : undefined} />}
     </>
@@ -103,7 +98,7 @@ function OnlinePill() {
 }
 
 /** Les 4 boutons du haut de la carte : même taille, même forme, une teinte de la palette chacun. */
-const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1.5 text-[12px] font-semibold whitespace-nowrap ring-1";
+const TOP_BTN = "relative flex h-10 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[11.5px] leading-tight font-semibold whitespace-nowrap ring-1";
 function Badge({ n, cls }: { n: number; cls: string }) {
   return (
     <span className={`flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] leading-none font-bold text-night ${cls}`}>
