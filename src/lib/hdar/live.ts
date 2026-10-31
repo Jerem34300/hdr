@@ -1700,3 +1700,4 @@ export const meetState = (withId: string) => rpc<MeetState | null>("hdar_meet_st
 export const meetPropose = (to: string) => rpc<MeetState>("hdar_meet_propose", { p_to: to });
 export const meetAccept = (id: string) => rpc<MeetState>("hdar_meet_accept", { p_id: id });
 export const meetStop = (id: string) => rpc("hdar_meet_stop", { p_id: id });
+export const meetFlash = (id: string, color: string) => rpc("hdar_meet_flash", { p_id: id, p_color: color });

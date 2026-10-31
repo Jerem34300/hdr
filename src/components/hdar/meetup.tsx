@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, Navigation2, Sparkles, X } from "lucide-react";
+import { Check, Navigation2, Smartphone, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { t, tf } from "@/lib/hdar/i18n";
 import { approxDistance, askCompass, bearingDeg, distanceM, warmth, type useMeetup } from "@/lib/hdar/meetup";
@@ -87,8 +87,8 @@ function Compass({ pseudo, photo, meet, onShow }: { pseudo: string; photo?: stri
           <span>{tf("Fin dans {n}", clock)}</span>
         </p>
         <div className="mt-1.5 flex items-center gap-2">
-          <button type="button" data-act="meet-show" onClick={onShow} className="flex h-9 min-w-0 items-center gap-1.5 rounded-full bg-signal/15 px-3 text-xs font-bold text-signal ring-1 ring-signal/40">
-            <Sparkles className="size-4 shrink-0" aria-hidden /><span>Fais-toi voir</span>
+          <button type="button" data-act="meet-show" onClick={onShow} className="flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-signal px-3 py-1.5 text-[13px] font-extrabold leading-tight text-night shadow-[0_0_18px_rgba(250,111,108,.45)]">
+            <Smartphone className="size-4 shrink-0" aria-hidden /><span>Fais clignoter son tél</span>
           </button>
           <button type="button" aria-label="Arrêter le partage" title="Arrêter le partage" onClick={() => void meet.stop()} className="grid size-9 shrink-0 place-items-center rounded-full border border-line"><X className="size-4" /></button>
         </div>
@@ -177,17 +177,17 @@ function ShowSheet({ pseudo, onClose, onFlash, onQuick }: { pseudo: string; onCl
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60" onClick={onClose} data-sheet-root data-act="show-sheet">
       <div className="w-full max-w-md rounded-t-3xl border-t border-line bg-surface px-4 pt-4 pb-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-display text-lg font-extrabold">Fais-toi voir</h3>
+          <h3 className="font-display text-lg font-extrabold">Fais clignoter son tél</h3>
           <button type="button" aria-label="Fermer" onClick={onClose} className="grid size-9 place-items-center rounded-full bg-white/5"><X className="size-4" /></button>
         </div>
-        <p className="mt-0.5 text-xs text-muted">{tf("Fais clignoter l'écran de {n}, puis lève ton téléphone.", pseudo)}</p>
+        <p className="mt-0.5 text-xs text-muted">{tf("Tu ne trouves pas {n} ? Son écran clignote dans la couleur choisie et lui demande de lever son téléphone.", pseudo)}</p>
         <div className="mt-3 flex flex-wrap gap-2.5" role="radiogroup" aria-label="Couleur">
           {MEET_COLORS.map((x) => (
             <button key={x} type="button" role="radio" aria-checked={c === x} aria-label={x} onClick={() => setC(x)} className={`size-10 rounded-full ring-offset-2 ring-offset-surface ${c === x ? "ring-2 ring-white" : "ring-1 ring-line"}`} style={{ background: x }} />
           ))}
         </div>
         <button type="button" data-act="meet-flash" onClick={() => onFlash(c)} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full px-4 font-bold text-night" style={{ background: c }}>
-          <Sparkles className="size-5" aria-hidden />Faire clignoter son écran
+          <Sparkles className="size-5" aria-hidden />Faire clignoter maintenant
         </button>
         <p className="mt-4 text-xs font-semibold text-muted">Message rapide</p>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -209,7 +209,7 @@ export function MeetFlash({ color, pseudo, onDone }: { color: string; pseudo: st
   if (typeof document === "undefined") return null;
   return createPortal(
     <button type="button" data-act="meet-flash-screen" onClick={onDone} className="meet-flash fixed inset-0 z-[95] flex flex-col items-center justify-end pb-24 text-center" style={{ background: color }}>
-      <span className="rounded-full bg-black/70 px-5 py-3 font-display text-lg font-bold text-white">{tf("{n} te cherche : lève ton téléphone", pseudo)}</span>
+      <span className="rounded-full bg-black/70 px-5 py-3 font-display text-lg font-bold text-white">{tf("{n} ne te trouve pas : lève ton téléphone", pseudo)}</span>
       <span className="mt-2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">Touche pour arrêter</span>
     </button>,
     document.body,

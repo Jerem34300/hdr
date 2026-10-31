@@ -1,5 +1,7 @@
 import { deviceId } from "./device";
 import { pushSubscribe, pushUnsubscribe } from "./live";
+import { SUPABASE_KEY, SUPABASE_URL } from "./session";
+import { useLang } from "./i18n";
 
 export const VAPID_PUBLIC_KEY =
   "BCYFlSj5FLTQ-HnjgG0xBXkB_xGD5d39kSzuKQY_G0l_t8DHRSxmEak0FvkxUGgAdmdYkXuzqS3zvwuUCcvLeEQ";
@@ -34,6 +36,7 @@ export async function enablePush(): Promise<boolean> {
     (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC_KEY) }));
   const j = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
   await pushSubscribe(deviceId(), j.endpoint, j.keys.p256dh, j.keys.auth);
+  syncSwConfig();
   return true;
 }
 
@@ -58,4 +61,13 @@ export async function refreshPush() {
   if (!sub) return;
   const j = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
   await pushSubscribe(deviceId(), j.endpoint, j.keys.p256dh, j.keys.auth).catch(() => undefined);
+  syncSwConfig();
+}
+
+/** Donne au service worker l'adresse + la clé publique (pour « Refuser » depuis une notif) et la langue des notifs. */
+export function syncSwConfig() {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+  void navigator.serviceWorker.ready
+    .then((r) => r.active?.postMessage({ type: "hdar-cfg", url: SUPABASE_URL, key: SUPABASE_KEY, lang: useLang.getState().lang }))
+    .catch(() => undefined);
 }

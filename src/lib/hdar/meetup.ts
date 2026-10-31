@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { meetAccept, meetPropose, meetState, meetStop, type MeetState } from "./live";
+import { meetAccept, meetFlash, meetPropose, meetState, meetStop, type MeetState } from "./live";
 import { supabase } from "./session";
 
 /** « Se retrouver » : boussole partagée entre deux personnes qui se sont déjà écrit.
  *  Les positions précises ne transitent que par un canal Realtime privé, pendant la session : rien n'est stocké. */
 export type Fix = { lat: number; lng: number; acc: number; at: number };
 export type MeetDemo = { state: MeetState; me?: Fix; other?: Fix; heading?: number; flash?: string };
+
+/** Action venue d'une notification (appli ouverte par la notif). Appliquée une seule fois. */
+type Intent = { with: string; accept: string | null; refuse: string | null; flash: string | null };
+let intent: Intent | null = null;
+export const setMeetIntent = (i: Intent) => { intent = i.accept || i.refuse || i.flash ? i : null; };
+const askPush = () => { if (typeof window !== "undefined") window.dispatchEvent(new Event("hdar-ask-push")); };
 
 export function distanceM(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 6371e3, r = Math.PI / 180;
@@ -127,14 +133,26 @@ export function useMeetup(withId: string, enabled: boolean, demo?: MeetDemo) {
     };
   }, [active, demo]);
 
+  // Intention venue d'une notification.
+  useEffect(() => {
+    if (demo || !st || !intent || intent.with !== withId) return;
+    const i = intent;
+    if (st.status === "pending" && !st.mine && st.id && (i.accept === st.id || i.refuse === st.id)) {
+      intent = null;
+      if (i.accept) void meetAccept(st.id).then(setSt).catch(() => undefined);
+      else void meetStop(st.id).then(() => setSt({ ...st, status: "ended", ended_by: "me" })).catch(() => undefined);
+    } else if (st.status === "active" && i.flash) { intent = null; setFlash(i.flash); }
+    else if (st.status !== "pending") intent = null;
+  }, [st, withId, demo]);
+
   const notify = () => void chan.current?.send({ type: "broadcast", event: "s", payload: {} });
   return {
     st, me, other, heading, flash, gpsErr,
     clearFlash: () => setFlash(null),
-    propose: async () => { await askCompass(); if (demo) return setSt({ allowed: true, id: "demo", status: "pending", mine: true }); setSt(await meetPropose(withId)); },
-    accept: async () => { await askCompass(); if (demo) return setSt({ ...st!, status: "active" }); setSt(await meetAccept(st!.id!)); },
+    propose: async () => { await askCompass(); askPush(); if (demo) return setSt({ allowed: true, id: "demo", status: "pending", mine: true }); setSt(await meetPropose(withId)); },
+    accept: async () => { await askCompass(); askPush(); if (demo) return setSt({ ...st!, status: "active" }); setSt(await meetAccept(st!.id!)); },
     stop: async () => { if (st?.id && !demo) { notify(); await meetStop(st.id); } setSt(st ? { ...st, status: "ended", ended_by: "me" } : null); },
-    sendFlash: (color: string) => { if (!demo) void chan.current?.send({ type: "broadcast", event: "f", payload: { id: st?.me, color } }); },
+    sendFlash: (color: string) => { if (demo || !st?.id) return; void chan.current?.send({ type: "broadcast", event: "f", payload: { id: st.me, color } }); void meetFlash(st.id, color).catch(() => undefined); },
   };
 }
 

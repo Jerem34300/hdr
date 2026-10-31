@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { dismissPushAsk, enablePush, refreshPush, shouldAskPush } from "@/lib/hdar/push";
+import { dismissPushAsk, enablePush, refreshPush, shouldAskPush, syncSwConfig } from "@/lib/hdar/push";
+import { setMeetIntent } from "@/lib/hdar/meetup";
+import { useLang } from "@/lib/hdar/i18n";
 import { useHdar } from "@/lib/hdar/store";
 
 /** Offers notifications once, right after the user sends their first private message (never on load). */
@@ -9,8 +11,12 @@ export function PushPrompt() {
   useEffect(() => {
     void refreshPush();
     // Opened from a notification: /?chat=<id>
-    const chat = new URLSearchParams(window.location.search).get("chat");
+    const qs = new URLSearchParams(window.location.search);
+    const chat = qs.get("chat");
     if (chat) {
+      // Depuis une notif « Se retrouver » : Accepter / Refuser / écran qui clignote.
+      const fl = qs.get("flash");
+      setMeetIntent({ with: chat, accept: qs.get("meetaccept"), refuse: qs.get("meetrefuse"), flash: fl && /^[0-9a-f]{6}$/i.test(fl) ? "#" + fl : null });
       useHdar.getState().openLive(chat, "Message");
       window.history.replaceState(null, "", "/");
     }
@@ -28,7 +34,8 @@ export function PushPrompt() {
       if (shouldAskPush()) window.setTimeout(() => setShow(true), 1500);
     };
     window.addEventListener("hdar-ask-push", ask);
-    return () => window.removeEventListener("hdar-ask-push", ask);
+    const unLang = useLang.subscribe(() => syncSwConfig());
+    return () => { window.removeEventListener("hdar-ask-push", ask); unLang(); };
   }, []);
   if (!show) return null;
   return (
