@@ -68,7 +68,9 @@ const near = (a: SearchHit, b: SearchHit) => Math.abs(a.lat - b.lat) < 0.01 && M
 
 /** Nos lieux d'abord (ils ouvrent leur fiche), puis les villes/adresses OSM sans doublon. */
 export async function searchAll(q: string, at: { lat: number; lng: number } | null, signal: AbortSignal): Promise<SearchHit[]> {
-  const [a, b] = await Promise.all([ours(q, at), photon(q, at, signal).catch(() => [] as SearchHit[])]);
+  const [a0, b] = await Promise.all([ours(q, at), photon(q, at, signal).catch(() => [] as SearchHit[])]);
+  // Même nom + même type à moins d'1 km (doublons OSM : quais, entrées) : une seule ligne.
+  const a = a0.filter((h, i) => a0.findIndex((x) => x.type === h.type && x.name.toLowerCase() === h.name.toLowerCase() && near(x, h)) === i);
   const ql = q.toLowerCase();
   const cities = b.filter((h, i) => h.type === "city" && b.findIndex((x) => x.type === "city" && x.name === h.name && x.sub === h.sub) === i);
   const lead = cities.filter((h) => h.name.toLowerCase().startsWith(ql));
