@@ -1,8 +1,45 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useHdar } from "@/lib/hdar/store";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export type TipArrow = "up" | "down" | "left" | "right";
+type Zone = { left: number; top: number; right: number; bottom: number };
+
+/**
+ * File d'attente globale des bulles d'aide : une seule visible à la fois, jamais par-dessus
+ * une feuille/fiche ouverte, le bandeau « Sois le premier… » ou une autre bulle.
+ */
+export function tipBlocked(id: string, zone?: Zone) {
+  if (typeof document === "undefined") return true;
+  if (useHdar.getState().sheet) return true;
+  if (document.querySelector(".fixed.inset-0, [data-sheet-root]")) return true;
+  if ([...document.querySelectorAll<HTMLElement>("[data-tip-bubble]")].some((e) => e.dataset.tipBubble !== id)) return true;
+  const ban = document.querySelector('[data-act="empty-banner"]')?.getBoundingClientRect();
+  return !!(ban && zone && zone.left < ban.right && zone.right > ban.left && zone.top < ban.bottom && zone.bottom > ban.top);
+}
+
+/** Rectangle probable d'une bulle (≈ 210 × 90 px) posée du côté `arrow` d'une cible. */
+export function tipZone(t: DOMRect, arrow: TipArrow): Zone {
+  const W = 210, H = 90, cx = (t.left + t.right) / 2, cy = (t.top + t.bottom) / 2;
+  if (arrow === "up") return { left: cx - W / 2, right: cx + W / 2, top: t.bottom, bottom: t.bottom + H };
+  if (arrow === "down") return { left: cx - W / 2, right: cx + W / 2, top: t.top - H, bottom: t.top };
+  if (arrow === "right") return { left: t.left - W, right: t.left, top: cy - H / 2, bottom: cy + H / 2 };
+  return { left: t.right, right: t.right + W, top: cy - H / 2, bottom: cy + H / 2 };
+}
+
+/** Vrai quand la bulle `id` a le droit de s'afficher (revérifié toutes les 500 ms). */
+export function useTipAllowed(id: string, on: boolean, selector: string, arrow: TipArrow) {
+  const [ok, setOk] = useState(false);
+  useEffect(() => {
+    if (!on) { setOk(false); return; }
+    const check = () => { const t = document.querySelector(selector)?.getBoundingClientRect(); setOk(!tipBlocked(id, t ? tipZone(t, arrow) : undefined)); };
+    check();
+    const iv = window.setInterval(check, 500);
+    return () => window.clearInterval(iv);
+  }, [id, on, selector, arrow]);
+  return ok;
+}
 
 /** Pointe : petit carré tourné à 45°, mêmes bord et fond que la bulle. Le côté indique où est la cible. */
 const POINTER: Record<TipArrow, string> = {
@@ -22,7 +59,7 @@ export function TipBubble({ arrow, children, onClose, onClick, className, testId
 }) {
   const Tag = onClick ? "button" : "div";
   return (
-    <div className={cn("vis-tip pointer-events-auto relative", arrow === "left" || arrow === "right" ? "vis-tip-x" : "", className)} data-testid={testId}>
+    <div className={cn("vis-tip pointer-events-auto relative", arrow === "left" || arrow === "right" ? "vis-tip-x" : "", className)} data-testid={testId} data-tip-bubble={testId ?? "tip"}>
       <Tag
         {...(onClick ? { type: "button" as const, onClick } : {})}
         className={cn(

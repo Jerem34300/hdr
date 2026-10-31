@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
-import { TipBubble } from "./tip-bubble";
+import { TipBubble, useTipAllowed } from "./tip-bubble";
 
 /** Paillettes autour du bouton caché : [x, y depuis le centre, délai, taille]. */
 const SPARKS: [number, number, number, number][] = [[-40, -18, 0, 7], [34, -30, 0.7, 6], [42, 6, 1.4, 8], [-36, 14, 1.9, 5], [-8, -42, 1.1, 6]];
@@ -93,10 +93,11 @@ export function VisibilityButton({ visible, label, bind }: { visible: boolean; l
       }
     } else toast("Tu es caché");
   }, [visible]);
+  const tipOk = useTipAllowed("vis-tip", tip, '[data-act="tonight"]', "down");
   const closeTip = () => (setTip(false), localStorage.setItem(TIP_KEY, "1"));
   return (
     <div className="relative -mt-6 flex min-w-0 flex-col items-center pb-1">
-      {tip && (
+      {tip && tipOk && (
         <div className="vis-tip absolute bottom-full z-30 mb-2 w-52">
           <TipBubble arrow="down" onClick={closeTip} testId="vis-tip">Touche pour te montrer sur la carte</TipBubble>
         </div>

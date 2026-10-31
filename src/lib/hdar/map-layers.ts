@@ -10,7 +10,8 @@ const DEFAULTS: Layers = { station: true, metro: true, bus: true, airport: true,
 
 /** Groupe d'un lieu de la carte (les partenaires ne sont jamais mélangés aux lieux publics). */
 export function layerOfPlace(kind: PlaceKind, partner: boolean): LayerKey {
-  if (partner || kind === "bar" || kind === "club" || kind === "sauna") return "partners";
+  // Partenaires : toujours affichés (aucun calque ne les masque, voir map-view).
+  if (partner) return "partners";
   if (kind === "toilets") return "toilets";
   if (kind === "beach") return "beach";
   if (kind === "park" || kind === "garden" || kind === "viewpoint" || kind === "promenade") return "nature";

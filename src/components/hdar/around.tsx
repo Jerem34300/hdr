@@ -61,7 +61,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             <span>Quartier</span>
             {areaUnread > 0 && <Badge n={areaUnread} cls="bg-signal" />}
           </button>
-          <Link to="/live" data-act="live-chip" aria-label="Live vidéo" className={`${TOP_BTN} bg-[#f472b6]/15 text-[#f9a8d4] ring-[#f472b6]/45`}>
+          <Link to="/live" data-act="live-chip" data-tip="live" aria-label="Live vidéo" className={`${TOP_BTN} bg-[#f472b6]/15 text-[#f9a8d4] ring-[#f472b6]/45`}>
             <Video className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
             <span>Live</span>
           </Link>

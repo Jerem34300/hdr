@@ -104,7 +104,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const layers = useLayers((x) => x.layers);
   const setLayer = useLayers((x) => x.set);
   useEffect(() => useLayers.getState().init(), []);
-  const placesOn = layers.partners || layers.beach || layers.nature || layers.public;
+  // Toujours chargés : les lieux partenaires restent sur la carte quels que soient les calques.
+  const placesOn = true;
   const toiletsOn = layers.toilets;
   const transitOn = layers.station || layers.metro || layers.bus || layers.airport;
   const adsOn = layers.ads;
@@ -417,7 +418,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     w: lngFromX(left / scale, z), e: lngFromX((left + size.w) / scale, z),
   };
   const adsPins = useAdPins(adsOn && zoom >= 9, adsBox);
-  const places = (toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces).filter((pl) => layers[layerOfPlace(pl.kind, pl.partner)]);
+  const places = (toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces).filter((pl) => pl.partner || layers[layerOfPlace(pl.kind, pl.partner)]);
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {
@@ -770,6 +771,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       })}
       {pins.length === 0 && !finding && !visible && (
         <div
+          data-act="empty-banner"
           className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -1025,7 +1027,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       <div className={`absolute top-16 start-3 ${layersOpen ? "z-[35]" : "z-30"}`}>
         <button
           type="button"
-          aria-label="Calques de la carte"
+          data-act="layers" aria-label="Calques de la carte"
           aria-expanded={layersOpen}
           className="flex size-11 items-center justify-center rounded-full bg-night/90 text-ink"
           onClick={() => setLayersOpen((v) => !v)}
@@ -1033,9 +1035,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           <Layers className="size-5" />
         </button>
         {layersOpen && (
-          <div className="mt-2 w-56 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
-            <LayerRow k="partners" on={layers.partners} set={setLayer} />
-            <p className="mt-1 border-t border-line px-2 pt-2 text-[11px] font-bold tracking-wider text-muted uppercase">Lieux publics</p>
+          <div data-sheet-root className="mt-2 w-56 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
+            <p className="px-2 pt-1 text-[11px] font-bold tracking-wider text-muted uppercase">Lieux publics</p>
             {(["station", "metro", "bus", "airport", "beach", "nature", "public", "toilets", "ads"] as const).map((k) => <LayerRow key={k} k={k} on={layers[k]} set={setLayer} />)}
             <button
               type="button"

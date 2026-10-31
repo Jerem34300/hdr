@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { myPhotos, useHdar } from "@/lib/hdar/store";
 import { useActiveBoost } from "./boost";
-import { TipBubble } from "./tip-bubble";
+import { TipBubble, tipBlocked, tipZone } from "./tip-bubble";
 
 type TipId = "connect" | "live" | "pocket" | "spots" | "photo" | "boost";
 type Arrow = "up" | "down" | "left" | "right";
@@ -15,6 +15,7 @@ type TipDef = {
 };
 
 const TIPS: TipDef[] = [
+  { id: "live", target: "live", text: "Tente un Live, rencontre en vidéo", sub: "", arrow: "up" },
   { id: "connect", target: "connect", text: "Touche pour te montrer sur la carte", sub: "Se montrer", arrow: "down" },
   { id: "pocket", target: "pocket", text: "Dis bonjour au quartier", sub: "", arrow: "up" },
   { id: "spots", target: "spots", text: "Trouve où sortir ce soir", sub: "", arrow: "down" },
@@ -105,6 +106,7 @@ export function MapTips() {
     if (import.meta.env.DEV && location.search.includes("tip=")) return;
     let stop = false;
     let hideTimer = 0;
+    let retry = 0;
     const pick = () => {
       if (stop) return;
       // Pas encore connecté ou sans photo : les deux bulles clés reviennent plus souvent.
@@ -136,6 +138,10 @@ export function MapTips() {
       }
       if (!chosen) return;
       if (!document.querySelector(`[data-tip="${chosen.target}"]`)) return;
+      // Une seule bulle à la fois, jamais sur une feuille ni sur le bandeau « Sois le premier… » : sinon on attend.
+      const tgt = document.querySelector(`[data-tip="${chosen.target}"]`)!.getBoundingClientRect();
+      const blocked = tipBlocked(`tip-${chosen.id}`, tipZone(tgt, chosen.arrow));
+      if (blocked) { retry = window.setTimeout(pick, 4000); return; }
       writeTs(LAST_KEY);
       setActive(chosen);
       hideTimer = window.setTimeout(() => setActive(null), AUTO);
@@ -146,6 +152,7 @@ export function MapTips() {
       stop = true;
       window.clearTimeout(start);
       window.clearTimeout(hideTimer);
+      window.clearTimeout(retry);
     };
   }, [visible, hasPhoto, boosted]);
 
@@ -157,7 +164,8 @@ export function MapTips() {
     const measure = () => {
       const root = document.querySelector("[data-tip-root]") as HTMLElement | null;
       const el = document.querySelector(`[data-tip="${active.target}"]`) as HTMLElement | null;
-      if (!root || !el) {
+      // Masquée dès qu'une feuille s'ouvre ou que le bandeau apparaît sous la bulle Live.
+      if (!root || !el || tipBlocked(`tip-${active.id}`, tipZone(el.getBoundingClientRect(), active.arrow))) {
         setPos(null);
         return;
       }
