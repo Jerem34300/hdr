@@ -39,7 +39,7 @@ import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
 import { GateRadar } from "./gate-radar";
-import { ArrowRight, Loader2, MapPin, MessagesSquare, ShieldCheck, Video } from "lucide-react";
+import { ArrowRight, Check, Loader2, MapPin, MessagesSquare, ShieldCheck, Video } from "lucide-react";
 import {
   TURNSTILE_SITE_KEY,
   adultConfirmed,
@@ -97,6 +97,7 @@ function devSiteKey() {
 function AdultGateInner({ children }: { children: ReactNode }) {
   const [state, setState] = useState<"loading" | "ask" | "ok">("loading");
   const [adult, setAdult] = useState(false);
+  const [checked, setChecked] = useState(false);
   const [challenge, setChallenge] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const submitRef = useRef<() => void>(() => undefined);
@@ -173,6 +174,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
   const submit = () => {
     if (busy) return;
+    if (needsAdult && !checked) return setError("Hdar est réservé aux 18 ans et plus.");
     if (!token && !widgetFailed) { setWaiting(true); return; } // on entre tout seul dès que la vérification répond
     setWaiting(false);
     setBusy(true);
@@ -236,12 +238,22 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           {challenge && <p className="mb-1.5 flex items-center justify-center gap-1.5 text-xs text-white/70"><ShieldCheck className="size-3.5" strokeWidth={2} />Petite vérification anti-robot</p>}
           <div ref={box} className="flex justify-center [&_iframe]:max-w-full" />
         </div>
+        {needsAdult && (
+          <label data-act="gate-adult" className="gate-adult flex min-h-[52px] cursor-pointer items-center gap-3 rounded-2xl border border-[#FA6F6C]/30 bg-white/[.04] px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors has-[:checked]:border-[#FA6F6C]/70 has-[:checked]:bg-[#FA6F6C]/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FFB4A8]">
+            <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => { setChecked(e.target.checked); setError(""); }} />
+            <span aria-hidden className="gate-box grid size-7 shrink-0 place-items-center rounded-[10px] border-2 border-[#FA6F6C]/55 bg-black/30 transition-[background,box-shadow,border-color] peer-checked:border-[#FA6F6C] peer-checked:bg-[#FA6F6C]/20 peer-checked:shadow-[0_0_14px_2px_rgba(250,111,108,.55)]">
+              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="#FF8A80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path className="gate-check" d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            </span>
+            <span className="min-w-0 flex-1">J'ai 18 ans ou plus</span>
+            <span aria-hidden className="shrink-0 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] px-2 py-0.5 text-[11px] font-extrabold text-night shadow-[0_0_10px_rgba(250,111,108,.45)]">18+</span>
+          </label>
+        )}
         {error && <p className="text-center text-sm text-red-400">{error}</p>}
-        <button type="submit" data-act="gate-enter" disabled={busy} className="gate-enter flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] text-lg font-extrabold text-night shadow-[0_10px_40px_-8px_rgba(250,111,108,.75)] active:scale-[.98] disabled:opacity-70">
+        <button type="submit" data-act="gate-enter" disabled={busy || (needsAdult && !checked)} className="gate-enter flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] text-lg font-extrabold text-night shadow-[0_10px_40px_-8px_rgba(250,111,108,.75)] active:scale-[.98] disabled:opacity-45 disabled:shadow-none">
           {busy || waiting ? <><Loader2 className="size-5 animate-spin" strokeWidth={2.5} />{busy ? "Connexion…" : "Vérification…"}</> : <>Entrer<ArrowRight className="size-5" strokeWidth={2.5} /></>}
         </button>
         <p className="text-center text-[11px] leading-snug text-white/55">
-          {needsAdult ? "En entrant, tu confirmes avoir 18 ans ou plus et tu acceptes les " : "En entrant, tu acceptes les "}
+          {"En entrant, tu acceptes les "}
           <a className="underline" href="/cgu">conditions d'utilisation</a> et la{" "}
           <a className="underline" href="/confidentialite">politique de confidentialité</a>.
         </p>

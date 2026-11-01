@@ -441,3 +441,8 @@ section:has(.hdar-sheet-up) > .dock,
 @keyframes gate-me-ping { 0% { r: 3; opacity: .5 } 100% { r: 12; opacity: 0 } }
 .gate-me-ping { animation: gate-me-ping 2.2s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .gate-flare, .gate-me-ping { animation: none } }
+
+/* Case 18+ de l'entrée : coche tracée au trait */
+.gate-check { stroke-dasharray: 22; stroke-dashoffset: 22; transition: stroke-dashoffset .28s ease-out .05s; filter: drop-shadow(0 0 3px rgba(255,138,128,.9)); }
+.gate-adult input:checked + .gate-box .gate-check { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) { .gate-check, .gate-box { transition: none } }
