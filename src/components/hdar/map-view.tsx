@@ -215,7 +215,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         .catch(() => undefined);
     };
     load();
-    const id = window.setInterval(load, 5000);
+    // 10 s et seulement au premier plan (5 s pour chaque client saturait la base aux pics de connexions)
+    const id = window.setInterval(() => document.visibilityState === "visible" && load(), 10_000);
     return () => {
       stop = true;
       window.clearInterval(id);

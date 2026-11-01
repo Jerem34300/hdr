@@ -80,13 +80,13 @@ export function useConversationsSync() {
         .catch(() => undefined);
     };
     load();
-    // Faster inbox while the app is in front, slow in background.
+    // Boîte de réception : 10 s au premier plan, 60 s en arrière-plan (4 s saturait la base aux pics de connexions).
     let id = 0;
     const tick = () => {
       load();
-      id = window.setTimeout(tick, document.hidden ? 20000 : 4000);
+      id = window.setTimeout(tick, document.hidden ? 60000 : 10000);
     };
-    id = window.setTimeout(tick, 4000);
+    id = window.setTimeout(tick, 10000);
     document.addEventListener("visibilitychange", load);
     return () => {
       stop = true;
