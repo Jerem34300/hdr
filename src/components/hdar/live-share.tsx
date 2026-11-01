@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Share2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AtSign, Camera, Copy, Ghost, MessageCircle, MessageSquare, MessagesSquare, MoreHorizontal, Music2, Send, Share2, X } from "lucide-react";
 import { livePos, liveShareCreate, liveShareDone, liveShareView, type LiveShareView } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { adultConfirmed, confirmAdult } from "@/lib/hdar/session";
 let shareCache: Promise<string> | null = null;
 // Si le lien personnel est refusé (pas de position, limite…), on partage le lien général du Live : le partage ne bloque jamais.
 const shareCode = () => (shareCache ??= liveShareCreate().then((r) => r?.code || "").catch(() => { setTimeout(() => (shareCache = null), 60000); return ""; }));
+const roomUrl = (room: string) => `https://hdar.chat/live?room=${encodeURIComponent(room)}`;
 const shareUrl = (code: string) => (code ? `https://hdar.chat/live/${code}` : "https://hdar.chat/live");
 
 async function copyText(t: string): Promise<boolean> {
@@ -19,47 +20,70 @@ async function copyText(t: string): Promise<boolean> {
 }
 
 /**
- * Bouton « Partager mon live » (1:1, diffusion, spectateur). Cause du bug Android : on attendait la création du lien
- * (appel réseau) AVANT navigator.share ; le geste était « consommé », share() rejetait (NotAllowedError) et l'erreur
- * était avalée : rien ne se passait. Désormais le lien est préchargé au montage, share() part tout de suite dans le clic,
- * et sinon on copie le lien (toast « Lien copié »). AbortError (l'utilisateur ferme la feuille) : silencieux.
+ * Bouton « Partager » du Live : ouvre une feuille PAR-DESSUS le Live (rien n'est démonté, aucune navigation).
+ * Lien : celui du Live précis (?room=) quand je diffuse ou regarde, sinon mon lien perso, sinon le lien général.
+ * Les applis s'ouvrent via des liens d'intention en nouvel onglet / nouvelle appli (target _blank) : le Live continue.
  */
-/** Lien direct vers un Live précis (identifiant de salon éphémère : ni position, ni email, ni identifiant de profil). */
-const roomUrl = (room: string) => `https://hdar.chat/live?room=${encodeURIComponent(room)}`;
 export function ShareLiveButton({ compact, room }: { compact?: boolean; room?: string | null }) {
   const [code, setCode] = useState<string | null>(null);
-  const busy = useRef(false);
+  const [open, setOpen] = useState(false);
   useEffect(() => { let on = true; void livePos().catch(() => null).then(() => shareCode()).then((c) => on && setCode(c)).catch(() => undefined); return () => { on = false; }; }, []);
-  const done = async (c: string) => { if (!c) return; const r = await liveShareDone(c).catch(() => null); if (r) { void usePremium.getState().refresh(); toast(`Merci du partage : ${r.label}`); } };
-  const fallback = async (url: string, c: string) => { if (await copyText(url)) { toast("Lien copié"); void done(c); } else toast(`Copie impossible : ${url}`); };
-  const go = () => {
-    if (busy.current) return;
-    if (room && /^[0-9a-f-]{36}$/i.test(room)) { // je diffuse (seul ou en duo) ou je regarde : lien vers CE Live
-      const url = roomUrl(room); const data = { title: "hdar. — Live", text: "Live en cours sur hdar. Viens voir !", url };
-      if (typeof navigator.share === "function" && (!navigator.canShare || navigator.canShare(data))) {
-        busy.current = true;
-        navigator.share(data).catch((e: unknown) => { if ((e as { name?: string })?.name !== "AbortError") void copyText(url).then((ok) => toast(ok ? "Lien du Live copié" : `Copie impossible : ${url}`)); }).finally(() => (busy.current = false));
-      } else void copyText(url).then((ok) => toast(ok ? "Lien du Live copié" : `Copie impossible : ${url}`));
-      return;
-    }
-    const text = "Je suis en Live sur hdar. Viens voir qui est dans le coin !";
-    if (code === null) { // lien pas encore prêt : on le crée puis on copie (le presse-papiers tolère mieux l'attente que share)
-      busy.current = true;
-      void shareCode().then((c) => { setCode(c); return fallback(shareUrl(c), c); }).catch((e) => toast(e instanceof Error ? e.message.replace(/^.*?: /, "") : "Partage impossible")).finally(() => (busy.current = false));
-      return;
-    }
-    const url = shareUrl(code); const data = { title: "hdar. — mon live", text, url };
-    if (typeof navigator.share === "function" && (!navigator.canShare || navigator.canShare(data))) {
-      busy.current = true;
-      navigator.share(data).then(() => void done(code), (e: unknown) => {
-        const n = (e as { name?: string })?.name;
-        if (n === "AbortError") return; // fermé par l'utilisateur
-        void fallback(url, code); // NotAllowedError (geste perdu), feuille indisponible…
-      }).finally(() => (busy.current = false));
-    } else void fallback(url, code);
-  };
-  return <button type="button" data-testid="share" aria-label="Partager mon live" onClick={go} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
-    className={`flex h-9 items-center gap-1 rounded-full bg-black/50 text-xs font-bold backdrop-blur ${compact ? "w-9 justify-center" : "px-3"}`}><Share2 className="size-4" />{!compact && " Partager"}</button>;
+  const direct = !!room && /^[0-9a-f-]{36}$/i.test(room);
+  const url = direct ? roomUrl(room!) : shareUrl(code ?? "");
+  return <>
+    <button type="button" data-testid="share" aria-label="Partager le Live" onClick={() => setOpen(true)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+      className={`flex h-9 items-center gap-1 rounded-full bg-black/50 text-xs font-bold backdrop-blur ${compact ? "w-9 justify-center" : "px-3"}`}><Share2 className="size-4" />{!compact && " Partager"}</button>
+    {open && <ShareSheet url={url} text={direct ? "Live en cours sur hdar. Viens voir !" : "Je suis en Live sur hdar. Viens voir qui est dans le coin !"} code={direct ? "" : code ?? ""} onClose={() => setOpen(false)} />}
+  </>;
+}
+
+function ShareSheet({ url, text, code, onClose }: { url: string; text: string; code: string; onClose: () => void }) {
+  const e = encodeURIComponent, both = `${text} ${url}`;
+  const thanks = async () => { if (!code) return; const r = await liveShareDone(code).catch(() => null); if (r) { void usePremium.getState().refresh(); toast(`Merci du partage : ${r.label}`); } };
+  const copy = async (note?: string) => { if (await copyText(url)) { toast(note ?? "Lien copié", { id: "live-share" }); void thanks(); } else toast(`Copie impossible : ${url}`); };
+  const apps: { k: string; label: string; href: string; icon: ReactNode }[] = [
+    { k: "wa", label: "WhatsApp", href: `https://wa.me/?text=${e(both)}`, icon: <MessageCircle className="size-5" /> },
+    { k: "tg", label: "Telegram", href: `https://t.me/share/url?url=${e(url)}&text=${e(text)}`, icon: <Send className="size-5" /> },
+    { k: "sms", label: "SMS", href: `sms:?&body=${e(both)}`, icon: <MessageSquare className="size-5" /> },
+    { k: "x", label: "X", href: `https://x.com/intent/post?text=${e(text)}&url=${e(url)}`, icon: <AtSign className="size-5" /> },
+    { k: "ms", label: "Messenger", href: `fb-messenger://share/?link=${e(url)}`, icon: <MessagesSquare className="size-5" /> },
+    { k: "sc", label: "Snapchat", href: `https://www.snapchat.com/scan?attachmentUrl=${e(url)}`, icon: <Ghost className="size-5" /> },
+  ];
+  const nativeOk = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const stop = (ev: { stopPropagation: () => void }) => ev.stopPropagation();
+  return (
+    <div data-testid="share-sheet" className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={onClose} onTouchStart={stop} onTouchEnd={stop} onPointerDown={stop}>
+      <div className="w-full rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink" onClick={stop}>
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-display text-lg font-bold">Partager le Live</p>
+          <button type="button" aria-label="Fermer" onClick={onClose} className="flex size-9 items-center justify-center rounded-full bg-night"><X className="size-4" /></button>
+        </div>
+        <p className="mt-1 text-xs break-all text-ink/60" translate="no">{url}</p>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {apps.map((a) => (
+            <a key={a.k} data-share={a.k} href={a.href} target="_blank" rel="noopener noreferrer" onClick={() => void thanks()}
+              className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-center text-xs font-semibold">
+              <span className="text-[#FA6F6C]">{a.icon}</span><span className="leading-tight">{a.label}</span>
+            </a>
+          ))}
+          <button type="button" data-share="copy" onClick={() => void copy()} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-xs font-semibold">
+            <span className="text-[#FA6F6C]"><Copy className="size-5" /></span><span className="leading-tight">Copier le lien</span>
+          </button>
+          <button type="button" data-share="tiktok" onClick={() => void copy("Lien copié : colle-le dans TikTok")} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-xs font-semibold">
+            <span className="text-[#FA6F6C]"><Music2 className="size-5" /></span><span className="leading-tight">TikTok</span>
+          </button>
+          <button type="button" data-share="insta" onClick={() => void copy("Lien copié : colle-le dans Instagram")} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-xs font-semibold">
+            <span className="text-[#FA6F6C]"><Camera className="size-5" /></span><span className="leading-tight">Instagram</span>
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-ink/50">TikTok et Instagram n'ont pas de partage de lien : le lien est copié, colle-le dans ton message ou ta story.</p>
+        {nativeOk && (
+          <button type="button" data-share="more" onClick={() => void navigator.share({ title: "hdar. — Live", text, url }).then(() => void thanks(), () => undefined)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-night py-3 text-sm font-bold"><MoreHorizontal className="size-4" /> Plus</button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 const TILE = 256;

@@ -1,3 +1,4 @@
+import { LiveDock } from "@/components/hdar/live-dock";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
@@ -54,6 +55,7 @@ export const Route = createRootRoute({
         <LandingMemo />
         <AuthProvider>
           <Outlet />
+          <LiveDock />
           <LaunchOfferSheet />
           <WelcomeFirst />
           <FounderCelebration />

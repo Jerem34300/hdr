@@ -1,6 +1,8 @@
 import { GENDERS, genderShort, seekingShort } from "@/lib/hdar/live";
 import { useEffect, useRef, useState } from "react";
 import { FloatingHearts, HeartPacks } from "./hearts";
+import { useLiveDock } from "@/lib/hdar/live-dock";
+import { LiveMinimizeButton } from "./live-dock";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShareLiveButton } from "./live-share";
@@ -39,8 +41,11 @@ function gathered(c: RTCPeerConnection) {
 }
 const label = (c: LiveCard) => [c.age ? `${c.age} ans` : null, genderShort(c.iam) || null, c.seeking ? `cherche ${seekingShort(c.seeking)}` : null].filter(Boolean).join(" · ");
 
+/** Paramètres du Live (?room, ?with, démo…) : ceux de l'ouverture, même si l'URL a changé depuis (Live réduit sur la carte). */
+const liveSearch = () => useLiveDock.getState().search || (typeof location !== "undefined" ? location.search : "");
 export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium?: boolean; unblurred?: boolean; online?: number }; pro?: string }) {
   const nav = useNavigate();
+  const exitLive = () => { useLiveDock.getState().close(); return nav({ to: "/" }); };
   const myPros = useMyPro();
   const proPlace = pro ? myPros.find((p) => p.id === pro) : undefined;
   const [giftOpen, setGiftOpen] = useState(false);
@@ -55,11 +60,11 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const pipe = useRef<BlurPipe | null>(null);
   const [mic, setMic] = useState(true);
   const [asked, setAsked] = useState(false);
-  const [burst, setBurst] = useState(demo && typeof location !== "undefined" && location.search.includes("heart") ? 1 : 0);
-  const [hearts, setHearts] = useState<number | null>(demo ? (typeof location !== "undefined" && location.search.includes("nohearts") ? 0 : 12) : null);
+  const [burst, setBurst] = useState(demo && typeof location !== "undefined" && liveSearch().includes("heart") ? 1 : 0);
+  const [hearts, setHearts] = useState<number | null>(demo ? (typeof location !== "undefined" && liveSearch().includes("nohearts") ? 0 : 12) : null);
   const bottomBar = useBottomBar<HTMLDivElement>();
-  const demoBc = !!demo && typeof location !== "undefined" && location.search.includes("bcast");
-  const [packsOpen, setPacksOpen] = useState(!!demo && typeof location !== "undefined" && location.search.includes("packs"));
+  const demoBc = !!demo && typeof location !== "undefined" && liveSearch().includes("bcast");
+  const [packsOpen, setPacksOpen] = useState(!!demo && typeof location !== "undefined" && liveSearch().includes("packs"));
   useEffect(() => { if (!demo) void myHearts().then((h) => setHearts(h.unlimited ? Infinity : h.balance)).catch(() => undefined); }, [demo]);
   const sendHeart = async () => {
     if (!peerRef.current && !demo) return;
@@ -85,14 +90,14 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     if (echo) setP2pLines((l) => [...l, { key: `p${Date.now()}${Math.random()}`, pseudo: "Toi", body, mine: true }].slice(-30));
   };
   /** Dev uniquement : test de bout en bout avec vraie caméra (factice) et vrai LiveKit, sans compte. */
-  const e2e = !!demo && import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("e2e");
+  const e2e = !!demo && import.meta.env.DEV && typeof location !== "undefined" && liveSearch().includes("e2e");
     const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
-  const [filterOpen, setFilterOpen] = useState(() => typeof location !== "undefined" && new URLSearchParams(location.search).has("filters"));
+  const [filterOpen, setFilterOpen] = useState(() => typeof location !== "undefined" && new URLSearchParams(liveSearch()).has("filters"));
   const [reporting, setReporting] = useState(false);
   /** hdar+ demandé depuis le Live : feuille par-dessus, on ne quitte le Live que si on le choisit. */
   const [upsell, setUpsell] = useState(false);
   const [more, setMore] = useState(false);
-  const [confirmBc, setConfirmBc] = useState(() => !!demo && typeof location !== "undefined" && location.search.includes("confirm"));
+  const [confirmBc, setConfirmBc] = useState(() => !!demo && typeof location !== "undefined" && liveSearch().includes("confirm"));
   const localRef = useRef<MediaStream | null>(null);
   const meVid = useRef<HTMLVideoElement>(null);
   const themVid = useRef<HTMLVideoElement>(null);
@@ -106,14 +111,14 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   // Live à plusieurs (v52) : diffusion « Inviter » + fil de Lives à regarder
   const [gOn, setGOn] = useState(false);
   useEffect(() => { if (!pro && (!demo || e2e)) void groupEnabled().then(setGOn); }, [demo, pro, e2e]);
-  const [watching, setWatching] = useState<string | null>(() => (e2e ? new URLSearchParams(location.search).get("watch") : null));
+  const [watching, setWatching] = useState<string | null>(() => (e2e ? new URLSearchParams(liveSearch()).get("watch") : null));
   const watchRef = useRef<string | null>(watching);
   const feed = useRef<{ at: number; rooms: string[]; seen: Set<string>; turn: number; left: Map<string, number> }>({ at: 0, rooms: [], seen: new Set(), turn: 0, left: new Map() });
   const bc = useBroadcast(() => outgoing(), () => localRef.current?.getAudioTracks()[0] ?? null);
   const broadcasting = !!bc.room || demoBc;
   // partenaire du 1:1 : « X diffuse » → il peut diffuser aussi (cam à 3+), uniquement s'il accepte
   const co = useCoBroadcast(() => outgoing(), () => localRef.current?.getAudioTracks()[0] ?? null);
-  const [hostBc, setHostBc] = useState<{ room: string; n: number; names: string[] } | null>(() => (demo && typeof location !== "undefined" && location.search.includes("coinvite") ? { room: "demo", n: 3, names: ["Léo", "Sam", "Max"] } : null));
+  const [hostBc, setHostBc] = useState<{ room: string; n: number; names: string[] } | null>(() => (demo && typeof location !== "undefined" && liveSearch().includes("coinvite") ? { room: "demo", n: 3, names: ["Léo", "Sam", "Max"] } : null));
   const [coNo, setCoNo] = useState<string | null>(null);
   const [coWith, setCoWith] = useState<{ id: string; pseudo: string } | null>(null); // côté diffuseur
   const p2pSend = (m: object) => {
@@ -298,7 +303,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
       if (!(m.includes("live_tooclose") && back)) toast(m.includes("live_nopos") ? "Active ta position : le Live ne te met jamais en relation avec quelqu'un à moins de 2 km" : m.includes("live_photo") ? "Le Live est réservé aux profils avec une photo validée" : m.includes("premium") ? "Réservé à hdar+" : m || "Live indisponible");
-      if (m.includes("live_tooclose") && back) { stop(false); setPhase("intro"); setTooClose({ id: back, name: new URLSearchParams(location.search).get("name") || prev?.pseudo || "" }); return; }
+      if (m.includes("live_tooclose") && back) { stop(false); setPhase("intro"); setTooClose({ id: back, name: new URLSearchParams(liveSearch()).get("name") || prev?.pseudo || "" }); return; }
       if (m.includes("live_nopos")) { stop(false); setGate("Active ta position pour entrer dans le Live."); setPhase("intro"); }
       else if (m.includes("live_photo") || m.includes("live_age") || m.includes("profil")) { stop(false); setGate(m.includes("live_age") ? "Indique ton âge." : m.includes("live_photo") ? "Ta première photo doit être validée." : "Crée ton profil."); setPhase("intro"); }
       if (m.includes("live_terms")) { localStorage.removeItem(`hdar-live-terms-v${LIVE_TERMS_VERSION}`); stop(); }
@@ -319,9 +324,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
     // Lien partagé « ?room=<salon> » : on ouvre directement ce Live (après l'entrée 18+ et les règles habituelles à l'entrée).
-    const sharedRoom = new URLSearchParams(location.search).get("room");
+    const sharedRoom = new URLSearchParams(liveSearch()).get("room");
     if (sharedRoom && /^[0-9a-f-]{36}$/i.test(sharedRoom) && (await groupEnabled())) return enterWatch(sharedRoom);
-    const w = new URLSearchParams(location.search).get("with");
+    const w = new URLSearchParams(liveSearch()).get("with");
     const target = w && /^[0-9a-f-]{36}$/i.test(w) ? w : undefined;
     // « Rejoindre son live » : s'il diffuse à plusieurs, on regarde sa diffusion (règle des 2 km vérifiée à l'entrée)
     if (target && (await groupEnabled())) { try { const r = await roomOf(target); if (r) return enterWatch(r); } catch { /* */ } }
@@ -338,7 +343,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     void bc.stop();
     watchRef.current = null; setWatching(null);
     void rouletteLeave(false).catch(() => undefined);
-    if (leave) void nav({ to: "/" });
+    if (leave) void exitLive();
   }
 
   async function loop() {
@@ -422,8 +427,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const [gate, setGate] = useState<string | null>(null);
   const [tooClose, setTooClose] = useState<{ id: string; name: string } | null>(null);
   if (tooClose) {
-    const goChat = () => { useHdar.getState().openLive(tooClose.id, tooClose.name); void nav({ to: "/" }); };
-    const goCall = () => { const t = tooClose; void nav({ to: "/" }); void startCall(t.id, t.name); };
+    const goChat = () => { useHdar.getState().openLive(tooClose.id, tooClose.name); void exitLive(); };
+    const goCall = () => { const t = tooClose; void exitLive(); void startCall(t.id, t.name); };
     const hasProfile = !!me.pseudo;
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur">
@@ -436,9 +441,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
             <button type="button" onClick={goChat} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display text-lg font-bold text-night shadow-[0_0_30px_#FA6F6C88]"><MessageCircle className="me-1.5 inline size-4 align-[-0.2em]" />Lui écrire en privé</button>
             <button type="button" onClick={goCall} className="relative mt-3 w-full rounded-full border border-[#FA6F6C]/60 py-3 font-bold text-[#FA6F6C]"><Video className="me-1.5 inline size-4 align-[-0.2em]" />Appel vidéo à deux</button>
           </> : (
-            <button type="button" onClick={() => { useHdar.getState().setTab("me"); void nav({ to: "/" }); }} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Crée ton profil pour lui écrire</button>
+            <button type="button" onClick={() => { useHdar.getState().setTab("me"); void exitLive(); }} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Crée ton profil pour lui écrire</button>
           )}
-          <button type="button" onClick={() => { setTooClose(null); void nav({ to: "/" }); }} className="relative mt-4 text-sm text-ink/60 underline">Fermer</button>
+          <button type="button" onClick={() => { setTooClose(null); void exitLive(); }} className="relative mt-4 text-sm text-ink/60 underline">Fermer</button>
         </div>
       </div>
     );
@@ -450,8 +455,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         <Video className="size-12 text-[#FA6F6C]" strokeWidth={1.75} />
         <h1 className="font-display text-2xl font-bold">Crée ton profil pour entrer dans le Live</h1>
         <p className="max-w-xs text-sm text-ink/80">{gate ?? `Il te manque ${missing}.`} Le Live est réservé aux profils avec un pseudo, un âge et une première photo validée.</p>
-        <button type="button" onClick={() => { useHdar.getState().setTab("me"); void nav({ to: "/" }); }} className="w-full max-w-xs rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Compléter mon profil</button>
-        <button type="button" onClick={() => void nav({ to: "/" })} className="text-sm text-ink/60">Retour à la carte</button>
+        <button type="button" onClick={() => { useHdar.getState().setTab("me"); void exitLive(); }} className="w-full max-w-xs rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Compléter mon profil</button>
+        <button type="button" onClick={() => void exitLive()} className="text-sm text-ink/60">Retour à la carte</button>
       </div>
     );
   }
@@ -472,7 +477,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <label className="relative flex max-w-xs items-center gap-2 text-sm"><input type="checkbox" checked={okTerms} onChange={(e) => setOkTerms(e.target.checked)} className="size-5 accent-[#FA6F6C]" /> J'ai compris</label>
         )}
         <button type="button" disabled={!okTerms && !(typeof localStorage !== "undefined" && localStorage.getItem(termsKey))} onClick={() => void enter()} className="relative w-full max-w-xs rounded-full bg-gradient-to-r from-[#FA6F6C] via-[#f472b6] to-[#fbbf24] py-3.5 font-display font-bold text-night shadow-[0_0_30px_#FA6F6C] disabled:opacity-40">Entrer dans le Live</button>
-        <button type="button" onClick={() => void nav({ to: "/" })} className="relative text-sm text-ink/60">Retour à la carte</button>
+        <button type="button" onClick={() => void exitLive()} className="relative text-sm text-ink/60">Retour à la carte</button>
       </div>
     );
   }
@@ -480,7 +485,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   if (watching) {
     return <>
       <WatchView key={watching} room={watching} onNext={() => { if (watchRef.current !== watching) return; feed.current.left.set(watching, Date.now()); watchRef.current = null; setWatching(null); void next(); }} onExit={() => stop()}
-        onTooClose={() => { watchRef.current = null; setWatching(null); const w = new URLSearchParams(location.search).get("with"); if (w) { stop(false); setPhase("intro"); setTooClose({ id: w, name: new URLSearchParams(location.search).get("name") || "" }); } else void next(); }} />
+        onTooClose={() => { watchRef.current = null; setWatching(null); const w = new URLSearchParams(liveSearch()).get("with"); if (w) { stop(false); setPhase("intro"); setTooClose({ id: w, name: new URLSearchParams(liveSearch()).get("name") || "" }); } else void next(); }} />
       <CoachMark group />
     </>;
   }
@@ -513,6 +518,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
           {gOn && !broadcasting && !co.room && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy || co.busy} onClick={() => (hostBc ? void coJoin() : setConfirmBc(true))} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
             className="flex h-9 items-center gap-1 rounded-full border border-[#FA6F6C] bg-black/50 px-2.5 text-xs font-bold text-[#FA6F6C] backdrop-blur disabled:opacity-50"><Radio className="size-4" /> {bc.busy || co.busy ? "Connexion…" : hostBc ? "Diffuser en duo" : "Diffuser"}</button>}
+          <LiveMinimizeButton />
           <ShareLiveButton compact room={bc.room ?? co.room ?? hostBc?.room ?? null} />
           <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>

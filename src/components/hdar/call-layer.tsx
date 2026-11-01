@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
-import { Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Minimize2, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff } from "lucide-react";
+import { FloatingWindow } from "./floating-window";
 import { acceptCall, hangUp, switchCamera, toggleCam, toggleMic, useCall, watchSignals } from "@/lib/hdar/call";
 
 function StreamVideo({ stream, muted, className }: { stream: MediaStream | null; muted?: boolean; className: string }) {
@@ -17,6 +18,10 @@ export function CallLayer() {
   const { phase, peerPseudo, local, remote, micOn, camOn, facing, switching } = useCall();
 
   useEffect(() => watchSignals(), []);
+  // Appel réduit : vignette flottante déplaçable. La connexion vit dans le module d'appel (call.ts) : réduire,
+  // chatter, aller sur la carte ou changer d'onglet ne coupe rien. Toucher = plein écran, bouton = raccrocher.
+  const [min, setMin] = useState(false);
+  useEffect(() => { if (phase === "idle" || phase === "ringing") setMin(false); }, [phase]);
 
   if (phase === "idle") return null;
 
@@ -53,8 +58,25 @@ export function CallLayer() {
   const status =
     phase === "calling" ? "Appel en cours…" : phase === "connecting" ? "Connexion…" : "";
 
+  if (min) {
+    // la connexion vit dans call.ts : la vignette n'affiche que les flux (aucune coupure en réduisant / rouvrant)
+    return (
+      <FloatingWindow id="call" testid="call-mini" ratio={4 / 3} defaultW={120} ringClass="ring-online" onTap={() => setMin(false)}
+        overlay={<>
+          <span className="pointer-events-none absolute inset-x-1 top-1 truncate text-[10px] font-bold text-white drop-shadow">{peerPseudo}</span>
+          <button type="button" aria-label="Raccrocher" onClick={hangUp} className="absolute bottom-1.5 left-1/2 z-10 flex size-9 -translate-x-1/2 items-center justify-center rounded-full bg-signal text-night"><PhoneOff className="size-4" /></button>
+        </>}>
+        {() => <>
+          <StreamVideo stream={remote} className="absolute inset-0 size-full object-cover" />
+          {phase !== "in-call" && <span className="absolute inset-0 flex items-center justify-center bg-night/70 px-1 text-center text-[11px]">{status}</span>}
+        </>}
+      </FloatingWindow>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black text-ink">
+      <button type="button" data-testid="call-min" aria-label="Réduire l'appel" onClick={() => setMin(true)} className="absolute top-4 start-4 z-10 flex size-11 items-center justify-center rounded-full bg-surface/90"><Minimize2 className="size-5" /></button>
       <StreamVideo stream={remote} className="absolute inset-0 size-full object-cover" />
       {phase !== "in-call" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-night/70">

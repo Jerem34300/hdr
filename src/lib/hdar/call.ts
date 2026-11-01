@@ -289,3 +289,4 @@ export function watchSignals() {
 }
 
 if (typeof window !== "undefined") useCall.subscribe((st) => { const w = window as unknown as { __hdarCall?: boolean; __hdarIdle?: () => void }; const b = st.phase !== "idle"; if (w.__hdarCall && !b) setTimeout(() => w.__hdarIdle?.(), 1500); w.__hdarCall = b; });
+if (import.meta.env.DEV && typeof window !== "undefined") (window as unknown as { __call: typeof useCall }).__call = useCall;
