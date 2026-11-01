@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { meetAccept, meetFlash, meetPropose, meetState, meetStop, type MeetState } from "./live";
 import { supabase } from "./session";
+import { create } from "zustand";
 
 /** « Se retrouver » : boussole partagée entre deux personnes qui se sont déjà écrit.
  *  Les positions précises ne transitent que par un canal Realtime privé, pendant la session : rien n'est stocké. */
@@ -51,6 +52,8 @@ export function useMeetup(withId: string, enabled: boolean, demo?: MeetDemo) {
   const chan = useRef<RealtimeChannel | null>(null);
   const meRef = useRef<Fix | null>(null);
   const active = st?.status === "active";
+  const prevWith = useRef(withId);
+  if (prevWith.current !== withId) { prevWith.current = withId; if (!demo) setSt(null); }
 
   // État : au chargement, puis toutes les 8 s tant que le chat est ouvert (4 s pendant une demande/session).
   useEffect(() => {
@@ -159,4 +162,29 @@ export function useMeetup(withId: string, enabled: boolean, demo?: MeetDemo) {
 export async function askCompass() {
   const D = (globalThis as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent;
   try { if (D?.requestPermission) await D.requestPermission(); } catch { /* refus : on garde la flèche « nord en haut » */ }
+}
+
+/** Session « Se retrouver » partagée entre le chat et la carte : un seul canal / un seul suivi GPS (MeetRunner, racine de l'appli). */
+export type MeetApi = ReturnType<typeof useMeetup>;
+export type MeetTarget = { id: string; pseudo: string; photo?: string };
+export const useMeetLive = create<{ target: MeetTarget | null; pinned: boolean; api: MeetApi | null; follow: boolean }>(() => ({ target: null, pinned: false, api: null, follow: true }));
+/** Le chat privé s'ouvre : il « épingle » sa conversation (sauf si une session active tourne avec quelqu'un d'autre). */
+export function pinMeet(t: MeetTarget) {
+  const s = useMeetLive.getState();
+  if (s.target && s.target.id !== t.id && s.api?.st?.status === "active") return;
+  useMeetLive.setState({ target: s.target?.id === t.id ? { ...s.target, ...t } : t, pinned: true, api: s.target?.id === t.id ? s.api : null });
+}
+/** Le chat se ferme : on garde la session seulement si elle est active (carte, radar flottant). */
+export function unpinMeet(id: string) {
+  const s = useMeetLive.getState();
+  if (s.target?.id !== id) return;
+  if (s.api?.st?.status === "active") useMeetLive.setState({ pinned: false });
+  else useMeetLive.setState({ target: null, pinned: false, api: null });
+}
+/** Tendance Plus chaud / Plus froid sur les dernières distances. */
+export function useTrend(d: number | null) {
+  const l = useRef<number[]>([]);
+  if (d != null) { const a = l.current; if (!a.length || Math.abs(a[a.length - 1]! - d) > 1) a.push(d); if (a.length > 4) a.shift(); }
+  const a = l.current;
+  return a.length >= 2 ? a[a.length - 1]! - a[0]! : 0;
 }

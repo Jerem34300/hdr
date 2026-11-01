@@ -3,9 +3,11 @@ import { createPortal } from "react-dom";
 import { Check, Navigation2, Smartphone, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { t, tf } from "@/lib/hdar/i18n";
-import { approxDistance, askCompass, bearingDeg, distanceM, warmth, type useMeetup } from "@/lib/hdar/meetup";
+import { approxDistance, askCompass, bearingDeg, distanceM, useMeetLive, useMeetup, useTrend, warmth, type MeetDemo } from "@/lib/hdar/meetup";
+import { useHdar } from "@/lib/hdar/store";
 
 type Meet = ReturnType<typeof useMeetup>;
+export { type Meet };
 export const MEET_COLORS = ["#FA6F6C", "#3EE08F", "#FACC15", "#38BDF8", "#A78BFA", "#FFFFFF"];
 const QUICK = ["Je suis au bar", "Je suis devant l'entrée", "J'arrive", "Tu me vois ?", "Je suis en veste rouge"];
 
@@ -61,12 +63,9 @@ export function MeetBar({ pseudo, photo, meet, onQuick }: { pseudo: string; phot
 function Compass({ pseudo, photo, meet, onShow }: { pseudo: string; photo?: string; meet: Meet; onShow: () => void }) {
   const { me, other, heading, gpsErr, st } = meet;
   const clock = useClock(st?.expires_at);
-  const lastD = useRef<number[]>([]);
   const d = me && other ? distanceM(me, other) : null;
   const acc = me && other ? Math.round(Math.max(me.acc, other.acc)) : me ? Math.round(me.acc) : null;
-  if (d != null) { const l = lastD.current; if (!l.length || Math.abs(l[l.length - 1]! - d) > 1) l.push(d); if (l.length > 4) l.shift(); }
-  const l = lastD.current;
-  const trend = l.length >= 2 ? l[l.length - 1]! - l[0]! : 0;
+  const trend = useTrend(d);
   const w = d != null ? warmth(d) : null;
   const rot = me && other ? bearingDeg(me, other) - (heading ?? 0) : 0;
   const weak = acc != null && acc > 40;
@@ -101,7 +100,7 @@ const SCALES = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
 const fmtM = (m: number) => (m >= 1000 ? `${m / 1000} km` : `${m} m`);
 
 /** Radar : soi au centre, l'autre en point lumineux (direction + distance), balayage qui fait briller le point à chaque passage. */
-function Radar({ d, angle, color, initial, photo, heading, label }: { d: number | null; angle: number | null; color: string; initial: string; photo?: string; heading: number | null; label: string }) {
+export function Radar({ d, angle, color, initial, photo, heading, label, className = "size-[104px]" }: { d: number | null; angle: number | null; color: string; initial: string; photo?: string; heading: number | null; label: string; className?: string }) {
   const R = 44; // rayon utile (viewBox −50…50)
   const max = SCALES.find((x) => (d ?? 0) * 1.15 <= x) ?? SCALES[SCALES.length - 1]!;
   const rings = ({ 20: [5, 10, 20], 50: [10, 25, 50], 100: [25, 50, 100], 200: [50, 100, 200], 500: [100, 250, 500], 1000: [250, 500, 1000], 2000: [500, 1000, 2000], 5000: [1000, 2500, 5000], 10000: [2500, 5000, 10000] } as Record<number, number[]>)[max]!;
@@ -142,7 +141,7 @@ function Radar({ d, angle, color, initial, photo, heading, label }: { d: number 
   const n = heading != null ? -heading : 0;
   const id = "rg" + initial.length;
   return (
-    <svg viewBox="-50 -50 100 100" className="size-[104px] shrink-0" role="img" aria-label={label} data-act="meet-radar">
+    <svg viewBox="-50 -50 100 100" className={className + " shrink-0"} role="img" aria-label={label} data-act="meet-radar">
       <defs>
         <radialGradient id={id + "bg"}><stop offset="0%" stopColor="#0b0e12" /><stop offset="100%" stopColor="#11161d" /></radialGradient>
         <clipPath id={id + "c"}><circle r={R + 4} /></clipPath>
@@ -213,5 +212,60 @@ export function MeetFlash({ color, pseudo, onDone }: { color: string; pseudo: st
       <span className="mt-2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">Touche pour arrêter</span>
     </button>,
     document.body,
+  );
+}
+
+/** Fait tourner la session « Se retrouver » à la racine : elle survit quand on quitte le chat pour la carte. */
+export function MeetRunner() {
+  const target = useMeetLive((s) => s.target);
+  const demo = mapDemo();
+  const api = useMeetup(demo ? "demo" : target?.id ?? "", !demo && !!target, demo);
+  useEffect(() => {
+    if (demo && !useMeetLive.getState().target) useMeetLive.setState({ target: { id: "demo", pseudo: "Lucas34" } });
+    useMeetLive.setState({ api: target || demo ? api : null });
+  });
+  // Fin de session hors du chat : tout disparaît.
+  const st = api.st?.status;
+  useEffect(() => {
+    const s = useMeetLive.getState();
+    if (!s.pinned && s.target && st !== "active" && st !== undefined) useMeetLive.setState({ target: null, api: null, follow: true });
+  }, [st]);
+  return api.flash && !useMeetLive.getState().pinned && target ? <MeetFlash color={api.flash} pseudo={target.pseudo} onDone={api.clearFlash} /> : null;
+}
+/** Aperçu de dev : ?profiltab&meetmap=far|near */
+function mapDemo(): MeetDemo | undefined {
+  if (!import.meta.env.DEV || typeof location === "undefined") return undefined;
+  const k = new URLSearchParams(location.search).get("meetmap");
+  if (!k) return undefined;
+  const me = { lat: 43.6086, lng: 3.88, acc: 6, at: Date.now() };
+  const other = k === "far" ? { lat: 43.6112, lng: 3.8832, acc: 9, at: Date.now() } : { lat: 43.60876, lng: 3.88015, acc: 5, at: Date.now() };
+  return { state: { allowed: true, id: "d", status: "active", mine: true, expires_at: new Date(Date.now() + 760_000).toISOString() }, me, other, heading: 20 };
+}
+
+/** Mini radar flottant en haut de la carte pendant une session active. Toucher = retour à la discussion. */
+export function MapMeetRadar({ hidden }: { hidden: boolean }) {
+  const target = useMeetLive((s) => s.target);
+  const api = useMeetLive((s) => s.api);
+  const sheet = useHdar((s) => s.sheet);
+  const me = api?.me, other = api?.other;
+  const d = me && other ? distanceM(me, other) : null;
+  const trend = useTrend(d);
+  if (!target || api?.st?.status !== "active" || hidden || sheet) return null;
+  const acc = me && other ? Math.round(Math.max(me.acc, other.acc)) : null;
+  const w = d != null ? warmth(d) : null;
+  const rot = me && other ? bearingDeg(me, other) - (api.heading ?? 0) : null;
+  return (
+    <button type="button" data-act="map-meet-radar" data-tip-bubble onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => useHdar.getState().openLive(target.id, target.pseudo)}
+      aria-label={tf("Retour à la discussion avec {n}", target.pseudo)}
+      className="absolute top-3 left-1/2 z-30 flex max-w-[calc(100%-8.5rem)] -translate-x-1/2 items-center gap-2 rounded-full border bg-night/90 py-1 ps-1 pe-3 text-start shadow-xl backdrop-blur"
+      style={{ borderColor: (w?.color ?? "#3EE08F") + "88" }}>
+      <Radar d={d} angle={rot} color={w?.color ?? "#3EE08F"} initial={target.pseudo} photo={target.photo} heading={api.heading} label={tf("Direction de {n}", target.pseudo)} className="size-[68px]" />
+      <span className="min-w-0">
+        <span className="block font-display text-base font-extrabold leading-tight" style={{ color: w?.color }}>{d != null ? <bdi dir="ltr">{approxDistance(d, acc ?? 10)}</bdi> : "…"}</span>
+        {d != null && Math.abs(trend) > 3 && <span className="block text-[11px] font-semibold leading-tight" style={{ color: w?.color }}>{trend < 0 ? "Plus chaud" : "Plus froid"}</span>}
+        <span className="block text-[10px] leading-tight text-muted">{tf("Retour à {n}", target.pseudo)}</span>
+      </span>
+    </button>
   );
 }

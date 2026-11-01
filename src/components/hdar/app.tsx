@@ -1,3 +1,4 @@
+import { MeetRunner } from "./meetup";
 import { useAppearance } from "@/lib/hdar/appearance";
 import { botSeen, botWelcomeCc } from "@/lib/hdar/live";
 import { currentCountry, useCountry } from "@/lib/hdar/country";
@@ -127,6 +128,7 @@ export function App() {
       <ConfirmSheet />
       <ReportSheet />
       <PushPrompt />
+      <MeetRunner />
       <ProfileReminder />
       <InstallPrompt />
       <IntroVideo />

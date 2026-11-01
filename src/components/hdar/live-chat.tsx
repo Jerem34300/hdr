@@ -59,7 +59,7 @@ import { CameraSheet } from "./camera";
 import { AttachButton, BlurredPhoto, MediaView } from "./media-composer";
 import { GoButton } from "./go-sheet";
 import { MeetBar, MeetFlash } from "./meetup";
-import { useMeetup, type MeetDemo } from "@/lib/hdar/meetup";
+import { pinMeet, unpinMeet, useMeetLive, useMeetup, type MeetDemo } from "@/lib/hdar/meetup";
 import { Map as MapIcon, Navigation2, Radar as RadarIcon } from "lucide-react";
 import { distanceM } from "@/lib/hdar/meetup";
 import { uploadChatMedia } from "@/lib/hdar/chat-media";
@@ -102,7 +102,16 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   const onboardedMe = useHdar((s) => s.me.onboarded);
   const ty = useTyping("dm", demo || !onboardedMe ? null : userId, myPseudo, demo ? (typeof location !== "undefined" && location.search.includes("typing") ? [{ id: userId, pseudo, kind: location.search.includes("vocal") ? "audio" : "text", at: Date.now() }] : []) : undefined);
   const [msgs, setMsgs] = useState<LiveMsg[]>(demo ?? []);
-  const meet = useMeetup(userId, !demo && onboardedMe && !isBot(userId), demo ? meetDemo() : undefined);
+  const demoMeet = demo ? meetDemo() : undefined;
+  const local = useMeetup(userId, false, demoMeet);
+  const meetOn = !demo && onboardedMe && !isBot(userId);
+  useEffect(() => {
+    if (!meetOn) return;
+    pinMeet({ id: userId, pseudo, photo: photo || undefined });
+    return () => unpinMeet(userId);
+  }, [meetOn, userId, pseudo, photo]);
+  const shared = useMeetLive((s) => (s.target?.id === userId ? s.api : null));
+  const meet = demoMeet ? local : shared ?? local;
   const [replyTo, setReplyTo] = useState<LiveMsg | null>(null);
   const [msgMenu, setMsgMenu] = useState<LiveMsg | null>(null);
   const [flash, setFlash] = useState<string | null>(null);

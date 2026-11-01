@@ -1,3 +1,6 @@
+import { MapMeetRadar } from "./meetup";
+import { useMeetLive } from "@/lib/hdar/meetup";
+import { Crosshair as MeetFit } from "lucide-react";
 import { toast } from "sonner";
 import { VectorBase } from "./vector-base";
 import { useLang } from "@/lib/hdar/i18n";
@@ -119,6 +122,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const [you, setYou] = useState({ lat: place.lat, lng: place.lng });
   const [located, setLocated] = useState(false);
   const follow = useRef(true);
+  const meetApi = useMeetLive((s) => s.api);
+  const meetTarget = useMeetLive((s) => s.target);
+  const meetFollow = useMeetLive((s) => s.follow);
+  const meetOn = meetApi?.st?.status === "active" && !!meetTarget;
   const locked = useRef(false);
   const frame = useRef({ left: 0, top: 0, z: 13, scale: 1 });
   const pending = useHdar((s) => s.pendingSpot);
@@ -353,6 +360,23 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     }
   }
 
+  // Session « Se retrouver » : garde les deux à l'écran (cadrage suivi, désactivé dès qu'on déplace la carte).
+  const mA = meetOn ? meetApi?.me : null, mB = meetOn ? meetApi?.other : null;
+  useEffect(() => {
+    if (!meetOn || !meetFollow || !mA) return;
+    follow.current = false;
+    if (!mB) { setView((v) => ({ ...v, lat: mA.lat, lng: mA.lng, zoom: Math.max(v.zoom, 16) })); return; }
+    // marges : radar flottant en haut (~100 px), barre du bas (~120 px)
+    const padW = 140, padH = 300;
+    let zz = 17;
+    for (; zz > 4; zz -= 0.25) {
+      const dx = Math.abs(worldX(mA.lng, zz) - worldX(mB.lng, zz));
+      const dy = Math.abs(worldY(mA.lat, zz) - worldY(mB.lat, zz));
+      if (dx <= size.w - padW && dy <= size.h - padH) break;
+    }
+    const cyw = (worldY(mA.lat, zz) + worldY(mB.lat, zz)) / 2 - 10; // un peu décalé vers le bas sous le radar
+    setView({ lat: latFromY(cyw, zz), lng: (mA.lng + mB.lng) / 2, zoom: zz });
+  }, [meetOn, meetFollow, mA?.lat, mA?.lng, mB?.lat, mB?.lng, size.w, size.h]);
   const project = (lat: number, lng: number) => ({
     x: worldX(lng, z) * scale - left,
     y: worldY(lat, z) * scale - top,
@@ -482,7 +506,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     if (!boosted.has("demo-boosted")) boosted.add("demo-boosted");
   }
 
-  const youPx = project(you.lat, you.lng);
+  const meetFix = meetOn ? meetApi?.me ?? null : null;
+  const meetOther = meetOn ? meetApi?.other ?? null : null;
+  const youPx = meetFix ? project(meetFix.lat, meetFix.lng) : project(you.lat, you.lng);
+  const otherPx = meetOther ? project(meetOther.lat, meetOther.lng) : null;
+  const accPx = meetFix ? Math.abs(project(meetFix.lat + meetFix.acc / 111320, meetFix.lng).y - youPx.y) : 0;
   const face = zoom >= 10.5 ? 46 : 34;
 
   // Group pins that would overlap on screen (only matters when zoomed out).
@@ -673,7 +701,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         if (start.dist !== 0) return;
         const dx = e.clientX - start.x;
         const dy = e.clientY - start.y;
-        if (Math.hypot(dx, dy) > 14) follow.current = false;
+        if (Math.hypot(dx, dy) > 14) { follow.current = false; if (useMeetLive.getState().follow) useMeetLive.setState({ follow: false }); }
         const z0 = Math.round(start.zoom);
         const s0 = 2 ** (start.zoom - z0);
         setView({
@@ -769,7 +797,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </span>
         );
       })}
-      {pins.length === 0 && !finding && !visible && (
+      {pins.length === 0 && !finding && !visible && !meetOn && (
         <div
           data-act="empty-banner"
           className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
@@ -817,6 +845,23 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         </div>
       )}
       {ring && <svg key={ring.k} aria-hidden className="press-ring pointer-events-none absolute z-40 size-16 -translate-x-1/2 -translate-y-1/2" style={{ left: ring.x, top: ring.y }} viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.25)" strokeWidth="4" /><circle cx="32" cy="32" r="26" fill="none" stroke="#FA6F6C" strokeWidth="4" strokeLinecap="round" strokeDasharray="164" strokeDashoffset="164" transform="rotate(-90 32 32)" /></svg>}
+      {meetOn && meetFix && otherPx && (
+        <svg aria-hidden className="pointer-events-none absolute inset-0 z-[11] size-full overflow-visible">
+          <line x1={youPx.x} y1={youPx.y} x2={otherPx.x} y2={otherPx.y} stroke="#fff" strokeOpacity=".85" strokeWidth="2.5" strokeDasharray="6 6" strokeLinecap="round" />
+        </svg>
+      )}
+      {meetOn && meetFix && <span aria-hidden className="pointer-events-none absolute z-[9] -translate-x-1/2 -translate-y-1/2 rounded-full border border-sky-300/60 bg-sky-400/15" style={{ left: youPx.x, top: youPx.y, width: Math.max(16, accPx * 2), height: Math.max(16, accPx * 2) }} />}
+      {meetOn && meetFix && (
+        <span data-act="meet-me-dot" aria-hidden className="pointer-events-none absolute z-[24] size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-sky-500 shadow-[0_0_10px_2px_rgba(56,189,248,.7)]" style={{ left: youPx.x, top: youPx.y }} />
+      )}
+      {meetOn && otherPx && meetTarget && (
+        <span data-act="meet-other-dot" className="pointer-events-none absolute z-[23] -translate-x-1/2 -translate-y-1/2" style={{ left: otherPx.x, top: otherPx.y }}>
+          <span className="meet-dot-glow absolute top-1/2 left-1/2 size-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FA6F6C]/35" />
+          <span className="relative grid size-7 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-[#FA6F6C] text-xs font-extrabold text-white shadow-[0_0_16px_4px_rgba(250,111,108,.8)]">
+            {meetTarget.photo ? <img src={meetTarget.photo} alt="" className="size-full object-cover" /> : <bdi>{meetTarget.pseudo.slice(0, 1).toUpperCase()}</bdi>}
+          </span>
+        </span>
+      )}
       {located && pulseAt > 0 && <span key={pulseAt} aria-hidden className="me-pulse pointer-events-none absolute z-10 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-signal" style={{ left: youPx.x, top: youPx.y }} />}
       <div className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: youPx.x, top: youPx.y }}>
         <span className={"radar-sweep block size-48 " + (visible ? "radar-green" : "radar-red")} />
@@ -1021,6 +1066,13 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       >
         <LocateFixed className="size-5" />
       </button>
+      <MapMeetRadar hidden={!!placeId || !!transitStop || layersOpen} />
+      {meetOn && !meetFollow && !placeId && !transitStop && !layersOpen && (
+        <button type="button" data-act="meet-fit" onPointerDown={(e) => e.stopPropagation()} onClick={() => useMeetLive.setState({ follow: true })}
+          className="absolute top-[92px] left-1/2 z-30 flex max-w-[calc(100%-8.5rem)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-line bg-night/90 px-3 py-1.5 text-xs font-bold shadow-xl backdrop-blur">
+          <MeetFit className="size-4 shrink-0" strokeWidth={2} /><span className="whitespace-nowrap">Nous deux à l'écran</span>
+        </button>
+      )}
       {layersOpen && (
         <button type="button" aria-label="Fermer les calques" className="absolute inset-0 z-[34] cursor-default bg-transparent" onClick={() => setLayersOpen(false)} />
       )}
