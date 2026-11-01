@@ -1,3 +1,4 @@
+import { GateRadar } from "@/components/hdar/gate-radar";
 import { AdultGate } from "@/components/hdar/adult-gate";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -60,13 +61,16 @@ function Home() {
  * read from the server-rendered page: what hdar is, plus links to city pages.
  */
 function Splash() {
+  // Même fond que l'écran d'entrée : le premier écran visible est le radar (liens villes gardés pour les moteurs, masqués).
   return (
-    <main className="flex h-dvh flex-col items-center justify-center bg-night px-6 text-center text-ink" aria-busy="true">
-      <p className="font-display text-4xl font-extrabold tracking-tight">
-        hdar<span className="text-signal">.</span>
-      </p>
-      <h1 className="mt-3 text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.</h1>
-      <nav aria-label="Villes" className="absolute inset-x-6 bottom-6 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
+    <main className="relative flex h-dvh flex-col items-center justify-center overflow-hidden bg-[#0b0d12] px-6 text-center text-ink" aria-busy="true">
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+        <span className="absolute -top-[10%] -left-[25%] size-[75vw] max-h-[520px] max-w-[520px] rounded-full bg-[#FA6F6C] opacity-35 blur-[70px]" />
+        <span className="absolute top-[30%] -right-[30%] size-[70vw] max-h-[480px] max-w-[480px] rounded-full bg-[#A78BFA] opacity-25 blur-[80px]" />
+      </div>
+      <GateRadar className="relative aspect-square w-[clamp(110px,min(70vw,34dvh),300px)]" />
+      <h1 className="sr-only">hdar. Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.</h1>
+      <nav aria-label="Villes" className="sr-only">
         {SEO_CITIES.filter((c) => c.slug !== "cap-d-agde").map((c) => (
           <a key={c.slug} href={`/rencontre/${c.slug}`}>{c.name}</a>
         ))}

@@ -5,6 +5,7 @@ import { MediaView } from "./media-composer";
 import {
   admin,
   admin58,
+  type GateCompare,
   adminLive,
   adminMedia,
   adminReports,
@@ -91,6 +92,7 @@ const STEP_LABELS: Record<string, string> = {
   app: "Ont vu l'appli (carte)",
   geo_ok: "Ont partagé leur position",
   geo_no: "Ont refusé la position",
+  pin_set: "Ont posé une épingle",
   "tab:spots": "Ont ouvert Lieux",
   "tab:inbox": "Ont ouvert Messages / Salons",
   "view:pocket": "Ont ouvert le chat du quartier",
@@ -171,14 +173,20 @@ export function VisitorsTab({ adminKey }: { adminKey: string }) {
             </p>
             <ul className="space-y-2.5">
               <Bar label="Ont vu l'écran d'entrée 18+" n={gate.gate_view ?? 0} max={max} hint="(sans identifiant)" />
-              <Bar label="Ont cliqué « Entrer »" n={gate.gate_enter ?? 0} max={max} hint={pct(gate.gate_enter ?? 0, gate.gate_view ?? 0)} />
-              {(gate.gate_error ?? 0) > 0 && <Bar label="Erreur à l'entrée (captcha…)" n={gate.gate_error ?? 0} max={max} />}
+              {(gate.gate_check ?? 0) > 0 && <Bar label="Ont coché « J'ai 18 ans ou plus »" n={gate.gate_check ?? 0} max={max} hint={pct(gate.gate_check ?? 0, gate.gate_view ?? 0)} />}
+              {(gate.gate_click ?? 0) > 0 && <Bar label="Ont cliqué « Entrer »" n={gate.gate_click ?? 0} max={max} hint={pct(gate.gate_click ?? 0, gate.gate_view ?? 0)} />}
+              {(gate.gate_verified ?? 0) > 0 && <Bar label="Anti-robot réussi (bouton Entrer)" n={gate.gate_verified ?? 0} max={max} hint={pct(gate.gate_verified ?? 0, gate.gate_view ?? 0)} />}
+              <Bar label="Sont entrés (session ouverte)" n={gate.gate_enter ?? 0} max={max} hint={pct(gate.gate_enter ?? 0, gate.gate_view ?? 0)} />
+              {((gate.gate_error ?? 0) + (gate.gate_captcha_fail ?? 0)) > 0 && <Bar label="Erreur ou échec de la vérification" n={(gate.gate_error ?? 0) + (gate.gate_captcha_fail ?? 0)} max={max} />}
               {FUNNEL.map((k) => (
                 <Bar key={k} label={STEP_LABELS[k] ?? k} n={data.steps[k] ?? 0} max={max} hint={pct(data.steps[k] ?? 0, data.steps.app ?? 0)} />
               ))}
-              {(data.steps.geo_no ?? 0) > 0 && <Bar label={STEP_LABELS.geo_no} n={data.steps.geo_no ?? 0} max={max} />}
+              {(data.steps.geo_no ?? 0) > 0 && <Bar label={STEP_LABELS.geo_no} n={data.steps.geo_no ?? 0} max={max} hint={pct(data.steps.geo_no ?? 0, data.steps.app ?? 0)} />}
+              {(data.steps.pin_set ?? 0) > 0 && <Bar label={STEP_LABELS.pin_set} n={data.steps.pin_set ?? 0} max={max} hint={pct(data.steps.pin_set ?? 0, data.steps.geo_no ?? 0) + " des refus"} />}
             </ul>
           </div>
+
+          <GateCompareCard adminKey={adminKey} />
 
           <div className="grid gap-3 md:grid-cols-3">
             <BreakdownList title="D'où ils viennent" rows={data.sources} />
@@ -205,7 +213,7 @@ export function VisitorsTab({ adminKey }: { adminKey: string }) {
   );
 }
 
-function Tile({ label, value, hint }: { label: string; value: number; hint?: string }) {
+function Tile({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
     <div className="rounded-2xl border border-line bg-surface p-3">
       <p className="text-xs text-muted">{label}</p>
@@ -793,6 +801,27 @@ export function RefNetwork({ adminKey, demo }: { adminKey: string; demo?: RefNet
           <tbody>{rows.map((r) => <tr key={r.source} className="border-t border-line/60"><td className="max-w-[8rem] truncate py-1.5 font-bold">{r.source}</td><td className="text-end">{r.parrains}</td><td className="ps-1.5 text-end font-bold">{r.filleuls}</td><td className="ps-1.5 text-end">{r.boosts}</td><td className="ps-1.5 text-end">{r.valides}</td></tr>)}</tbody>
         </table>
       )}
+    </div>
+  );
+}
+
+/** Nouvelle entrée : taux d'entrée avant / après le repère du 01/11, sur des durées égales. Compteurs sans identifiant. */
+function GateCompareCard({ adminKey }: { adminKey: string }) {
+  const load = useCallback(() => admin58.gateCompare(adminKey), [adminKey]);
+  const { data } = useLoad<GateCompare>(load, 60_000);
+  if (!data) return null;
+  const rate = (g: Record<string, number>) => ((g.gate_view ?? 0) > 0 ? Math.round(((g.gate_enter ?? 0) / (g.gate_view ?? 1)) * 100) : null);
+  const b = rate(data.before), a = rate(data.after);
+  const span = data.span_h >= 48 ? `${Math.round(data.span_h / 24)} j` : `${data.span_h} h`;
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-4" data-act="gate-compare">
+      <h3 className="font-display font-bold">Nouvelle entrée depuis le 01/11</h3>
+      <p className="mb-3 text-xs text-muted">Taux d'entrée (sont entrés ÷ ont vu l'écran 18+) sur {span} avant et après le repère du {when(data.cutoff)}. Compteurs horaires sans identifiant.</p>
+      <div className="grid grid-cols-3 gap-2">
+        <Tile label="Avant" value={b == null ? "—" : `${b} %`} hint={`${data.before.gate_enter ?? 0} / ${data.before.gate_view ?? 0}`} />
+        <Tile label="Après" value={a == null ? "—" : `${a} %`} hint={`${data.after.gate_enter ?? 0} / ${data.after.gate_view ?? 0}`} />
+        <Tile label="Profils en position choisie" value={data.chosen} hint="épingle active" />
+      </div>
     </div>
   );
 }

@@ -84,7 +84,7 @@ export function track(step: string) {
 
 const gateSent = new Set<string>();
 /** Écran d'entrée 18+ : simple compteur sans identifiant (le visiteur n'a pas encore de session). */
-export function trackGate(kind: "gate_view" | "gate_enter" | "gate_error") {
+export function trackGate(kind: "gate_view" | "gate_check" | "gate_click" | "gate_verified" | "gate_enter" | "gate_error" | "gate_captcha_fail") {
   if (typeof window === "undefined" || gateSent.has(kind)) return;
   gateSent.add(kind);
   void fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_gate`, {

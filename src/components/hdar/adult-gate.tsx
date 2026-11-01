@@ -33,7 +33,7 @@ import { AppearanceScreen } from "./appearance";
 import { GroupChatDemo } from "./group-chat";
 import { LiveChatDemo } from "./live-chat";
 import { RefLinksDemo } from "./admin-ref-links";
-import { RefNetwork, RefsTabDemo } from "./admin-insights";
+import { RefNetwork, RefsTabDemo, VisitorsTab } from "./admin-insights";
 import { DailyTabDemo } from "./admin-daily";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
@@ -145,11 +145,13 @@ function AdultGateInner({ children }: { children: ReactNode }) {
             setToken(t);
             setError("");
             setChallenge(false);
+            trackGate("gate_verified");
           },
           "expired-callback": () => setToken(""),
           "error-callback": () => {
             setToken("");
             setError("Vérification anti-robot échouée, réessaie.");
+            trackGate("gate_captcha_fail");
             setWaiting(false);
           },
         });
@@ -175,6 +177,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   const submit = () => {
     if (busy) return;
     if (needsAdult && !checked) return setError("Hdar est réservé aux 18 ans et plus.");
+    trackGate("gate_click");
     if (!token && !widgetFailed) { setWaiting(true); return; } // on entre tout seul dès que la vérification répond
     setWaiting(false);
     setBusy(true);
@@ -235,7 +238,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
         </div>
         {needsAdult && (
           <label data-act="gate-adult" className="gate-adult flex min-h-[52px] cursor-pointer items-center gap-3 rounded-2xl border border-[#FA6F6C]/30 bg-white/[.04] px-4 py-2.5 text-sm font-medium backdrop-blur transition-colors has-[:checked]:border-[#FA6F6C]/70 has-[:checked]:bg-[#FA6F6C]/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FFB4A8]">
-            <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => { setChecked(e.target.checked); setError(""); }} />
+            <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => { setChecked(e.target.checked); setError(""); if (e.target.checked) trackGate("gate_check"); }} />
             <span aria-hidden className="gate-box grid size-7 shrink-0 place-items-center rounded-[10px] border-2 border-[#FA6F6C]/55 bg-black/30 transition-[background,box-shadow,border-color] peer-checked:border-[#FA6F6C] peer-checked:bg-[#FA6F6C]/20 peer-checked:shadow-[0_0_14px_2px_rgba(250,111,108,.55)]">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="#FF8A80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path className="gate-check" d="M5 12.5l4.5 4.5L19 7.5" /></svg>
             </span>
@@ -266,6 +269,7 @@ function DevPreview() {
   if (location.search.includes("provdemo")) return <RefsTabDemo />;
   if (location.search.includes("reseaudemo")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Provenance (démo)</p><RefNetwork adminKey="" demo={[{ source: "expose_twittos", parrains: 6, filleuls: 14, boosts: 12, valides: 7 }, { source: "(sans lien)", parrains: 9, filleuls: 11, boosts: 11, valides: 5 }, { source: "next1", parrains: 2, filleuls: 3, boosts: 3, valides: 1 }]} /></main>;
   if (location.search.includes("jourdemo")) return <DailyTabDemo />;
+  if (location.search.includes("visitorsdemo")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><VisitorsTab adminKey="demo" /></main>;
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;
   if (location.search.includes("botadmin")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Robot d'accueil</p><BotTab adminKey="demo" demo={{ enabled: true, dm_text: BOT_DEMO_DM, salon_text: "Bienvenue à {mentions} 👋 Faites-leur bon accueil !", reply_text: BOT_DEMO_REPLY, ...BOT_DEFAULTS, nudge_on: true, question_on: true, rules_on: true, tip_on: true, updated_at: new Date().toISOString(), welcomed: 128, pending: 2, salon: "Général", opted_out: 9 }} demoAnnounce={location.search.includes("annonce") ? { text: "Nouveau : choisis la couleur de tes bulles dans Profil → Apparence 🎨", target: "both", count: 1284 } : undefined} /><Toaster theme="dark" position="top-center" /></main>;
