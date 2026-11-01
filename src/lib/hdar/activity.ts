@@ -114,7 +114,7 @@ async function poll() {
 }
 
 let timer = 0;
-/** Mounted once in the app shell: polls every 20 s while visible. */
+/** Mounted once in the app shell: polls every 40-50 s while visible. */
 export function useActivityPolling() {
   const view = useHdar((s) => s.view);
   useEffect(() => {
@@ -126,7 +126,7 @@ export function useActivityPolling() {
       if (document.visibilityState === "visible") void poll();
     };
     tick();
-    timer = window.setInterval(tick, 20000);
+    timer = window.setInterval(tick, 40_000 + Math.random() * 10_000); // 40-50 s, étalé entre clients
     document.addEventListener("visibilitychange", tick);
     return () => {
       window.clearInterval(timer);

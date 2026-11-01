@@ -1,4 +1,5 @@
 import { useMyName } from "@/lib/hdar/discret";
+import { startPoll } from "@/lib/hdar/poll";
 import { mentionNotify } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, LocateFixed } from "lucide-react";
@@ -33,7 +34,7 @@ export function PocketChat() {
   const isAdmin = useAmAdmin();
 
   const refresh = useCallback(() => {
-    void areaFeed2(lat, lng)
+    return areaFeed2(lat, lng)
       .then((rows) => {
         setLines(rows);
         setLoaded(true);
@@ -41,11 +42,8 @@ export function PocketChat() {
       .catch(() => setLoaded(true));
   }, [lat, lng]);
 
-  useEffect(() => {
-    refresh();
-    const id = window.setInterval(() => document.visibilityState === "visible" && refresh(), 4000);
-    return () => window.clearInterval(id);
-  }, [refresh]);
+  // Sonnette Realtime par case de 0,1° (v127) + secours lent au premier plan
+  useEffect(() => startPoll(refresh, { every: 6000, idle: 30_000, topic: `nudge:area:${Math.floor(lat / 0.1)}:${Math.floor(lng / 0.1)}` }), [refresh, lat, lng]);
 
   return (
     <GroupChat

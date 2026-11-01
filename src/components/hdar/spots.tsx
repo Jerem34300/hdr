@@ -1,4 +1,5 @@
 import { haversine } from "@/lib/hdar/rules";
+import { startPoll } from "@/lib/hdar/poll";
 import { useAmAdmin } from "@/lib/hdar/admin-mode";
 import { useEffect, useRef, useState } from "react";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
@@ -245,18 +246,15 @@ function LiveSpotRoom({ spot }: { spot: LiveSpot }) {
 
   useEffect(() => {
     let stop = false;
-    const load = () => {
-      void spotMessages(deviceId(), spot.id)
-        .then((rows) => {
-          if (!stop) setLines(rows);
-        })
-        .catch(() => undefined);
-    };
-    load();
-    const id = window.setInterval(load, 3000);
+    const load = () =>
+      spotMessages(deviceId(), spot.id).then((rows) => {
+        if (!stop) setLines(rows);
+      });
+    // Sonnette Realtime (v127) + secours lent au premier plan
+    const end = startPoll(load, { every: 5000, idle: 30_000, topic: `typing:spot:${spot.id}` });
     return () => {
       stop = true;
-      window.clearInterval(id);
+      end();
     };
   }, [spot.id]);
 

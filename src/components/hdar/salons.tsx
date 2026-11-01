@@ -1,4 +1,5 @@
 import { useMyName } from "@/lib/hdar/discret";
+import { startPoll } from "@/lib/hdar/poll";
 import { mentionNotify, salonReportNote } from "@/lib/hdar/live";
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronUp, Globe, Map as MapIcon, MapPin, MessageCircle, Plus, X } from "lucide-react";
@@ -421,18 +422,15 @@ export function SalonRoom({ id, name }: { id: string; name: string }) {
         } else setInfo(s);
       })
       .catch(() => undefined);
-    refresh();
     // Ouvrir un salon le suit (il apparaît dans les discussions) et le marque lu, en entrant et en sortant.
     const st = useHdar.getState();
     st.followSalon(id);
     st.markSalonSeen(id);
-    const t = window.setInterval(() => {
-      if (document.visibilityState !== "visible") return;
-      refresh();
-      useHdar.getState().markSalonSeen(id);
-    }, 3000);
+    // Sonnette Realtime sur le canal du salon (v127) + secours lent au premier plan (au lieu de 3 s pour tous)
+    const end = startPoll(() => salonMessages(id).then((rows) => { setLines(rows); setLoaded(true); useHdar.getState().markSalonSeen(id); }, (e) => { setLoaded(true); throw e; }),
+      { every: 5000, idle: 30_000, topic: `typing:salon:${id}` });
     return () => {
-      window.clearInterval(t);
+      end();
       useHdar.getState().markSalonSeen(id);
       refreshSalonInbox();
     };

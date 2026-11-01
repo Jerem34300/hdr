@@ -1,6 +1,6 @@
 /**
  * Qui est là dans un salon ou dans le chat du quartier. L'écran de discussion ouvert signale sa
- * présence toutes les 15 s (en ligne = passé dans le salon ces 5 dernières minutes) ; la liste des discussions lit
+ * présence toutes les 30-40 s (en ligne = passé dans le salon ces 5 dernières minutes) ; la liste des discussions lit
  * les compteurs toutes les 20 s.
  */
 import { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ export function useRoomPresence(room: string, pseudo: string, lat: number | null
           .then((r) => alive && setState(r))
           .catch(() => undefined);
       }
-      timer = window.setTimeout(tick, 15000);
+      timer = window.setTimeout(tick, 30_000 + Math.random() * 10_000); // en ligne = vu ces 5 min : 30-40 s suffit
     };
     // On reste compté « dans le salon » 5 min après l'avoir quitté (comme « vu récemment »).
     const onVis = () => document.visibilityState === "visible" && tick();

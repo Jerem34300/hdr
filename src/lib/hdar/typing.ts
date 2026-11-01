@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 import { typingTopic } from "./live";
-import { supabase } from "./session";
+import { sendTopic, subscribeTopic } from "./rt";
 import { useHdar } from "./store";
 import { useAppearance } from "./appearance";
 
@@ -13,24 +12,21 @@ const EVERY = 2500; // au plus un envoi toutes les 2,5 s (sauf changement d'acti
 
 export function useTyping(scope: "salon" | "area" | "dm", ref: string | null, pseudo: string, demo?: Typer[]) {
   const [typers, setTypers] = useState<Typer[]>(demo ?? []);
-  const chan = useRef<RealtimeChannel | null>(null);
+  const chan = useRef<string | null>(null);
   const me = useRef<string | null>(null);
   const last = useRef<{ at: number; kind: TypingKind | "stop" }>({ at: 0, kind: "stop" });
 
   useEffect(() => {
     if (demo || !ref) return;
     let alive = true;
-    let ch: RealtimeChannel | null = null;
+    let unsub: (() => void) | null = null;
     void typingTopic(scope, ref)
-      .then(async (t) => {
+      .then((t) => {
         if (!alive || !t?.topic) return;
         me.current = t.me;
-        const sb = supabase();
-        const { data } = await sb.auth.getSession();
-        if (data.session) await sb.realtime.setAuth(data.session.access_token);
-        if (!alive) return;
-        ch = sb.channel(t.topic, { config: { private: true, broadcast: { self: false } } });
-        ch.on("broadcast", { event: "t" }, ({ payload }) => {
+        // canal partagé (rt.ts) : le même sujet sert aussi de « sonnette » des nouveaux messages (v127)
+        unsub = subscribeTopic(t.topic, (event, payload) => {
+          if (event !== "t") return;
           const p = payload as { id?: string; pseudo?: string; kind?: string };
           if (!p?.id || p.id === me.current || useHdar.getState().blocks.includes(p.id)) return;
           setTypers((list) => {
@@ -39,13 +35,13 @@ export function useTyping(scope: "salon" | "area" | "dm", ref: string | null, ps
             const kind = (["text", "photo", "video", "audio"].includes(p.kind ?? "") ? p.kind : "text") as TypingKind;
             return [...rest, { id: p.id!, pseudo: String(p.pseudo ?? "Quelqu'un").slice(0, 30), kind, at: Date.now() }];
           });
-        }).subscribe();
-        chan.current = ch;
+        });
+        chan.current = t.topic;
       })
       .catch(() => undefined);
     return () => {
       alive = false;
-      if (ch) void supabase().removeChannel(ch);
+      unsub?.();
       chan.current = null;
       setTypers([]);
     };
@@ -59,13 +55,13 @@ export function useTyping(scope: "salon" | "area" | "dm", ref: string | null, ps
   }, [demo]);
 
   const send = (kind: TypingKind | "stop") => {
-    const ch = chan.current;
-    if (!ch || !me.current || useAppearance.getState().typing === false) return;
+    const topic = chan.current;
+    if (!topic || !me.current || useAppearance.getState().typing === false) return;
     const now = Date.now();
     if (kind === last.current.kind && kind !== "stop" && now - last.current.at < EVERY) return;
     if (kind === "stop" && last.current.kind === "stop") return;
     last.current = { at: now, kind };
-    void ch.send({ type: "broadcast", event: "t", payload: { id: me.current, pseudo, kind } });
+    sendTopic(topic, "t", { id: me.current, pseudo, kind });
   };
   return { typers, ping: (k: TypingKind = "text") => send(k), stop: () => send("stop") };
 }

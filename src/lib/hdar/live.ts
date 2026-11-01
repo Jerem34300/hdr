@@ -157,6 +157,14 @@ export async function pulse({
   data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number; note?: string; chosen?: boolean };
 }) {
   if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
+  // Le GPS donne une position ~1 fois/s : on n'envoie qu'au plus toutes les 30 s (ou tout de suite si on a bougé de
+  // ~150 m, changé d'envies, ou choisi sa place), et on se tait 60 s après un refus anti-spam (12/min côté serveur).
+  const now = Date.now(), key = `${data.desires}|${data.note ?? ""}|${data.pseudo}`;
+  const moved = pulseLast ? Math.hypot(data.lat - pulseLast.lat, (data.lng - pulseLast.lng) * Math.cos((data.lat * Math.PI) / 180)) > 0.00135 : true;
+  if (now < pulseMuteUntil) return;
+  if (pulseLast && !data.chosen && key === pulseLast.key && !moved && now - pulseLast.at < 30_000) return;
+  if (pulseLast && now - pulseLast.at < 5000 && !data.chosen) return;
+  pulseLast = { lat: data.lat, lng: data.lng, key, at: now };
   await rpc("hdar_pulse", {
     p_chosen: !!data.chosen,
     p_self: selfId(data.self),
@@ -169,8 +177,13 @@ export async function pulse({
     p_desires: String(data.desires || "").slice(0, 80),
     p_hours: Math.round(Math.min(12, Math.max(1, Number(data.hours) || 3))),
     p_note: String(data.note || "").trim().slice(0, 60),
+  }).catch((e: unknown) => {
+    if (e instanceof Error && /Doucement/.test(e.message)) pulseMuteUntil = Date.now() + 60_000;
+    throw e;
   });
 }
+let pulseLast: { lat: number; lng: number; key: string; at: number } | null = null;
+let pulseMuteUntil = 0;
 
 /** Épingle « Place-toi sur la carte » (géolocalisation refusée) : arrondie ~200 m côté serveur. */
 export async function pinSet(lat: number, lng: number) {
@@ -1640,6 +1653,9 @@ export function mentionNotify(scope: "dm" | "salon" | "area", ref: string | null
   void rpc("hdar_mention_notify", { p_scope: scope, p_ref: ref }).catch(() => undefined);
 }
 /** Nom du canal Realtime privé pour les indicateurs « en train d'écrire » (v85). null = pas d'indicateur. */
+let _myTopic: Promise<string | null> | null = null;
+/** Mon canal Realtime personnel (sonnette de la boîte de réception, v127). */
+export const myTopic = () => (_myTopic ??= rpc<string | null>("hdar_my_topic", {}).then((t) => { if (!t) _myTopic = null; return t; }, (e) => { _myTopic = null; throw e; }));
 export const typingTopic = (scope: string, ref: string) => rpc<{ topic: string; me: string } | null>("hdar_typing_topic", { p_scope: scope, p_ref: ref });
 /** Robot d'accueil officiel (v86) : profil système, sans position, ne lit pas les messages. */
 export const BOT_ID = "00000000-0000-4000-8000-00000000b075";

@@ -1,4 +1,6 @@
 import { isBot } from "@/lib/hdar/live";
+import { startPoll } from "@/lib/hdar/poll";
+import { typingTopic } from "@/lib/hdar/live";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { locale, tBot, useLang } from "@/lib/hdar/i18n";
 import { BotAvatar, BotBadge, BotComposer } from "./bot";
@@ -199,45 +201,21 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
   useEffect(() => {
     if (demo) return;
     let stop = false;
-    let timer = 0;
-    let lastKey = "";
-    let lastChange = Date.now();
-    // Adaptive polling: 1 s while the conversation is lively, slower when quiet or hidden.
-    const delay = () => {
-      if (document.hidden) return 15000;
-      const quiet = Date.now() - lastChange;
-      return quiet < 60_000 ? 1000 : quiet < 300_000 ? 2500 : 5000;
-    };
-    const load = () => {
-      window.clearTimeout(timer);
-      void readThread({ data: { self: deviceId(), withId: userId } })
-        .then((rows) => {
-          if (stop) return;
-          const key = `${rows.length}:${rows[rows.length - 1]?.id ?? ""}`;
-          if (key !== lastKey) {
-            lastKey = key;
-            lastChange = Date.now();
-          }
-          setMsgs(rows);
-          if (!document.hidden)
-            void markRead(deviceId(), userId)
-              .then((t) => !stop && setSeenAt(t))
-              .catch(() => undefined);
-        })
-        .catch(() => undefined)
-        .finally(() => {
-          if (!stop) timer = window.setTimeout(load, delay());
-        });
-    };
-    const onVisible = () => {
-      if (!document.hidden) load();
-    };
-    load();
-    document.addEventListener("visibilitychange", onVisible);
+    // Sonnette Realtime sur le canal privé de la conversation (v127) : on relit dès qu'un message arrive.
+    // Secours au premier plan : 3 s si la sonnette n'est pas connectée, 30 s sinon (au lieu de 1 s pour tous).
+    const load = () =>
+      readThread({ data: { self: deviceId(), withId: userId } }).then((rows) => {
+        if (stop) return;
+        setMsgs(rows);
+        if (!document.hidden)
+          void markRead(deviceId(), userId)
+            .then((t) => !stop && setSeenAt(t))
+            .catch(() => undefined);
+      });
+    const end = startPoll(load, { every: 3000, idle: 30_000, topic: typingTopic("dm", userId).then((t) => t?.topic ?? null).catch(() => null) });
     return () => {
       stop = true;
-      window.clearTimeout(timer);
-      document.removeEventListener("visibilitychange", onVisible);
+      end();
       window.clearInterval(recTimer.current);
       const mr = recRef.current;
       if (mr && mr.state !== "inactive") {

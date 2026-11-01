@@ -15,14 +15,14 @@ import { MapPin, Video, X } from "lucide-react";
 import { liveCount } from "@/lib/hdar/live";
 import { Link } from "@tanstack/react-router";
 
-/** Nombre de personnes dans le Live (pastille du chip Live), rafraîchi toutes les 15 s quand l'appli est visible. */
+/** Nombre de personnes dans le Live (pastille du chip Live), rafraîchi toutes les 30-40 s quand l'appli est visible. */
 function useLiveCount() {
   const [n, setN] = useState(0);
   useEffect(() => {
     let alive = true;
     const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => undefined); };
     tick();
-    const t = setInterval(tick, 15000);
+    const t = setInterval(tick, 30_000 + Math.random() * 10_000);
     document.addEventListener("visibilitychange", tick);
     return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); };
   }, []);

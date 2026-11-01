@@ -1,4 +1,5 @@
 import { MapMeetRadar } from "./meetup";
+import { startPoll } from "@/lib/hdar/poll";
 import { useMeetLive } from "@/lib/hdar/meetup";
 import { Crosshair as MeetFit, MapPinned, X as XIcon } from "lucide-react";
 import { PIN_ERRORS, pinClear, pinSet, posChosen } from "@/lib/hdar/live";
@@ -201,7 +202,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     let stop = false;
     const load = () => {
       const f = usePremium.getState();
-      void liveMap(f.premium ? f.filters : { minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false })
+      return liveMap(f.premium ? f.filters : { minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false })
         .catch((e: Error) => {
           // Premium expiré : le serveur refuse les filtres, on repasse sans filtre.
           if (/premium_required/.test(e.message)) { usePremium.setState({ premium: false }); return liveMap({ minAge: null, maxAge: null, desires: [], places: [], iam: [], online: false, photo: false }); }
@@ -212,14 +213,12 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           useMapFocus.setState({ pins: Object.fromEntries(rows.map((r) => [r.id, { lat: r.lat, lng: r.lng }])) });
           noticeLiveFavorites(rows);
         })
-        .catch(() => undefined);
     };
-    load();
-    // 10 s et seulement au premier plan (5 s pour chaque client saturait la base aux pics de connexions)
-    const id = window.setInterval(() => document.visibilityState === "visible" && load(), 10_000);
+    // Positions : 15 s au premier plan seulement, attente progressive sur erreur (poll.ts)
+    const end = startPoll(load, { every: 15_000 });
     return () => {
       stop = true;
-      window.clearInterval(id);
+      end();
     };
   }, [filterKey]);
   useEffect(() => void usePremium.getState().refresh(), []);
@@ -449,7 +448,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     const id = window.setInterval(() => document.visibilityState === "visible" && run(), 90_000);
     return () => { stop = true; window.clearTimeout(t); window.clearInterval(id); };
   }, [vbKey]);
-  const basePlaces = usePlaces(placesOn);
+  const basePlaces = usePlaces(placesOn, vb, zoom);
   const toilets = useToilets(
     toiletsOn,
     {

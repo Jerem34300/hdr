@@ -1,4 +1,5 @@
 import { VideoSection } from "./video-section";
+import { startPoll } from "@/lib/hdar/poll";
 import { GoButton } from "./go-sheet";
 import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
@@ -77,22 +78,48 @@ export function setPlacesLayer(on: boolean) {
 let cache: PlacePin[] | null = null;
 let cacheAt = 0;
 let loading: Promise<PlacePin[]> | null = null;
-const PLACES_TTL = 5 * 60_000;
-const loadPlaces = () => (loading ??= listPlaces(-90, -180, 90, 180).then((r) => { cache = r; cacheAt = Date.now(); return r; }).finally(() => (loading = null)));
+const PLACES_TTL = 10 * 60_000;
+// Vue monde (dézoomé, ou sans fenêtre) : servie par le cache serveur (v126), une seule fois par appareil toutes les 10 min.
+const loadWorld = () => (loading ??= listPlaces(-90, -180, 90, 180).then((r) => { cache = r; cacheAt = Date.now(); return r; }).finally(() => (loading = null)));
+// Vue ville (zoom ≥ 8) : seulement les cases de 1° visibles, gardées 10 min chacune.
+const tiles = new Map<string, { at: number; rows: PlacePin[] }>();
+const tileLoads = new Map<string, Promise<PlacePin[]>>();
+const loadTile = (i: number, j: number) => {
+  const k = `${i}:${j}`, t = tiles.get(k);
+  if (t && Date.now() - t.at < PLACES_TTL) return Promise.resolve(t.rows);
+  let p = tileLoads.get(k);
+  if (!p) {
+    p = listPlaces(i, j, i + 1, j + 1).then((rows) => { tiles.set(k, { at: Date.now(), rows }); return rows; }).finally(() => tileLoads.delete(k));
+    tileLoads.set(k, p);
+  }
+  return p;
+};
+export type PlacesView = { s: number; w: number; n: number; e: number };
 
-/** All permanent places (~2 000) are loaded once and clustered on screen at every zoom level.
- *  Rechargés toutes les 5 min et au retour sur l'appli : une fiche créée pendant que l'appli reste ouverte apparaît. */
-export function usePlaces(on: boolean) {
+/** Lieux permanents : la zone visible seulement (cases de 1°) quand on est zoomé, sinon la vue monde mise en cache. */
+export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
   const [rows, setRows] = useState<PlacePin[]>(cache ?? []);
+  const city = !!vb && zoom >= 8;
+  const key = city ? [Math.floor(vb!.s), Math.floor(vb!.w), Math.floor(vb!.n), Math.floor(vb!.e)].join(",") : "world";
   useEffect(() => {
     if (!on) return;
     let stop = false;
     const refresh = () => {
-      if (cache && Date.now() - cacheAt < PLACES_TTL) { setRows(cache); return; }
-      void loadPlaces().then((r) => !stop && setRows(r)).catch(() => undefined);
+      if (document.visibilityState !== "visible") return;
+      if (!city) {
+        if (cache && Date.now() - cacheAt < PLACES_TTL) { setRows(cache); return; }
+        void loadWorld().then((r) => !stop && setRows(r)).catch(() => undefined);
+        return;
+      }
+      const [s, w, n, e] = key.split(",").map(Number);
+      const want: [number, number][] = [];
+      for (let i = s; i <= n; i++) for (let j = w; j <= (e >= w ? e : e + 360); j++) want.push([i, ((j + 180) % 360) - 180]);
+      if (want.length > 12) return; // garde-fou (ne devrait pas arriver à zoom ≥ 8)
+      void Promise.all(want.map(([i, j]) => loadTile(i, j).catch(() => [] as PlacePin[])))
+        .then((parts) => { if (stop) return; const seen = new Set<string>(); setRows(parts.flat().filter((p) => !seen.has(p.id) && !!seen.add(p.id))); });
     };
     refresh();
-    const t = window.setInterval(refresh, PLACES_TTL);
+    const t = window.setInterval(refresh, PLACES_TTL + Math.random() * 60_000);
     const vis = () => document.visibilityState === "visible" && refresh();
     document.addEventListener("visibilitychange", vis);
     return () => {
@@ -100,7 +127,7 @@ export function usePlaces(on: boolean) {
       window.clearInterval(t);
       document.removeEventListener("visibilitychange", vis);
     };
-  }, [on]);
+  }, [on, key, city]);
   return on ? rows : [];
 }
 
@@ -237,19 +264,17 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
   useEffect(() => {
     let stop = false;
     const load = () => {
-      if (document.visibilityState !== "visible") return;
-      void placeMessages(place.id)
+      return placeMessages(place.id)
         .then((r) => {
           if (!stop) setLines(r);
           setOpenPlace(place.id);
-        })
-        .catch(() => undefined);
+        });
     };
-    load();
-    const t = window.setInterval(load, 5000);
+    // Sonnette Realtime (v127) + secours lent au premier plan
+    const end = startPoll(load, { every: 6000, idle: 30_000, topic: `typing:place:${place.id}` });
     return () => {
       stop = true;
-      window.clearInterval(t);
+      end();
     };
   }, [place.id]);
   useEffect(() => {

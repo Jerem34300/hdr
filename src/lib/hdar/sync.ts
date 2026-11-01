@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deviceId } from "./device";
-import { flagMyPhoto, hit, listConversations, saveProfile } from "./live";
+import { flagMyPhoto, hit, listConversations, myTopic, saveProfile } from "./live";
+import { startPoll } from "./poll";
 import { explicitReason } from "./nsfw";
 
 const CHECKED_KEY = "hdar-photo-checked";
@@ -55,10 +56,8 @@ export function useConversationsSync() {
   useEffect(() => {
     let stop = false;
     let first = true;
-    const load = () => {
-      if (document.visibilityState !== "visible") return;
-      void listConversations(deviceId())
-        .then((rows) => {
+    const load = () =>
+      listConversations(deviceId()).then((rows) => {
           if (stop) return;
           const st = useHdar.getState();
           if (!first) {
@@ -76,22 +75,13 @@ export function useConversationsSync() {
           }
           first = false;
           useHdar.setState({ liveConvos: rows });
-        })
-        .catch(() => undefined);
-    };
-    load();
-    // Boîte de réception : 10 s au premier plan, 60 s en arrière-plan (4 s saturait la base aux pics de connexions).
-    let id = 0;
-    const tick = () => {
-      load();
-      id = window.setTimeout(tick, document.hidden ? 60000 : 10000);
-    };
-    id = window.setTimeout(tick, 10000);
-    document.addEventListener("visibilitychange", load);
+        });
+    // Boîte de réception : sonnette Realtime sur mon canal personnel (v127), secours 15 s sans sonnette / 2 min avec,
+    // au premier plan seulement (les notifications push couvrent l'arrière-plan).
+    const end = startPoll(load, { every: 15_000, idle: 120_000, topic: myTopic().catch(() => null), events: ["dm"] });
     return () => {
       stop = true;
-      window.clearTimeout(id);
-      document.removeEventListener("visibilitychange", load);
+      end();
     };
   }, []);
 }
