@@ -39,7 +39,7 @@ import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
 import { GateRadar } from "./gate-radar";
-import { ArrowRight, Check, Loader2, MapPin, MessagesSquare, ShieldCheck, Video } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import {
   TURNSTILE_SITE_KEY,
   adultConfirmed,
@@ -201,22 +201,22 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   submitRef.current = submit;
 
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#0b0d12] text-ink sm:items-center sm:justify-center">
+    <main className="relative flex h-dvh flex-col overflow-x-hidden overflow-y-auto bg-[#0b0d12] text-ink sm:items-center sm:justify-center" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <GateTeaser hidden onCity={(city, r) => setTeaser({ city, near: r?.near ?? 0, total: r?.total ?? 0 })} />
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
         <span className="gate-flare absolute -top-[10%] -left-[25%] size-[75vw] max-w-[520px] max-h-[520px] max-w-none rounded-full bg-[#FA6F6C] opacity-35 blur-[70px]" />
         <span className="gate-flare f2 absolute top-[30%] -right-[30%] size-[70vw] max-h-[480px] max-w-[480px] rounded-full bg-[#A78BFA] opacity-25 blur-[80px]" />
         <span className="gate-flare f3 absolute -bottom-[10%] left-[5%] size-[65vw] max-h-[440px] max-w-[440px] rounded-full bg-[#3EE08F] opacity-20 blur-[80px]" />
       </div>
-      <div className="relative z-10 flex w-full flex-1 flex-col items-center px-6 pt-8 sm:max-w-sm sm:flex-none">
+      <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center px-6 pt-4 [@media(min-height:760px)]:pt-8 sm:max-w-sm sm:flex-none">
         <div className="flex w-full items-center justify-between">
           <span className="font-display text-3xl font-extrabold">hdar<span className="text-signal">.</span></span>
-          <span className="rounded-full border border-white/25 px-2.5 py-0.5 text-xs font-bold text-white/80">18+</span>
+          
         </div>
-        <div className="relative my-auto flex w-full flex-col items-center py-4" aria-live="polite">
-          <GateRadar className="aspect-square w-[min(78vw,340px)] drop-shadow-[0_0_40px_rgba(250,111,108,.25)]" />
-          <p className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-bold backdrop-blur">
-            <span className="size-2 shrink-0 animate-pulse rounded-full bg-[#3EE08F]" />
+        <div className="relative my-auto flex min-h-0 w-full flex-col items-center py-2 [@media(min-height:760px)]:py-4" aria-live="polite">
+          <GateRadar className="aspect-square w-[clamp(110px,min(78vw,34dvh),340px)] drop-shadow-[0_0_40px_rgba(250,111,108,.25)]" />
+          <p className="mt-3 flex max-w-full items-center justify-center gap-1.5 text-center text-[13px] text-white/60 [@media(max-height:36em)]:mt-1">
+            <span className="size-1.5 shrink-0 rounded-full bg-[#3EE08F]" />
             <span>{teaser && teaser.near > 0
               ? `${teaser.near} ${teaser.near > 1 ? "personnes actives" : "personne active"} ces dernières 24 h${teaser.city ? ` près de ${teaser.city}` : ""}`
               : teaser && teaser.total > 0
@@ -225,21 +225,16 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           </p>
         </div>
       </div>
-      <form className="relative z-10 w-full space-y-3 px-6 pt-2 pb-7 sm:max-w-sm" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <h1 className="text-center font-display text-2xl leading-tight font-extrabold">Qui est autour de toi, ce soir ?</h1>
-        <p className="text-center text-sm text-white/70">Sorties et rencontres près de toi. Gratuit, discret, sans inscription.</p>
-        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-white/70">
-          <li className="flex items-center gap-1.5"><MapPin className="size-3.5 text-signal" strokeWidth={2} />Qui est là</li>
-          <li className="flex items-center gap-1.5"><MessagesSquare className="size-3.5 text-[#3EE08F]" strokeWidth={2} />Chat du quartier</li>
-          <li className="flex items-center gap-1.5"><Video className="size-3.5 text-[#A78BFA]" strokeWidth={2} />Live vidéo</li>
-        </ul>
+      <form className="relative z-10 w-full shrink-0 space-y-2.5 px-5 pt-1 sm:max-w-sm [@media(min-height:760px)]:space-y-3" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <h1 className="text-center text-[22px] leading-tight font-bold tracking-tight [@media(min-height:760px)]:text-2xl">Qui est autour de toi, ce soir ?</h1>
+        <p className="text-center text-sm text-white/65">Sorties et rencontres près de toi. Gratuit, discret, sans inscription.</p>
         {/* Turnstile en mode « interaction seulement » : invisible la plupart du temps, cadre sombre s'il demande un clic. */}
         <div className={challenge ? "rounded-2xl border border-white/10 bg-white/5 p-2" : "h-0 overflow-hidden"} data-act="gate-captcha">
           {challenge && <p className="mb-1.5 flex items-center justify-center gap-1.5 text-xs text-white/70"><ShieldCheck className="size-3.5" strokeWidth={2} />Petite vérification anti-robot</p>}
           <div ref={box} className="flex justify-center [&_iframe]:max-w-full" />
         </div>
         {needsAdult && (
-          <label data-act="gate-adult" className="gate-adult flex min-h-[52px] cursor-pointer items-center gap-3 rounded-2xl border border-[#FA6F6C]/30 bg-white/[.04] px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors has-[:checked]:border-[#FA6F6C]/70 has-[:checked]:bg-[#FA6F6C]/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FFB4A8]">
+          <label data-act="gate-adult" className="gate-adult flex min-h-[52px] cursor-pointer items-center gap-3 rounded-2xl border border-[#FA6F6C]/30 bg-white/[.04] px-4 py-2.5 text-sm font-medium backdrop-blur transition-colors has-[:checked]:border-[#FA6F6C]/70 has-[:checked]:bg-[#FA6F6C]/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FFB4A8]">
             <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => { setChecked(e.target.checked); setError(""); }} />
             <span aria-hidden className="gate-box grid size-7 shrink-0 place-items-center rounded-[10px] border-2 border-[#FA6F6C]/55 bg-black/30 transition-[background,box-shadow,border-color] peer-checked:border-[#FA6F6C] peer-checked:bg-[#FA6F6C]/20 peer-checked:shadow-[0_0_14px_2px_rgba(250,111,108,.55)]">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="#FF8A80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path className="gate-check" d="M5 12.5l4.5 4.5L19 7.5" /></svg>
@@ -249,7 +244,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           </label>
         )}
         {error && <p className="text-center text-sm text-red-400">{error}</p>}
-        <button type="submit" data-act="gate-enter" disabled={busy || (needsAdult && !checked)} className="gate-enter flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] text-lg font-extrabold text-night shadow-[0_10px_40px_-8px_rgba(250,111,108,.75)] active:scale-[.98] disabled:opacity-45 disabled:shadow-none">
+        <button type="submit" data-act="gate-enter" disabled={busy || (needsAdult && !checked)} className="gate-enter flex h-12 [@media(min-height:760px)]:h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] text-base font-bold text-night shadow-[0_8px_24px_-10px_rgba(250,111,108,.7)] active:scale-[.98] disabled:opacity-45 disabled:shadow-none">
           {busy || waiting ? <><Loader2 className="size-5 animate-spin" strokeWidth={2.5} />{busy ? "Connexion…" : "Vérification…"}</> : <>Entrer<ArrowRight className="size-5" strokeWidth={2.5} /></>}
         </button>
         <p className="text-center text-[11px] leading-snug text-white/55">
