@@ -131,7 +131,10 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   if (e2e && typeof window !== "undefined") (window as unknown as { __p2pIn: typeof onCoMsg }).__p2pIn = onCoMsg;
   useEffect(() => { if (!hostBc && co.room) { void co.stop(); toast("La diffusion est terminée, tu es de nouveau en privé"); } }, [hostBc]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!bc.room) { setCoWith(null); if (!demo || e2e) p2pSend({ bc: null }); } }, [bc.room]); // eslint-disable-line react-hooks/exhaustive-deps
-  const coJoin = async () => { if (!hostBc) return; const id = await co.join(hostBc.room); if (id) { p2pSend({ co: id }); toast("Tu diffuses avec " + (peer?.pseudo ?? "ton partenaire")); } };
+  const coJoin = async () => { if (!hostBc || co.busy || co.room) return; if (bc.room) await bc.stop(); const id = await co.join(hostBc.room); if (id) { p2pSend({ co: id }); toast("Tu diffuses avec " + (peer?.pseudo ?? "ton partenaire")); } };
+  // Les deux partenaires diffusent en même temps (deux salons) : on fusionne sans coupure. Règle identique des deux côtés :
+  // le salon au plus petit identifiant reste, l'autre arrête le sien et rejoint celui-là en duo (même caméra, même 1:1).
+  useEffect(() => { if (bc.room && hostBc && hostBc.room !== "demo" && hostBc.room !== bc.room && bc.room > hostBc.room && !co.room && !co.busy) void coJoin(); }, [bc.room, hostBc?.room]); // eslint-disable-line react-hooks/exhaustive-deps
   const coLeave = () => { void co.stop(); p2pSend({ co: null }); toast("Tu es de nouveau en privé"); };
   const closePc = () => { setHostBc(null); setCoWith(null); if (co.room) void co.stop(); dc.current = null; setP2pLines([]); setNeedTap(false); setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
@@ -258,7 +261,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
 
   /** Prochain Live à regarder dans le fil (un sur deux), sauf si je diffuse moi-même. */
   async function pickRoom(): Promise<string | null> {
-    if (!gOn || bc.room || pro) return null;
+    if (!gOn || bc.room || co.room || co.busy || hostBc || pro) return null; // en duo : on ne part pas regarder un autre Live
     const f = feed.current;
     f.turn++;
     if (Date.now() - f.at > 15000) { try { f.rooms = (await roomFeed()).map((r) => r.room); f.at = Date.now(); } catch { f.rooms = []; } }
@@ -503,8 +506,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
         </div>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
-          {gOn && !broadcasting && !co.room && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy} onClick={() => setConfirmBc(true)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
-            className="flex h-9 items-center gap-1 rounded-full border border-[#FA6F6C] bg-black/50 px-2.5 text-xs font-bold text-[#FA6F6C] backdrop-blur disabled:opacity-50"><Radio className="size-4" /> Diffuser</button>}
+          {gOn && !broadcasting && !co.room && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy || co.busy} onClick={() => (hostBc ? void coJoin() : setConfirmBc(true))} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
+            className="flex h-9 items-center gap-1 rounded-full border border-[#FA6F6C] bg-black/50 px-2.5 text-xs font-bold text-[#FA6F6C] backdrop-blur disabled:opacity-50"><Radio className="size-4" /> {bc.busy || co.busy ? "Connexion…" : hostBc ? "Diffuser en duo" : "Diffuser"}</button>}
           <ShareLiveButton compact />
           <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
@@ -572,7 +575,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <button type="button" data-testid="co-stop" onClick={coLeave} className="rounded-full bg-black/60 px-3 py-1 text-xs font-bold">Revenir en privé</button>
         </div>
       )}
-      {hostBc && !co.room && !broadcasting && coNo === hostBc.room && <button type="button" data-testid="co-reopen" onClick={() => setCoNo(null)} className="absolute top-[8.75rem] start-3 z-20 rounded-full border border-[#FA6F6C] bg-black/60 px-3 py-1 text-xs font-bold text-[#FA6F6C]">📣 {peer?.pseudo} diffuse · 👁 {hostBc.n}</button>}
+      {hostBc && !co.room && !broadcasting && coNo === hostBc.room && <button type="button" data-testid="co-reopen" onClick={() => setCoNo(null)} className="absolute top-[8.75rem] start-3 z-20 rounded-full border border-[#FA6F6C] bg-black/60 px-3 py-1 text-xs font-bold text-[#FA6F6C]"><Radio className="me-1 inline size-3.5 align-[-0.15em]" />{peer?.pseudo} diffuse · <Eye className="inline size-3.5 align-[-0.15em]" /> {hostBc.n}</button>}
       {!demo && <CoachMark group={gOn} />}
       <FloatingHearts burst={burst} />
       {giftOpen && peer && proPlace && <ProGiftSheet places={[proPlace]} to={peer.id} pseudo={peer.pseudo} via="live" onClose={() => setGiftOpen(false)} />}
