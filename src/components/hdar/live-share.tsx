@@ -24,7 +24,9 @@ async function copyText(t: string): Promise<boolean> {
  * était avalée : rien ne se passait. Désormais le lien est préchargé au montage, share() part tout de suite dans le clic,
  * et sinon on copie le lien (toast « Lien copié »). AbortError (l'utilisateur ferme la feuille) : silencieux.
  */
-export function ShareLiveButton({ compact }: { compact?: boolean }) {
+/** Lien direct vers un Live précis (identifiant de salon éphémère : ni position, ni email, ni identifiant de profil). */
+const roomUrl = (room: string) => `https://hdar.chat/live?room=${encodeURIComponent(room)}`;
+export function ShareLiveButton({ compact, room }: { compact?: boolean; room?: string | null }) {
   const [code, setCode] = useState<string | null>(null);
   const busy = useRef(false);
   useEffect(() => { let on = true; void livePos().catch(() => null).then(() => shareCode()).then((c) => on && setCode(c)).catch(() => undefined); return () => { on = false; }; }, []);
@@ -32,6 +34,14 @@ export function ShareLiveButton({ compact }: { compact?: boolean }) {
   const fallback = async (url: string, c: string) => { if (await copyText(url)) { toast("Lien copié"); void done(c); } else toast(`Copie impossible : ${url}`); };
   const go = () => {
     if (busy.current) return;
+    if (room && /^[0-9a-f-]{36}$/i.test(room)) { // je diffuse (seul ou en duo) ou je regarde : lien vers CE Live
+      const url = roomUrl(room); const data = { title: "hdar. — Live", text: "Live en cours sur hdar. Viens voir !", url };
+      if (typeof navigator.share === "function" && (!navigator.canShare || navigator.canShare(data))) {
+        busy.current = true;
+        navigator.share(data).catch((e: unknown) => { if ((e as { name?: string })?.name !== "AbortError") void copyText(url).then((ok) => toast(ok ? "Lien du Live copié" : `Copie impossible : ${url}`)); }).finally(() => (busy.current = false));
+      } else void copyText(url).then((ok) => toast(ok ? "Lien du Live copié" : `Copie impossible : ${url}`));
+      return;
+    }
     const text = "Je suis en Live sur hdar. Viens voir qui est dans le coin !";
     if (code === null) { // lien pas encore prêt : on le crée puis on copie (le presse-papiers tolère mieux l'attente que share)
       busy.current = true;

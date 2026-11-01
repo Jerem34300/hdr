@@ -638,7 +638,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
           <span className="mt-1 inline-block rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80">{RULES}</span>
         </div>
         <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE · <Eye className="inline size-3 align-[-0.1em]" /> {st?.viewers ?? 0}/{st?.cap ?? 6}</span>
-        <ShareLiveButton compact />
+        <ShareLiveButton compact room={room} />
         <button type="button" aria-label="Quitter" onClick={() => { leave(); onExit(); }} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
       </div>
       <Chat room={room} lines={lines} pops={pops} show={chat} canReport onSent={refresh} />

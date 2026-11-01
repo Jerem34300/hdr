@@ -318,6 +318,9 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     running.current = true; (window as unknown as { __hdarLive?: boolean }).__hdarLive = true;
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
+    // Lien partagé « ?room=<salon> » : on ouvre directement ce Live (après l'entrée 18+ et les règles habituelles à l'entrée).
+    const sharedRoom = new URLSearchParams(location.search).get("room");
+    if (sharedRoom && /^[0-9a-f-]{36}$/i.test(sharedRoom) && (await groupEnabled())) return enterWatch(sharedRoom);
     const w = new URLSearchParams(location.search).get("with");
     const target = w && /^[0-9a-f-]{36}$/i.test(w) ? w : undefined;
     // « Rejoindre son live » : s'il diffuse à plusieurs, on regarde sa diffusion (règle des 2 km vérifiée à l'entrée)
@@ -510,7 +513,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
           {gOn && !broadcasting && !co.room && <button type="button" data-testid="diffuser" aria-label="Diffuser à plusieurs" disabled={bc.busy || co.busy} onClick={() => (hostBc ? void coJoin() : setConfirmBc(true))} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
             className="flex h-9 items-center gap-1 rounded-full border border-[#FA6F6C] bg-black/50 px-2.5 text-xs font-bold text-[#FA6F6C] backdrop-blur disabled:opacity-50"><Radio className="size-4" /> {bc.busy || co.busy ? "Connexion…" : hostBc ? "Diffuser en duo" : "Diffuser"}</button>}
-          <ShareLiveButton compact />
+          <ShareLiveButton compact room={bc.room ?? co.room ?? hostBc?.room ?? null} />
           <button type="button" aria-label="Quitter" onClick={() => stop()} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
         </div>
       </div>
