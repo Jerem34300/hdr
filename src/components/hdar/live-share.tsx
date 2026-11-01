@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Share2 } from "lucide-react";
-import { liveShareCreate, liveShareDone, liveShareView, type LiveShareView } from "@/lib/hdar/live";
+import { livePos, liveShareCreate, liveShareDone, liveShareView, type LiveShareView } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { toast } from "sonner";
 import { Wordmark } from "./logo";
@@ -9,8 +9,9 @@ import { adultConfirmed, confirmAdult } from "@/lib/hdar/session";
 
 /** Lien de partage préparé À L'AVANCE : navigator.share doit partir dans le geste (Chrome Android refuse après un await réseau). */
 let shareCache: Promise<string> | null = null;
-const shareCode = () => (shareCache ??= liveShareCreate().then((r) => r.code).catch((e) => { shareCache = null; throw e; }));
-const shareUrl = (code: string) => `https://hdar.chat/live/${code}`;
+// Si le lien personnel est refusé (pas de position, limite…), on partage le lien général du Live : le partage ne bloque jamais.
+const shareCode = () => (shareCache ??= liveShareCreate().then((r) => r?.code || "").catch(() => { setTimeout(() => (shareCache = null), 60000); return ""; }));
+const shareUrl = (code: string) => (code ? `https://hdar.chat/live/${code}` : "https://hdar.chat/live");
 
 async function copyText(t: string): Promise<boolean> {
   try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(t); return true; } } catch { /* repli */ }
@@ -26,13 +27,13 @@ async function copyText(t: string): Promise<boolean> {
 export function ShareLiveButton({ compact }: { compact?: boolean }) {
   const [code, setCode] = useState<string | null>(null);
   const busy = useRef(false);
-  useEffect(() => { let on = true; void shareCode().then((c) => on && setCode(c)).catch(() => undefined); return () => { on = false; }; }, []);
-  const done = async (c: string) => { const r = await liveShareDone(c).catch(() => null); if (r) { void usePremium.getState().refresh(); toast(`Merci du partage 🎁 ${r.label}`); } };
-  const fallback = async (url: string, c: string) => { if (await copyText(url)) { toast("Lien copié 📋"); void done(c); } else toast(`Copie impossible : ${url}`); };
+  useEffect(() => { let on = true; void livePos().catch(() => null).then(() => shareCode()).then((c) => on && setCode(c)).catch(() => undefined); return () => { on = false; }; }, []);
+  const done = async (c: string) => { if (!c) return; const r = await liveShareDone(c).catch(() => null); if (r) { void usePremium.getState().refresh(); toast(`Merci du partage : ${r.label}`); } };
+  const fallback = async (url: string, c: string) => { if (await copyText(url)) { toast("Lien copié"); void done(c); } else toast(`Copie impossible : ${url}`); };
   const go = () => {
     if (busy.current) return;
-    const text = "Je suis en Live sur hdar. 🎥 Viens voir qui est dans le coin !";
-    if (!code) { // lien pas encore prêt : on le crée puis on copie (le presse-papiers tolère mieux l'attente que share)
+    const text = "Je suis en Live sur hdar. Viens voir qui est dans le coin !";
+    if (code === null) { // lien pas encore prêt : on le crée puis on copie (le presse-papiers tolère mieux l'attente que share)
       busy.current = true;
       void shareCode().then((c) => { setCode(c); return fallback(shareUrl(c), c); }).catch((e) => toast(e instanceof Error ? e.message.replace(/^.*?: /, "") : "Partage impossible")).finally(() => (busy.current = false));
       return;

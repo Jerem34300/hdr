@@ -89,6 +89,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     const [filters, setFilters] = useState<Filters>({ iam: [], minAge: null, maxAge: null });
   const [filterOpen, setFilterOpen] = useState(() => typeof location !== "undefined" && new URLSearchParams(location.search).has("filters"));
   const [reporting, setReporting] = useState(false);
+  /** hdar+ demandé depuis le Live : feuille par-dessus, on ne quitte le Live que si on le choisit. */
+  const [upsell, setUpsell] = useState(false);
   const [more, setMore] = useState(false);
   const [confirmBc, setConfirmBc] = useState(() => !!demo && typeof location !== "undefined" && location.search.includes("confirm"));
   const localRef = useRef<MediaStream | null>(null);
@@ -169,7 +171,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const askSentRef = useRef(false);
   useEffect(() => { askSentRef.current = askSent; }, [askSent]);
   const ask = async () => {
-    if (!premium) return void nav({ to: "/premium" });
+    if (!premium) return setUpsell(true);
     if (askSent) return toast("Demande déjà envoyée");
     if (demo) return setAskSent(true);
     try { await liveAsk(); setAskSent(true); toast("Demande envoyée"); } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
@@ -583,14 +585,24 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {more && (
         <div data-testid="more-sheet" className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setMore(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
-            <MoreItem icon={<RotateCcw className="size-5" />} label="Revenir à la personne d'avant" crown={!premium} onClick={() => { setMore(false); if (!premium) return void nav({ to: "/premium" }); if (!prev) return toast("Personne avant"); void next(prev.id); }} />
-            <MoreItem icon={<SlidersHorizontal className="size-5" />} label="Filtres Live" crown={!premium} onClick={() => { setMore(false); if (premium) setFilterOpen(true); else void nav({ to: "/premium" }); }} />
+            <MoreItem icon={<RotateCcw className="size-5" />} label="Revenir à la personne d'avant" crown={!premium} onClick={() => { setMore(false); if (!premium) return setUpsell(true); if (!prev) return toast("Personne avant"); void next(prev.id); }} />
+            <MoreItem icon={<SlidersHorizontal className="size-5" />} label="Filtres Live" crown={!premium} onClick={() => { setMore(false); if (premium) setFilterOpen(true); else setUpsell(true); }} />
             {pro && <MoreItem icon={<Gift className="size-5" />} label="Cadeau pro" onClick={() => { setMore(false); if (peer && proPlace) setGiftOpen(true); }} />}
             <MoreItem icon={<Flag className="size-5" />} label={`Signaler ${peer?.pseudo ?? ""}`} danger onClick={() => { setMore(false); if (peer) setReporting(true); }} />
           </div>
         </div>
       )}
       {confirmBc && <ConfirmBroadcast onOk={() => { setConfirmBc(false); if (!demo || e2e) void bc.start(); }} onCancel={() => setConfirmBc(false)} />}
+      {upsell && (
+        <div data-testid="upsell-sheet" className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={() => setUpsell(false)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
+            <p className="flex items-center gap-2 font-display text-lg font-bold"><Crown className="size-5 text-[#fbbf24]" /> Réservé à hdar+</p>
+            <p className="text-sm text-ink/75">Demander à se voir, revenir à la personne d'avant et les filtres font partie de hdar+. Ton Live continue tant que tu restes ici.</p>
+            <button type="button" onClick={() => setUpsell(false)} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">Rester dans le Live</button>
+            <button type="button" onClick={() => { setUpsell(false); stop(false); void nav({ to: "/premium" }); }} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Voir hdar+ (quitte le Live)</button>
+          </div>
+        </div>
+      )}
       {reporting && (
         <div className="absolute inset-0 z-30 flex items-end bg-black/60" onClick={() => setReporting(false)}>
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 text-ink" onClick={(e) => e.stopPropagation()}>

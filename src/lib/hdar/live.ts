@@ -1235,7 +1235,12 @@ export const adminAmbCap = (key: string, user: string, cap: number | null) => rp
 
 // Partager mon live (v50)
 export type LiveShareView = { pseudo: string; active: boolean; ref: string | null; lat: number; lng: number; area: string | null; live: number; pins: { lat: number; lng: number; live: boolean }[]; places: { kind: string; name: string | null; lat: number; lng: number }[] };
-export const liveShareCreate = () => rpc<{ code: string; ref: string }>("hdar_live_share_create", {});
+/** Lien de partage du Live : jamais de condition « visible / épinglé » côté appli. Position du Live si déjà connue (v124), sinon sans. */
+export const liveShareCreate = async () => {
+  const at = livePosVal;
+  try { return await rpc<{ code: string; ref: string }>("hdar_live_share_create", at ? { p_lat: at.lat, p_lng: at.lng } : {}); }
+  catch (e) { if (at && /function|argument|schema cache/i.test(e instanceof Error ? e.message : "")) return rpc<{ code: string; ref: string }>("hdar_live_share_create", {}); throw e; }
+};
 export const liveShareDone = (code: string) => rpc<{ kind: string; amount: number; label: string } | null>("hdar_live_share_done", { p_code: code });
 /** Appel public (visiteur non inscrit) : clé anonyme seulement, aucune session créée. */
 export async function anonRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
