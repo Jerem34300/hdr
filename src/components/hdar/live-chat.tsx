@@ -14,7 +14,6 @@ import { showOnMap, useMapFocus, useRegion } from "@/lib/hdar/map-focus";
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
-  ChevronRight,
   Mic,
   MoreVertical,
   Send,
@@ -61,7 +60,8 @@ import { AttachButton, BlurredPhoto, MediaView } from "./media-composer";
 import { GoButton } from "./go-sheet";
 import { MeetBar, MeetFlash } from "./meetup";
 import { useMeetup, type MeetDemo } from "@/lib/hdar/meetup";
-import { Navigation2 } from "lucide-react";
+import { Map as MapIcon, Navigation2, Radar as RadarIcon } from "lucide-react";
+import { distanceM } from "@/lib/hdar/meetup";
 import { uploadChatMedia } from "@/lib/hdar/chat-media";
 
 const MAX_VOICE_SEC = 60;
@@ -81,6 +81,10 @@ const msgPreview = (m: LiveMsg) =>
 export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: string; /** Aperçu de dev : messages fixes, pas de serveur. */ demo?: LiveMsg[] }) {
   const region = useRegion(userId);
   const onMap = useMapFocus((s) => !!s.pins[userId]);
+  const pin = useMapFocus((s) => s.pins[userId]);
+  const here = useHdar((s) => s.here);
+  // Bouton radar : seulement si l'autre est à ~2 km (positions approximatives de la carte, rien de plus précis).
+  const near = (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("proche")) || (!!pin && !!here && distanceM(here, pin) < 2000);
   const favs = useFavorites();
   const onboarded = useHdar((s) => s.me.onboarded) && !(import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("asdiscret"));
   const [camera, setCamera] = useState(false);
@@ -350,7 +354,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         </button>
         <button
           type="button"
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-1 py-1 text-start active:bg-surface"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl px-1 py-1 text-start active:bg-surface"
           aria-label={`Voir le profil de ${pseudo}`}
           onClick={() => openProfile(userId, pseudo)}
         >
@@ -363,13 +367,21 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
                 <span className="ms-1 text-amber-400" aria-label="Favori">★</span>
               )}
             </span>
-            <span className="flex items-center text-xs text-muted">
-              {region ? <>📍 {region} · </> : null}Voir le profil <ChevronRight className="size-3" />
+            <span className="flex items-center whitespace-nowrap text-[11px] text-muted">
+              {region ? <>📍 {region} · </> : null}Voir le profil
             </span>
           </span>
         </button>
-        {onMap && !isBot(userId) && (
-          <button type="button" aria-label="Voir sur la carte" title="Voir sur la carte" onClick={() => showOnMap(userId)} className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-lg">🗺️</button>
+        {(onMap || (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("proche"))) && !isBot(userId) && (
+          <button type="button" aria-label="Voir sur la carte" title="Voir sur la carte" onClick={() => showOnMap(userId)} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-line"><MapIcon className="size-[18px]" strokeWidth={2} aria-hidden /></button>
+        )}
+        {near && !isBot(userId) && meet.st?.allowed !== false && meet.st?.status !== "active" && meet.st?.status !== "pending" && (
+          <button type="button" data-act="meet-radar-btn" aria-label="Se retrouver" title="Se retrouver"
+            onClick={() => (onboarded || demo ? void meet.propose().catch((e: Error) => toast(e.message)) : openGate())}
+            className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-surface text-[#3EE08F] ring-1 ring-[#3EE08F]/50">
+            <span className="absolute inset-0 rounded-full ring-2 ring-[#3EE08F]/60 radar-pulse" aria-hidden />
+            <RadarIcon className="relative size-[18px]" strokeWidth={2} aria-hidden />
+          </button>
         )}
         {!isBot(userId) && <button
           type="button"
@@ -381,7 +393,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
         </button>}
         <button
           type="button"
-          className="flex size-10 shrink-0 items-center justify-center"
+          className="flex h-10 w-8 shrink-0 items-center justify-center"
           aria-label="Plus d'options"
           aria-expanded={menu}
           onClick={() => setMenu((v) => !v)}
