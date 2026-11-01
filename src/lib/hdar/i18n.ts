@@ -130,7 +130,7 @@ export function countryName(cc: string, lang: Lang = useLang.getState().lang): s
 
 // ---------- Traduction de l'interface rendue (nœuds texte + attributs) ----------
 // Les contenus des membres (messages, pseudos, bios, annonces…) sont marqués translate="no" et ne sont jamais traduits.
-const SKIP = "[translate=no],[data-noi18n],script,style,textarea,code,.maplibregl-map";
+const SKIP = "[translate=no]:not(html),[data-noi18n],script,style,textarea,code,.maplibregl-map";
 const ATTRS = ["placeholder", "title", "aria-label", "alt"] as const;
 const src = new WeakMap<Node, string>(); // texte français d'origine
 const out = new WeakMap<Node, string>(); // dernière valeur posée par nous

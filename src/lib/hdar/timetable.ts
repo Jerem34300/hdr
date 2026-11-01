@@ -271,3 +271,19 @@ export async function mergeSncf(rows: BoardRow[]) {
     r.rtSource = "sncf";
   }
 }
+
+export type StationHit = { name: string; lat: number; lng: number; id: string };
+/** Recherche de gare par nom (Transitous, gratuit, sans clé) : seulement les arrêts desservis par le train. */
+export async function searchStations(q: string): Promise<StationHit[]> {
+  const text = q.trim();
+  if (text.length < 2) return [];
+  if (isTransitDemo()) return [{ name: "Montpellier Saint-Roch", lat: 43.6047, lng: 3.8807, id: "d1" }, { name: "Montpellier Sud de France", lat: 43.5952, lng: 3.9233, id: "d2" }].filter((x) => x.name.toLowerCase().includes(text.toLowerCase().slice(0, 4)));
+  const all = await get<(Place & { id: string; type?: string })[]>(`/geocode?text=${encodeURIComponent(text)}&type=STOP&language=${locale().slice(0, 2)}`, 6000);
+  const rail = RAIL.split(",");
+  const seen = new Set<string>();
+  return all
+    .filter((p) => p.modes?.some((m) => rail.includes(m)))
+    .filter((p) => { const k = p.name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+    .slice(0, 8)
+    .map((p) => ({ name: p.name, lat: p.lat, lng: p.lon, id: p.id }));
+}

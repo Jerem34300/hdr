@@ -29,6 +29,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "hdar." },
       { name: "theme-color", content: "#0B0D12" },
+      { name: "google", content: "notranslate" },
       { name: "google-site-verification", content: "GUj-5VvdUijZY32Tv7JysJVtjGwGBwtXMrPYf2QGkm4" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
@@ -44,7 +45,7 @@ export const Route = createRootRoute({
     ],
   }),
   component: () => (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr" translate="no" className="notranslate" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

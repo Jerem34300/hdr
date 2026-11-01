@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { ackSalonsBadge, useSalonInbox } from "@/lib/hdar/salon-inbox";
 import { playFavoriteSound } from "@/lib/hdar/sounds";
 import { adsCount, alertHits, listAds, regionFromPos, slugify, type Ad } from "@/lib/hdar/ads";
-import { Video, X } from "lucide-react";
+import { MapPin, Video, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
@@ -39,7 +39,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             className="min-w-0 truncate text-end text-sm text-muted"
             {...bindTap(openCity)}
           >
-            📍 {area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
+            <MapPin className="me-1 inline size-3.5 -translate-y-px align-middle" strokeWidth={2} />{area ?? (place.slug === "ici" ? "Autour de toi" : place.name)}
           </button>
         </div>
         <div className="no-scrollbar -mx-3 mt-0.5 flex gap-1 overflow-x-auto px-2 pt-1.5 pb-0.5" data-act="top-row">

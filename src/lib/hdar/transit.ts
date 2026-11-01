@@ -371,3 +371,14 @@ export function stopName(s: Pick<TransitStop, "kind" | "name">) {
   if (s.kind === "bus" && /^(gare|gare sncf|gare ferroviaire|station)$/i.test(s.name.trim())) return `Arrêt de bus – ${s.name.trim()}`;
   return s.name;
 }
+
+/** Zones couvertes par nos gares importées (OSM) et les horaires : France métropolitaine, Belgique, Luxembourg. */
+const COVERED: [number, number, number, number][] = [[41.3, -5.2, 51.1, 9.6], [49.5, 2.5, 51.5, 6.4], [49.4, 5.7, 50.2, 6.5]];
+export function transitCovered(at: { lat: number; lng: number } | null | undefined) {
+  if (!at) return false;
+  // la boîte France déborde sur l'Espagne / l'Italie / la Suisse : on exclut grossièrement ces bords
+  if (at.lat < 43.3 && at.lng < 3.0) return false; // nord de l'Espagne
+  if (at.lng > 7.7 && at.lat < 45.5 && !(at.lat > 41.3 && at.lat < 43.1 && at.lng > 8.5 && at.lng < 9.6)) return false; // Italie (hors Corse)
+  if (at.lng > 6.9 && at.lat > 45.8 && at.lat < 47.8) return false; // Suisse
+  return COVERED.some(([s, w, n, e]) => at.lat >= s && at.lat <= n && at.lng >= w && at.lng <= e);
+}

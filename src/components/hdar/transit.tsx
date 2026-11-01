@@ -1,17 +1,17 @@
 // Transports : pins gares / métro-tram / aéroports, fiche de l'arrêt (chat + « Je suis dans… »), salons à bord.
 import { focusNoScroll, useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { useEffect, useRef, useState } from "react";
-import { Bus, Plane, TrainFront, TramFront, Users, X } from "lucide-react";
+import { Bus, ChevronRight, Keyboard, LocateFixed, Plane, Search, TrainFront, TramFront, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import type { PlaceDetail } from "@/lib/hdar/live";
 import { useHdar } from "@/lib/hdar/store";
 import {
-  TRANSIT_KINDS, TRIP_FOR, TRIP_LABEL, ensureStop, isTransitDemo, normalizeTrip, stopLines, todayISO, tripJoin, tripLeave,
+  TRANSIT_KINDS, TRIP_FOR, fetchTransit, transitCovered, TRIP_LABEL, ensureStop, isTransitDemo, normalizeTrip, stopLines, todayISO, tripJoin, tripLeave,
   tripsAt, tripsMine, validTrip, tripCounts, tripKey,
   stopName, type TransitKind, type TransitStop, type Trip, type TripKind,
 } from "@/lib/hdar/transit";
 import { PlaceChat } from "./places-layer";
-import { autoDay, hhmm, lookupTrain, stationBoard, stationLines, type BoardRow, type LineDirections, type TrainInfo } from "@/lib/hdar/timetable";
+import { autoDay, hhmm, lookupTrain, searchStations, stationBoard, stationLines, type BoardRow, type LineDirections, type StationHit, type TrainInfo } from "@/lib/hdar/timetable";
 import { bindTap } from "./tap";
 
 export function TransitIcon({ kind, className = "size-4" }: { kind: TransitKind | TripKind; className?: string }) {
@@ -93,10 +93,18 @@ export function TransitSheet({ stop, onClose }: { stop: TransitStop; onClose: ()
         type="button"
         data-act="trip-join"
         className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-signal font-bold text-night"
-        onClick={() => setJoining(true)}
+        onClick={() => {
+          if (stop.kind === "station") sheetRef.current?.querySelector('[data-act="station-board"]')?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+          else setJoining(true);
+        }}
       >
-        <TransitIcon kind={tk} className="size-5" /> {TRIP_LABEL[tk]}
+        <TransitIcon kind={tk} className="size-5" /> {stop.kind === "station" ? "Monter dans un train" : TRIP_LABEL[tk]}
       </button>
+      {stop.kind === "station" && (
+        <button type="button" data-act="trip-manual" onClick={() => setJoining(true)} className="mt-1 flex h-9 w-full items-center justify-center gap-1.5 text-xs font-bold text-muted">
+          <Keyboard className="size-3.5 shrink-0" strokeWidth={2} />Saisir le numéro du train
+        </button>
+      )}
       <p className="mt-1.5 text-center text-[11px] text-muted">Salon à bord temporaire · personne ne voit ta position</p>
       {stop.kind !== "airport" && (
         <StationBoard stop={stop} placeId={placeId} onJoined={(t) => openSalon(t.id, t.name)} />
@@ -146,6 +154,21 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
   const [lines, setLines] = useState<LineDirections[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [train, setTrain] = useState<TrainInfo | null | "loading">(null);
+  // Train sans gare ouverte : on choisit d'abord sa gare (recherche ou gares proches), puis son train dans le tableau.
+  const [station, setStation] = useState<TransitStop | null>(null);
+  const [stationPlace, setStationPlace] = useState<string | null>(null);
+  const [manual, setManual] = useState(false);
+  useEffect(() => {
+    setStationPlace(null);
+    if (!station || station.ref.startsWith("tt:")) return; // gare absente de la carte : salon du train sans lieu
+    let stopped = false;
+    void ensureStop(station).then((id) => !stopped && setStationPlace(id)).catch(() => undefined);
+    return () => { stopped = true; };
+  }, [station?.ref]);
+  const customCenter = useHdar((s) => s.customCenter);
+  // Parcours gare → trains → « Monter » seulement là où nos données de transport existent ; ailleurs, numéro du train.
+  const covered = transitCovered(here ?? customCenter);
+  const picking = kind === "train" && !stop && !manual && covered;
   const at = stop ? { lat: stop.lat, lng: stop.lng } : here;
   useEffect(() => {
     if ((kind !== "metro" && kind !== "bus") || !at) return;
@@ -190,7 +213,7 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
   };
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={onClose}>
-      <div className="hdar-sheet-up w-full rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+      <div className="hdar-sheet-up max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8" onClick={(e) => e.stopPropagation()}>
         <button type="button" aria-label="Fermer" className="float-right flex size-10 items-center justify-center" onClick={onClose}>
           <X className="size-5" />
         </button>
@@ -207,10 +230,12 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
                 onClick={() => {
                   setKind(t);
                   setCode("");
+                  setStation(null);
+                  setManual(false);
                 }}
-                className={"flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-sm " + (kind === t ? "border-signal bg-signal/15 font-bold text-signal" : "border-line")}
+                className={"notranslate flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-2xl border px-1 text-sm whitespace-nowrap " + (kind === t ? "border-signal bg-signal/15 font-bold text-signal" : "border-line")}
               >
-                <TransitIcon kind={t} /> {t === "train" ? "Train" : t === "flight" ? "Avion" : t === "metro" ? "Métro" : "Bus"}
+                <TransitIcon kind={t} className="size-4 shrink-0" /> <span className="notranslate">{t === "train" ? "Train" : t === "flight" ? "Avion" : t === "metro" ? "Métro" : "Bus"}</span>
               </button>
             ))}
           </div>
@@ -250,6 +275,26 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
             <p className="mt-3 text-xs text-muted">Ou saisis ta ligne :</p>
           </>
         )}
+        {picking && (
+          station ? (
+            <div data-act="picked-station">
+              <div className="mt-4 flex items-center gap-2">
+                <TrainFront className="size-4 shrink-0 text-signal" strokeWidth={2} />
+                <p className="min-w-0 flex-1 truncate font-semibold">{station.name}</p>
+                <button type="button" data-act="station-change" onClick={() => setStation(null)} className="shrink-0 text-xs font-bold text-signal">Changer de gare</button>
+              </div>
+              <StationBoard stop={station} placeId={stationPlace} onJoined={onJoined} windowMin={60} />
+            </div>
+          ) : (
+            <StationPicker here={here} onPick={setStation} />
+          )
+        )}
+        {picking && (
+          <button type="button" data-act="trip-manual" onClick={() => setManual(true)} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-2xl text-xs font-bold text-muted">
+            <Keyboard className="size-4 shrink-0" strokeWidth={2} />Je connais le numéro de mon train
+          </button>
+        )}
+        {!picking && <>
         <label className="mt-3 block text-xs font-bold text-muted">
           {kind === "flight" ? "Numéro de vol" : kind === "train" ? "Numéro du train" : "Ligne"}
           <input
@@ -300,6 +345,7 @@ export function TripJoinSheet({ kind: k0, start, stop, placeId, onClose, onJoine
         >
           {busy ? "…" : code && ok ? `Rejoindre ${kind === "flight" ? "le vol " : ""}${kind === "metro" || kind === "bus" ? code.trim() : normalizeTrip(kind, code)}` : "Rejoindre"}
         </button>
+        </>}
         <p className="mt-2 text-center text-[11px] text-muted">Réservé aux 18 ans et plus · Signaler reste disponible dans le salon</p>
       </div>
     </div>
@@ -381,7 +427,7 @@ export function AboardBar({ id, aboard, kind, onLeft }: { id: string; aboard: nu
 }
 
 /** Tableau type écran de gare : Départs / Arrivées (train) ou prochains passages par ligne (métro / tram). */
-function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId: string | null; onJoined: (t: Trip) => void }) {
+function StationBoard({ stop, placeId, onJoined, windowMin }: { stop: TransitStop; placeId: string | null; onJoined: (t: Trip) => void; windowMin?: number }) {
   const bus = stop.kind === "bus";
   const urban = stop.kind === "metro" || bus;
   const onboarded = useHdar((s) => s.me.onboarded);
@@ -424,7 +470,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
   const list = (rows ?? [])
     .filter((r) => {
       const t = urban || tab === "dep" ? r.dep : r.arr;
-      return !!t && new Date(t).getTime() >= now;
+      return !!t && new Date(t).getTime() >= now && (!windowMin || new Date(t).getTime() <= Date.now() + windowMin * 60_000);
     })
     .sort((a, b) => (urban || tab === "dep" ? a.dep! : a.arr!).localeCompare(urban || tab === "dep" ? b.dep! : b.arr!));
   // Métro / tram : une ligne par (ligne, direction) avec les 3 prochains passages.
@@ -468,7 +514,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
         )}
       </div>
       {rows === null && <p className="px-3 py-3 text-xs text-muted">Chargement des horaires…</p>}
-      {rows !== null && list.length === 0 && <p className="px-3 py-3 text-xs text-muted">{bus ? "Aucun bus trouvé à cet arrêt pour le moment (horaires non publiés en données ouvertes ou pas de passage prévu)." : "Aucun passage trouvé dans les 3 prochaines heures."}</p>}
+      {rows !== null && list.length === 0 && <p className="px-3 py-3 text-xs text-muted">{bus ? "Aucun bus trouvé à cet arrêt pour le moment (horaires non publiés en données ouvertes ou pas de passage prévu)." : windowMin ? "Aucun train dans l'heure qui vient à cette gare." : "Aucun passage trouvé dans les 3 prochaines heures."}</p>}
       <div className="max-h-80 divide-y divide-line overflow-y-auto">
         {urban
           ? groups.map(({ r, next }) => (
@@ -492,7 +538,7 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
                     {r.delayMin > 0 && !r.cancelled && <span className="block text-[10px] text-amber-300">+{r.delayMin} min</span>}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">
+                    <span className="block font-semibold leading-snug [overflow-wrap:anywhere]">
                       {tab === "dep" ? r.to : r.from}
                     </span>
                     <span className="flex items-center gap-1.5 text-xs text-muted">
@@ -506,13 +552,84 @@ function StationBoard({ stop, placeId, onJoined }: { stop: TransitStop; placeId:
                     </span>
                   )}
                   <Aboard r={r} />
+                  <span className="flex shrink-0 items-center rounded-full bg-signal px-2.5 py-1 text-xs font-bold text-night">{busy === r.id ? "…" : "Monter"}</span>
                 </button>
               );
             })}
       </div>
       <p className="border-t border-line px-3 py-1.5 text-[10px] text-muted">
-        {rows?.some((r) => r.rtSource === "sncf") ? "Retards et suppressions : temps réel SNCF · horaires Transitous" : `Horaires Transitous (données ouvertes)${rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"}`}{bus ? " · touche une ligne pour rejoindre son salon" : " · touche un train pour rejoindre son salon"}
+        {rows?.some((r) => r.rtSource === "sncf") ? "Retards et suppressions : temps réel SNCF · horaires Transitous" : `Horaires Transitous (données ouvertes)${rows?.some((r) => r.realTime) ? " · temps réel quand dispo" : " · horaires prévus"}`}{bus ? " · touche une ligne pour rejoindre son salon" : " · « Monter » rejoint le salon du train"}
       </p>
+    </div>
+  );
+}
+
+/** Choix de la gare : recherche par nom (Transitous) + gares proches (mêmes gares que les lieux de la carte). */
+function StationPicker({ here, onPick }: { here: { lat: number; lng: number } | null; onPick: (s: TransitStop) => void }) {
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<StationHit[] | null>(null);
+  const [near, setNear] = useState<(TransitStop & { d: number })[] | null>(null);
+  useEffect(() => {
+    if (!here) return setNear([]);
+    let stopped = false;
+    const d = 0.12;
+    void fetchTransit({ s: here.lat - d, w: here.lng - d * 1.5, n: here.lat + d, e: here.lng + d * 1.5 }, 12)
+      .catch(() => [] as TransitStop[])
+      .then((all) => {
+        if (stopped) return;
+        const km = (a: { lat: number; lng: number }) => Math.hypot((a.lat - here.lat) * 111, (a.lng - here.lng) * 111 * Math.cos((here.lat * Math.PI) / 180));
+        setNear(all.filter((x) => x.kind === "station").map((x) => ({ ...x, d: km(x) })).sort((a, b) => a.d - b.d).slice(0, 6));
+      });
+    return () => { stopped = true; };
+  }, [here?.lat.toFixed(2), here?.lng.toFixed(2)]);
+  useEffect(() => {
+    if (q.trim().length < 2) return setHits(null);
+    let stopped = false;
+    const t = window.setTimeout(() => void searchStations(q).catch(() => [] as StationHit[]).then((r) => !stopped && setHits(r)), 300);
+    return () => { stopped = true; window.clearTimeout(t); };
+  }, [q]);
+  // Gare trouvée par son nom : on reprend la gare de la carte (même lieu, même chat) si elle est à moins de 400 m.
+  const pick = (name: string, lat: number, lng: number, ref: string) => {
+    const d = 0.01;
+    void fetchTransit({ s: lat - d, w: lng - d, n: lat + d, e: lng + d }, 14)
+      .catch(() => [] as TransitStop[])
+      .then((all) => {
+        const m = all.filter((x) => x.kind === "station").map((x) => ({ x, d: Math.hypot(x.lat - lat, (x.lng - lng) * Math.cos((lat * Math.PI) / 180)) * 111_000 })).sort((a, b) => a.d - b.d)[0];
+        onPick(m && m.d < 400 ? m.x : { ref, kind: "station", name, lat, lng });
+      });
+  };
+  const dist = (d: number) => (d < 1 ? `${Math.max(50, Math.round(d * 10) * 100)} m` : `${d.toFixed(d < 10 ? 1 : 0).replace(".", ",")} km`);
+  const Row = ({ name, sub, onClick }: { name: string; sub?: string; onClick: () => void }) => (
+    <button type="button" data-act="station-pick" onClick={onClick} className="flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm">
+      <TrainFront className="size-4 shrink-0 text-signal" strokeWidth={2} />
+      <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
+      {sub && <span className="shrink-0 text-xs text-muted"><bdi>{sub}</bdi></span>}
+      <ChevronRight className="size-4 shrink-0 text-muted rtl:rotate-180" strokeWidth={2} />
+    </button>
+  );
+  return (
+    <div className="mt-4" data-act="station-picker">
+      <p className="text-xs font-bold text-muted">Choisis ta gare</p>
+      <label className="relative mt-1 block">
+        <Search className="pointer-events-none absolute top-1/2 start-3.5 size-4 -translate-y-1/2 text-muted" strokeWidth={2} />
+        <input value={q} onChange={(e) => setQ(e.target.value.slice(0, 60))} placeholder="Rechercher une gare" aria-label="Rechercher une gare"
+          className="h-12 w-full rounded-2xl border border-line bg-night ps-10 pe-4 text-base text-ink" />
+      </label>
+      {hits !== null ? (
+        <div className="mt-2 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-night">
+          {hits.length === 0 && <p className="px-3 py-3 text-xs text-muted">Aucune gare trouvée.</p>}
+          {hits.map((h) => <Row key={h.id} name={h.name} onClick={() => pick(h.name, h.lat, h.lng, "tt:" + h.id)} />)}
+        </div>
+      ) : (
+        <>
+          <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-muted"><LocateFixed className="size-3.5 shrink-0" strokeWidth={2} />Gares proches</p>
+          <div className="mt-1.5 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-night">
+            {near === null && <p className="px-3 py-3 text-xs text-muted">Recherche des gares autour de toi…</p>}
+            {near?.length === 0 && <p className="px-3 py-3 text-xs text-muted">{here ? "Aucune gare à proximité. Recherche-la par son nom." : "Position inconnue : recherche ta gare par son nom."}</p>}
+            {near?.map((g) => <Row key={g.ref} name={stopName(g)} sub={dist(g.d)} onClick={() => onPick(g)} />)}
+          </div>
+        </>
+      )}
     </div>
   );
 }
