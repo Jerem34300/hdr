@@ -1,6 +1,8 @@
 import { MapMeetRadar } from "./meetup";
 import { useMeetLive } from "@/lib/hdar/meetup";
-import { Crosshair as MeetFit } from "lucide-react";
+import { Crosshair as MeetFit, MapPinned, X as XIcon } from "lucide-react";
+import { PIN_ERRORS, pinClear, pinSet, posChosen } from "@/lib/hdar/live";
+import { toast as pinToast } from "sonner";
 import { toast } from "sonner";
 import { VectorBase } from "./vector-base";
 import { useLang } from "@/lib/hdar/i18n";
@@ -182,6 +184,13 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   // Activité anonyme des dernières 24 h (carreaux ~5 km) : la carte n'est jamais vide.
   const [recent, setRecent] = useState<Recent | null>(null);
   const [approx, setApprox] = useState<string | null>(null);
+  // Géolocalisation refusée/indisponible → « Place-toi sur la carte » (épingle arrondie ~1 km).
+  const [geoDenied, setGeoDenied] = useState(() => import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("pindemo"));
+  const [picking, setPicking] = useState(false);
+  const [pinBusy, setPinBusy] = useState(false);
+  const myPin = useHdar((s) => s.pin);
+  const chosenMode = !!myPin && geoDenied;
+  const [chosenIds, setChosenIds] = useState<Set<string>>(new Set());
   const [filtersOpen, setFiltersOpen] = useState(() => { try { const v = sessionStorage.getItem("hdar-open-filters"); sessionStorage.removeItem("hdar-open-filters"); return !!v; } catch { return false; } });
   const mapFilters = usePremium((s) => (s.premium ? s.filters : null));
   const filterKey = JSON.stringify(mapFilters);
@@ -247,7 +256,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     );
   }
 
-  function applyFix(lat: number, lng: number, recenter: boolean) {
+  function applyFix(lat: number, lng: number, recenter: boolean, chosen = false) {
+    if (!chosen) {
+      setGeoDenied(false);
+      if (useHdar.getState().pin) { useHdar.setState({ pin: null }); if (useHdar.getState().me.onboarded) void pinClear().catch(() => undefined); }
+    }
     setYou({ lat, lng });
     setLocated(true);
     useHdar.setState({ here: { lat, lng } });
@@ -279,6 +292,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           desires: [...tonight.desires, ...(tonight.places ?? [])].filter(Boolean).join(","),
           hours: 3,
           note: tonight.note,
+          chosen,
         },
       }).catch(() => undefined);
     }
@@ -290,6 +304,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     const giveUp = window.setTimeout(() => setFinding(false), 7000);
     if (!navigator.geolocation) {
       setFinding(false);
+      setGeoDenied(true);
+      const pin = useHdar.getState().pin;
+      if (pin) applyFix(pin.lat, pin.lng, true, true);
       return () => window.clearTimeout(giveUp);
     }
     const id = navigator.geolocation.watchPosition(
@@ -299,6 +316,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       },
       (err) => {
         track(err.code === 1 ? "geo_no" : "geo_timeout");
+        setGeoDenied(true);
+        const pin = useHdar.getState().pin;
+        if (pin) { setFinding(false); applyFix(pin.lat, pin.lng, true, true); return; }
         setLocated(false);
         setFinding(false);
         centerOnApproxCity();
@@ -377,6 +397,29 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     const cyw = (worldY(mA.lat, zz) + worldY(mB.lat, zz)) / 2 - 10; // un peu décalé vers le bas sous le radar
     setView({ lat: latFromY(cyw, zz), lng: (mA.lng + mB.lng) / 2, zoom: zz });
   }, [meetOn, meetFollow, mA?.lat, mA?.lng, mB?.lat, mB?.lng, size.w, size.h]);
+  // Épingle : pulse régulier tant qu'on est visible (pas de GPS pour le déclencher).
+  const tonightOn = useHdar((s) => !!(s.me.tonight && s.me.tonight.expiresAt > s.now));
+  useEffect(() => {
+    if (!chosenMode || !tonightOn || !myPin) return;
+    const go = () => applyFix(myPin.lat, myPin.lng, false, true);
+    const id = window.setInterval(go, 60_000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosenMode, tonightOn, myPin?.lat, myPin?.lng]);
+  async function confirmPin() {
+    if (pinBusy) return;
+    setPinBusy(true);
+    try {
+      const at = import.meta.env.DEV && location.search.includes("pindemo") ? { lat: Math.round(view.lat * 100) / 100, lng: Math.round(view.lng * 100) / 100 } : await pinSet(view.lat, view.lng);
+      useHdar.setState({ pin: at });
+      setPicking(false);
+      track("pin_set");
+      applyFix(at.lat, at.lng, false, true);
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "";
+      pinToast(PIN_ERRORS[m] ?? (m || "Réessaie dans un instant"));
+    } finally { setPinBusy(false); }
+  }
   const project = (lat: number, lng: number) => ({
     x: worldX(lng, z) * scale - left,
     y: worldY(lat, z) * scale - top,
@@ -492,6 +535,14 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fly]);
 
+  const pinIdsKey = live.map((p) => p.id).sort().join(",");
+  useEffect(() => {
+    if (import.meta.env.DEV && location.search.includes("pindemo")) return setChosenIds(new Set(live.slice(0, 2).map((p) => p.id)));
+    if (!pinIdsKey) return setChosenIds(new Set());
+    const t = window.setTimeout(() => void posChosen(pinIdsKey.split(",")).then((ids) => setChosenIds(new Set(ids))).catch(() => undefined), 600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinIdsKey]);
   const pins = live.map((p) => ({
     id: p.id,
     pseudo: p.pseudo,
@@ -797,7 +848,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </span>
         );
       })}
-      {pins.length === 0 && !finding && !visible && !meetOn && (
+      {pins.length === 0 && !finding && !visible && !meetOn && !(geoDenied && !myPin) && !picking && (
         <div
           data-act="empty-banner"
           className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
@@ -887,6 +938,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             <span key={pin.id} className="contents">
             {(live || hl === pin.id) && <span className={`pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border-2 ${hl === pin.id ? "border-[#A1E3C3]" : "border-red-500"}`} style={{ left: c.x, top: c.y, width: face + 10, height: face + 10 }} />}
             {live && <span className="pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-red-500" style={{ left: c.x, top: c.y, width: face + 4, height: face + 4 }} />}
+            {chosenIds.has(pin.id) && (
+              <span aria-label="Position choisie" title="Position choisie" className="pointer-events-none absolute z-[22] grid size-4 place-items-center rounded-full bg-night text-[#FACC15] ring-1 ring-[#FACC15]/70" style={{ left: c.x - face / 2 - 4, top: c.y + face / 2 - 12 }}>
+                <MapPinned className="size-2.5" strokeWidth={2.5} />
+              </span>
+            )}
             {(live || convo || fav) && (
               <span className="pointer-events-none absolute z-[22] flex items-center gap-px" style={{ left: c.x + face / 2 - 10, top: c.y - face / 2 - 6 }}>
                 {live && <span className="flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white shadow" aria-label="En Live">🎥</span>}
@@ -1066,6 +1122,40 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       >
         <LocateFixed className="size-5" />
       </button>
+      {chosenMode && !picking && located && (
+        <button type="button" data-act="my-pin-badge" onPointerDown={(e) => e.stopPropagation()} onClick={() => { setPicking(true); follow.current = false; }}
+          className="absolute z-[24] flex -translate-x-1/2 items-center gap-1 rounded-full border border-[#FACC15]/60 bg-night/90 px-2 py-0.5 text-[11px] font-bold whitespace-nowrap text-[#FACC15] shadow" style={{ left: youPx.x, top: youPx.y + 34 }}>
+          <MapPinned className="size-3 shrink-0" strokeWidth={2.5} />Position choisie
+        </button>
+      )}
+      {geoDenied && !myPin && !picking && !finding && !meetOn && (
+        <div data-act="pin-cta" data-tip-bubble onPointerDown={(e) => e.stopPropagation()}
+          className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-[#FACC15]/40 bg-night/92 p-3 shadow-xl backdrop-blur">
+          <p className="flex items-center gap-2 font-display text-sm font-bold"><MapPinned className="size-4 shrink-0 text-[#FACC15]" strokeWidth={2} />Ta position n'est pas partagée</p>
+          <p className="mt-0.5 text-xs text-muted">Choisis ton coin pour voir qui est autour et rejoindre le chat du quartier.</p>
+          <button type="button" data-act="pin-start" onClick={() => { setPicking(true); follow.current = false; setView((v) => ({ ...v, zoom: Math.max(v.zoom, 13) })); }}
+            className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#FACC15] text-sm font-extrabold text-night">
+            <MapPinned className="size-4 shrink-0" strokeWidth={2.5} />Place-toi sur la carte
+          </button>
+        </div>
+      )}
+      {picking && (
+        <>
+          <div aria-hidden className="pointer-events-none absolute top-1/2 left-1/2 z-[35] -translate-x-1/2 -translate-y-full">
+            <MapPinned className="size-10 text-[#FACC15] drop-shadow-[0_0_10px_rgba(250,204,21,.7)]" strokeWidth={2} />
+          </div>
+          <span aria-hidden className="pointer-events-none absolute top-1/2 left-1/2 z-[34] size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-[#FACC15]/60 bg-[#FACC15]/10" />
+          <div data-act="pin-picker" data-sheet-root onPointerDown={(e) => e.stopPropagation()}
+            className="absolute inset-x-3 bottom-24 z-40 mx-auto max-w-[24rem] rounded-2xl border border-line bg-night/95 p-3 shadow-2xl backdrop-blur">
+            <p className="font-display text-sm font-bold">Place-toi sur la carte</p>
+            <p className="mt-0.5 text-xs text-muted">Déplace la carte pour viser ton coin. Ta position est arrondie à environ 1 km et marquée « Position choisie ».</p>
+            <div className="mt-2 flex gap-2">
+              <button type="button" data-act="pin-cancel" onClick={() => setPicking(false)} className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line px-4 text-sm font-bold"><XIcon className="size-4" strokeWidth={2} />Annuler</button>
+              <button type="button" data-act="pin-confirm" disabled={pinBusy} onClick={() => void confirmPin()} className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#FACC15] px-3 text-sm font-extrabold text-night disabled:opacity-60"><MapPinned className="size-4 shrink-0" strokeWidth={2.5} /><span>Me placer ici</span></button>
+            </div>
+          </div>
+        </>
+      )}
       <MapMeetRadar hidden={!!placeId || !!transitStop || layersOpen} />
       {meetOn && !meetFollow && !placeId && !transitStop && !layersOpen && (
         <button type="button" data-act="meet-fit" onPointerDown={(e) => e.stopPropagation()} onClick={() => useMeetLive.setState({ follow: true })}

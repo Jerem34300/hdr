@@ -154,10 +154,11 @@ function otherId(value: string) {
 export async function pulse({
   data,
 }: {
-  data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number; note?: string };
+  data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number; note?: string; chosen?: boolean };
 }) {
   if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
   await rpc("hdar_pulse", {
+    p_chosen: !!data.chosen,
     p_self: selfId(data.self),
     p_lat: data.lat,
     p_lng: data.lng,
@@ -170,6 +171,20 @@ export async function pulse({
     p_note: String(data.note || "").trim().slice(0, 60),
   });
 }
+
+/** Épingle « Place-toi sur la carte » (géolocalisation refusée) : arrondie ~1 km côté serveur. */
+export async function pinSet(lat: number, lng: number) {
+  const r = await rpc<{ lat: number; lng: number }[]>("hdar_pin_set", { p_lat: lat, p_lng: lng });
+  const row = Array.isArray(r) ? r[0] : null;
+  return row ? { lat: Number(row.lat), lng: Number(row.lng) } : { lat: Math.round(lat * 100) / 100, lng: Math.round(lng * 100) / 100 };
+}
+export const pinClear = () => rpc("hdar_pin_clear", {});
+/** Parmi ces profils, ceux dont la position est choisie (badge). */
+export const posChosen = (ids: string[]) => (ids.length ? rpc<string[]>("hdar_pos_chosen", { p_ids: ids.slice(0, 300) }).then((r) => (Array.isArray(r) ? r.map(String) : [])) : Promise.resolve([] as string[]));
+export const PIN_ERRORS: Record<string, string> = {
+  pin_real_active: "Ta vraie position est active : impossible d'épingler ailleurs.",
+  pin_too_soon: "Attends un peu avant de déplacer ton épingle.",
+};
 
 /** Le « mot » : phrase courte du profil (60 car.), visible par tous sur ta fiche. */
 export const setProfileNote = (note: string) => rpc("hdar_note_set", { p_note: note.trim().slice(0, 60) });

@@ -179,6 +179,8 @@ type State = {
   liveSpots: SpotRow[];
   /** Last real GPS fix (not persisted); the neighbourhood chat is centred on it. */
   here: { lat: number; lng: number } | null;
+  /** Position choisie à la main (géolocalisation refusée), arrondie ~1 km. */
+  pin: { lat: number; lng: number } | null;
   /** Real private conversations (not persisted). */
   liveConvos: Conversation[];
   /** Last time each live conversation was opened, to show unread dots. */
@@ -304,6 +306,7 @@ const base = () => {
     customSpots: [] as CustomSpot[],
     liveSpots: [] as SpotRow[],
     here: null as { lat: number; lng: number } | null,
+    pin: null as { lat: number; lng: number } | null,
     liveConvos: [] as Conversation[],
     seenAt: {} as Record<string, number>,
     pendingSpot: null as { title: string; hours: number } | null,
@@ -739,6 +742,7 @@ export const useHdar = create<State>()(
         reports: s.reports,
         cityId: s.cityId,
         customCenter: s.customCenter,
+        pin: s.pin,
         discreet: s.discreet,
         mode: s.mode,
         clock: s.clock,

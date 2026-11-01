@@ -38,3 +38,5 @@ export function useRegion(id: string | null | undefined) {
 }
 // Captures de dev uniquement : déclencher « Voir sur la carte » depuis le script.
 if (import.meta.env.DEV && typeof window !== "undefined") (window as unknown as { __hdarShowOnMap?: typeof showOnMap }).__hdarShowOnMap = showOnMap;
+
+if (import.meta.env.DEV && typeof window !== "undefined") (window as unknown as { __flyTo?: typeof flyTo }).__flyTo = flyTo;

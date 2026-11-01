@@ -1,3 +1,5 @@
+import { MapPinned } from "lucide-react";
+import { posChosen } from "@/lib/hdar/live";
 import { VideoSection } from "./video-section";
 import { safeSrc } from "@/lib/hdar/media";
 import { RichText } from "./rich-text";
@@ -61,6 +63,13 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
   const closeView = useHdar((s) => s.closeView);
   const openLive = useHdar((s) => s.openLive);
   const here = useHdar((s) => s.here);
+  const [chosen, setChosen] = useState(false);
+  useEffect(() => {
+    if (import.meta.env.DEV && location.search.includes("pindemo")) return setChosen(true);
+    let alive = true;
+    void posChosen([userId]).then((ids) => alive && setChosen(ids.includes(userId))).catch(() => undefined);
+    return () => { alive = false; };
+  }, [userId]);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "gone">("loading");
   const [extras, setExtras] = useState<ProfileExtras | null>(null);
@@ -152,6 +161,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
                 <span className="rounded-full bg-white/5 px-3 py-1.5 text-muted ring-1 ring-white/10">Hors ligne</span>
               ) : null}
               {distance && <span className="rounded-full bg-[#FA6F6C]/15 px-3 py-1.5 text-[#FA6F6C] ring-1 ring-[#FA6F6C]/40">📍 {distance}</span>}
+              {chosen && <span data-act="profile-pos-chosen" className="inline-flex items-center gap-1 rounded-full bg-[#FACC15]/10 px-3 py-1.5 text-[#FACC15] ring-1 ring-[#FACC15]/40"><MapPinned className="size-3.5 shrink-0" strokeWidth={2.5} />Position choisie</span>}
               {region && <span className="rounded-full bg-white/5 px-3 py-1.5 text-ink/80 ring-1 ring-white/10">{region}</span>}
               <HeartsCount id={userId} />
             </div>
