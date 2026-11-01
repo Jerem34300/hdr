@@ -47,7 +47,7 @@ export function LiveDock() {
     try { if (v && document.pictureInPictureEnabled) await v.requestPictureInPicture(); } catch { /* non pris en charge */ }
   };
   const live = (scale: number | null) => (
-    <div style={scale ? { width: vp.w, height: vp.h, transform: `scale(${scale})`, transformOrigin: "0 0" } : { width: "100%", height: "100%", transform: "translateZ(0)" }} className="relative" inert={scale ? true : undefined}>
+    <div style={scale ? { width: vp.w, height: vp.h, transform: "scale(var(--fw-scale))", transformOrigin: "0 0" } : { width: "100%", height: "100%", transform: "translateZ(0)" }} className="relative" inert={scale ? true : undefined}>
       <RouletteScreen demo={demo} pro={q.get("pro") ?? undefined} />
     </div>
   );
@@ -56,9 +56,9 @@ export function LiveDock() {
     <div data-live-host data-min={min ? "1" : "0"}>
       <FloatingWindow id="live" testid="live-mini" active={min} ratio={ratio} defaultW={132} onTap={reopen}
         overlay={<>
-          <span className="pointer-events-none absolute start-1.5 top-1.5 rounded-full bg-[#FA6F6C] px-1.5 py-0.5 text-[9px] font-bold text-night">LIVE</span>
-          <button type="button" data-testid="live-mini-close" aria-label="Quitter le Live" onClick={quit} className="absolute end-1 top-1 z-10 flex size-7 items-center justify-center rounded-full bg-black/70 text-white"><X className="size-4" /></button>
-          {typeof document !== "undefined" && document.pictureInPictureEnabled && <button type="button" aria-label="Image dans l'image" onClick={() => void pip()} className="absolute start-1 bottom-1 z-10 flex size-7 items-center justify-center rounded-full bg-black/70 text-white"><PictureInPicture2 className="size-3.5" /></button>}
+          <span className="pointer-events-none absolute start-2 top-2 flex items-center gap-1 rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[9px] font-bold text-night backdrop-blur"><span className="fw-live-dot size-1.5 rounded-full bg-night" />LIVE</span>
+          <button type="button" data-testid="live-mini-close" aria-label="Quitter le Live" onClick={quit} className="absolute end-1.5 top-1.5 z-10 flex size-7 items-center justify-center rounded-full bg-black/40 text-white ring-1 ring-white/15 backdrop-blur-md"><X className="size-4" /></button>
+          {typeof document !== "undefined" && document.pictureInPictureEnabled && <button type="button" aria-label="Image dans l'image" onClick={() => void pip()} className="absolute start-1.5 bottom-1.5 z-10 flex size-7 items-center justify-center rounded-full bg-black/40 text-white ring-1 ring-white/15 backdrop-blur-md"><PictureInPicture2 className="size-3.5" /></button>}
         </>}>
         {(w) => live(min ? w / vp.w : null)}
       </FloatingWindow>

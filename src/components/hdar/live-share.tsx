@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AtSign, Camera, Copy, Ghost, MessageCircle, MessageSquare, MessagesSquare, MoreHorizontal, Music2, Send, Share2, X } from "lucide-react";
+import { AtSign, Camera, Copy, Ghost, MessageCircle, MessageSquare, MessagesSquare, MoreHorizontal, Music2, Radio, Send, Share2, X } from "lucide-react";
 import { livePos, liveShareCreate, liveShareDone, liveShareView, type LiveShareView } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { toast } from "sonner";
@@ -51,35 +51,60 @@ function ShareSheet({ url, text, code, onClose }: { url: string; text: string; c
   ];
   const nativeOk = typeof navigator !== "undefined" && typeof navigator.share === "function";
   const stop = (ev: { stopPropagation: () => void }) => ev.stopPropagation();
+  // glisser vers le bas pour fermer (transform direct, pas de rendu React par image)
+  const sheet = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ y: number; t: number; dy: number } | null>(null);
+  const onDown = (ev: React.PointerEvent) => { if ((ev.target as Element).closest("a,button")) return; drag.current = { y: ev.clientY, t: ev.timeStamp, dy: 0 }; (ev.currentTarget as Element).setPointerCapture?.(ev.pointerId); };
+  const onMove = (ev: React.PointerEvent) => { const d = drag.current, n = sheet.current; if (!d || !n) return; d.dy = Math.max(0, ev.clientY - d.y) + Math.min(0, ev.clientY - d.y) * 0.2; n.style.transition = "none"; n.style.transform = `translate3d(0,${d.dy}px,0)`; };
+  const onUp = (ev: React.PointerEvent) => {
+    const d = drag.current, n = sheet.current; drag.current = null; if (!d || !n) return;
+    const v = d.dy / Math.max(16, ev.timeStamp - d.t) * 1000, rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (d.dy > 110 || v > 900) { if (rm) return onClose(); n.style.transition = "transform .22s cubic-bezier(.4,0,1,1)"; n.style.transform = "translate3d(0,110%,0)"; window.setTimeout(onClose, 200); }
+    else { n.style.transition = rm ? "none" : "transform .4s cubic-bezier(.2,.9,.25,1.15)"; n.style.transform = ""; }
+  };
+  const tile = "sh-item flex min-h-[4.75rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night/80 px-1 py-2 text-center text-xs font-semibold transition-transform active:scale-95";
+  const ico = "flex size-9 items-center justify-center text-[#FA6F6C]";
+  const host = (() => { try { const u = new URL(url); return u.host + u.pathname; } catch { return url; } })();
+  let i = 0;
   return (
-    <div data-testid="share-sheet" className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={onClose} onTouchStart={stop} onTouchEnd={stop} onPointerDown={stop}>
-      <div className="w-full rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink" onClick={stop}>
+    <div data-testid="share-sheet" className="fixed inset-0 z-[60] flex items-end bg-black/45" style={{ animation: "hdar-fade .25s both" }} onClick={onClose} onTouchStart={stop} onTouchEnd={stop} onPointerDown={stop}>
+      <div ref={sheet} className="sh-glass sh-up w-full touch-none rounded-t-3xl px-5 pt-2.5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink will-change-transform" onClick={stop}
+        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-white/25" aria-hidden />
         <div className="flex items-center justify-between gap-3">
           <p className="font-display text-lg font-bold">Partager le Live</p>
           <button type="button" aria-label="Fermer" onClick={onClose} className="flex size-9 items-center justify-center rounded-full bg-night"><X className="size-4" /></button>
         </div>
-        <p className="mt-1 text-xs break-all text-ink/60" translate="no">{url}</p>
+        <div data-testid="share-card" className="sh-item mt-3 flex items-center gap-3 rounded-2xl bg-night/80 p-3 ring-1 ring-white/10" style={{ ["--i" as string]: 0 }}>
+          <span className="relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-surface">
+            <Radio className="size-5 text-[#FA6F6C]" /><span className="fw-live-dot absolute end-1 top-1 size-2 rounded-full bg-[#FA6F6C]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-sm font-bold">hdar. — Live</span>
+            <span className="block text-xs text-ink/70">{text}</span>
+            <span className="mt-0.5 block text-[11px] break-all text-[#FA6F6C]/90" translate="no">{host}</span>
+          </span>
+        </div>
         <div className="mt-4 grid grid-cols-3 gap-2">
           {apps.map((a) => (
-            <a key={a.k} data-share={a.k} href={a.href} target="_blank" rel="noopener noreferrer" onClick={() => void thanks()}
-              className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-center text-xs font-semibold">
-              <span className="text-[#FA6F6C]">{a.icon}</span><span className="leading-tight">{a.label}</span>
+            <a key={a.k} data-share={a.k} href={a.href} target="_blank" rel="noopener noreferrer" onClick={() => void thanks()} className={tile} style={{ ["--i" as string]: ++i }}>
+              <span className={ico}>{a.icon}</span><span className="leading-tight">{a.label}</span>
             </a>
           ))}
-          <button type="button" data-share="copy" onClick={() => void copy()} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-xs font-semibold">
-            <span className="text-[#FA6F6C]"><Copy className="size-5" /></span><span className="leading-tight">Copier le lien</span>
+          <button type="button" data-share="copy" onClick={() => void copy()} className={tile} style={{ ["--i" as string]: ++i }}>
+            <span className={ico}><Copy className="size-5" /></span><span className="leading-tight">Copier le lien</span>
           </button>
-          <button type="button" data-share="tiktok" onClick={() => void copy("Lien copié : colle-le dans TikTok")} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-xs font-semibold">
-            <span className="text-[#FA6F6C]"><Music2 className="size-5" /></span><span className="leading-tight">TikTok</span>
+          <button type="button" data-share="tiktok" onClick={() => void copy("Lien copié : colle-le dans TikTok")} className={tile} style={{ ["--i" as string]: ++i }}>
+            <span className={ico}><Music2 className="size-5" /></span><span className="leading-tight">TikTok</span>
           </button>
-          <button type="button" data-share="insta" onClick={() => void copy("Lien copié : colle-le dans Instagram")} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-night px-1 py-2 text-xs font-semibold">
-            <span className="text-[#FA6F6C]"><Camera className="size-5" /></span><span className="leading-tight">Instagram</span>
+          <button type="button" data-share="insta" onClick={() => void copy("Lien copié : colle-le dans Instagram")} className={tile} style={{ ["--i" as string]: ++i }}>
+            <span className={ico}><Camera className="size-5" /></span><span className="leading-tight">Instagram</span>
           </button>
         </div>
         <p className="mt-2 text-[11px] text-ink/50">TikTok et Instagram n'ont pas de partage de lien : le lien est copié, colle-le dans ton message ou ta story.</p>
         {nativeOk && (
           <button type="button" data-share="more" onClick={() => void navigator.share({ title: "hdar. — Live", text, url }).then(() => void thanks(), () => undefined)}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-night py-3 text-sm font-bold"><MoreHorizontal className="size-4" /> Plus</button>
+            className="sh-item mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-night py-3 text-sm font-bold" style={{ ["--i" as string]: ++i }}><MoreHorizontal className="size-4" /> Plus</button>
         )}
       </div>
     </div>

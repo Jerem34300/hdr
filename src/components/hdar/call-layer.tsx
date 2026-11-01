@@ -61,9 +61,9 @@ export function CallLayer() {
   if (min) {
     // la connexion vit dans call.ts : la vignette n'affiche que les flux (aucune coupure en réduisant / rouvrant)
     return (
-      <FloatingWindow id="call" testid="call-mini" ratio={4 / 3} defaultW={120} ringClass="ring-online" onTap={() => setMin(false)}
+      <FloatingWindow id="call" testid="call-mini" ratio={4 / 3} defaultW={120} glow="online" morph={false} onTap={() => setMin(false)}
         overlay={<>
-          <span className="pointer-events-none absolute inset-x-1 top-1 truncate text-[10px] font-bold text-white drop-shadow">{peerPseudo}</span>
+          <span className="pointer-events-none absolute inset-x-2 top-2 text-[10px] leading-tight font-bold break-words text-white drop-shadow">{peerPseudo}</span>
           <button type="button" aria-label="Raccrocher" onClick={hangUp} className="absolute bottom-1.5 left-1/2 z-10 flex size-9 -translate-x-1/2 items-center justify-center rounded-full bg-signal text-night"><PhoneOff className="size-4" /></button>
         </>}>
         {() => <>

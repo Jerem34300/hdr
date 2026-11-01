@@ -446,3 +446,23 @@ section:has(.hdar-sheet-up) > .dock,
 .gate-check { stroke-dasharray: 22; stroke-dashoffset: 22; transition: stroke-dashoffset .28s ease-out .05s; filter: drop-shadow(0 0 3px rgba(255,138,128,.9)); }
 .gate-adult input:checked + .gate-box .gate-check { stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) { .gate-check, .gate-box { transition: none } }
+
+/* Fenêtre flottante : touche de verre, bord corail, lueur discrète qui respire */
+.fw-glass { background: rgba(11,11,16,.55); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 0 0 2px #FA6F6C, 0 10px 30px rgba(0,0,0,.55); }
+@keyframes fw-breathe { 0%,100% { box-shadow: 0 0 0 2px #FA6F6C, 0 0 0 rgba(250,111,108,0), 0 10px 30px rgba(0,0,0,.55); } 50% { box-shadow: 0 0 0 2px #FA6F6C, 0 0 14px rgba(250,111,108,.28), 0 10px 30px rgba(0,0,0,.55); } }
+@keyframes fw-breathe-online { 0%,100% { box-shadow: 0 0 0 2px var(--color-online, #4ade80), 0 0 0 transparent, 0 10px 30px rgba(0,0,0,.55); } 50% { box-shadow: 0 0 0 2px var(--color-online, #4ade80), 0 0 14px rgba(61,220,151,.25), 0 10px 30px rgba(0,0,0,.55); } }
+.fw-glow { animation: fw-breathe 3.2s ease-in-out infinite; }
+.fw-glow-online { animation: fw-breathe-online 3.2s ease-in-out infinite; }
+@keyframes fw-dot { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+.fw-live-dot { animation: fw-dot 1.4s ease-in-out infinite; }
+/* Feuille de partage : surface habituelle avec une touche de verre, apparition en cascade */
+.sh-glass { background: color-mix(in srgb, var(--color-surface, #16161d) 88%, transparent); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+@keyframes sh-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.sh-item { animation: sh-in .36s cubic-bezier(.2,.9,.25,1) both; animation-delay: calc(var(--i) * 30ms + 100ms); }
+@keyframes sh-draw { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
+.sh-item svg * { stroke-dasharray: 60; animation: sh-draw .6s ease-out both; animation-delay: calc(var(--i) * 30ms + 140ms); }
+.sh-up { animation: hdar-sheet-up .38s cubic-bezier(.2,.9,.25,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .fw-glow, .fw-glow-online, .fw-live-dot, .sh-item, .sh-item svg *, .sh-up { animation: none !important; }
+  .sh-item svg * { stroke-dasharray: none; }
+}
