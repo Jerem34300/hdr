@@ -1,5 +1,5 @@
 -- v122 : « Place-toi sur la carte » quand la géolocalisation est refusée.
--- Épingle arrondie côté serveur (~1 km), badge « position choisie » visible des autres,
+-- Épingle arrondie côté serveur (~200 m), badge « position choisie » visible des autres,
 -- interdite si une vraie position est active, déplacements limités. Préparé, NON appliqué.
 
 create table if not exists hdar.pos_meta (
@@ -25,8 +25,8 @@ begin
   if m.real_at is not null and m.real_at > now() - interval '30 minutes' then raise exception 'pin_real_active'; end if;
   if m.pin_at is not null and m.pin_at > now() - interval '2 minutes' then raise exception 'pin_too_soon'; end if;
   perform hdar.rate_check(s, 'pin', 12, interval '1 day');
-  la := round(p_lat * 100) / 100;   -- grille ~1,1 km
-  lo := round(p_lng * 100) / 100;
+  la := round(p_lat * 500) / 500;   -- grille ~200 m (comme la présence)
+  lo := round(p_lng * 500) / 500;
   insert into hdar.pos_meta (user_id, pin_lat, pin_lng, pin_at, chosen) values (s, la, lo, now(), true)
     on conflict (user_id) do update set pin_lat = la, pin_lng = lo, pin_at = now(), chosen = true;
   update hdar.profiles p set lat = la, lng = lo, updated_at = now() where p.user_id = s and p.visible_until > now();

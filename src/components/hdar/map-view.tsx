@@ -184,7 +184,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   // Activité anonyme des dernières 24 h (carreaux ~5 km) : la carte n'est jamais vide.
   const [recent, setRecent] = useState<Recent | null>(null);
   const [approx, setApprox] = useState<string | null>(null);
-  // Géolocalisation refusée/indisponible → « Place-toi sur la carte » (épingle arrondie ~1 km).
+  // Géolocalisation refusée/indisponible → « Place-toi sur la carte » (épingle arrondie ~200 m).
   const [geoDenied, setGeoDenied] = useState(() => import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("pindemo"));
   const [picking, setPicking] = useState(false);
   const [pinBusy, setPinBusy] = useState(false);
@@ -410,7 +410,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     if (pinBusy) return;
     setPinBusy(true);
     try {
-      const at = import.meta.env.DEV && location.search.includes("pindemo") ? { lat: Math.round(view.lat * 100) / 100, lng: Math.round(view.lng * 100) / 100 } : await pinSet(view.lat, view.lng);
+      const at = import.meta.env.DEV && location.search.includes("pindemo") ? { lat: Math.round(view.lat * 500) / 500, lng: Math.round(view.lng * 500) / 500 } : await pinSet(view.lat, view.lng);
       useHdar.setState({ pin: at });
       setPicking(false);
       track("pin_set");
@@ -1148,7 +1148,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           <div data-act="pin-picker" data-sheet-root onPointerDown={(e) => e.stopPropagation()}
             className="absolute inset-x-3 bottom-24 z-40 mx-auto max-w-[24rem] rounded-2xl border border-line bg-night/95 p-3 shadow-2xl backdrop-blur">
             <p className="font-display text-sm font-bold">Place-toi sur la carte</p>
-            <p className="mt-0.5 text-xs text-muted">Déplace la carte pour viser ton coin. Ta position est arrondie à environ 1 km et marquée « Position choisie ».</p>
+            <p className="mt-0.5 text-xs text-muted">Déplace la carte pour viser ton coin. Ta position est arrondie à environ 200 m et marquée « Position choisie ».</p>
             <div className="mt-2 flex gap-2">
               <button type="button" data-act="pin-cancel" onClick={() => setPicking(false)} className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line px-4 text-sm font-bold"><XIcon className="size-4" strokeWidth={2} />Annuler</button>
               <button type="button" data-act="pin-confirm" disabled={pinBusy} onClick={() => void confirmPin()} className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#FACC15] px-3 text-sm font-extrabold text-night disabled:opacity-60"><MapPinned className="size-4 shrink-0" strokeWidth={2.5} /><span>Me placer ici</span></button>

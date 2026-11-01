@@ -172,11 +172,11 @@ export async function pulse({
   });
 }
 
-/** Épingle « Place-toi sur la carte » (géolocalisation refusée) : arrondie ~1 km côté serveur. */
+/** Épingle « Place-toi sur la carte » (géolocalisation refusée) : arrondie ~200 m côté serveur. */
 export async function pinSet(lat: number, lng: number) {
   const r = await rpc<{ lat: number; lng: number }[]>("hdar_pin_set", { p_lat: lat, p_lng: lng });
   const row = Array.isArray(r) ? r[0] : null;
-  return row ? { lat: Number(row.lat), lng: Number(row.lng) } : { lat: Math.round(lat * 100) / 100, lng: Math.round(lng * 100) / 100 };
+  return row ? { lat: Number(row.lat), lng: Number(row.lng) } : { lat: Math.round(lat * 500) / 500, lng: Math.round(lng * 500) / 500 };
 }
 export const pinClear = () => rpc("hdar_pin_clear", {});
 /** Parmi ces profils, ceux dont la position est choisie (badge). */
