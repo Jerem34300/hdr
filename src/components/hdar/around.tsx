@@ -12,9 +12,25 @@ import { ackSalonsBadge, useSalonInbox } from "@/lib/hdar/salon-inbox";
 import { playFavoriteSound } from "@/lib/hdar/sounds";
 import { adsCount, alertHits, listAds, regionFromPos, slugify, type Ad } from "@/lib/hdar/ads";
 import { MapPin, Video, X } from "lucide-react";
+import { liveCount } from "@/lib/hdar/live";
 import { Link } from "@tanstack/react-router";
 
+/** Nombre de personnes dans le Live (pastille du chip Live), rafraîchi toutes les 15 s quand l'appli est visible. */
+function useLiveCount() {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => undefined); };
+    tick();
+    const t = setInterval(tick, 15000);
+    document.addEventListener("visibilitychange", tick);
+    return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); };
+  }, []);
+  return n;
+}
+
 export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
+  const liveN = useLiveCount();
   const enterLine = useHdar((s) => s.enterLine);
   const openPocket = useHdar((s) => s.openPocket);
   const openCity = useHdar((s) => s.openCity);
@@ -64,6 +80,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
           <Link to="/live" data-act="live-chip" data-tip="live" aria-label="Live vidéo" className={`${TOP_BTN} bg-[#f472b6]/15 text-[#f9a8d4] ring-[#f472b6]/45`}>
             <Video className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
             <span>Live</span>
+            {liveN > 0 && <Badge n={liveN} cls="bg-[#f472b6]" />}
           </Link>
         </div>
       </header>

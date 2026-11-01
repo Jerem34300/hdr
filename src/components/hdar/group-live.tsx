@@ -1,7 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Room, RoomEvent, Track, type LocalTrack, type LocalTrackPublication, type RemoteParticipant, type RemoteTrack, type RemoteTrackPublication } from "livekit-client";
-import { ChevronUp, Flag, MessageCircle, MessageCircleOff, Mic, MicOff, MoreHorizontal, Radio, Video, VideoOff, X } from "lucide-react";
+import { Ban, Crown, Eye, Heart, VolumeX, ChevronUp, Flag, MessageCircle, MessageCircleOff, Mic, MicOff, MoreHorizontal, Radio, Video, VideoOff, X } from "lucide-react";
 import { ShareLiveButton } from "./live-share";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { myHearts, roomLeave, roomOpen, roomReportMsg, roomSay, roomStage, roomState, roomToken, rouletteReport, type RoomMsg, type RoomState } from "@/lib/hdar/live";
@@ -88,7 +88,7 @@ export function SoundToast({ show, onTap }: { show: boolean; onTap: () => void }
   return (
     <button type="button" data-testid="sound-toast" onClick={onTap} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}
       className="absolute top-[5.5rem] end-3 z-20 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-night shadow-lg">
-      🔇 Son coupé par le navigateur · <u>activer</u>
+      <VolumeX className="size-4" /> Son coupé par le navigateur · <u>activer</u>
     </button>
   );
 }
@@ -132,7 +132,7 @@ function Chat({ room, lines, pops, show, canReport, reserve, onP2P, onSent }: { 
           {room && (
             <div className="mb-1.5 flex items-center gap-2">
               {REACTIONS.map((r) => <button key={r} type="button" aria-label={`Réagir ${r} (1 cœur)`} onClick={() => void react(r)} className="flex size-9 items-center justify-center rounded-full bg-black/45 text-xl backdrop-blur">{r}</button>)}
-              <span className="rounded-full bg-[#FA6F6C] px-1.5 text-[10px] font-bold text-night">{bal === Infinity ? "∞" : bal ?? "·"} ❤️</span>
+              <span className="rounded-full bg-[#FA6F6C] px-1.5 text-[10px] font-bold text-night">{bal === Infinity ? "∞" : bal ?? "·"} <Heart className="inline size-3 fill-current align-[-0.1em]" /></span>
             </div>
           )}
           <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); void send(); }}>
@@ -195,7 +195,7 @@ export function useBroadcast(getVideo: () => MediaStreamTrack | null, getAudio: 
       if (v) vPub.current = await l.localParticipant.publishTrack(v, { source: Track.Source.Camera, name: "cam", simulcast: false });
       if (a) aPub.current = await l.localParticipant.publishTrack(a, { source: Track.Source.Microphone, name: "mic" });
       roomRef.current = id; setRoom(id); setCam(true);
-      toast("📣 Tu diffuses : les gens qui font défiler peuvent te regarder");
+      toast("Tu diffuses : les gens qui font défiler peuvent te regarder");
     } catch (e) {
       toast(groupError(e instanceof Error ? e.message : ""));
       await stop(id);
@@ -266,7 +266,7 @@ export function CoInvite({ pseudo, n, names, busy, onYes, onNo }: { pseudo: stri
   return (
     <div data-testid="co-invite" className="absolute inset-x-4 top-[8.5rem] z-30 rounded-3xl border border-[#FA6F6C]/60 bg-night/95 p-4 shadow-[0_0_30px_#FA6F6C66] backdrop-blur" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
       <p className="flex items-center gap-2 font-display text-lg font-bold"><Radio className="size-5 text-[#FA6F6C]" /> {pseudo} diffuse en ce moment</p>
-      <p className="mt-1 text-sm text-white/80">👁 {n === 0 ? "Personne ne regarde encore" : `${n} ${n > 1 ? "personnes regardent" : "personne regarde"}`}{names.length > 0 && <span className="text-white/60"> · {names.slice(0, 4).join(", ")}{names.length > 4 ? "…" : ""}</span>}</p>
+      <p className="mt-1 text-sm text-white/80"><Eye className="me-1 inline size-4 align-[-0.2em]" />{n === 0 ? "Personne ne regarde encore" : `${n} ${n > 1 ? "personnes regardent" : "personne regarde"}`}{names.length > 0 && <span className="text-white/60"> · {names.slice(0, 4).join(", ")}{names.length > 4 ? "…" : ""}</span>}</p>
       <p className="mt-2 text-xs text-white/70">Tu restes en privé : personne d'autre ne te voit. Si tu diffuses aussi, les spectateurs te verront et t'entendront à côté de {pseudo}. Tu arrêtes quand tu veux.</p>
       <div className="mt-3 flex gap-2">
         <button type="button" data-testid="co-no" onClick={onNo} className="flex-1 rounded-full bg-white/10 py-2.5 text-sm font-bold">Rester en privé</button>
@@ -354,7 +354,7 @@ export function ViewerStrip({ viewers, onOpen }: { viewers: GridViewer[]; onOpen
         <button key={v.id} type="button" onClick={() => !out && onOpen(v.id)} aria-label={`Voir ${v.pseudo ?? "spectateur"}`}
           className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-night ring-1 ring-white/25 ${out ? "pointer-events-none animate-[tileout_.32s_ease-in_forwards]" : "animate-[tilein_.32s_cubic-bezier(.2,.8,.2,1)]"}`}>
           {v.video ? <TrackVideo track={v.video} /> : <Avatar id={v.id} pseudo={v.pseudo} />}
-          <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1 text-[9px] font-bold">{v.mic ? "🎤 " : ""}{v.pseudo ?? "?"}</span>
+          <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1 text-[9px] font-bold">{v.mic ? <Mic className="me-0.5 inline size-2.5" /> : null}{v.pseudo ?? "?"}</span>
         </button>
       ))}
     </div>
@@ -439,7 +439,7 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, res
     <>
       <div ref={audios} className="hidden" />
       <button type="button" data-testid="bc-badge" onClick={() => setList(true)} className="absolute top-[8.75rem] start-3 z-20 rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">
-        ● En diffusion{co ? ` avec ${co.pseudo}` : ""} · 👁 {nView}/{st?.cap ?? 12}
+        ● En diffusion{co ? ` avec ${co.pseudo}` : ""} · <Eye className="inline size-3.5 align-[-0.15em]" /> {nView}/{st?.cap ?? 12}
       </button>
       <ViewerStrip viewers={viewers} onOpen={(id) => setList(id)} />
       <SoundToast show={needTap} onTap={() => { void lk?.startAudio(); setNeedTap(false); }} />
@@ -462,8 +462,8 @@ export function BroadcastOverlay({ room, cam, onCam, mic, onMic, onStop, lk, res
             {shown.map((v) => (
               <div key={v.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-night px-3 py-2 text-sm text-white">
                 <span className="min-w-0 flex-1 truncate font-bold">{v.pseudo ?? "?"}</span>
-                <button type="button" onClick={() => void ask(v.id, "cam")} className="rounded-full bg-white/10 px-2 py-1 text-xs">📷 Demander caméra</button>
-                <button type="button" onClick={() => void ask(v.id, "mic")} className="rounded-full bg-white/10 px-2 py-1 text-xs">🎤 Demander micro</button>
+                <button type="button" onClick={() => void ask(v.id, "cam")} className="rounded-full bg-white/10 px-2 py-1 text-xs"><Video className="me-1 inline size-3.5 align-[-0.15em]" />Demander caméra</button>
+                <button type="button" onClick={() => void ask(v.id, "mic")} className="rounded-full bg-white/10 px-2 py-1 text-xs"><Mic className="me-1 inline size-3.5 align-[-0.15em]" />Demander micro</button>
                 <button type="button" onClick={() => void act("remove", v.id)} className="rounded-full bg-white/10 px-2 py-1 text-xs">Faire sortir</button>
                 <button type="button" onClick={() => void act("kick", v.id)} className="rounded-full bg-red-500/80 px-2 py-1 text-xs font-bold">Expulser 24 h</button>
                 <button type="button" aria-label="Signaler" onClick={() => void rouletteReport(v.id, "Live à plusieurs (spectateur)").then(() => { toast("Signalé et bloqué"); void act("kick", v.id); }).catch(() => toast("Signalement impossible"))} className="rounded-full bg-white/10 p-1.5"><Flag className="size-3.5" /></button>
@@ -505,7 +505,11 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
     setMyCam(false); setMyMic(false); setPreview(null);
   };
   const leave = () => { if (done.current) return; done.current = true; unpublishAll(); void lk.current?.disconnect(); void roomLeave(room).catch(() => undefined); };
-  const { st, msgs, pops, refresh } = useRoomState(room, (banned) => { toast(banned ? "Tu as été expulsé de ce Live" : "Ce Live est terminé"); leave(); onNext(); });
+  // On ne suit l'état du salon qu'APRÈS y être entré (jeton signé = membre inscrit) : avant, le serveur répond « gone »
+  // pour un non-membre, ce qui faisait sortir aussitôt, repasser en 1:1, re-rentrer… (boucle + toasts empilés).
+  const [joined, setJoined] = useState(false);
+  const ended = (msg: string) => { if (done.current) return; toast(msg, { id: "live-ended" }); leave(); onNext(); };
+  const { st, msgs, pops, refresh } = useRoomState(joined ? room : null, (banned) => ended(banned ? "Tu as été expulsé de ce Live" : "Ce Live est terminé"));
   const host = usePhoto(st?.host ?? null);
   const lines = useMemo(() => roomLines(msgs), [msgs]);
   /** Allume / éteint ma caméra ou mon micro — uniquement après un geste explicite (accepter / toucher le bouton). */
@@ -545,11 +549,13 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
     let alive = true;
     void (async () => {
       try {
+        const t = await roomToken(room); // inscrit comme spectateur (ou refuse : room_gone, complet, trop près…)
+        if (!alive) return;
         const s0 = await roomState(room, 0).catch(() => null);
+        if (!alive) return;
         if (s0?.gone) throw new Error("room_gone");
         hostId.current = s0?.host ?? null;
-        const t = await roomToken(room);
-        if (!alive) return;
+        setJoined(true);
         const l = new Room({ adaptiveStream: true, dynacast: true });
         lk.current = l;
         const attach = (track: RemoteTrack) => {
@@ -586,7 +592,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
             } } catch { /* ignoré */ }
           try { const m = JSON.parse(DEC.decode(payload)) as Ask; if (m.t === "ask" && (m.what === "cam" || m.what === "mic")) setAsked(m.what); } catch { /* ignoré */ }
         });
-        l.on(RoomEvent.Disconnected, () => { if (!done.current) { toast("Ce Live est terminé"); leave(); onNext(); } });
+        l.on(RoomEvent.Disconnected, () => { if (alive) ended("Ce Live est terminé"); });
         await l.connect(t.url, t.token, { autoSubscribe: false });
         if (!alive) { void l.disconnect(); return; }
         await l.localParticipant.setTrackSubscriptionPermissions(false, hostId.current ? [{ participantIdentity: hostId.current, allowAll: true }] : []);
@@ -595,7 +601,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       } catch (e) {
         const m = e instanceof Error ? e.message : "";
         if (m.includes("live_tooclose")) { leave(); return onTooClose(); }
-        toast(groupError(m)); leave(); onNext();
+        if (!alive) return; toast(groupError(m), { id: "live-ended" }); leave(); onNext();
       }
     })();
     return () => { alive = false; leave(); };
@@ -627,11 +633,11 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       <SoundToast show={needTap} onTap={() => { void lk.current?.startAudio(); setNeedTap(false); }} />
       <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-xl font-bold">{st?.host_pseudo ?? "…"}{st?.host_premium && <span className="ms-1 text-sm">👑+</span>}</p>
-          <p className="text-xs text-white/80">📣 Diffuse en direct{coTiles.length ? ` avec ${coTiles.map((c) => c.pseudo || "?").join(", ")}` : ""} · {myCam || myMic ? `seul·e ${st?.host_pseudo ?? "la personne qui diffuse"} te ${myCam ? "voit" : "entend"}` : "tu regardes, personne ne te voit"}</p>
+          <p className="font-display text-xl font-bold leading-tight [overflow-wrap:anywhere]">{st?.host_pseudo ?? "…"}{st?.host_premium && <Crown className="ms-1 inline size-4 text-[#fbbf24]" aria-label="hdar+" />}</p>
+          <p className="text-xs text-white/80"><Radio className="me-1 inline size-3.5 align-[-0.15em]" />Diffuse en direct{coTiles.length ? ` avec ${coTiles.map((c) => c.pseudo || "?").join(", ")}` : ""} · {myCam || myMic ? `seul·e ${st?.host_pseudo ?? "la personne qui diffuse"} te ${myCam ? "voit" : "entend"}` : "tu regardes, personne ne te voit"}</p>
           <span className="mt-1 inline-block rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80">{RULES}</span>
         </div>
-        <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE · 👁 {st?.viewers ?? 0}/{st?.cap ?? 6}</span>
+        <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE · <Eye className="inline size-3 align-[-0.1em]" /> {st?.viewers ?? 0}/{st?.cap ?? 6}</span>
         <ShareLiveButton compact />
         <button type="button" aria-label="Quitter" onClick={() => { leave(); onExit(); }} className="flex size-9 items-center justify-center rounded-full bg-black/50"><X className="size-5" /></button>
       </div>
@@ -662,7 +668,7 @@ export function WatchView({ room, onNext, onExit, onTooClose }: { room: string; 
       {asked && (
         <div className="absolute inset-0 z-40 flex items-end bg-black/60" onClick={() => setAsked(null)} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <div className="w-full space-y-3 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
-            <p className="font-display text-lg font-bold">{asked === "cam" ? "📷 Allumer ta caméra ?" : "🎤 Allumer ton micro ?"}</p>
+            <p className="font-display text-lg font-bold">{asked === "cam" ? "Allumer ta caméra ?" : "Allumer ton micro ?"}</p>
             <p className="text-sm text-ink/75">{asked === "cam" ? "Seul·e" : "Seul·e"} <b>{st?.host_pseudo ?? "la personne qui diffuse"}</b> {asked === "cam" ? "te verra" : "t'entendra"}. Les autres spectateurs, jamais. {asked === "cam" ? "Tu restes flouté tant que tu ne choisis pas « me montrer »." : ""} Tu coupes quand tu veux.</p>
             <button type="button" onClick={() => { const w = asked; setAsked(null); void setMine(w, true); }} className="w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">{asked === "cam" ? "Allumer ma caméra" : "Allumer mon micro"}</button>
             <button type="button" onClick={() => setAsked(null)} className="w-full rounded-full bg-night py-3 text-sm font-bold text-white">Non merci</button>
@@ -686,20 +692,20 @@ export function CoachMark({ group }: { group: boolean }) {
   const [open, setOpen] = useState(() => typeof localStorage !== "undefined" && !localStorage.getItem(COACH_KEY));
   if (!open) return null;
   const close = () => { localStorage.setItem(COACH_KEY, "1"); setOpen(false); };
-  const items: [string, string][] = [
-    ["👆", "Glisse vers le haut pour passer au Live suivant, à l'infini."],
+  const items: [ReactNode, string][] = [
+    [<ChevronUp key="u" className="size-5" />, "Glisse vers le haut pour passer au Live suivant, à l'infini."],
     ...(group ? [
-      ["📡", "« Diffuser » (en haut) ouvre ta caméra aux gens qui font défiler le Live (6 places). Ton partenaire en 1:1 reste en privé : il n'est jamais montré."],
-      ["👁", "Quand tu tombes sur quelqu'un qui diffuse, tu le vois, tu l'entends et tu chattes. Personne ne te voit, sauf si tu acceptes d'allumer ta caméra ou ton micro : seule la personne qui diffuse te voit alors, jamais les autres."],
-    ] as [string, string][] : []),
-    ["📷", "Coupe ou rallume ta caméra 📷, ton micro 🎤 et le chat 💬 quand tu veux."],
-    ["🚫", "18+, pas de nudité, enregistrement interdit. Jamais personne à moins de 2 km."],
+      [<Radio key="r" className="size-5" />, "« Diffuser » (en haut) ouvre ta caméra aux gens qui font défiler le Live (6 places). Ton partenaire en 1:1 reste en privé : il n'est jamais montré."],
+      [<Eye key="e" className="size-5" />, "Quand tu tombes sur quelqu'un qui diffuse, tu le vois, tu l'entends et tu chattes. Personne ne te voit, sauf si tu acceptes d'allumer ta caméra ou ton micro : seule la personne qui diffuse te voit alors, jamais les autres."],
+    ] as [ReactNode, string][] : []),
+    [<Video key="v" className="size-5" />, "Coupe ou rallume ta caméra, ton micro et le chat quand tu veux."],
+    [<Ban key="b" className="size-5" />, "18+, pas de nudité, enregistrement interdit. Jamais personne à moins de 2 km."],
   ];
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 px-6 backdrop-blur" onClick={close}>
       <div className="w-full max-w-sm rounded-3xl border border-[#FA6F6C]/40 bg-night p-5 text-ink shadow-[0_0_50px_#FA6F6C55]" onClick={(e) => e.stopPropagation()}>
         <p className="font-display text-xl font-bold">Comment marche le Live</p>
-        <ul className="mt-3 space-y-2.5 text-sm">{items.map(([i, t]) => <li key={i} className="flex gap-2"><span className="text-xl">{i}</span><span>{t}</span></li>)}</ul>
+        <ul className="mt-3 space-y-2.5 text-sm">{items.map(([i, t]) => <li key={t} className="flex gap-2"><span className="shrink-0 text-[#FA6F6C]">{i}</span><span>{t}</span></li>)}</ul>
         <button type="button" onClick={close} className="mt-4 w-full rounded-full bg-[#FA6F6C] py-3 font-display font-bold text-night">C'est parti</button>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { FloatingHearts, HeartPacks } from "./hearts";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShareLiveButton } from "./live-share";
-import { ChevronUp, Crown, SwitchCamera, EyeOff, Flag, MoreHorizontal, Radio, MessageCircle, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
+import { Eye, Gift, Heart, MapPin, Pointer, ChevronUp, Crown, SwitchCamera, EyeOff, Flag, MoreHorizontal, Radio, MessageCircle, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
 import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, liveEvent, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
@@ -106,7 +106,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   useEffect(() => { if (!pro && (!demo || e2e)) void groupEnabled().then(setGOn); }, [demo, pro, e2e]);
   const [watching, setWatching] = useState<string | null>(() => (e2e ? new URLSearchParams(location.search).get("watch") : null));
   const watchRef = useRef<string | null>(watching);
-  const feed = useRef<{ at: number; rooms: string[]; seen: Set<string>; turn: number }>({ at: 0, rooms: [], seen: new Set(), turn: 0 });
+  const feed = useRef<{ at: number; rooms: string[]; seen: Set<string>; turn: number; left: Map<string, number> }>({ at: 0, rooms: [], seen: new Set(), turn: 0, left: new Map() });
   const bc = useBroadcast(() => outgoing(), () => localRef.current?.getAudioTracks()[0] ?? null);
   const broadcasting = !!bc.room || demoBc;
   // partenaire du 1:1 : « X diffuse » → il peut diffuser aussi (cam à 3+), uniquement s'il accepte
@@ -131,7 +131,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   if (e2e && typeof window !== "undefined") (window as unknown as { __p2pIn: typeof onCoMsg }).__p2pIn = onCoMsg;
   useEffect(() => { if (!hostBc && co.room) { void co.stop(); toast("La diffusion est terminée, tu es de nouveau en privé"); } }, [hostBc]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!bc.room) { setCoWith(null); if (!demo || e2e) p2pSend({ bc: null }); } }, [bc.room]); // eslint-disable-line react-hooks/exhaustive-deps
-  const coJoin = async () => { if (!hostBc) return; const id = await co.join(hostBc.room); if (id) { p2pSend({ co: id }); toast("📣 Tu diffuses avec " + (peer?.pseudo ?? "ton partenaire")); } };
+  const coJoin = async () => { if (!hostBc) return; const id = await co.join(hostBc.room); if (id) { p2pSend({ co: id }); toast("Tu diffuses avec " + (peer?.pseudo ?? "ton partenaire")); } };
   const coLeave = () => { void co.stop(); p2pSend({ co: null }); toast("Tu es de nouveau en privé"); };
   const closePc = () => { setHostBc(null); setCoWith(null); if (co.room) void co.stop(); dc.current = null; setP2pLines([]); setNeedTap(false); setTheyBlur(true); pc.current?.close(); pc.current = null; if (themVid.current) themVid.current.srcObject = null; };
 
@@ -169,7 +169,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     if (!premium) return void nav({ to: "/premium" });
     if (askSent) return toast("Demande déjà envoyée");
     if (demo) return setAskSent(true);
-    try { await liveAsk(); setAskSent(true); toast("Demande envoyée 👀"); } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
+    try { await liveAsk(); setAskSent(true); toast("Demande envoyée"); } catch (e) { toast(e instanceof Error ? e.message : "Impossible"); }
   };
 
   
@@ -190,7 +190,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       ch.onmessage = (ev) => { try { const d = JSON.parse(String(ev.data)) as { blur?: boolean; chat?: string; bc?: { room?: unknown; n?: unknown; names?: unknown } | null; co?: unknown };
         if (onCoMsg(d)) return;
         if (typeof d.chat === "string") { const body = d.chat.slice(0, 200); setP2pLines((l) => [...l, { key: `p${Date.now()}${Math.random()}`, pseudo: peerRef.current?.pseudo ?? "?", body }].slice(-30)); setP2pChat(true); return; }
-        const b = d.blur !== false; setTheyBlur((was) => { if (was && !b) toast(askSentRef.current ? "Il a accepté, il se montre 👀" : "Il se montre 👀"); return b; }); } catch { /* */ } };
+        const b = d.blur !== false; setTheyBlur((was) => { if (was && !b) toast(askSentRef.current ? "Il a accepté, il se montre" : "Il se montre"); return b; }); } catch { /* */ } };
     };
     c.ondatachannel = (e) => wire(e.channel);
     let batch: RTCIceCandidateInit[] = []; let bt: ReturnType<typeof setTimeout> | null = null;
@@ -262,7 +262,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
     const f = feed.current;
     f.turn++;
     if (Date.now() - f.at > 15000) { try { f.rooms = (await roomFeed()).map((r) => r.room); f.at = Date.now(); } catch { f.rooms = []; } }
-    const fresh = f.rooms.filter((r) => !f.seen.has(r));
+    const fresh = f.rooms.filter((r) => !f.seen.has(r) && Date.now() - (f.left.get(r) ?? 0) > 120000); // un Live quitté ne revient pas tout de suite (évite le va-et-vient)
     if (!fresh.length) { if (f.rooms.length && f.seen.size) f.seen.clear(); return null; }
     if (f.turn % 2 === 1 && online > 1 && !watchRef.current) return null; // alterne avec le 1:1 quand il y a du monde
     f.seen.add(fresh[0]);
@@ -348,7 +348,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           const k = r.kind as string;
           if (!k.startsWith("live-") || r.from_id !== peerRef.current?.id) continue;
           if (k === "live-bye") { void next(); break; }
-          if (k === "live-heart") { setBurst(Date.now()); toast("Tu as reçu un ❤️"); continue; }
+          if (k === "live-heart") { setBurst(Date.now()); toast("Tu as reçu un cœur"); continue; }
           if (k === "live-ask") { if (blurRef.current) { setAsked(true); navigator.vibrate?.(120); } continue; }
           if (k === "live-ice") {
             try { pendingIce.current.push(...(JSON.parse(r.payload) as RTCIceCandidateInit[])); } catch { /* */ }
@@ -421,12 +421,12 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur">
         <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#FA6F6C]/40 bg-night p-6 text-center text-ink shadow-[0_0_60px_#FA6F6C55]">
           <span aria-hidden className="pointer-events-none absolute -top-16 -end-10 size-48 rounded-full bg-[#FA6F6C] opacity-30 blur-3xl" />
-          <span className="relative text-5xl">👀</span>
+          <Eye className="relative size-12 text-[#FA6F6C]" strokeWidth={1.75} />
           <h2 className="relative mt-3 font-display text-2xl font-bold">Vous êtes trop proches</h2>
           <p className="relative mt-2 text-sm text-ink/80">Le Live, c'est pour rencontrer des gens plus loin. Cette personne est juste à côté : écris-lui directement en privé, et passez en appel vidéo à deux. Plus intime, et rien que pour vous deux.</p>
           {hasProfile ? <>
-            <button type="button" onClick={goChat} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display text-lg font-bold text-night shadow-[0_0_30px_#FA6F6C88]">💬 Lui écrire en privé</button>
-            <button type="button" onClick={goCall} className="relative mt-3 w-full rounded-full border border-[#FA6F6C]/60 py-3 font-bold text-[#FA6F6C]">🎥 Appel vidéo à deux</button>
+            <button type="button" onClick={goChat} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display text-lg font-bold text-night shadow-[0_0_30px_#FA6F6C88]"><MessageCircle className="me-1.5 inline size-4 align-[-0.2em]" />Lui écrire en privé</button>
+            <button type="button" onClick={goCall} className="relative mt-3 w-full rounded-full border border-[#FA6F6C]/60 py-3 font-bold text-[#FA6F6C]"><Video className="me-1.5 inline size-4 align-[-0.2em]" />Appel vidéo à deux</button>
           </> : (
             <button type="button" onClick={() => { useHdar.getState().setTab("me"); void nav({ to: "/" }); }} className="relative mt-5 w-full rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Crée ton profil pour lui écrire</button>
           )}
@@ -439,7 +439,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   if (phase === "intro" && !demo && (missing || gate)) {
     return (
       <div className="relative flex min-h-dvh flex-col items-center justify-center gap-4 bg-night px-6 text-center text-ink">
-        <span className="text-5xl">🎥</span>
+        <Video className="size-12 text-[#FA6F6C]" strokeWidth={1.75} />
         <h1 className="font-display text-2xl font-bold">Crée ton profil pour entrer dans le Live</h1>
         <p className="max-w-xs text-sm text-ink/80">{gate ?? `Il te manque ${missing}.`} Le Live est réservé aux profils avec un pseudo, un âge et une première photo validée.</p>
         <button type="button" onClick={() => { useHdar.getState().setTab("me"); void nav({ to: "/" }); }} className="w-full max-w-xs rounded-full bg-[#FA6F6C] py-3.5 font-display font-bold text-night">Compléter mon profil</button>
@@ -471,7 +471,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
 
   if (watching) {
     return <>
-      <WatchView key={watching} room={watching} onNext={() => { watchRef.current = null; setWatching(null); void next(); }} onExit={() => stop()}
+      <WatchView key={watching} room={watching} onNext={() => { if (watchRef.current !== watching) return; feed.current.left.set(watching, Date.now()); watchRef.current = null; setWatching(null); void next(); }} onExit={() => stop()}
         onTooClose={() => { watchRef.current = null; setWatching(null); const w = new URLSearchParams(location.search).get("with"); if (w) { stop(false); setPhase("intro"); setTooClose({ id: w, name: new URLSearchParams(location.search).get("name") || "" }); } else void next(); }} />
       <CoachMark group />
     </>;
@@ -494,12 +494,12 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         {peer && <PeerPhoto id={peer.id} />}
         <div className="min-w-0 flex-1">
-          {peer && <p className="truncate font-display text-xl font-bold">{peer.pseudo}{peer.premium && <span className="ms-1 text-sm">👑+</span>}</p>}
+          {peer && <p className="font-display text-xl font-bold leading-tight [overflow-wrap:anywhere]">{peer.pseudo}{peer.premium && <Crown className="ms-1 inline size-4 text-[#fbbf24]" aria-label="hdar+" />}</p>}
           {peer?.pro && <PartnerBadge name={peer.pro.name} />}
           {pro && !peer && <PartnerBadge name={proPlace?.name ?? "Live Pro"} />}
           {peer && !peer.pro && <p className="text-xs text-white/80">{label(peer)}</p>}
           {peer && <PeerRegion id={peer.id} demo={!!demo} />}
-                    {peer?.note && <p className="mt-1 max-w-[16rem] truncate text-xs text-white/70">💬 {peer.note}</p>}
+                    {peer?.note && <p className="mt-1 max-w-[16rem] text-xs text-white/70 [overflow-wrap:anywhere]"><MessageCircle className="me-1 inline size-3.5 align-[-0.15em]" />{peer.note}</p>}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-[#FA6F6C] px-2 py-0.5 text-[11px] font-bold">● LIVE {online > 0 ? online : ""}</span>
@@ -511,12 +511,12 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       </div>
       {peer && theyBlur && !broadcasting && (
         <button type="button" onClick={() => void ask()} disabled={askSent} className="absolute top-[62%] left-1/2 z-[5] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#FA6F6C] px-4 py-2 text-sm font-bold text-night shadow-[0_0_20px_#fbbf24] disabled:opacity-60">
-          {askSent ? "Demande envoyée 👀" : <>Demande à se voir 👀{!premium && <Crown className="ms-1 inline size-4" />}</>}
+          {askSent ? "Demande envoyée" : <><Eye className="me-1.5 inline size-4 align-[-0.2em]" />Demande à se voir{!premium && <Crown className="ms-1 inline size-4" />}</>}
         </button>
       )}
       {asked && (
         <div className="absolute inset-x-6 top-1/3 z-20 animate-[pulse_1.6s_ease-in-out_infinite] rounded-3xl border border-[#fbbf24]/60 bg-night/90 p-4 text-center shadow-[0_0_40px_#fbbf24] backdrop-blur">
-          <p className="font-display text-lg font-bold">{peer?.pseudo} {pro ? "aimerait vous voir" : "aimerait te voir"} 👀</p>
+          <p className="font-display text-lg font-bold">{peer?.pseudo} {pro ? "aimerait vous voir" : "aimerait te voir"}</p>
           <div className="mt-3 flex gap-2">
             <button type="button" onClick={() => setAsked(false)} className="flex-1 rounded-full bg-white/10 py-2 text-sm">Non merci</button>
             <button type="button" onClick={() => { setAsked(false); void setBlur(false); }} className="flex-1 rounded-full bg-[#A1E3C3] py-2 text-sm font-bold text-night">Me montrer</button>
@@ -526,7 +526,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {peer && (theyBlur || blurred || phase !== "live" || !gotVideo) && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-3xl bg-black/50 px-5 py-3 text-center text-sm font-semibold backdrop-blur">
           {phase !== "live" || !gotVideo ? <span className="inline-flex items-center gap-2">Connexion…</span> : theyBlur && <span className="inline-flex items-center gap-2"><EyeOff className="size-4" /> Caméra floutée</span>}
-          {blurred && <span className="text-xs font-normal text-white/85">{pro ? "👆 Touchez votre aperçu pour vous montrer" : "👆 Touche ton aperçu pour te montrer"}</span>}
+          {blurred && <span className="text-xs font-normal text-white/85"><Pointer className="me-1 inline size-3.5 align-[-0.15em]" />{pro ? "Touchez votre aperçu pour vous montrer" : "Touche ton aperçu pour te montrer"}</span>}
         </span>
       )}
       <div ref={prevBox}
@@ -553,7 +553,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <Round label={mic ? "Couper le micro" : "Activer le micro"} on={!mic} onClick={() => setMic(!mic)}>{mic ? <Mic className="size-5" /> : <MicOff className="size-5" />}</Round>
           <Round label={p2pChat ? "Fermer le chat" : "Chat privé"} on={p2pChat} onClick={() => setP2pChat(!p2pChat)}><MessageCircle className="size-5" /></Round>
           <Round label="Envoyer un cœur" on={false} onClick={() => void sendHeart()}>
-            <span className="text-lg">❤️</span>
+            <Heart className="size-5 fill-[#FA6F6C] text-[#FA6F6C]" />
             <span className="absolute -top-1 -end-1 rounded-full bg-[#FA6F6C] px-1 text-[9px] font-bold text-night">{hearts === Infinity ? "∞" : hearts ?? "·"}</span>
           </Round>
           <Round label="Plus d'options" on={more} onClick={() => setMore(true)}><MoreHorizontal className="size-5" /></Round>
@@ -568,7 +568,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {hostBc && !co.room && !broadcasting && coNo !== hostBc.room && peer && <CoInvite pseudo={peer.pseudo ?? "?"} n={hostBc.n} names={hostBc.names} busy={co.busy} onYes={() => void coJoin()} onNo={() => setCoNo(hostBc.room)} />}
       {hostBc && co.room && (
         <div data-testid="co-badge" className="absolute top-[8.75rem] start-3 z-20 flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-          <span className="rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">● Tu diffuses avec {peer?.pseudo} · 👁 {hostBc.n}</span>
+          <span className="rounded-full bg-[#FA6F6C] px-3 py-1 text-xs font-bold text-night shadow-[0_0_16px_#FA6F6C]">● Tu diffuses avec {peer?.pseudo} · <Eye className="inline size-3.5 align-[-0.15em]" /> {hostBc.n}</span>
           <button type="button" data-testid="co-stop" onClick={coLeave} className="rounded-full bg-black/60 px-3 py-1 text-xs font-bold">Revenir en privé</button>
         </div>
       )}
@@ -582,7 +582,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
           <div className="w-full space-y-2 rounded-t-3xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink" onClick={(e) => e.stopPropagation()}>
             <MoreItem icon={<RotateCcw className="size-5" />} label="Revenir à la personne d'avant" crown={!premium} onClick={() => { setMore(false); if (!premium) return void nav({ to: "/premium" }); if (!prev) return toast("Personne avant"); void next(prev.id); }} />
             <MoreItem icon={<SlidersHorizontal className="size-5" />} label="Filtres Live" crown={!premium} onClick={() => { setMore(false); if (premium) setFilterOpen(true); else void nav({ to: "/premium" }); }} />
-            {pro && <MoreItem icon={<span className="text-lg">🎁</span>} label="Cadeau pro" onClick={() => { setMore(false); if (peer && proPlace) setGiftOpen(true); }} />}
+            {pro && <MoreItem icon={<Gift className="size-5" />} label="Cadeau pro" onClick={() => { setMore(false); if (peer && proPlace) setGiftOpen(true); }} />}
             <MoreItem icon={<Flag className="size-5" />} label={`Signaler ${peer?.pseudo ?? ""}`} danger onClick={() => { setMore(false); if (peer) setReporting(true); }} />
           </div>
         </div>
@@ -599,7 +599,7 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       {filterOpen && (
         <div className="absolute inset-0 flex items-end bg-black/60" onClick={() => setFilterOpen(false)}>
           <div className="w-full space-y-4 rounded-t-3xl bg-surface p-5 text-ink" onClick={(e) => e.stopPropagation()}>
-            <p className="font-display text-lg font-bold">Filtres Live 👑+</p>
+            <p className="font-display text-lg font-bold">Filtres Live <Crown className="inline size-4 text-[#fbbf24]" /></p>
             <div className="grid grid-cols-2 gap-2 pe-32">{GENDERS.map(({ id: g, short }) => { const on = filters.iam.includes(g); return <button key={g} type="button" onClick={() => setFilters({ ...filters, iam: on ? filters.iam.filter((x) => x !== g) : [...filters.iam, g] })} className={`flex-1 rounded-full py-2 font-bold ${on ? "bg-[#FA6F6C] text-night" : "bg-night"}`}>{short}</button>; })}</div>
             <div className="flex items-center gap-2 text-sm">Âge
               <input type="number" min={18} max={99} placeholder="18" value={filters.minAge ?? ""} onChange={(e) => setFilters({ ...filters, minAge: e.target.value ? Number(e.target.value) : null })} className="w-20 rounded-xl bg-night px-3 py-2" /> à
@@ -629,5 +629,5 @@ function PeerPhoto({ id }: { id: string }) {
 function PeerRegion({ id, demo }: { id: string; demo: boolean }) {
   const r = useRegion(demo ? null : id);
   const txt = demo ? "Hérault, France" : r;
-  return txt ? <p className="text-xs text-white/70">📍 {txt}</p> : null;
+  return txt ? <p className="text-xs text-white/70"><MapPin className="me-1 inline size-3.5 align-[-0.15em]" />{txt}</p> : null;
 }
