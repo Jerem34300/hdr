@@ -568,7 +568,8 @@ export function GroupChatDemo() {
     mk(9, "b21c", "Nina", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹 et pour les questions hdar.chat/faq", 0.2),
     ...(location.search.includes("fwdvideo") ? [{ ...mk(15, "me", "Toi", "", 0.05, { fwd: "" }), id: "dfwd", kind: "video" as const }] : []),
     ...(location.search.includes("video") ? [{ ...mk(14, "b21c", "Nina", "", 0.1), id: "dvid", kind: "video" as const }] : []),
-    ...(location.search.includes("bot") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31, @Max et @Zoe 👋 Faites-leur bon accueil !", 0.1)] : []),
+    ...(location.search.includes("bot1") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31 ! Faites-lui bon accueil.", 0.1)]
+      : location.search.includes("bot") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31, @Max et @Zoe ! Faites-leur bon accueil.", 0.1)] : []),
     ...(location.search.includes("discret") ? [mk(13, "v417", "Discret 417", "Salut tout le monde 👋 quelqu'un connaît un bar sympa vers la Comédie ?", 0.03)] : []),
     ...(location.search.includes("qdj") ? [mk(11, BOT_ID, "hdar", "💬 Question du jour : Plutôt café en terrasse ou apéro au coucher du soleil ? ☀️", 0.05)] : []),
     ...(location.search.includes("regles") ? [mk(12, BOT_ID, "hdar", BOT_DEFAULTS.rules_text, 0.02)] : []),
