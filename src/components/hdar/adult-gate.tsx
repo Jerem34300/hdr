@@ -38,6 +38,8 @@ import { DailyTabDemo } from "./admin-daily";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
+import { GateRadar } from "./gate-radar";
+import { ArrowRight, Loader2, MapPin, MessagesSquare, ShieldCheck, Video } from "lucide-react";
 import {
   TURNSTILE_SITE_KEY,
   adultConfirmed,
@@ -86,10 +88,18 @@ export function AdultGate({ children }: { children: ReactNode }) {
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("adsdemo=")) return <AdsDemo />;
   return <AdultGateInner>{children}</AdultGateInner>;
 }
+/** Dev : clés de test Turnstile officielles (?gatetest=pass|interactive). */
+function devSiteKey() {
+  if (!import.meta.env.DEV || typeof location === "undefined") return null;
+  const k = new URLSearchParams(location.search).get("gatetest");
+  return k === "interactive" ? "3x00000000000000000000FF" : k === "pass" ? "1x00000000000000000000AA" : null;
+}
 function AdultGateInner({ children }: { children: ReactNode }) {
   const [state, setState] = useState<"loading" | "ask" | "ok">("loading");
   const [adult, setAdult] = useState(false);
-  const [checked, setChecked] = useState(false);
+  const [challenge, setChallenge] = useState(false);
+  const [waiting, setWaiting] = useState(false);
+  const submitRef = useRef<() => void>(() => undefined);
   const [token, setToken] = useState("");
   const [widgetFailed, setWidgetFailed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -123,17 +133,23 @@ function AdultGateInner({ children }: { children: ReactNode }) {
       if (!ts || !box.current) return setWidgetFailed(true);
       try {
         widget.current = ts.render(box.current, {
-          sitekey: TURNSTILE_SITE_KEY,
+          sitekey: devSiteKey() ?? TURNSTILE_SITE_KEY,
           theme: "dark",
+          size: "flexible",
+          appearance: "interaction-only",
+          "before-interactive-callback": () => setChallenge(true),
+          "after-interactive-callback": () => setChallenge(false),
           language: ({ pt: "pt-br" } as Record<string, string>)[useLang.getState().lang] ?? useLang.getState().lang,
           callback: (t: string) => {
             setToken(t);
             setError("");
+            setChallenge(false);
           },
           "expired-callback": () => setToken(""),
           "error-callback": () => {
             setToken("");
             setError("Vérification anti-robot échouée, réessaie.");
+            setWaiting(false);
           },
         });
       } catch {
@@ -148,83 +164,88 @@ function AdultGateInner({ children }: { children: ReactNode }) {
     };
   }, [state]);
 
+  // « Entrer » touché avant la fin de la vérification : on entre dès qu'elle répond.
+  useEffect(() => { if (waiting && (token || widgetFailed)) submitRef.current(); }, [waiting, token, widgetFailed]);
+
   if (state === "ok") return <PinGate>{children}</PinGate>;
   if (state === "loading") return null;
   const needsAdult = !adult;
-  const ready = (!needsAdult || checked) && (token || widgetFailed) && !busy;
+
+  const submit = () => {
+    if (busy) return;
+    if (!token && !widgetFailed) { setWaiting(true); return; } // on entre tout seul dès que la vérification répond
+    setWaiting(false);
+    setBusy(true);
+    setError("");
+    setCaptchaToken(token || undefined);
+    if (needsAdult) confirmAdult(); // le clic sur « Entrer » vaut confirmation 18+ (mention juste au-dessus du bouton)
+    ensureSession()
+      .then(() => {
+        trackGate("gate_enter");
+        try {
+          const ad = sessionStorage.getItem(PENDING_AD);
+          if (ad) { sessionStorage.removeItem(PENDING_AD); useHdar.getState().openAnnonces(ad); }
+        } catch { /* privé */ }
+        setState("ok");
+      })
+      .catch((err: unknown) => {
+        trackGate("gate_error");
+        setError(err instanceof Error ? err.message : "Connexion impossible, réessaie");
+        setToken("");
+        if (widget.current) window.turnstile?.reset(widget.current);
+      })
+      .finally(() => setBusy(false));
+  };
+  submitRef.current = submit;
 
   return (
-    <main className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-night text-ink sm:items-center sm:justify-center">
-      <GateAdTicker onPick={(id) => {
-        try { sessionStorage.setItem(PENDING_AD, id); } catch { /* privé */ }
-        setError(needsAdult && !checked ? "Confirme que tu as 18 ans pour ouvrir l'annonce 👇" : "Touche Entrer pour ouvrir l'annonce 👇");
-      }} />
-      <GateTeaser onCity={(city, r) => setTeaser({ city, near: r?.near ?? 0, total: r?.total ?? 0 })} />
-      <div className="relative z-10 px-6 pt-10 text-center sm:hidden" aria-live="polite">
-        {teaser && (
-          <p className="mx-auto inline-flex items-center gap-2 rounded-full bg-night/85 px-4 py-2 text-sm font-bold shadow-lg">
-            <span className="size-2 animate-pulse rounded-full bg-[#3EE08F]" />
-            {teaser.near > 0
-              ? `${teaser.near} ${teaser.near > 1 ? "personnes actives" : "personne active"} ces dernières 24 h${teaser.city ? ` près de ${teaser.city}` : ""}`
-              : teaser.total > 0
-                ? `${teaser.total} personnes actives ces dernières 24 h en France`
-                : `Sois parmi les premiers${teaser.city ? ` à ${teaser.city}` : ""}`}
-          </p>
-        )}
+    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#0b0d12] text-ink sm:items-center sm:justify-center">
+      <GateTeaser hidden onCity={(city, r) => setTeaser({ city, near: r?.near ?? 0, total: r?.total ?? 0 })} />
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <span className="gate-flare absolute -top-[10%] -left-[25%] size-[75vw] max-w-[520px] max-h-[520px] max-w-none rounded-full bg-[#FA6F6C] opacity-35 blur-[70px]" />
+        <span className="gate-flare f2 absolute top-[30%] -right-[30%] size-[70vw] max-h-[480px] max-w-[480px] rounded-full bg-[#A78BFA] opacity-25 blur-[80px]" />
+        <span className="gate-flare f3 absolute -bottom-[10%] left-[5%] size-[65vw] max-h-[440px] max-w-[440px] rounded-full bg-[#3EE08F] opacity-20 blur-[80px]" />
       </div>
-      <div className="flex-1 sm:hidden" />
-      <form
-        className="relative z-10 w-full space-y-4 rounded-t-[2rem] border-t border-line bg-night/90 p-6 pb-8 backdrop-blur-md sm:max-w-sm sm:rounded-[2rem] sm:border"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (needsAdult && !checked) return setError("Hdar est réservé aux 18 ans et plus.");
-          if (!token && !widgetFailed) return setError("Patiente une seconde, vérification anti-robot…");
-          setBusy(true);
-          setError("");
-          setCaptchaToken(token || undefined);
-          if (needsAdult) confirmAdult();
-          ensureSession()
-            .then(() => {
-              trackGate("gate_enter");
-              try {
-                const ad = sessionStorage.getItem(PENDING_AD);
-                if (ad) { sessionStorage.removeItem(PENDING_AD); useHdar.getState().openAnnonces(ad); }
-              } catch { /* privé */ }
-              setState("ok");
-            })
-            .catch((err: unknown) => {
-              trackGate("gate_error");
-              setError(err instanceof Error ? err.message : "Connexion impossible, réessaie");
-              setToken("");
-              if (widget.current) window.turnstile?.reset(widget.current);
-            })
-            .finally(() => setBusy(false));
-        }}
-      >
-        <h1 className="font-display text-3xl font-extrabold">hdar.</h1>
-        <p className="text-sm text-muted">Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+.</p>
-        <p className="text-xs text-muted">Sans inscription. Ouvert à toutes et tous, LGBT-friendly 🏳️‍🌈</p>
-        <ul className="grid grid-cols-3 gap-2 text-center text-[11px] text-muted">
-          <li className="rounded-2xl border border-line px-2 py-2">🗺️<br />Qui est là</li>
-          <li className="rounded-2xl border border-line px-2 py-2">💬<br />Chat du quartier</li>
-          <li className="rounded-2xl border border-line px-2 py-2">🎥<br />Live vidéo</li>
+      <div className="relative z-10 flex w-full flex-1 flex-col items-center px-6 pt-8 sm:max-w-sm sm:flex-none">
+        <div className="flex w-full items-center justify-between">
+          <span className="font-display text-3xl font-extrabold">hdar<span className="text-signal">.</span></span>
+          <span className="rounded-full border border-white/25 px-2.5 py-0.5 text-xs font-bold text-white/80">18+</span>
+        </div>
+        <div className="relative my-auto flex w-full flex-col items-center py-4" aria-live="polite">
+          <GateRadar className="aspect-square w-[min(78vw,340px)] drop-shadow-[0_0_40px_rgba(250,111,108,.25)]" />
+          <p className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-bold backdrop-blur">
+            <span className="size-2 shrink-0 animate-pulse rounded-full bg-[#3EE08F]" />
+            <span>{teaser && teaser.near > 0
+              ? `${teaser.near} ${teaser.near > 1 ? "personnes actives" : "personne active"} ces dernières 24 h${teaser.city ? ` près de ${teaser.city}` : ""}`
+              : teaser && teaser.total > 0
+                ? `${teaser.total} personnes actives ces dernières 24 h en France`
+                : "Des gens sortent autour de toi"}</span>
+          </p>
+        </div>
+      </div>
+      <form className="relative z-10 w-full space-y-3 px-6 pt-2 pb-7 sm:max-w-sm" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <h1 className="text-center font-display text-2xl leading-tight font-extrabold">Qui est autour de toi, ce soir ?</h1>
+        <p className="text-center text-sm text-white/70">Sorties et rencontres près de toi. Gratuit, discret, sans inscription.</p>
+        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-white/70">
+          <li className="flex items-center gap-1.5"><MapPin className="size-3.5 text-signal" strokeWidth={2} />Qui est là</li>
+          <li className="flex items-center gap-1.5"><MessagesSquare className="size-3.5 text-[#3EE08F]" strokeWidth={2} />Chat du quartier</li>
+          <li className="flex items-center gap-1.5"><Video className="size-3.5 text-[#A78BFA]" strokeWidth={2} />Live vidéo</li>
         </ul>
-        {needsAdult && (
-          <label className="flex items-center gap-3 text-sm">
-            <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} />
-            J'ai 18 ans ou plus
-          </label>
-        )}
-        <div ref={box} className="min-h-[65px]" />
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <button type="submit" disabled={!ready} className="h-12 w-full rounded-full bg-signal text-night disabled:opacity-40">
-          {busy ? "Connexion…" : "Entrer"}
+        {/* Turnstile en mode « interaction seulement » : invisible la plupart du temps, cadre sombre s'il demande un clic. */}
+        <div className={challenge ? "rounded-2xl border border-white/10 bg-white/5 p-2" : "h-0 overflow-hidden"} data-act="gate-captcha">
+          {challenge && <p className="mb-1.5 flex items-center justify-center gap-1.5 text-xs text-white/70"><ShieldCheck className="size-3.5" strokeWidth={2} />Petite vérification anti-robot</p>}
+          <div ref={box} className="flex justify-center [&_iframe]:max-w-full" />
+        </div>
+        {error && <p className="text-center text-sm text-red-400">{error}</p>}
+        <button type="submit" data-act="gate-enter" disabled={busy} className="gate-enter flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] text-lg font-extrabold text-night shadow-[0_10px_40px_-8px_rgba(250,111,108,.75)] active:scale-[.98] disabled:opacity-70">
+          {busy || waiting ? <><Loader2 className="size-5 animate-spin" strokeWidth={2.5} />{busy ? "Connexion…" : "Vérification…"}</> : <>Entrer<ArrowRight className="size-5" strokeWidth={2.5} /></>}
         </button>
-        <RecoverLink captchaToken={token || undefined} onUsed={() => { setToken(""); if (widget.current) window.turnstile?.reset(widget.current); }} />
-        <p className="text-center text-xs text-muted">
-          En entrant, tu acceptes les <a className="underline" href="/cgu">conditions d'utilisation</a> et la{" "}
+        <p className="text-center text-[11px] leading-snug text-white/55">
+          {needsAdult ? "En entrant, tu confirmes avoir 18 ans ou plus et tu acceptes les " : "En entrant, tu acceptes les "}
+          <a className="underline" href="/cgu">conditions d'utilisation</a> et la{" "}
           <a className="underline" href="/confidentialite">politique de confidentialité</a>.
         </p>
+        <RecoverLink captchaToken={token || undefined} onUsed={() => { setToken(""); if (widget.current) window.turnstile?.reset(widget.current); }} />
       </form>
     </main>
   );

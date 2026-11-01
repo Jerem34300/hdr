@@ -13,7 +13,7 @@ const FALLBACK = { city: "Montpellier", lat: 43.61, lng: 3.88 };
  * Aperçu de la carte derrière l'écran 18+ : vraie carte de la ville approximative (réseau),
  * floutée, avec l'activité anonyme des dernières 24 h. Rien d'identifiant : carreaux ~5 km.
  */
-export function GateTeaser({ onCity }: { onCity?: (city: string | null, recent: Recent | null) => void }) {
+export function GateTeaser({ onCity, hidden }: { onCity?: (city: string | null, recent: Recent | null) => void; hidden?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 390, h: 800 });
   const [geo, setGeo] = useState<{ city: string | null; lat: number; lng: number }>(FALLBACK);
@@ -38,6 +38,7 @@ export function GateTeaser({ onCity }: { onCity?: (city: string | null, recent: 
     };
   }, []);
 
+  if (hidden) return null;
   const z = 10;
   const left = wx(geo.lng, z) - size.w / 2;
   const top = wy(geo.lat, z) - size.h / 2;

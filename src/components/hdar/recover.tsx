@@ -4,7 +4,7 @@ import { TURNSTILE_SITE_KEY } from "@/lib/hdar/session";
 import { useHdar } from "@/lib/hdar/store";
 import { loadTurnstile } from "./adult-gate";
 import { toast } from "sonner";
-import { ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import { newsSet, newsStatus } from "@/lib/hdar/live";
 import { linkedEmail, linkEmailStart, linkEmailVerify, recoverStart, recoverVerify } from "@/lib/hdar/recover";
 
@@ -157,7 +157,7 @@ export function RecoverAccountSettings() {
       if (!alive || !ts || !box.current || widget.current) return;
       try {
         widget.current = ts.render(box.current, {
-          sitekey: TURNSTILE_SITE_KEY, theme: "dark", language: "fr",
+          sitekey: TURNSTILE_SITE_KEY, theme: "dark", size: "flexible", language: "fr",
           callback: (t: string) => setToken(t), "expired-callback": () => setToken(""), "error-callback": () => setToken(""),
         });
       } catch { /* widget indisponible */ }
@@ -167,8 +167,8 @@ export function RecoverAccountSettings() {
   const current = me.onboarded ? me.pseudo || "ton profil actuel" : null;
   if (!open)
     return (
-      <button type="button" onClick={() => setOpen(true)} className="flex h-11 w-full items-center justify-center rounded-full border border-line text-sm">
-        🔑 Retrouver mon compte
+      <button type="button" onClick={() => setOpen(true)} className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-white/15 text-sm text-white/80">
+        <KeyRound className="size-4 shrink-0" strokeWidth={2} />Retrouver mon compte
       </button>
     );
   return (

@@ -25,12 +25,7 @@ export function IntroVideo() {
   const [ended, setEnded] = useState(false);
   const [portrait, setPortrait] = useState(true);
 
-  useEffect(() => {
-    if (onboarded || seen() || inCall || cover) return;
-    if (location.pathname.startsWith("/live")) return;
-    const t = window.setTimeout(() => { if (!useHdar.getState().me.onboarded && useCall.getState().phase === "idle") useIntro.setState({ open: true, manual: false }); }, 1200);
-    return () => window.clearTimeout(t);
-  }, [onboarded, inCall, cover]);
+  // Plus d'ouverture automatique après « Entrer » : la vidéo reste dans Profil → Comment ça marche.
 
   useEffect(() => {
     if (!open) return;

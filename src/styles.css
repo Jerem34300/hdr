@@ -432,3 +432,12 @@ section:has(.hdar-sheet-up) > .dock,
 @keyframes meet-dot-glow { 0%,100% { transform: translate(-50%,-50%) scale(.8); opacity: .9 } 50% { transform: translate(-50%,-50%) scale(1.4); opacity: .25 } }
 .meet-dot-glow { animation: meet-dot-glow 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .meet-dot-glow { animation: none; opacity: .6 } }
+
+/* Écran d'entrée : flares flous et ping du point central */
+@keyframes gate-flare { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(6%,-4%) scale(1.12) } }
+.gate-flare { animation: gate-flare 14s ease-in-out infinite; }
+.gate-flare.f2 { animation-duration: 18s; animation-direction: reverse; }
+.gate-flare.f3 { animation-duration: 22s; }
+@keyframes gate-me-ping { 0% { r: 3; opacity: .5 } 100% { r: 12; opacity: 0 } }
+.gate-me-ping { animation: gate-me-ping 2.2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .gate-flare, .gate-me-ping { animation: none } }
