@@ -1649,7 +1649,7 @@ export const mentionSearch = (q: string) => rpc<MentionHit[]>("hdar_mention_sear
 export const mentionLookup = (pseudo: string) => rpc<MentionHit | null>("hdar_mention_lookup", { p_pseudo: pseudo });
 /** À appeler juste après l'envoi d'un message contenant « @ » : le serveur notifie qui peut lire ce fil. */
 export function mentionNotify(scope: "dm" | "salon" | "area", ref: string | null, body: string) {
-  if (!/(^|[^\w@])@[\w.-]{2,}/.test(body)) return;
+  if (!/(^|[^\w@])@(\[[^\]\n]{2,}\]|[\w.-]{2,})/.test(body)) return;
   void rpc("hdar_mention_notify", { p_scope: scope, p_ref: ref }).catch(() => undefined);
 }
 /** Nom du canal Realtime privé pour les indicateurs « en train d'écrire » (v85). null = pas d'indicateur. */

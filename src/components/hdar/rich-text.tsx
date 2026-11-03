@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { create } from "zustand";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { linkify, safeUrl } from "@/lib/hdar/linkify";
+import { linkify, mentionToken, safeUrl } from "@/lib/hdar/linkify";
 import { mentionLookup, mentionSearch, type MentionHit } from "@/lib/hdar/live";
 import { useHdar } from "@/lib/hdar/store";
 
@@ -80,7 +80,14 @@ export function LeaveConfirm() {
   );
 }
 
+const DEMO_PSEUDOS = ["Beau goss", "Plan Q", "Lea_31", "Max", "Zoe", "Toi", "Lucas34"];
 function openMention(pseudo: string) {
+  // Aperçu de dev (sans serveur) : simule hdar_mention_lookup (pseudo exact, insensible à la casse).
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("devpreview")) {
+    const hit = DEMO_PSEUDOS.find((x) => x.toLowerCase() === pseudo.trim().toLowerCase());
+    toast(hit ? `Profil de @${hit} ouvert` : `@${pseudo} introuvable`);
+    return;
+  }
   void mentionLookup(pseudo)
     .then((r) => (r ? useHdar.getState().openProfile(r.user_id, r.pseudo) : toast(`@${pseudo} introuvable`)))
     .catch(() => toast(`@${pseudo} introuvable`));
@@ -132,16 +139,18 @@ export function useMentions(value: string, setValue: (v: string) => void, local:
   if (q !== null)
     for (const x of [...local, ...remote]) {
       const k = x.pseudo.toLowerCase();
-      if (seen.has(k) || !k.startsWith(q.toLowerCase()) || /\s/.test(x.pseudo)) continue;
+      if (seen.has(k) || !k.startsWith(q.toLowerCase())) continue;
       seen.add(k);
       list.push({ pseudo: x.pseudo });
       if (list.length >= 6) break;
     }
   const pick = (pseudo: string) => {
-    const start = caret - (q?.length ?? 0);
-    const next = value.slice(0, start) + pseudo + " " + value.slice(caret);
+    // Remplace « @deb » par @pseudo ou @[Pseudo avec espace] (reconnu en entier au rendu et côté serveur).
+    const start = caret - (q?.length ?? 0) - 1;
+    const tok = mentionToken(pseudo);
+    const next = value.slice(0, start) + tok + " " + value.slice(caret);
     setValue(next);
-    setCaret(start + pseudo.length + 1);
+    setCaret(start + tok.length + 1);
   };
   const track = (el: HTMLInputElement | HTMLTextAreaElement) => setCaret(el.selectionStart ?? el.value.length);
   return { list: q === null ? [] : list, pick, track };

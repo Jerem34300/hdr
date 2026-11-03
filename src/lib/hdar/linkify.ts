@@ -2,9 +2,9 @@
 export type Seg = { t: "text"; v: string } | { t: "url"; v: string; href: string; host: string; internal: boolean } | { t: "mention"; v: string; pseudo: string };
 
 const TLD = "com|fr|net|org|io|chat|app|be|ch|ca|eu|info|me|co|tv|ly|gl|gg|xyz|dev|link|page|site|online|store|shop|club|bar|paris|re|lu|ma|tn|dz|uk|de|es|it";
-// 1 = URL complète, 2 = domaine simple, 4 = @pseudo (3 = séparateur avant @)
+// 1 = URL complète, 2 = domaine simple, 4 = @[pseudo avec espace], 5 = @pseudo (3 = séparateur avant @)
 const RE = new RegExp(
-  `(https?:\\/\\/[^\\s<>"']+)|((?<![@\\w.\\-])(?:www\\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:${TLD})(?![\\w-])(?:\\/[^\\s<>"']*)?)|(^|[^\\w@])@([\\w.\\-]{2,30})`,
+  `(https?:\\/\\/[^\\s<>"']+)|((?<![@\\w.\\-])(?:www\\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:${TLD})(?![\\w-])(?:\\/[^\\s<>"']*)?)|(^|[^\\w@])@(?:\\[([^\\[\\]\n]{2,30})\\]|([\\w.\\-]{2,30}))`,
   "gi",
 );
 const TRAIL = /[).,;:!?»"'’]+$/;
@@ -46,13 +46,33 @@ export function linkify(text: string, mentions = true): Seg[] {
       push(trail);
       last = i + m[0].length;
     } else if (m[4] && mentions) {
-      const pseudo = m[4].replace(/[.-]+$/, "");
+      // Format délimité @[Beau goss] : pseudo avec espace, affiché « @Beau goss » en entier.
+      const pseudo = m[4].trim();
+      if (pseudo.length < 2) continue;
+      push(text.slice(last, i) + (m[3] ?? ""));
+      out.push({ t: "mention", v: "@" + pseudo, pseudo });
+      last = i + m[0].length;
+    } else if (m[5] && mentions) {
+      const pseudo = m[5].replace(/[.-]+$/, "");
       if (pseudo.length < 2) continue;
       push(text.slice(last, i) + (m[3] ?? ""));
       out.push({ t: "mention", v: "@" + pseudo, pseudo });
       last = i + (m[3] ?? "").length + 1 + pseudo.length;
+    } else if (m[4] || m[5]) {
+      // Mentions désactivées : on affiche quand même « @Beau goss » sans les crochets.
+      push(text.slice(last, i) + (m[3] ?? "") + "@" + (m[4] ?? m[5]));
+      last = i + m[0].length;
     }
   }
   push(text.slice(last));
   return out;
 }
+
+/** Texte à insérer pour mentionner un pseudo : @pseudo, ou @[Pseudo avec espace] s'il n'est pas d'un seul mot. */
+export function mentionToken(pseudo: string) {
+  const p = pseudo.trim();
+  return /^[\w.-]+$/.test(p) ? "@" + p : "@[" + p.replace(/[\[\]\n]/g, "") + "]";
+}
+
+/** Pour un aperçu en texte brut : « @[Beau goss] » → « @Beau goss ». */
+export const plainMentions = (s: string) => s.replace(/@\[([^\[\]\n]{2,30})\]/g, "@$1");

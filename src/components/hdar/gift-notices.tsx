@@ -1,3 +1,4 @@
+import { plainMentions } from "@/lib/hdar/linkify";
 import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
 import { myNotices, proGiftBlock, type NoticeRef, type ProGift } from "@/lib/hdar/live";
@@ -30,7 +31,7 @@ export function GiftNotices() {
       <div className="boost-nudge w-full max-w-sm rounded-3xl border border-[#fbbf24]/60 bg-surface p-6 text-center shadow-[0_0_40px_#fbbf24]" onClick={(e) => e.stopPropagation()}>
         <p className="text-5xl">🎁</p>
         <p className="mt-2 font-display text-2xl font-extrabold">{n.title}</p>
-        {n.gift ? <div className="mt-3"><GiftCard g={n.gift} /></div> : n.body && <p className="mt-2 text-sm text-muted">{n.body}</p>}
+        {n.gift ? <div className="mt-3"><GiftCard g={n.gift} /></div> : n.body && <p className="mt-2 text-sm text-muted">{plainMentions(n.body)}</p>}
         <button type="button" onClick={() => setList(list.slice(1))} className="boost-cta mt-5 h-12 w-full rounded-full font-display font-extrabold text-night">Merci !</button>
         {n.gift && <div className="mt-3 flex justify-center gap-4 text-xs text-muted">
           <button type="button" className="underline" onClick={() => { void proGiftBlock(n.gift!.id).then(() => toast("Ce lieu ne pourra plus t'envoyer de cadeaux")).catch(() => undefined); setList(list.slice(1)); }}>Bloquer ce lieu</button>
