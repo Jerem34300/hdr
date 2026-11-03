@@ -171,9 +171,7 @@ export async function pulse({
     p_lat: data.lat,
     p_lng: data.lng,
     p_pseudo:
-      String(data.pseudo || "Anonyme")
-        .trim()
-        .slice(0, 24) || "Anonyme",
+      cleanPseudo(String(data.pseudo || "Anonyme")).slice(0, 24) || "Anonyme",
     p_desires: String(data.desires || "").slice(0, 80),
     p_hours: Math.round(Math.min(12, Math.max(1, Number(data.hours) || 3))),
     p_note: String(data.note || "").trim().slice(0, 60),
@@ -429,7 +427,7 @@ export async function saveProfile(input: {
 }) {
   await rpc("hdar_profile_save", {
     p_self: selfId(input.self),
-    p_pseudo: input.pseudo,
+    p_pseudo: cleanPseudo(input.pseudo),
     p_age: input.age,
     p_bio: input.bio,
     p_tags: input.tags.join(","),
@@ -1645,6 +1643,8 @@ export const dmRemove = (id: string) => rpc("hdar_dm_remove", { p_id: id });
 export const setBubble = (color: string) => rpc("hdar_set_bubble", { p_color: color });
 /** Mentions @pseudo (v83). Jamais d'email : pseudo + id seulement. */
 export type MentionHit = { user_id: string; pseudo: string; photo?: boolean };
+/** Même nettoyage que hdar.pseudo_clean : espaces insécables → espace, espaces multiples réduits, bords coupés, sans crochets. */
+export const cleanPseudo = (p: string) => p.normalize("NFC").replace(/[\u00a0\u2007\u2009\u202f\u3000\t\r\n]/g, " ").replace(/[[\]]/g, "").replace(/ {2,}/g, " ").trim();
 export const mentionSearch = (q: string) => rpc<MentionHit[]>("hdar_mention_search", { p_q: q });
 export const mentionLookup = (pseudo: string) => rpc<MentionHit | null>("hdar_mention_lookup", { p_pseudo: pseudo });
 /** À appeler juste après l'envoi d'un message contenant « @ » : le serveur notifie qui peut lire ce fil. */
