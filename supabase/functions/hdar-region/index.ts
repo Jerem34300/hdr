@@ -16,8 +16,21 @@ async function rpc(fn: string, args: Record<string, unknown>) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
-    const { id } = await req.json();
+    const { id, city } = await req.json();
     if (typeof id !== "string" || id.length > 80) return json({ label: null });
+    // v129 : ville approximative (« Montpellier, Occitanie ») de la case de 0,1° du profil, pour l'accueil du robot.
+    // Rien n'est renvoyé au client : la ville n'est écrite que dans le cache serveur hdar.geo_city.
+    if (city === true) {
+      const c = await rpc("hdar_city_key", { p_id: id });
+      if (!c || c.label) return json({ ok: true });
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&lat=${c.lat}&lon=${c.lng}`, { headers: { "user-agent": "hdar.chat city lookup (contact via hdar.chat/contact)" } });
+      const a = ((await r.json()) as { address?: Record<string, string> }).address ?? {};
+      const town = a.city || a.town || a.village || a.municipality || "";
+      const region = a.state || a.region || a.province || "";
+      const label = [town, region].filter(Boolean).filter((x, i, l) => l.indexOf(x) === i).join(", ");
+      if (town && label) await rpc("hdar_city_store", { p_k: c.k, p_label: label });
+      return json({ ok: true });
+    }
     const key = await rpc("hdar_region_key", { p_id: id });
     if (!key) return json({ label: null });
     if (key.label) return json({ label: key.label });

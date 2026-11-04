@@ -179,6 +179,7 @@ export async function pulse({
     if (e instanceof Error && /Doucement/.test(e.message)) pulseMuteUntil = Date.now() + 60_000;
     throw e;
   });
+  if (data.lat != null && data.lng != null) warmCity(data.self, data.lat, data.lng);
 }
 let pulseLast: { lat: number; lng: number; key: string; at: number } | null = null;
 let pulseMuteUntil = 0;
@@ -591,6 +592,22 @@ export async function hideConversation(self: string, other: string) {
 export async function hit(self: string) {
   await rpc("hdar_hit", { p_self: selfId(self) });
   void recordCity();
+}
+
+/** Accueil du robot (v129) : fait géocoder côté serveur la ville de ma case de 0,1° (« Montpellier, Occitanie »),
+ * au plus une fois par case et par 12 h. Rien n'est renvoyé ; la position exacte ne quitte pas le serveur. */
+function warmCity(self: string, lat: number, lng: number) {
+  try {
+    const cell = `${Math.round(lat * 10) / 10},${Math.round(lng * 10) / 10}`;
+    const KEY = "hdar-city-warm";
+    const prev = JSON.parse(localStorage.getItem(KEY) || "{}") as { c?: string; at?: number };
+    if (prev.c === cell && Date.now() - (prev.at ?? 0) < 12 * 3600 * 1000) return;
+    localStorage.setItem(KEY, JSON.stringify({ c: cell, at: Date.now() }));
+    void (async () => {
+      const token = await accessToken();
+      await fetch(`${SUPABASE_URL}/functions/v1/hdar-region`, { method: "POST", headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ id: self, city: true }) });
+    })().catch(() => undefined);
+  } catch { /* facultatif */ }
 }
 
 /** Ville approximative (géolocalisation Netlify, sans IP) rattachée au profil, au plus une fois toutes les 12 h. */

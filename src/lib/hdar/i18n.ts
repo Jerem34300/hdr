@@ -121,11 +121,12 @@ export function tBot(body: string, lang: Lang = useLang.getState().lang): string
   // Accueil + bloc parrainage (hdar.welcome_extra, lien unique) : deux textes traduits séparément.
   const cut = body.indexOf("\n\n🎁 ");
   if (cut > 0) return tBot(body.slice(0, cut), lang) + "\n\n" + tBot(body.slice(cut + 2), lang);
-  // Synthèse des envies publiques ajoutée à l'accueil (v129) : libellé + envies traduits un par un.
-  const syn = body.indexOf("\n" + SYN);
-  if (syn > 0) {
-    const items = body.slice(syn + 1 + SYN.length).trim().replace(/\.$/, "").split(" · ").map((x) => t(x.trim(), lang));
-    return tBot(body.slice(0, syn), lang) + "\n" + t(SYN, lang) + " " + items.join(" · ") + ".";
+  // Accueil v129 sur plusieurs lignes (tournure, « Du côté de … », envies) : chaque ligne traduite à part.
+  if (body.includes("\n")) return body.split("\n").map((l) => tBot(l, lang)).join("\n");
+  // Synthèse des envies publiques : libellé + envies traduits un par un.
+  if (body.startsWith(SYN)) {
+    const items = body.slice(SYN.length).trim().replace(/\.$/, "").split(" · ").map((x) => t(x.trim(), lang));
+    return t(SYN, lang) + " " + items.join(" · ") + ".";
   }
   // Liste de mentions « @a, @b et @c » : un seul trou dans les gabarits, « et » traduit à part.
   const ml = MENTION_LIST.exec(body);

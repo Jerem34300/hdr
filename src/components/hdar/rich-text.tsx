@@ -117,7 +117,7 @@ export function RichText({ text, mentions = true, className }: { text: string; m
       </a>
     );
   });
-  return <span translate="no" className={className}>{nodes}</span>;
+  return <span translate="no" dir="auto" className={className}>{nodes}</span>;
 }
 
 /** Suggestions @pseudo au-dessus d'un champ de saisie : membres du fil d'abord, puis recherche serveur. */

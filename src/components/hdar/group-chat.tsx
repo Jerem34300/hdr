@@ -568,10 +568,15 @@ export function GroupChatDemo() {
     mk(9, "b21c", "Nina", "@Toi @Lucas34 le bar c'est celui-là : lebarbu.fr 🍹 et pour les questions hdar.chat/faq", 0.2),
     ...(location.search.includes("fwdvideo") ? [{ ...mk(15, "me", "Toi", "", 0.05, { fwd: "" }), id: "dfwd", kind: "video" as const }] : []),
     ...(location.search.includes("video") ? [{ ...mk(14, "b21c", "Nina", "", 0.1), id: "dvid", kind: "video" as const }] : []),
-    ...(location.search.includes("botvar") ? [
-        mk(17, BOT_ID, "hdar", "@[Beau goss] vient de créer son profil. Bienvenue !\nEnvies affichées sur son profil : Un verre · Balade.", 0.4),
-        mk(18, BOT_ID, "hdar", "Nouveaux sur hdar : @Lea_31 et @[Plan Q]. Passez leur dire bonjour.", 0.25),
-        mk(19, BOT_ID, "hdar", "Nouveau sur hdar : @Max. Passez lui dire bonjour.", 0.1)] : []),
+    ...(location.search.includes("botvar") ? (location.search.includes("es") ? [
+        mk(17, BOT_ID, "hdar", "Registro confirmado para @[Lucía]. Bienvenida, estás en tu casa.\nPor la zona de Barcelona, Catalunya.\nGanas indicadas en su perfil: Salir.", 0.5),
+        mk(18, BOT_ID, "hdar", "Pregunta del día: ¿El lugar más inesperado donde has ligado?", 0.3),
+        mk(19, BOT_ID, "hdar", "@Javi, @[Ana María] y @Leo acaban de registrarse. Un saludo no cuesta nada y alegra el día.", 0.1)] : [
+        mk(17, BOT_ID, "hdar", "@[Beau goss] vient de rejoindre hdar. Soyez sympas, c'est tout frais.\nDu côté de Montpellier, Occitanie.\nEnvies affichées sur son profil : Un verre · Balade.", 0.5),
+        mk(18, BOT_ID, "hdar", "Question du jour : Le compliment qui te fait fondre à tous les coups ?", 0.35),
+        mk(20, BOT_ID, "hdar", "Bienvenue à @Lea_31 : inscription validée, timidité optionnelle.", 0.25),
+        mk(19, BOT_ID, "hdar", "@Max, @Zoe et @[Plan Q] viennent de s'inscrire. Un bonjour, ça ne coûte rien et ça fait plaisir.", 0.1)]) : []),
+
     ...(location.search.includes("botsp") ? [mk(10, BOT_ID, "hdar", location.search.includes("botspold") ? "Bienvenue à @Beau goss ! Faites-lui bon accueil." : "Bienvenue à @[Beau goss] ! Faites-lui bon accueil.", 0.15),
         mk(16, BOT_ID, "hdar", location.search.includes("botspold") ? "Bienvenue à @Plan Q, @Max et @Zoe ! Faites-leur bon accueil." : "Bienvenue à @[Plan Q], @Max et @Zoe ! Faites-leur bon accueil.", 0.1)]
       : location.search.includes("bot1") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31 ! Faites-lui bon accueil.", 0.1)]
@@ -605,8 +610,8 @@ export function GroupChatDemo() {
           <header className="flex items-center gap-2 border-b border-line px-2 py-2">
             <span className="px-3 text-2xl">{area ? "📍" : "☀️"}</span>
             <div className="min-w-0 flex-1">
-              <p className="font-display font-bold">{area ? "Chat du quartier" : "Occitanie"}</p>
-              <p className="text-xs text-muted">3 personnes aujourd'hui · Montpellier, Toulouse, Nîmes…</p>
+              <p className="font-display font-bold">{area ? "Chat du quartier" : location.search.includes("botvar") ? (location.search.includes("es") ? "Général Espagne" : "Général France") : "Occitanie"}</p>
+              {!location.search.includes("botvar") && <p className="text-xs text-muted">3 personnes aujourd'hui · Montpellier, Toulouse, Nîmes…</p>}
             </div>
             <OnlineButton
               presence={{
