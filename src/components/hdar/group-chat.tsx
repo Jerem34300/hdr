@@ -569,9 +569,9 @@ export function GroupChatDemo() {
     ...(location.search.includes("fwdvideo") ? [{ ...mk(15, "me", "Toi", "", 0.05, { fwd: "" }), id: "dfwd", kind: "video" as const }] : []),
     ...(location.search.includes("video") ? [{ ...mk(14, "b21c", "Nina", "", 0.1), id: "dvid", kind: "video" as const }] : []),
     ...(location.search.includes("botvar") ? [
-        mk(17, BOT_ID, "hdar", "Un nouveau visage dans le salon : @[Beau goss]. Bienvenue !\nEnvies affichées sur son profil : Un verre · Balade.", 0.4),
-        mk(18, BOT_ID, "hdar", "@Lea_31 et @[Plan Q] poussent la porte du salon. Bienvenue à vous !", 0.25),
-        mk(19, BOT_ID, "hdar", "Bienvenue parmi nous, @Max. N'hésite pas à dire bonjour.", 0.1)] : []),
+        mk(17, BOT_ID, "hdar", "@[Beau goss] vient de créer son profil. Bienvenue !\nEnvies affichées sur son profil : Un verre · Balade.", 0.4),
+        mk(18, BOT_ID, "hdar", "Nouveaux sur hdar : @Lea_31 et @[Plan Q]. Passez leur dire bonjour.", 0.25),
+        mk(19, BOT_ID, "hdar", "Nouveau sur hdar : @Max. Passez lui dire bonjour.", 0.1)] : []),
     ...(location.search.includes("botsp") ? [mk(10, BOT_ID, "hdar", location.search.includes("botspold") ? "Bienvenue à @Beau goss ! Faites-lui bon accueil." : "Bienvenue à @[Beau goss] ! Faites-lui bon accueil.", 0.15),
         mk(16, BOT_ID, "hdar", location.search.includes("botspold") ? "Bienvenue à @Plan Q, @Max et @Zoe ! Faites-leur bon accueil." : "Bienvenue à @[Plan Q], @Max et @Zoe ! Faites-leur bon accueil.", 0.1)]
       : location.search.includes("bot1") ? [mk(10, BOT_ID, "hdar", "Bienvenue à @Lea_31 ! Faites-lui bon accueil.", 0.1)]

@@ -1,5 +1,5 @@
 -- hdar v129 — Accueil du robot moins répétitif.
--- 1) 12 tournures au singulier, 12 au pluriel, tirées au hasard (seulement si l'admin garde les textes par défaut).
+-- 1) 12 tournures au singulier, 12 au pluriel (présentation factuelle : vient de s'inscrire / de créer son profil), tirées au hasard (seulement si l'admin garde les textes par défaut).
 -- 2) Accueil d'une seule personne : « Envies affichées sur son profil : Un verre · Balade. » à partir de SES envies
 --    publiques (hdar.profiles.tags, qu'il/elle a cochées). Jamais genre, recherche (orientation), âge, ville ou position.
 --    « Plan » est exclu (vie intime). Rien de coché → message normal.
@@ -8,31 +8,31 @@
 create or replace function hdar.bot_welcome_pick(p_one boolean) returns text
 language sql volatile set search_path to '' as $$
   select (case when p_one then array[
-    'Bienvenue à {mentions} ! Faites-lui bon accueil.',
-    '{mentions} vient d''arriver parmi nous. Un petit bonjour lui fera plaisir.',
-    'Un nouveau visage dans le salon : {mentions}. Bienvenue !',
-    'Bienvenue {mentions}, installe-toi tranquillement.',
-    '{mentions} nous rejoint. Bienvenue, et bonne découverte du salon.',
-    'Ravi de t''accueillir, {mentions}. Le salon est à toi.',
-    'Dites bonjour à {mentions}, qui vient de nous rejoindre.',
-    '{mentions} pousse la porte du salon. Bienvenue à toi !',
-    'Bienvenue parmi nous, {mentions}. N''hésite pas à dire bonjour.',
-    'Le salon s''agrandit : bienvenue à {mentions}.',
-    '{mentions} est des nôtres. Bienvenue, et à toi de jouer.',
-    'Bonne arrivée, {mentions} ! On est contents de te voir ici.']
+    '{mentions} vient de créer son profil. Bienvenue !',
+    'Nouveau sur hdar : {mentions}. Passez lui dire bonjour.',
+    'Bienvenue à {mentions}, qui vient de s''inscrire sur hdar.',
+    '{mentions} vient de rejoindre hdar. Un petit bonjour lui fera plaisir.',
+    'Profil tout neuf sur hdar : {mentions}. Bienvenue !',
+    '{mentions} fait ses premiers pas sur hdar. Bienvenue à toi !',
+    'Inscription toute fraîche : {mentions}. Bienvenue sur hdar !',
+    '{mentions} vient de s''inscrire. N''hésitez pas à lui dire bonjour.',
+    'Bienvenue sur hdar, {mentions} ! Ton profil est en ligne.',
+    '{mentions} fait désormais partie de hdar. Bienvenue !',
+    'Nouveau profil : {mentions}. Bienvenue parmi nous !',
+    '{mentions} vient de s''inscrire sur hdar. Faites-lui bon accueil.']
   else array[
-    'Bienvenue à {mentions} ! Faites-leur bon accueil.',
-    '{mentions} viennent d''arriver parmi nous. Un petit bonjour leur fera plaisir.',
-    'De nouveaux visages dans le salon : {mentions}. Bienvenue !',
-    'Bienvenue {mentions}, installez-vous tranquillement.',
-    '{mentions} nous rejoignent. Bienvenue, et bonne découverte du salon.',
-    'Ravis de vous accueillir, {mentions}. Le salon est à vous.',
-    'Dites bonjour à {mentions}, qui viennent de nous rejoindre.',
-    '{mentions} poussent la porte du salon. Bienvenue à vous !',
-    'Bienvenue parmi nous, {mentions}. N''hésitez pas à dire bonjour.',
-    'Le salon s''agrandit : bienvenue à {mentions}.',
-    '{mentions} sont des nôtres. Bienvenue à vous.',
-    'Bonne arrivée, {mentions} ! On est contents de vous voir ici.'] end)[1 + floor(random() * 12)::int]
+    '{mentions} viennent de créer leur profil. Bienvenue !',
+    'Nouveaux sur hdar : {mentions}. Passez leur dire bonjour.',
+    'Bienvenue à {mentions}, qui viennent de s''inscrire sur hdar.',
+    '{mentions} viennent de rejoindre hdar. Un petit bonjour leur fera plaisir.',
+    'Profils tout neufs sur hdar : {mentions}. Bienvenue !',
+    '{mentions} font leurs premiers pas sur hdar. Bienvenue à vous !',
+    'Inscriptions toutes fraîches : {mentions}. Bienvenue sur hdar !',
+    '{mentions} viennent de s''inscrire. N''hésitez pas à leur dire bonjour.',
+    'Bienvenue sur hdar, {mentions} ! Vos profils sont en ligne.',
+    '{mentions} font désormais partie de hdar. Bienvenue !',
+    'Nouveaux profils : {mentions}. Bienvenue parmi nous !',
+    '{mentions} viennent de s''inscrire sur hdar. Faites-leur bon accueil.'] end)[1 + floor(random() * 12)::int]
 $$;
 revoke all on function hdar.bot_welcome_pick(boolean) from public, anon, authenticated;
 
