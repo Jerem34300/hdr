@@ -1,4 +1,6 @@
-import { MapPinned } from "lucide-react";
+import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudMoon, CloudRain, CloudSun, MapPinned, Moon, Snowflake, Sun } from "lucide-react";
+import { SKY_LABEL, useWeather, type Sky } from "@/lib/hdar/weather";
+import { t } from "@/lib/hdar/i18n";
 import { posChosen } from "@/lib/hdar/live";
 import { VideoSection } from "./video-section";
 import { safeSrc } from "@/lib/hdar/media";
@@ -103,6 +105,8 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
   const region = useRegion(self ? null : userId);
   const onMap = useMapFocus((s) => !!s.pins[userId]);
   const inLive = useMapFocus((s) => !!s.liveIds?.has(userId));
+  const weather = useWeather(self || bot ? null : profile?.lat, self || bot ? null : profile?.lng,
+    import.meta.env.DEV && demo && location.search.includes("wxdemo") ? { temp: 17, sky: "partly", day: true } : undefined);
   const distance =
     here && profile?.lat != null && profile.lng != null
       ? bucketDistance(haversine(here, { lat: profile.lat, lng: profile.lng }))
@@ -163,6 +167,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
               {distance && <span className="rounded-full bg-[#FA6F6C]/15 px-3 py-1.5 text-[#FA6F6C] ring-1 ring-[#FA6F6C]/40">📍 {distance}</span>}
               {chosen && <span data-act="profile-pos-chosen" className="inline-flex items-center gap-1 rounded-full bg-[#FACC15]/10 px-3 py-1.5 text-[#FACC15] ring-1 ring-[#FACC15]/40"><MapPinned className="size-3.5 shrink-0" strokeWidth={2.5} />Position choisie</span>}
               {region && <span className="rounded-full bg-white/5 px-3 py-1.5 text-ink/80 ring-1 ring-white/10">{region}</span>}
+              {weather && <WeatherChip temp={weather.temp} sky={weather.sky} day={weather.day} />}
               <HeartsCount id={userId} />
             </div>
             {(!self || inLive) && (
@@ -332,5 +337,20 @@ function Album({ photos }: { photos: string[] }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** Météo actuelle de la zone du contact (case de ~10 km), icône au trait + température + ciel. */
+function WeatherChip({ temp, sky, day }: { temp: number; sky: Sky; day: boolean }) {
+  const Icon = sky === "clear" ? (day ? Sun : Moon) : sky === "partly" ? (day ? CloudSun : CloudMoon) : sky === "fog" ? CloudFog
+    : sky === "drizzle" ? CloudDrizzle : sky === "rain" ? CloudRain : sky === "snow" ? Snowflake : sky === "storm" ? CloudLightning : Cloud;
+  const label = t(SKY_LABEL[sky]);
+  return (
+    <span data-act="profile-weather" title={t("Météo actuelle dans sa zone")} aria-label={`${t("Météo actuelle dans sa zone")} : ${temp} °C, ${label}`}
+      className="inline-flex items-center gap-1.5 rounded-full bg-[#A1E3C3]/10 px-3 py-1.5 text-[#A1E3C3] ring-1 ring-[#A1E3C3]/35">
+      <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+      <span className="tabular-nums">{temp}&nbsp;°C</span>
+      <span className="font-semibold text-ink/80">{label}</span>
+    </span>
   );
 }

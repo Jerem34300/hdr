@@ -111,12 +111,28 @@ function trKey(k: string, lang: Lang, depth = 0): string | undefined {
   const g = /^Général (.+)$/.exec(k);
   if (g && d["Général"]) return `${d["Général"]} ${g[1]}`;
 }
+const SYN = "Envies affichées sur son profil :";
+const MENTION = String.raw`@(?:\[[^\]\n]+\]|[\w.\-]+)`;
+const MENTION_LIST = new RegExp(`${MENTION}(?:(?:, | et )${MENTION})*`);
+const AND: Partial<Record<Lang, string>> = { en: "and", es: "y", de: "und", it: "e", pt: "e", ar: "و" };
 /** Message du robot hdar (texte source français, stocké en base) dans la langue de l'utilisateur. */
 export function tBot(body: string, lang: Lang = useLang.getState().lang): string {
   if (lang === "fr" || !dicts[lang]) return body;
   // Accueil + bloc parrainage (hdar.welcome_extra, lien unique) : deux textes traduits séparément.
   const cut = body.indexOf("\n\n🎁 ");
   if (cut > 0) return tBot(body.slice(0, cut), lang) + "\n\n" + tBot(body.slice(cut + 2), lang);
+  // Synthèse des envies publiques ajoutée à l'accueil (v129) : libellé + envies traduits un par un.
+  const syn = body.indexOf("\n" + SYN);
+  if (syn > 0) {
+    const items = body.slice(syn + 1 + SYN.length).trim().replace(/\.$/, "").split(" · ").map((x) => t(x.trim(), lang));
+    return tBot(body.slice(0, syn), lang) + "\n" + t(SYN, lang) + " " + items.join(" · ") + ".";
+  }
+  // Liste de mentions « @a, @b et @c » : un seul trou dans les gabarits, « et » traduit à part.
+  const ml = MENTION_LIST.exec(body);
+  if (ml && /, | et /.test(ml[0])) {
+    const r = trKey(body.replace(ml[0], "@M"), lang);
+    if (r) return r.replace("@M", ml[0].replace(/ et (?=@)/g, ` ${AND[lang] ?? "&"} `));
+  }
   return trKey(body, lang) ?? trKey(norm(body), lang) ?? body;
 }
 /** Nom d'un pays dans la langue de l'interface (Intl). */

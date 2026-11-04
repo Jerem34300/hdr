@@ -315,7 +315,7 @@ function DevPreview() {
   );
   if (location.search.includes("profilview")) {
     const photo = location.search.includes("nophoto") ? "" : "/avatars/03.jpg";
-    return <main className="flex h-dvh flex-col bg-night text-ink"><ProfileView userId="demo-p" pseudo="Soumisdu59" demo={{ id: "demo-p", pseudo: "Soumisdu59", age: 53, bio: "Curieux et bienveillant, j'aime les soirées qui finissent tard. Discrétion assurée 😉", tags: ["plan", "verre", "balade"], desires: ["plan", "dehors", "chez-toi"], photo, online: true, lat: null, lng: null, note: "Dispo ce soir vers Lille centre", premium: true, iam: "h", seeking: ["f", "c"] }} /></main>;
+    return <main className="flex h-dvh flex-col bg-night text-ink"><ProfileView userId="demo-p" pseudo="Soumisdu59" demo={{ id: "demo-p", pseudo: "Soumisdu59", age: 53, bio: "Curieux et bienveillant, j'aime les soirées qui finissent tard. Discrétion assurée 😉", tags: ["plan", "verre", "balade"], desires: ["plan", "dehors", "chez-toi"], photo, online: true, lat: location.search.includes("wx") ? 43.6 : null, lng: location.search.includes("wx") ? 3.9 : null, note: "Dispo ce soir vers Lille centre", premium: true, iam: "h", seeking: ["f", "c"] }} /></main>;
   }
   if (location.search.includes("appearance")) return <main className="flex h-dvh flex-col bg-night text-ink"><AppearanceScreen onBack={() => undefined} /></main>;
   if (location.search.includes("lockscreen")) return <LockScreen demoEmail={location.search.includes("noemail") ? null : "ton@email.fr"} onUnlock={() => toast("Déverrouillé")} />;
