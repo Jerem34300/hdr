@@ -1225,7 +1225,7 @@ export const ambPlaceCreate = (o: { kind: string; name: string; description: str
   rpc<{ id: string; token: string }>("hdar_amb_place_create", { p_kind: o.kind, p_name: o.name, p_description: o.description, p_lat: o.lat, p_lng: o.lng, p_contact: o.contact, p_promo: o.promo });
 export type PlaceClaimInfo = {
   id: string; name: string; kind: string; description: string;
-  lat: number; lng: number; website: string | null; has_contact: boolean;
+  lat: number; lng: number; city: string | null; website: string | null; has_contact: boolean;
   photos: string[]; promo: string | null; free_days: number;
 };
 export type PlaceClaimResult = {

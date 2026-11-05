@@ -29,6 +29,37 @@ create index if not exists outreach_city on hdar.outreach (city) where city is n
 alter table hdar.outreach enable row level security;
 revoke all on hdar.outreach from public, anon, authenticated;
 
+
+---------------------------------------------------------------- Ville approximative (même logique que l'admin, rayon ~25 km)
+create or replace function hdar.nearest_city(p_lat double precision, p_lng double precision) returns text
+language plpgsql stable parallel safe set search_path to '' as $$
+declare
+  best text := null;
+  bd double precision := 1e9;
+  d double precision;
+  r record;
+begin
+  if p_lat is null or p_lng is null then return null; end if;
+  for r in
+    select * from (values
+      ('Paris', 48.857::float8, 2.352::float8), ('Marseille', 43.296, 5.37), ('Lyon', 45.764, 4.836),
+      ('Toulouse', 43.605, 1.444), ('Nice', 43.71, 7.262), ('Nantes', 47.218, -1.554),
+      ('Montpellier', 43.611, 3.877), ('Strasbourg', 48.573, 7.752), ('Bordeaux', 44.838, -0.579),
+      ('Lille', 50.629, 3.057), ('Rennes', 48.117, -1.678), ('Reims', 49.258, 4.032),
+      ('Toulon', 43.124, 5.928), ('Grenoble', 45.188, 5.724), ('Dijon', 47.322, 5.041),
+      ('Nîmes', 43.837, 4.36), ('Clermont-Ferrand', 45.777, 3.087), ('Aix-en-Provence', 43.529, 5.447),
+      ('Perpignan', 42.699, 2.895), ('Avignon', 43.949, 4.806), ('Béziers', 43.344, 3.215),
+      ('Sète', 43.403, 3.697), ('Cannes', 43.552, 7.017), ('Bruxelles', 50.85, 4.352)
+    ) as c(name, lat, lng)
+  loop
+    d := (r.lat - p_lat)^2 + ((r.lng - p_lng) * cos(radians(p_lat)))^2;
+    if d < bd then bd := d; best := r.name; end if;
+  end loop;
+  if best is null then return null; end if;
+  if sqrt(bd) * 111 > 25 then return null; end if;
+  return best;
+end $$;
+
 ---------------------------------------------------------------- Aperçu (aucun side-effect)
 create or replace function public.hdar_place_claim_info(p_token text) returns jsonb
 language sql stable security definer set search_path to '' as $$
@@ -39,6 +70,7 @@ language sql stable security definer set search_path to '' as $$
     'description', left(coalesce(description, ''), 600),
     'lat', round(lat::numeric, 3),
     'lng', round(lng::numeric, 3),
+    'city', hdar.nearest_city(lat, lng),
     'website', website,
     'has_contact', contact is not null and length(btrim(contact)) > 0,
     'photos', to_jsonb(coalesce(photos[1:4], '{}'::text[])),
@@ -144,7 +176,7 @@ declare
 begin
   perform hdar.admin_check(p_key);
   for r in
-    select p.id, p.kind, p.name, p.claim_token, p.contact
+    select p.id, p.kind, p.name, p.claim_token, p.contact, p.lat, p.lng
     from hdar.places p
     where p.kind = any (kinds)
       and p.claimed_at is null
@@ -170,7 +202,7 @@ begin
     end if;
     insert into hdar.outreach (place_id, kind, name, city, email, claim_token, status)
     values (
-      r.id, r.kind, r.name, city_f,
+      r.id, r.kind, r.name, coalesce(city_f, hdar.nearest_city(r.lat, r.lng)),
       case when r.contact ~* '@' then left(r.contact, 200) end,
       t, 'ready'
     )

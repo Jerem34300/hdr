@@ -135,6 +135,7 @@ export function ClaimFlow({ token, onFinished }: { token: string; onFinished: ()
             {KIND_LABEL[info.kind] || PLACE_KINDS[info.kind as PlaceKind]?.label || info.kind}
           </p>
           <h2 className="mt-1 font-display text-2xl font-extrabold">{info.name}</h2>
+          {info.city && <p className="mt-1 text-sm font-bold text-online">{info.city}</p>}
           {info.description ? <p className="mt-3 text-sm whitespace-pre-wrap text-muted">{info.description}</p> : (
             <p className="mt-3 text-sm text-muted">Aucune description pour le moment : vous pourrez la compléter après avoir créé votre profil pro.</p>
           )}

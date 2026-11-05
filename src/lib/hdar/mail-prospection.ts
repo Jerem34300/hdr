@@ -41,6 +41,8 @@ export type ProspectionMailInput = {
   name: string;
   token: string;
   unsubscribe: string;
+  /** Ville approximative du lieu (dynamique). */
+  city?: string | null;
   site?: string;
   /** Surcharge la base des images (aperçu local file:// ou http://127.0.0.1). */
   assetBase?: string;
@@ -72,18 +74,41 @@ function asset(base: string, file: string) {
   return `${base.replace(/\/$/, "")}/${file}`;
 }
 
-export function prospectionSubject(name: string) {
-  return `Fiche préparée pour « ${name} » — créez votre profil pro pour la publier sur hdar`;
+export function prospectionSubject(name: string, city?: string | null) {
+  const where = city ? ` à ${city}` : "";
+  return `Fiche préparée pour « ${name} »${where} — créez votre profil pro pour la publier sur hdar`;
+}
+
+/** Image d'aperçu selon la ville : carte Montpellier si connue, sinon visuel générique hdar. */
+export function prospectionMapAsset(city?: string | null): { file: string; alt: string } {
+  const c = (city || "").trim();
+  if (/^montpellier$/i.test(c)) {
+    return {
+      file: "carte-montpellier.jpg",
+      alt: "Aperçu de la carte hdar autour de Montpellier, avec les lieux et les membres autour de vous",
+    };
+  }
+  if (c) {
+    return {
+      file: "hdar-hero.jpg",
+      alt: `Aperçu de hdar.chat — sorties et rencontres autour de ${c}`,
+    };
+  }
+  return {
+    file: "hdar-hero.jpg",
+    alt: "Aperçu de hdar.chat — carte live des sorties et rencontres autour de vous",
+  };
 }
 
 /** Version texte brut. */
 export function prospectionMailText(o: ProspectionMailInput): string {
   const site = o.site || "https://hdar.chat";
   const url = claimUrl(site, o.token);
+  const where = o.city ? ` à ${o.city}` : "";
   return [
     `Bonjour,`,
     ``,
-    `Nous avons préparé une fiche pour « ${o.name} » sur hdar.chat (carte live des sorties et rencontres, 18+, discret).`,
+    `Nous avons préparé une fiche pour « ${o.name} »${where} sur hdar.chat (carte live des sorties et rencontres, 18+, discret).`,
     `Cette fiche n'est pas encore visible sur la carte : elle n'apparaît qu'après que vous ayez créé votre profil pro, modifié la fiche, puis validé explicitement sa publication.`,
     ``,
     `Parcours :`,
@@ -116,8 +141,11 @@ export function prospectionMailHtml(o: ProspectionMailInput): string {
   const site = o.site || "https://hdar.chat";
   const url = claimUrl(site, o.token);
   const name = esc(o.name);
+  const city = (o.city || "").trim();
+  const cityLabel = city ? esc(city) : "";
   const unsub = esc(o.unsubscribe);
   const href = esc(url);
+  const map = prospectionMapAsset(city || null);
   const img = (file: string) => esc(asset(o.assetBase || EMAIL_ASSET_BASE, file));
 
   const row = (ico: string, title: string, body: string) => `
@@ -139,12 +167,12 @@ export function prospectionMailHtml(o: ProspectionMailInput): string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="supported-color-schemes" content="dark">
-<title>${esc(prospectionSubject(o.name))}</title>
+<title>${esc(prospectionSubject(o.name, city || null))}</title>
 <!-- hdar prospection · PROSPECTION_MAIL_ACTIVATED=${String(PROSPECTION_MAIL_ACTIVATED)} · images sans jeton · ne pas envoyer sans accord -->
 </head>
 <body style="margin:0;padding:0;background:${C.night};-webkit-text-size-adjust:100%;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">
-  Fiche préparée pour « ${name} ». Elle n'apparaît sur hdar qu'après votre profil pro, vos modifications et votre validation.
+  Fiche préparée pour « ${name} »${cityLabel ? ` à ${cityLabel}` : ""}. Elle n'apparaît sur hdar qu'après votre profil pro, vos modifications et votre validation.
 </div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.night}">
 <tr><td align="center" style="padding:28px 12px">
@@ -156,16 +184,17 @@ export function prospectionMailHtml(o: ProspectionMailInput): string {
   </td></tr>
 
   <tr><td style="padding:10px 20px 4px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif">
-    <img src="${img("carte-montpellier.jpg")}" width="520" alt="Aperçu de la carte hdar autour de Montpellier, avec les lieux et les membres autour de vous" style="display:block;width:100%;max-width:520px;height:auto;border:0;border-radius:18px">
+    <img src="${img(map.file)}" width="520" alt="${esc(map.alt)}" style="display:block;width:100%;max-width:520px;height:auto;border:0;border-radius:18px">
+    ${cityLabel ? `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:12px;color:${C.mint};text-align:center;margin-top:8px;letter-spacing:1px;text-transform:uppercase;font-weight:700">${cityLabel}</div>` : ""}
   </td></tr>
 
   <tr><td style="padding:14px 20px 6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-radius:22px;background:radial-gradient(circle at 18% 15%,rgba(250,111,108,.45),transparent 55%),radial-gradient(circle at 88% 90%,rgba(62,224,143,.28),transparent 55%),#1a1220">
       <tr><td style="padding:26px 20px;text-align:center">
         <div style="font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:${C.gold};font-weight:700;margin-bottom:10px">Fiche préparée · pas encore en ligne</div>
-        <div style="font-size:24px;font-weight:800;line-height:1.25;color:${C.ink};margin:0">${I.building}&nbsp; ${name}</div>
+        <div style="font-size:24px;font-weight:800;line-height:1.25;color:${C.ink};margin:0">${I.building}&nbsp; ${name}${cityLabel ? ` · ${cityLabel}` : ""}</div>
         <div style="font-size:14px;line-height:1.55;color:${C.muted};margin-top:12px">
-          Nous avons préparé une fiche à votre nom. Elle n'apparaît sur hdar qu'après votre profil pro, vos modifications et votre validation explicite.
+          Nous avons préparé une fiche à votre nom${cityLabel ? ` (${cityLabel})` : ""}. Elle n'apparaît sur hdar qu'après votre profil pro, vos modifications et votre validation explicite.
         </div>
       </td></tr>
     </table>
@@ -302,7 +331,7 @@ export function buildProspectionMail(o: ProspectionMailInput) {
     activated: PROSPECTION_MAIL_ACTIVATED,
     from: PROSPECTION_FROM,
     replyTo: PROSPECTION_REPLY_TO,
-    subject: prospectionSubject(o.name),
+    subject: prospectionSubject(o.name, o.city),
     html: prospectionMailHtml(o),
     text: prospectionMailText(o),
     claimUrl: claimUrl(o.site || "https://hdar.chat", o.token),
