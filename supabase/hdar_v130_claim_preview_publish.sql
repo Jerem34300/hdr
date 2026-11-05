@@ -1,4 +1,4 @@
--- v130 (NON appliquée en prod) : parcours revendication pro
+-- v130 (appliquée en prod) : parcours revendication pro
 -- 1) Aperçu enrichi sans rattachement (hdar_place_claim_info)
 -- 2) Claim = ownership seulement (pas de mise en ligne automatique)
 -- 3) Publication explicite (hdar_place_publish) : 90 j offerts pendant le lancement
