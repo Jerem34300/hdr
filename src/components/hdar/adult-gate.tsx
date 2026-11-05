@@ -35,6 +35,7 @@ import { LiveChatDemo } from "./live-chat";
 import { RefLinksDemo } from "./admin-ref-links";
 import { RefNetwork, RefsTabDemo, VisitorsTab } from "./admin-insights";
 import { DailyTabDemo } from "./admin-daily";
+import { ProspectionTabDemo } from "./admin-prospection";
 import { SalonInboxRow } from "./salons";
 import { trackGate } from "@/lib/hdar/track";
 import { GateTeaser } from "./gate-teaser";
@@ -269,6 +270,7 @@ function DevPreview() {
   if (location.search.includes("provdemo")) return <RefsTabDemo />;
   if (location.search.includes("reseaudemo")) return <main className="min-h-dvh bg-night px-4 pt-6 text-ink"><p className="mb-3 font-display text-xl font-extrabold">Admin · Provenance (démo)</p><RefNetwork adminKey="" demo={[{ source: "expose_twittos", parrains: 6, filleuls: 14, boosts: 12, valides: 7 }, { source: "(sans lien)", parrains: 9, filleuls: 11, boosts: 11, valides: 5 }, { source: "next1", parrains: 2, filleuls: 3, boosts: 3, valides: 1 }]} /></main>;
   if (location.search.includes("jourdemo")) return <DailyTabDemo />;
+  if (location.search.includes("prospectiondemo")) return <ProspectionTabDemo />;
   if (location.search.includes("visitorsdemo")) return <main className="min-h-dvh bg-night px-4 py-5 text-ink"><VisitorsTab adminKey="demo" /></main>;
   if (location.search.includes("mapfilters")) return <main className="h-dvh bg-night"><FilterSheet onClose={() => undefined} /></main>;
   if (location.search.includes("genres")) return <GenresDemo />;

@@ -10,6 +10,7 @@
  */
 
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
+import { sanitizeOutreachRow, type OutreachRow as OutreachRowT, type OutreachStats as OutreachStatsT } from "./prospection-admin";
 import { track } from "./track";
 import { deviceId } from "./device";
 import { PAYMENTS_ENABLED, showLaunchOffer } from "./payments";
@@ -1241,21 +1242,54 @@ export const placeClaim = (token: string, contact?: string, manager?: string) =>
 /** Validation explicite : fiche en ligne, 90 jours offerts au lancement. */
 export const placePublish = (id: string) =>
   rpc<{ id: string; name: string; free: boolean; until: string; promo: string | null }>("hdar_place_publish", { p_id: id });
-export type OutreachRow = {
-  id: string; place_id: string; kind: string; name: string; city: string | null; email: string | null;
-  claim_token: string | null; claim_url: string | null; status: string;
-  sent_at: string | null; claimed_at: string | null; suppressed_at: string | null; note: string | null; created_at: string;
-};
+export type { OutreachRow, OutreachStats } from "./prospection-admin";
 export const adminOutreachPrepare = (key: string, city: string | null, limit = 50) =>
   rpc<{ prepared: number; city: string | null; kinds: string[] }>("hdar_admin_outreach_prepare", {
     p_key: key, p_city: city, p_kinds: ["bar", "club", "sauna"], p_limit: limit,
   });
-export const adminOutreachList = (key: string, status: string | null = null, city: string | null = null) =>
-  rpc<OutreachRow[]>("hdar_admin_outreach_list", { p_key: key, p_status: status, p_city: city, p_limit: 200 });
+/** Liste prospection. Compatible v130 (4 args) ; v131 ajoute country/kind/lot sans jetons ni e-mail complet. */
+export async function adminOutreachList(
+  key: string,
+  status: string | null = null,
+  city: string | null = null,
+  opts: { country?: string | null; kind?: string | null; lot?: string | null; limit?: number } = {},
+): Promise<OutreachRowT[]> {
+  const args: Record<string, unknown> = {
+    p_key: key,
+    p_status: status,
+    p_city: city,
+    p_limit: opts.limit ?? 2000,
+  };
+  if (opts.country) args.p_country = opts.country;
+  if (opts.kind) args.p_kind = opts.kind;
+  if (opts.lot) args.p_lot = opts.lot;
+  try {
+    const rows = await rpc<OutreachRowT[]>("hdar_admin_outreach_list", args);
+    return (rows ?? []).map(sanitizeOutreachRow);
+  } catch (e) {
+    // Si v131 pas encore appliquée, retente sans les filtres étendus.
+    if (opts.country || opts.kind || opts.lot) {
+      const rows = await rpc<OutreachRowT[]>("hdar_admin_outreach_list", {
+        p_key: key, p_status: status, p_city: city, p_limit: opts.limit ?? 2000,
+      });
+      return (rows ?? []).map(sanitizeOutreachRow);
+    }
+    throw e;
+  }
+}
+export async function adminOutreachStats(key: string): Promise<OutreachStatsT | null> {
+  try {
+    return await rpc<OutreachStatsT>("hdar_admin_outreach_stats", { p_key: key });
+  } catch {
+    return null; // v131 non appliquée : les compteurs sont dérivés côté client
+  }
+}
 export const adminOutreachSuppress = (key: string, id: string, note?: string) =>
   rpc("hdar_admin_outreach_suppress", { p_key: key, p_id: id, p_note: note ?? null });
 export const adminOutreachMarkSent = (key: string, ids: string[]) =>
   rpc<number>("hdar_admin_outreach_mark_sent", { p_key: key, p_ids: ids });
+export const adminOutreachMarkRefused = (key: string, id: string, note?: string) =>
+  rpc("hdar_admin_outreach_mark_refused", { p_key: key, p_id: id, p_note: note ?? null });
 export const adminAmbSearch = (key: string, q: string) => rpc<{ user_id: string; pseudo: string; amb: boolean }[]>("hdar_admin_amb_search", { p_key: key, p_q: q });
 export const adminAmbSet = (key: string, user: string, active: boolean, rules: Record<string, unknown> = {}) => rpc("hdar_admin_amb_set", { p_key: key, p_user: user, p_active: active, p_rules: rules });
 export const adminAmbs = (key: string, from: string | null, to: string | null) => rpc<AdminAmb[]>("hdar_admin_ambs", { p_key: key, p_from: from ?? "-infinity", p_to: to });
