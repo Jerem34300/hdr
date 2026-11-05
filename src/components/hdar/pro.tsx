@@ -13,6 +13,7 @@ import {
 import { readImage } from "@/lib/hdar/media";
 import { PLACE_KINDS } from "./places-layer";
 import { ProLanding } from "./pro-landing";
+import { ClaimFlow } from "./pro-claim";
 
 const KINDS: PlaceKind[] = ["bar", "club", "sauna", "other"];
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
@@ -22,6 +23,10 @@ const day = (v: string | null) => (v ? new Date(v).toLocaleString(locale(), { da
 export function ProSpace() {
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [payOk, setPayOk] = useState<boolean | null>(null);
+  const [claimToken, setClaimToken] = useState<string | null>(() => {
+    if (typeof location === "undefined") return null;
+    return new URLSearchParams(location.search).get("claim");
+  });
   useEffect(() => {
     if (location.hash === "#boost") { location.replace("/boost" + location.search); return; }
     void pricing().then(setPrices).catch(() => undefined);
@@ -29,11 +34,7 @@ export function ProSpace() {
     const q = new URLSearchParams(location.search);
     if (q.get("paid")) toast("Paiement reçu, merci ! L'activation prend quelques secondes.");
     if (q.get("cancel")) toast("Paiement annulé.");
-    const claim = q.get("claim");
-    if (claim) void import("@/lib/hdar/live").then((m) => m.placeClaim(claim)).then((r) => {
-      toast(`Fiche « ${r.name} » ajoutée à votre espace${r.promo ? ` · offre de lancement : ${r.promo}` : ""}. ${PAYMENTS_ENABLED ? "Choisissez votre abonnement pour la mettre en ligne." : "Elle est en ligne gratuitement pendant le lancement."}`, { duration: 9000 });
-      location.replace("/pro");
-    }).catch((e: Error) => toast(e.message));
+    // Ne plus appeler placeClaim à l'ouverture : le parcours ClaimFlow gère l'aperçu puis la confirmation.
   }, []);
   return (
     <main className="h-dvh overflow-y-auto bg-night px-5 py-8 text-ink">
@@ -41,15 +42,17 @@ export function ProSpace() {
         <a href="/" className="text-sm text-muted underline">← Retour à la carte</a>
         <h1 className="mt-3 font-display text-3xl font-extrabold">hdar<span className="text-signal">.</span> pro</h1>
         <p className="mt-1 text-sm text-muted">Faites briller votre établissement sur la carte.</p>
-        {payOk === false && (
+        {payOk === false && !claimToken && (
           <p className="mt-4 rounded-2xl border border-[#fbbf24] px-4 py-3 text-sm text-[#fbbf24]">
-            💳 Paiement bientôt disponible. Vous pouvez déjà préparer votre fiche, elle s'activera dès le paiement.
+            Paiement bientôt disponible. Vous pouvez déjà préparer votre fiche, elle s'activera dès le paiement.
           </p>
         )}
-        {typeof location !== "undefined" && new URLSearchParams(location.search).has("demo") ? (
+        {claimToken ? (
+          <ClaimFlow token={claimToken} onFinished={() => { setClaimToken(null); location.replace("/pro"); }} />
+        ) : typeof location !== "undefined" && new URLSearchParams(location.search).has("demo") ? (
           <ProDashboard id="demo" name="Le Néon (démo)" onBack={() => location.assign("/pro")} demo={demoDash()} />
         ) : <Places prices={prices.filter((p) => p.kind === "listing")} boostPrices={prices.filter((p) => p.kind === "pro_boost")} payOk={!!payOk} />}
-        <ShinyCta href="/boost" sub="Votre profil perso, en tête de la carte">Booster mon profil</ShinyCta>
+        {!claimToken && <ShinyCta href="/boost" sub="Votre profil perso, en tête de la carte">Booster mon profil</ShinyCta>}
       </div>
     </main>
   );
@@ -103,7 +106,7 @@ function Places({ prices, boostPrices, payOk }: { prices: PriceRow[]; boostPrice
               <p className="text-sm text-muted">{PLACE_KINDS[p.kind]?.icon} {PLACE_KINDS[p.kind]?.label}</p>
               <h2 className="font-display text-xl font-extrabold">{p.name}</h2>
               <p className={"text-xs " + (p.active ? "text-online" : "text-muted")}>
-                {p.active ? `En ligne jusqu'au ${day(p.partner_until)}` : "Pas encore visible sur la carte : choisis une durée"}
+                {p.active ? `En ligne jusqu'au ${day(p.partner_until)}` : "Pas encore visible sur la carte : choisissez une durée"}
                 {p.sub_status && ` · abonnement : ${p.sub_status === "active" ? "renouvellement auto" : p.sub_status === "cancelling" ? "s'arrête à la fin de la période" : p.sub_status}`}
               </p>
             </div>

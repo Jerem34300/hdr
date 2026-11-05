@@ -7,7 +7,7 @@ const GOLD = "#fbbf24", CORAL = "#FA6F6C", MINT = "#3EE08F";
 const DOW = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const fmtDur = (s: number) => (s >= 60 ? `${Math.floor(s / 60)} min ${s % 60 ? `${s % 60} s` : ""}` : `${s} s`);
 
-/** Tableau de bord pro : statistiques agrégées et anonymes (aucune identité). */
+/** Tableau de bord pro : statistiques agrégées et discrètes (aucune identité). */
 export function ProDashboard({ id, name, onBack, demo, readOnly }: { id: string; name: string; onBack: () => void; demo?: ProDash; readOnly?: boolean }) {
   const lock = !!demo || !!readOnly;
   const [days, setDays] = useState(30);
@@ -50,12 +50,12 @@ export function ProDashboard({ id, name, onBack, demo, readOnly }: { id: string;
             {d.boosts.length ? <ul className="mt-2 space-y-1 text-xs">{d.boosts.map((b, i) => <li key={i} className="rounded-lg bg-night px-3 py-1.5">⭐ {b.label} · du {new Date(b.from).toLocaleDateString(locale())} au {new Date(b.to).toLocaleDateString(locale())}</li>)}</ul>
               : <p className="mt-2 text-xs text-muted">Aucun Boost Pro pour l'instant. Achetez-en un depuis votre espace pro pour comparer.</p>}
           </Section>
-          <Section title="Heures d'affluence (anonyme, agrégé)"><Heatmap heat={d.heat} /></Section>
+          <Section title="Heures d'affluence (discret, agrégé)"><Heatmap heat={d.heat} /></Section>
           <Section title="Valider un code cadeau"><UseCode place={id} onDone={load} demo={lock} /></Section>
           <Section title={`Avis (${d.reviews.length})${d.avg != null ? ` · ${d.avg} ★` : ""}`}>
             {d.reviews.length === 0 ? <p className="text-sm text-muted">Pas encore d'avis.</p> : <ul className="space-y-2">{d.reviews.map((r) => <Review key={r.id} r={r} onDone={load} demo={lock} />)}</ul>}
           </Section>
-          <p className="mt-4 text-center text-[11px] text-muted">🔒 Statistiques agrégées et anonymes : vous ne voyez jamais qui est qui.</p>
+          <p className="mt-4 text-center text-[11px] text-muted">🔒 Statistiques agrégées et discrètes : vous ne voyez jamais qui est qui.</p>
         </>
       )}
     </div>

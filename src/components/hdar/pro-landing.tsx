@@ -92,17 +92,17 @@ export function SampleFiche() {
 
 const BENEFITS = [
   ["📍", "Vu en temps réel", "Votre lieu s'affiche aux personnes visibles autour de vous, au moment où elles cherchent où sortir."],
-  ["✨", "Un halo qui attire l'œil", "Ton pin brille sur la carte, impossible de le rater parmi les autres lieux."],
+  ["✨", "Un halo qui attire l'œil", "Votre pin brille sur la carte, impossible de le rater parmi les autres lieux."],
   ["💬", "Votre propre chat", "Annoncez une soirée, répondez aux questions, créez l'envie avant même que les gens arrivent."],
   ["⭐", "Avis sous votre contrôle", "Notes et commentaires : activés ou non, publics sur la fiche ou privés pour vous seul."],
   ["📊", "Des stats concrètes", "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe."],
-  ["🔒", "Respect de l'anonymat", "Stats agrégées par zone : vous mesurez votre audience sans jamais savoir qui est qui."],
+  ["🔒", "Respect du discret", "Stats agrégées par zone : vous mesurez votre audience sans jamais savoir qui est qui."],
 ] as const;
 
 const FAQ = [
   ["Y a-t-il un engagement ?", "Non. Vous choisissez 1 semaine, 1 mois ou 3 mois. L'abonnement se renouvelle, mais vous l'arrêtez quand vous voulez."],
   ["Comment résilier ?", "En un clic depuis votre espace pro, via le portail sécurisé Stripe. Votre fiche reste visible jusqu'à la fin de la période payée."],
-  ["Les utilisateurs restent-ils anonymes ?", "Oui. hdar ne vous donne jamais l'identité ni la position exacte de quelqu'un : les statistiques sont regroupées par zone."],
+  ["Les utilisateurs restent-ils discrets ?", "Oui. hdar ne vous donne jamais l'identité ni la position exacte de quelqu'un : les statistiques sont regroupées par zone."],
   ["Je peux désactiver les avis ?", "Oui, à tout moment : notes et commentaires activés ou non, publics ou privés."],
   ["Quels lieux sont acceptés ?", "Bars, clubs, saunas, événements, restaurants, commerces, lieux LGBT-friendly et inclusifs. Les fiches sont modérées selon nos CGU."],
 ] as const;

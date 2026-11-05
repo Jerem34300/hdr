@@ -1223,8 +1223,39 @@ export const ambAttach = (code: string) => rpc<boolean>("hdar_amb_attach", { p_c
 export const ambCodeCreate = (kind: string, amount: number) => rpc<string>("hdar_amb_code_create", { p_kind: kind, p_amount: amount });
 export const ambPlaceCreate = (o: { kind: string; name: string; description: string; lat: number; lng: number; contact: string; promo: string }) =>
   rpc<{ id: string; token: string }>("hdar_amb_place_create", { p_kind: o.kind, p_name: o.name, p_description: o.description, p_lat: o.lat, p_lng: o.lng, p_contact: o.contact, p_promo: o.promo });
-export const placeClaim = (token: string) => rpc<{ id: string; name: string; promo: string | null }>("hdar_place_claim", { p_token: token });
-export const placeClaimInfo = (token: string) => rpc<{ name: string; kind: string; promo: string | null } | null>("hdar_place_claim_info", { p_token: token });
+export type PlaceClaimInfo = {
+  id: string; name: string; kind: string; description: string;
+  lat: number; lng: number; website: string | null; has_contact: boolean;
+  photos: string[]; promo: string | null; free_days: number;
+};
+export type PlaceClaimResult = {
+  id: string; name: string; kind: PlaceKind; description: string;
+  lat: number; lng: number; website: string | null; contact: string | null;
+  photos: string[]; ratings_on: boolean; comments_on: boolean; comments_public: boolean;
+  manager: string | null; promo: string | null; published: boolean;
+};
+export const placeClaimInfo = (token: string) => rpc<PlaceClaimInfo | null>("hdar_place_claim_info", { p_token: token });
+/** Rattache la fiche au compte courant sans la publier. */
+export const placeClaim = (token: string, contact?: string, manager?: string) =>
+  rpc<PlaceClaimResult>("hdar_place_claim", { p_token: token, p_contact: contact ?? null, p_manager: manager ?? null });
+/** Validation explicite : fiche en ligne, 90 jours offerts au lancement. */
+export const placePublish = (id: string) =>
+  rpc<{ id: string; name: string; free: boolean; until: string; promo: string | null }>("hdar_place_publish", { p_id: id });
+export type OutreachRow = {
+  id: string; place_id: string; kind: string; name: string; city: string | null; email: string | null;
+  claim_token: string | null; claim_url: string | null; status: string;
+  sent_at: string | null; claimed_at: string | null; suppressed_at: string | null; note: string | null; created_at: string;
+};
+export const adminOutreachPrepare = (key: string, city: string | null, limit = 50) =>
+  rpc<{ prepared: number; city: string | null; kinds: string[] }>("hdar_admin_outreach_prepare", {
+    p_key: key, p_city: city, p_kinds: ["bar", "club", "sauna"], p_limit: limit,
+  });
+export const adminOutreachList = (key: string, status: string | null = null, city: string | null = null) =>
+  rpc<OutreachRow[]>("hdar_admin_outreach_list", { p_key: key, p_status: status, p_city: city, p_limit: 200 });
+export const adminOutreachSuppress = (key: string, id: string, note?: string) =>
+  rpc("hdar_admin_outreach_suppress", { p_key: key, p_id: id, p_note: note ?? null });
+export const adminOutreachMarkSent = (key: string, ids: string[]) =>
+  rpc<number>("hdar_admin_outreach_mark_sent", { p_key: key, p_ids: ids });
 export const adminAmbSearch = (key: string, q: string) => rpc<{ user_id: string; pseudo: string; amb: boolean }[]>("hdar_admin_amb_search", { p_key: key, p_q: q });
 export const adminAmbSet = (key: string, user: string, active: boolean, rules: Record<string, unknown> = {}) => rpc("hdar_admin_amb_set", { p_key: key, p_user: user, p_active: active, p_rules: rules });
 export const adminAmbs = (key: string, from: string | null, to: string | null) => rpc<AdminAmb[]>("hdar_admin_ambs", { p_key: key, p_from: from ?? "-infinity", p_to: to });
