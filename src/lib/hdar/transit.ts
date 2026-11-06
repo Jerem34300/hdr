@@ -227,7 +227,7 @@ export function useTransit(on: boolean, b: { s: number; w: number; n: number; e:
     const ac = new AbortController();
     const t = window.setTimeout(() => {
       void fetchTransit(box.current, zoom, ac.signal, setStops).then(setStops).catch(() => undefined);
-    }, 700);
+    }, 1400);
     return () => {
       ac.abort();
       window.clearTimeout(t);

@@ -86,7 +86,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const pinned = useRef(false);
   useEffect(() => {
     const t = () => { if (document.visibilityState === "visible") void liveIds().then((ids) => useMapFocus.setState({ liveIds: new Set(ids ?? []) })).catch(() => undefined); };
-    t(); const i = setInterval(t, 30000); return () => clearInterval(i);
+    t(); const i = setInterval(t, 60_000); return () => clearInterval(i);
   }, []);
   const act = useActivity();
   const [boosted, setBoosted] = useState<Set<string>>(new Set());
@@ -214,8 +214,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           noticeLiveFavorites(rows);
         })
     };
-    // Positions : 15 s au premier plan seulement, attente progressive sur erreur (poll.ts)
-    const end = startPoll(load, { every: 15_000 });
+    // Positions : 30 s au premier plan (pas de sonnette lat/lng — vie privée). Avant 15 s × N usagers saturait le pool.
+    const end = startPoll(load, { every: 30_000, idle: 60_000 });
     return () => {
       stop = true;
       end();

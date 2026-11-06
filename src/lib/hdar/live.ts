@@ -14,6 +14,7 @@ import { sanitizeOutreachRow, type OutreachRow as OutreachRowT, type OutreachSta
 import { track } from "./track";
 import { deviceId } from "./device";
 import { PAYMENTS_ENABLED, showLaunchOffer } from "./payments";
+import { withRpcGate } from "./gate";
 
 export type LivePin = {
   id: string;
@@ -94,28 +95,30 @@ export type SpotLine = {
 };
 
 async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
-  const token = await accessToken();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(args),
-  });
-  if (!res.ok) {
-    let message = `Serveur indisponible (${res.status})`;
-    try {
-      const err = (await res.json()) as { message?: string };
-      if (err.message) message = err.message;
-    } catch {
-      // keep the generic message
+  return withRpcGate(async () => {
+    const token = await accessToken();
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(args),
+    });
+    if (!res.ok) {
+      let message = `Serveur indisponible (${res.status})`;
+      try {
+        const err = (await res.json()) as { message?: string };
+        if (err.message) message = err.message;
+      } catch {
+        // keep the generic message
+      }
+      throw new Error(message);
     }
-    throw new Error(message);
-  }
-  const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+    const text = await res.text();
+    return (text ? JSON.parse(text) : undefined) as T;
+  });
 }
 /** Accès RPC pour les modules annexes (transports). */
 export const rpcCall = rpc;

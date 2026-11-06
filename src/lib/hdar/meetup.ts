@@ -55,13 +55,13 @@ export function useMeetup(withId: string, enabled: boolean, demo?: MeetDemo) {
   const prevWith = useRef(withId);
   if (prevWith.current !== withId) { prevWith.current = withId; if (!demo) setSt(null); }
 
-  // État : au chargement, puis toutes les 8 s tant que le chat est ouvert (4 s pendant une demande/session).
+  // État : Realtime porte le GPS pendant la session ; le sondage d'état est lent (évite de marteler le pool).
   useEffect(() => {
     if (demo || !enabled) return;
     let alive = true;
     const load = () => void meetState(withId).then((s) => alive && setSt(s)).catch(() => undefined);
     load();
-    const id = setInterval(load, st?.status === "pending" || active ? 4000 : 8000);
+    const id = setInterval(load, st?.status === "pending" || active ? 12_000 : 30_000);
     return () => { alive = false; clearInterval(id); };
   }, [withId, enabled, demo, st?.status, active]);
 

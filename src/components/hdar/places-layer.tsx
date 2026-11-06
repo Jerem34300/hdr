@@ -41,11 +41,41 @@ export function setToiletsLayer(on: boolean) {
   localStorage.setItem(TOILETS_KEY, on ? "on" : "off");
 }
 
+/** Cache tuile toilettes (clé arrondie à 0,05°) : évite de retaper PostgREST à chaque pan. */
+const toiletTiles = new Map<string, { at: number; rows: PlacePin[] }>();
+const toiletLoads = new Map<string, Promise<PlacePin[]>>();
+const TOILET_TTL = 5 * 60_000;
+function toiletKey(s: number, w: number, n: number, e: number) {
+  const r = (v: number) => (Math.round(v * 20) / 20).toFixed(2);
+  return `${r(s)},${r(w)},${r(n)},${r(e)}`;
+}
+function loadToiletTile(s: number, w: number, n: number, e: number) {
+  const k = toiletKey(s, w, n, e);
+  const hit = toiletTiles.get(k);
+  if (hit && Date.now() - hit.at < TOILET_TTL) return Promise.resolve(hit.rows);
+  let p = toiletLoads.get(k);
+  if (!p) {
+    p = listToilets(s, w, n, e)
+      .then((r) => {
+        const rows = r.map((x) => ({ ...x, kind: "toilets" as const, name: "Toilettes publiques", partner: false }));
+        toiletTiles.set(k, { at: Date.now(), rows });
+        if (toiletTiles.size > 40) {
+          const oldest = [...toiletTiles.entries()].sort((a, b) => a[1].at - b[1].at)[0];
+          if (oldest) toiletTiles.delete(oldest[0]);
+        }
+        return rows;
+      })
+      .finally(() => toiletLoads.delete(k));
+    toiletLoads.set(k, p);
+  }
+  return p;
+}
+
 /** Public toilets, fetched for the visible box only from zoom 12 (there are tens of thousands). */
 export function useToilets(on: boolean, box: { s: number; w: number; n: number; e: number }, zoom: number): PlacePin[] {
   const [rows, setRows] = useState<PlacePin[]>([]);
   const active = on && zoom >= 12;
-  const key = [box.s, box.w, box.n, box.e].map((v) => v.toFixed(2)).join(",");
+  const key = toiletKey(box.s, box.w, box.n, box.e);
   useEffect(() => {
     if (!active) {
       setRows([]);
@@ -53,13 +83,12 @@ export function useToilets(on: boolean, box: { s: number; w: number; n: number; 
     }
     const [s, w, n, e] = key.split(",").map(Number);
     let stop = false;
+    // Décalage : laisse places + live_map partir avant (fan-out ouvert).
     const t = window.setTimeout(() => {
-      void listToilets(s - 0.02, w - 0.02, n + 0.02, e + 0.02)
-        .then((r) => {
-          if (!stop) setRows(r.map((x) => ({ ...x, kind: "toilets" as const, name: "Toilettes publiques", partner: false })));
-        })
+      void loadToiletTile(s - 0.02, w - 0.02, n + 0.02, e + 0.02)
+        .then((r) => { if (!stop) setRows(r); })
         .catch(() => undefined);
-    }, 400);
+    }, 700);
     return () => {
       stop = true;
       window.clearTimeout(t);
@@ -79,44 +108,36 @@ let cache: PlacePin[] | null = null;
 let cacheAt = 0;
 let loading: Promise<PlacePin[]> | null = null;
 const PLACES_TTL = 10 * 60_000;
-// Vue monde (dézoomé, ou sans fenêtre) : servie par le cache serveur (v126), une seule fois par appareil toutes les 10 min.
+// Une seule RPC monde (cache serveur v134, ~2 000 pins) ; le filtre ville se fait côté client.
+// Avant : jusqu'à 12 RPC cases de 1° en parallèle → saturait le pool PostgREST (10) dès 1-2 utilisateurs.
 const loadWorld = () => (loading ??= listPlaces(-90, -180, 90, 180).then((r) => { cache = r; cacheAt = Date.now(); return r; }).finally(() => (loading = null)));
-// Vue ville (zoom ≥ 8) : seulement les cases de 1° visibles, gardées 10 min chacune.
-const tiles = new Map<string, { at: number; rows: PlacePin[] }>();
-const tileLoads = new Map<string, Promise<PlacePin[]>>();
-const loadTile = (i: number, j: number) => {
-  const k = `${i}:${j}`, t = tiles.get(k);
-  if (t && Date.now() - t.at < PLACES_TTL) return Promise.resolve(t.rows);
-  let p = tileLoads.get(k);
-  if (!p) {
-    p = listPlaces(i, j, i + 1, j + 1).then((rows) => { tiles.set(k, { at: Date.now(), rows }); return rows; }).finally(() => tileLoads.delete(k));
-    tileLoads.set(k, p);
-  }
-  return p;
-};
 export type PlacesView = { s: number; w: number; n: number; e: number };
+function inView(p: PlacePin, vb: PlacesView) {
+  if (p.lat < vb.s || p.lat > vb.n) return false;
+  if (vb.w <= vb.e) return p.lng >= vb.w && p.lng <= vb.e;
+  return p.lng >= vb.w || p.lng <= vb.e;
+}
 
-/** Lieux permanents : la zone visible seulement (cases de 1°) quand on est zoomé, sinon la vue monde mise en cache. */
+/** Lieux permanents : 1 chargement monde / 10 min, filtre bbox local si zoomé (plus de fan-out tuiles). */
 export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
   const [rows, setRows] = useState<PlacePin[]>(cache ?? []);
   const city = !!vb && zoom >= 8;
-  const key = city ? [Math.floor(vb!.s), Math.floor(vb!.w), Math.floor(vb!.n), Math.floor(vb!.e)].join(",") : "world";
+  const vbKey = city && vb ? [vb.s.toFixed(2), vb.w.toFixed(2), vb.n.toFixed(2), vb.e.toFixed(2)].join(",") : "world";
+  const vbRef = useRef(vb);
+  vbRef.current = vb;
   useEffect(() => {
     if (!on) return;
     let stop = false;
+    const apply = (all: PlacePin[]) => {
+      if (stop) return;
+      const box = vbRef.current;
+      if (!city || !box) { setRows(all); return; }
+      setRows(all.filter((p) => inView(p, box)));
+    };
     const refresh = () => {
       if (document.visibilityState !== "visible") return;
-      if (!city) {
-        if (cache && Date.now() - cacheAt < PLACES_TTL) { setRows(cache); return; }
-        void loadWorld().then((r) => !stop && setRows(r)).catch(() => undefined);
-        return;
-      }
-      const [s, w, n, e] = key.split(",").map(Number);
-      const want: [number, number][] = [];
-      for (let i = s; i <= n; i++) for (let j = w; j <= (e >= w ? e : e + 360); j++) want.push([i, ((j + 180) % 360) - 180]);
-      if (want.length > 12) return; // garde-fou (ne devrait pas arriver à zoom ≥ 8)
-      void Promise.all(want.map(([i, j]) => loadTile(i, j).catch(() => [] as PlacePin[])))
-        .then((parts) => { if (stop) return; const seen = new Set<string>(); setRows(parts.flat().filter((p) => !seen.has(p.id) && !!seen.add(p.id))); });
+      if (cache && Date.now() - cacheAt < PLACES_TTL) { apply(cache); return; }
+      void loadWorld().then(apply).catch(() => undefined);
     };
     refresh();
     const t = window.setInterval(refresh, PLACES_TTL + Math.random() * 60_000);
@@ -127,7 +148,7 @@ export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
       window.clearInterval(t);
       document.removeEventListener("visibilitychange", vis);
     };
-  }, [on, key, city]);
+  }, [on, vbKey, city]);
   return on ? rows : [];
 }
 
@@ -483,20 +504,50 @@ function PlaceExtras({ id, description = null }: { id: string; description?: str
   );
 }
 
+/** Cache tuile sorties OSM — même logique que les toilettes. */
+const outingTiles = new Map<string, { at: number; rows: PlacePin[] }>();
+const outingLoads = new Map<string, Promise<PlacePin[]>>();
+const OUTING_TTL = 5 * 60_000;
+function outingKey(s: number, w: number, n: number, e: number) {
+  const r = (v: number) => (Math.round(v * 20) / 20).toFixed(2);
+  return `${r(s)},${r(w)},${r(n)},${r(e)}`;
+}
+function loadOutingTile(s: number, w: number, n: number, e: number) {
+  const k = outingKey(s, w, n, e);
+  const hit = outingTiles.get(k);
+  if (hit && Date.now() - hit.at < OUTING_TTL) return Promise.resolve(hit.rows);
+  let p = outingLoads.get(k);
+  if (!p) {
+    p = listOutings(s, w, n, e)
+      .then((r) => {
+        const rows = r.map((x) => ({ ...x, partner: false }));
+        outingTiles.set(k, { at: Date.now(), rows });
+        if (outingTiles.size > 40) {
+          const oldest = [...outingTiles.entries()].sort((a, b) => a[1].at - b[1].at)[0];
+          if (oldest) outingTiles.delete(oldest[0]);
+        }
+        return rows;
+      })
+      .finally(() => outingLoads.delete(k));
+    outingLoads.set(k, p);
+  }
+  return p;
+}
+
 /** Lieux de sortie OSM (parcs, jardins, belvédères, places, promenades), chargés pour la zone visible à partir du zoom 12. */
 export function useOutings(on: boolean, box: { s: number; w: number; n: number; e: number }, zoom: number): PlacePin[] {
   const [rows, setRows] = useState<PlacePin[]>([]);
   const active = on && zoom >= 12;
-  const key = [box.s, box.w, box.n, box.e].map((v) => v.toFixed(2)).join(",");
+  const key = outingKey(box.s, box.w, box.n, box.e);
   useEffect(() => {
     if (!active) { setRows([]); return; }
     const [s, w, n, e] = key.split(",").map(Number);
     let stop = false;
     const t = window.setTimeout(() => {
-      void listOutings(s - 0.02, w - 0.02, n + 0.02, e + 0.02)
-        .then((r) => { if (!stop) setRows(r.map((x) => ({ ...x, partner: false }))); })
+      void loadOutingTile(s - 0.02, w - 0.02, n + 0.02, e + 0.02)
+        .then((r) => { if (!stop) setRows(r); })
         .catch(() => undefined);
-    }, 450);
+    }, 1100);
     return () => { stop = true; window.clearTimeout(t); };
   }, [active, key]);
   return active ? rows : [];

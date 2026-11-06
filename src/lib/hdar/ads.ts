@@ -1,20 +1,23 @@
 /** Petites annonces : appels RPC (hdar_ad_*), régions, catégories, durées et tarifs du boost. */
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
 import { regionAt } from "./regions";
+import { withRpcGate } from "./gate";
 
 async function rpc<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
-  const token = await accessToken();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
-    method: "POST",
-    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify(args),
+  return withRpcGate(async () => {
+    const token = await accessToken();
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify(args),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { message?: string };
+      throw new Error(err.message || `Serveur indisponible (${res.status})`);
+    }
+    const text = await res.text();
+    return (text ? JSON.parse(text) : undefined) as T;
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(err.message || `Serveur indisponible (${res.status})`);
-  }
-  const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const AD_CATEGORIES = [

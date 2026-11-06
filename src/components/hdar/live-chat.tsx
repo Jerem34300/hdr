@@ -212,7 +212,7 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
             .then((t) => !stop && setSeenAt(t))
             .catch(() => undefined);
       });
-    const end = startPoll(load, { every: 3000, idle: 30_000, topic: typingTopic("dm", userId).then((t) => t?.topic ?? null).catch(() => null) });
+    const end = startPoll(load, { every: 5000, idle: 45_000, topic: typingTopic("dm", userId).then((t) => t?.topic ?? null).catch(() => null) });
     return () => {
       stop = true;
       end();

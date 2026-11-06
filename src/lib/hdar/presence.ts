@@ -21,7 +21,7 @@ export function useRoomPresence(room: string, pseudo: string, lat: number | null
           .then((r) => alive && setState(r))
           .catch(() => undefined);
       }
-      timer = window.setTimeout(tick, 30_000 + Math.random() * 10_000); // en ligne = vu ces 5 min : 30-40 s suffit
+      timer = window.setTimeout(tick, 45_000 + Math.random() * 15_000); // en ligne = vu ces 5 min : 45-60 s suffit
     };
     // On reste compté « dans le salon » 5 min après l'avoir quitté (comme « vu récemment »).
     const onVis = () => document.visibilityState === "visible" && tick();
@@ -53,7 +53,7 @@ async function poll() {
       /* hors ligne : on garde les derniers compteurs */
     }
   }
-  if (users > 0) timer = window.setTimeout(() => void poll(), 20000);
+  if (users > 0) timer = window.setTimeout(() => void poll(), 40_000 + Math.random() * 10_000);
 }
 
 /** Compteurs « en ligne » (hors moi) pour la liste des discussions, un seul sondage partagé. */
