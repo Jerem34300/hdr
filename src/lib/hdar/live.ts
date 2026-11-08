@@ -1835,6 +1835,8 @@ export type TickData = {
   my_boost?: MyBoost | null;
   rooms_online?: { area: number; area_last?: string | null; salons: Record<string, number> };
   notices?: Notice[];
+  /** Alertes d'annonces non lues (v140). */
+  ad_hits?: { ad_id: string; title: string; city: string; at: string }[];
 };
 /** null = base pas encore à jour (fonction absente) : l'appelant retombe sur hdar_activity seul. */
 export async function tickRpc(lat: number | null, lng: number | null, areaSince: string | null, posLat: number | null, posLng: number | null) {

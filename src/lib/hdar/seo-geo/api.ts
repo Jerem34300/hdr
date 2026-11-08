@@ -18,7 +18,34 @@ export const getAdsIndex = createServerFn({ method: "GET" }).handler(async () =>
 });
 const METRO = new Set(["auvergne-rhone-alpes", "bourgogne-franche-comte", "bretagne", "centre-val-de-loire", "corse", "grand-est", "hauts-de-france", "ile-de-france", "normandie", "nouvelle-aquitaine", "occitanie", "pays-de-la-loire", "provence-alpes-cote-d-azur"]);
 const adRegion = (s: string) => (METRO.has(s) ? s : "outre-mer");
+type AdsCounts = { total: number; cities: Record<string, number>; regions: Record<string, number> };
+// Tous les comptes d'annonces en un relevé (v140), gardé 10 min par instance du serveur : un robot qui
+// parcourt les milliers de pages de communes ne tape plus la base à chaque page.
+let countsCache: { at: number; p: Promise<AdsCounts | null> } | null = null;
+async function loadCounts(): Promise<AdsCounts | null> {
+  const { SUPABASE_URL, SUPABASE_KEY } = await import("../session");
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_ads_counts`, {
+      method: "POST", headers: { apikey: SUPABASE_KEY, "content-type": "application/json" }, body: "{}",
+      signal: AbortSignal.timeout(2500),
+    });
+    return r.ok ? ((await r.json()) as AdsCounts) : null;
+  } catch {
+    return null;
+  }
+}
 async function adsCount(region: string | null, city: string | null): Promise<number> {
+  if (!countsCache || Date.now() - countsCache.at > 10 * 60_000) {
+    const p = loadCounts();
+    countsCache = { at: Date.now(), p };
+    // Échec (base pas à jour, coupure) : on réessaie au prochain appel plutôt que dans 10 min.
+    void p.then((c) => { if (!c && countsCache?.p === p) countsCache = null; });
+  }
+  const c = await countsCache.p;
+  if (c) return city ? c.cities[city] ?? 0 : region ? c.regions[region] ?? 0 : c.total ?? 0;
+  return adsCountOne(region, city);
+}
+async function adsCountOne(region: string | null, city: string | null): Promise<number> {
   const { SUPABASE_URL, SUPABASE_KEY } = await import("../session");
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_ads_count`, {
