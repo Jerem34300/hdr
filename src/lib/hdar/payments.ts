@@ -4,6 +4,7 @@
  */
 import { create } from "zustand";
 import { SUPABASE_KEY, SUPABASE_URL, accessToken } from "./session";
+import { cachedRpc, clearCached } from "./local-cache";
 
 export const PAYMENTS_ENABLED = import.meta.env.VITE_PAYMENTS_ENABLED === "true";
 export const FIRST_CODE = "FIRST";
@@ -30,22 +31,13 @@ async function rpc<T>(fn: string, args: Record<string, unknown>, anon = false): 
   return (await res.json()) as T;
 }
 export type FirstMe = { founder: boolean; rank?: number; city?: string | null; region?: string | null; remaining: number; profile_boost_at?: string | null; profile_boosts_left?: number; ad_boost_at?: string | null };
-/** Compteurs de l'offre FIRST : relus au plus toutes les 5 min (ils bougent peu, et chaque écran les affiche). */
-const FIRST_TTL = 5 * 60_000;
-const firstCache = new Map<string, { at: number; p: Promise<unknown> }>();
-function cachedFirst<T>(key: string, load: () => Promise<T>): Promise<T> {
-  const hit = firstCache.get(key);
-  if (hit && Date.now() - hit.at < FIRST_TTL) return hit.p as Promise<T>;
-  const p = load();
-  firstCache.set(key, { at: Date.now(), p });
-  return p;
-}
+/** Compteurs de l'offre FIRST : gardés 10 min sur le téléphone (ils bougent peu, et chaque écran les affiche). */
 export const firstRemaining = () =>
-  cachedFirst("remaining", () => rpc<number>("hdar_first_remaining", {}, true).then(Number).catch(() => null));
+  cachedRpc("first:remaining", 10 * 60_000, () => rpc<number>("hdar_first_remaining", {}, true).then(Number).catch(() => null));
 export const firstMe = () => rpc<FirstMe>("hdar_first_me", {});
 export const firstRedeem = (code: string, region: string) =>
   rpc<{ rank: number; remaining: number; city: string | null; region: string | null; title: string; body: string }>("hdar_first_redeem", { p_code: code, p_region: region }).then((r) => {
-    firstCache.clear();
+    clearCached("first:");
     return r;
   });
 export const firstBoost = () => rpc<string>("hdar_first_boost", {});
@@ -56,7 +48,7 @@ export const adminFirstStats = (key: string) =>
 /** Quota régional (5000 répartis au prorata de la population INSEE). */
 export type FirstRegion = { region: string; name: string; quota: number; remaining: number; global: number };
 export const firstRegion = (region: string) =>
-  cachedFirst(`region:${region}`, () => rpc<FirstRegion | null>("hdar_first_region", { p_region: region }, true).catch(() => null));
+  cachedRpc(`first:region:${region}`, 10 * 60_000, () => rpc<FirstRegion | null>("hdar_first_region", { p_region: region }, true).catch(() => null));
 export const placesLabel = (n: number | null) => (n == null ? "" : n <= 0 ? "Plus aucune place" : `Plus que ${n} place${n > 1 ? "s" : ""}`);
 
 /** Partage natif du bon plan (aperçu du lien : page d'accueil, texte sans contenu explicite). */

@@ -1,6 +1,6 @@
 import { OnlineSheet } from "./online-sheet";
 import { ONLINE_DEMO } from "./online-demo";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useScene } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
 import { bindTap } from "./tap";
@@ -14,6 +14,11 @@ import { adsCount, alertHits, listAds, regionFromPos, slugify, type Ad } from "@
 import { MapPin, Video, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useLiveCount } from "@/lib/hdar/live-count";
+import { useTick } from "@/lib/hdar/tick";
+import { cachedRpc } from "@/lib/hdar/local-cache";
+
+/** Nombre d'annonces de la région : gardé 10 min sur le téléphone (il change peu). */
+const cachedAdsCount = (region: string) => cachedRpc(`ads-count:${region}`, 10 * 60_000, () => adsCount(region).then((v) => Number(v) || 0));
 
 export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
   const liveN = useLiveCount();
@@ -119,29 +124,25 @@ function AdsButton({ lat, lng }: { lat: number; lng: number }) {
   useEffect(() => {
     if (import.meta.env.DEV && location.search.includes("badgesdemo")) { setN(7); return; }
     let stop = false;
-    const t = window.setTimeout(() => void adsCount(region).then((v) => !stop && setN(Number(v) || 0)).catch(() => undefined), 1500);
+    const t = window.setTimeout(() => void cachedAdsCount(region).then((v) => !stop && setN(v)).catch(() => undefined), 1500);
     return () => { stop = true; window.clearTimeout(t); };
   }, [region]);
   // Alertes annonces : hits non lus (badge 🔔 + son + toast à chaque nouveau).
   const onboarded = useHdar((s) => s.me.onboarded);
   const [hits, setHits] = useState<string[]>([]);
+  // Les alertes arrivent avec le battement commun (v140, 40-50 s).
+  const tickHits = useTick((t) => t.ad_hits);
+  const known = useRef<Set<string> | null>(null);
   useEffect(() => {
-    if (!onboarded) return;
-    let stop = false; let known: Set<string> | null = null;
-    const poll = () => void alertHits().then((h) => {
-      if (stop) return;
-      const fresh = known ? h.filter((x) => !known!.has(x.ad_id)) : [];
-      known = new Set(h.map((x) => x.ad_id));
-      setHits(h.map((x) => x.ad_id));
-      if (fresh.length) {
-        playFavoriteSound();
-        toast(`🔔 Nouvelle annonce · ${fresh[0].city}`, { description: fresh[0].title, action: { label: "Voir", onClick: () => { void alertHits(true); setHits([]); openAnnonces(fresh[0].ad_id); } } });
-      }
-    }).catch(() => undefined);
-    const first = window.setTimeout(poll, 3000);
-    const iv = window.setInterval(() => { if (document.visibilityState === "visible") poll(); }, 60_000);
-    return () => { stop = true; window.clearTimeout(first); window.clearInterval(iv); };
-  }, [onboarded, openAnnonces]);
+    if (!onboarded || !tickHits) return;
+    const fresh = known.current ? tickHits.filter((x) => !known.current!.has(x.ad_id)) : [];
+    known.current = new Set(tickHits.map((x) => x.ad_id));
+    setHits(tickHits.map((x) => x.ad_id));
+    if (fresh.length) {
+      playFavoriteSound();
+      toast(`🔔 Nouvelle annonce · ${fresh[0].city}`, { description: fresh[0].title, action: { label: "Voir", onClick: () => { void alertHits(true); setHits([]); openAnnonces(fresh[0].ad_id); } } });
+    }
+  }, [onboarded, openAnnonces, tickHits]);
   const open = () => {
     if (hits.length) { const id = hits[0]; void alertHits(true).catch(() => undefined); setHits([]); openAnnonces(hits.length === 1 ? id : undefined); }
     else openAnnonces();
