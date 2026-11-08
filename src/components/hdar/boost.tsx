@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import { myBoosts, mySpots, paymentsEnabled, pricing, type MyBoost, type MySpot, type PriceRow } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
-import { sharedPoll } from "@/lib/hdar/shared-poll";
+import { requestTick, useTick } from "@/lib/hdar/tick";
 import { useHdar } from "@/lib/hdar/store";
 import { PinFace } from "./map-view";
 import { Wordmark } from "./logo";
@@ -30,18 +30,12 @@ export function useNow(ms = 1000) {
   return n;
 }
 /**
- * Boost actif de l'utilisateur (null si aucun / pas de profil) : un seul relevé partagé par la carte, les
- * bulles d'aide et le profil (5 min, au retour sur l'appli et à l'ouverture d'un écran si > 30 s) ;
- * `refreshActiveBoost()` juste après avoir activé un boost.
+ * Boost actif de l'utilisateur (null si aucun / pas de profil) : lu dans le battement commun (v138, 40-50 s),
+ * partagé par la carte, les bulles d'aide et le profil ; `refreshActiveBoost()` juste après avoir activé un boost.
  */
-const activeBoost = sharedPoll<MyBoost | null>(
-  () => myBoosts().then((r) => r.find((x) => x.active) ?? null),
-  null,
-  5 * 60_000,
-);
-export const refreshActiveBoost = activeBoost.refresh;
-export function useActiveBoost() {
-  const b = activeBoost.use();
+export const refreshActiveBoost = requestTick;
+export function useActiveBoost(): MyBoost | null {
+  const b = useTick((t) => t.my_boost) ?? null;
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("boostdemo")) {
     const now = Date.now();
     return { id: "demo", starts_at: new Date(now - 2 * 60_000).toISOString(), ends_at: new Date(now + 58 * 60_000 + 30_000).toISOString(), active: true, cancelled: false, views: 4, messages: 1 };

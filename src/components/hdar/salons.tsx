@@ -52,8 +52,7 @@ function useMyRegion() {
 
 /** Nombre de personnes dans chaque salon et dans le chat du quartier (hors moi). */
 function useOnline() {
-  const at = useMyPos();
-  return useRoomsOnline(at.lat, at.lng);
+  return useRoomsOnline();
 }
 
 /** Découvrir : chat du quartier, ta région, salons thématiques et régions (onglet Messages). */
