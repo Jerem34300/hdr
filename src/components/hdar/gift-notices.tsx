@@ -1,7 +1,8 @@
 import { plainMentions } from "@/lib/hdar/linkify";
 import { GiftReveal } from "./gift-reveal";
 import { useEffect, useState } from "react";
-import { myNotices, proGiftBlock, type NoticeRef, type ProGift } from "@/lib/hdar/live";
+import { proGiftBlock, type Notice, type NoticeRef, type ProGift } from "@/lib/hdar/live";
+import { onNotices, takeNotices } from "@/lib/hdar/tick";
 import { useHdar } from "@/lib/hdar/store";
 import { toast } from "sonner";
 import { GiftCard } from "./pro-tools";
@@ -11,17 +12,17 @@ import { usePremium } from "@/lib/hdar/premium";
 export function GiftNotices() {
   const [list, setList] = useState<{ id: number; title: string; body: string | null; gift?: ProGift | null }[]>([]);
   useEffect(() => {
-    const pull = () => void myNotices().then((r) => {
-      if (!r?.length) return;
+    // Les notifications arrivent avec le battement commun (v138, toutes les 40-50 s).
+    const show = (r: Notice[]) => {
+      if (!r.length) return;
       const mentions = r.filter((n) => n.kind === "mention");
       for (const n of mentions) showMention(n.title, n.body, n.ref ?? null);
       const rest = r.filter((n) => n.kind !== "mention");
       if (rest.length) { setList((l) => [...l, ...rest]); void usePremium.getState().refresh(); }
-    }).catch(() => undefined);
-    const t = setTimeout(pull, 2500);
-    // Mentions : on revérifie régulièrement tant que l'app est visible.
-    const iv = setInterval(() => { if (document.visibilityState === "visible") pull(); }, 45_000);
-    return () => { clearTimeout(t); clearInterval(iv); };
+    };
+    show(takeNotices());
+    const off = onNotices(() => show(takeNotices()));
+    return off;
   }, []);
   const n = list[0];
   if (!n) return null;

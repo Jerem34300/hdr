@@ -1824,3 +1824,24 @@ export const meetPropose = (to: string) => rpc<MeetState>("hdar_meet_propose", {
 export const meetAccept = (id: string) => rpc<MeetState>("hdar_meet_accept", { p_id: id });
 export const meetStop = (id: string) => rpc("hdar_meet_stop", { p_id: id });
 export const meetFlash = (id: string, color: string) => rpc("hdar_meet_flash", { p_id: id, p_color: color });
+
+// Battement commun (v138) : activité, Live, boostés, mon boost, présence salons, notifications ------
+export type Notice = { id: number; title: string; body: string | null; at: string; kind?: string | null; ref?: NoticeRef | null; gift?: ProGift | null };
+export type TickData = {
+  activity?: { area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] };
+  live_count?: number;
+  live_ids?: string[];
+  boosted?: string[];
+  my_boost?: MyBoost | null;
+  rooms_online?: { area: number; area_last?: string | null; salons: Record<string, number> };
+  notices?: Notice[];
+};
+/** null = base pas encore à jour (fonction absente) : l'appelant retombe sur hdar_activity seul. */
+export async function tickRpc(lat: number | null, lng: number | null, areaSince: string | null, posLat: number | null, posLng: number | null) {
+  try {
+    return await rpc<TickData>("hdar_tick", { p_lat: lat, p_lng: lng, p_area_since: areaSince, p_pos_lat: posLat, p_pos_lng: posLng });
+  } catch (e) {
+    if (missingFn(e)) return null;
+    throw e;
+  }
+}

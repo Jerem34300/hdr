@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { activity, type ActivitySpot } from "./live";
+import { activity, tickRpc, type ActivitySpot } from "./live";
+import { resolvePlace } from "./scene";
+import { publishTick, setTickRequester } from "./tick";
 import { playSoftSound } from "./sounds";
 import { useHdar } from "./store";
 
@@ -73,12 +75,19 @@ async function poll() {
   const view = st.view;
   if (view.name === "pocket") localStorage.setItem(AREA_SEEN, new Date().toISOString());
   if (view.name === "spot") markSpotSeen(view.id);
-  let res: { area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] };
+  let res: { area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] } | undefined;
   try {
-    res = await activity(here?.lat ?? null, here?.lng ?? null, localStorage.getItem(AREA_SEEN));
+    // Battement commun (v138) : activité + compteurs de fond en une requête ; sinon l'ancienne.
+    const pos = here ?? resolvePlace(st.cityId, st.customCenter);
+    const t = await tickRpc(here?.lat ?? null, here?.lng ?? null, localStorage.getItem(AREA_SEEN), pos.lat, pos.lng);
+    if (t) {
+      publishTick(t);
+      res = t.activity;
+    } else res = await activity(here?.lat ?? null, here?.lng ?? null, localStorage.getItem(AREA_SEEN));
   } catch {
     return;
   }
+  if (!res) return;
   const seen = spotSeen();
   const known = new Set(spotKnown());
   const unread = new Set<string>();
@@ -125,11 +134,18 @@ export function useActivityPolling() {
     const tick = () => {
       if (document.visibilityState === "visible") void poll();
     };
+    // Battement à la demande (ex. boost activé), les demandes rapprochées regroupées en un seul.
+    let soon = 0;
+    setTickRequester(() => {
+      if (!soon) soon = window.setTimeout(() => ((soon = 0), tick()), 300);
+    });
     tick();
     timer = window.setInterval(tick, 40_000 + Math.random() * 10_000); // 40-50 s, étalé entre clients
     document.addEventListener("visibilitychange", tick);
     return () => {
       window.clearInterval(timer);
+      window.clearTimeout(soon);
+      setTickRequester(null);
       document.removeEventListener("visibilitychange", tick);
     };
   }, []);

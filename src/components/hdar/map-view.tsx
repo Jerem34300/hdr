@@ -20,7 +20,7 @@ import { EyeIcon } from "./visibility-button";
 import { setTransitLayer, transitLayerOn, useTransit, type TransitStop } from "@/lib/hdar/transit";
 import { TrainFront } from "lucide-react";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
 import { Layers, LocateFixed, Rocket } from "lucide-react";
 import { layerOfPlace, useLayers, type LayerKey } from "@/lib/hdar/map-layers";
@@ -29,9 +29,8 @@ import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
 import { useActiveBoost } from "./boost";
-import { liveIds } from "@/lib/hdar/live";
 import { useMapFocus } from "@/lib/hdar/map-focus";
-import { listBoosted, liveCount, liveMap, mapRecent, pulse, goDark, visitorPing, type LivePin, type RecentPin, type VisitorBubble } from "@/lib/hdar/live";
+import { liveMap, mapRecent, pulse, goDark, visitorPing, type LivePin, type RecentPin, type VisitorBubble } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
@@ -42,6 +41,8 @@ import { useHdar } from "@/lib/hdar/store";
 import { agoLabel, approxGeo, recentActivity, type Recent } from "@/lib/hdar/recent";
 import type { Zone } from "@/lib/hdar/data";
 import type { LivePerson, LiveSpot, Place } from "@/lib/hdar/scene";
+import { useLiveCount } from "@/lib/hdar/live-count";
+import { useTick } from "@/lib/hdar/tick";
 
 type Props = {
   place: Place;
@@ -84,28 +85,18 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   /** Bulle ouverte sur un profil (après « Voir sur la carte »). */
   const [card, setCard] = useState<string | null>(null);
   const pinned = useRef(false);
-  useEffect(() => {
-    const t = () => { if (document.visibilityState === "visible") void liveIds().then((ids) => useMapFocus.setState({ liveIds: new Set(ids ?? []) })).catch(() => undefined); };
-    t(); const i = setInterval(t, 60_000); return () => clearInterval(i);
-  }, []);
+  // Personnes en Live et profils boostés : lus dans le battement commun (v138).
+  const liveIdList = useTick((t) => t.live_ids);
+  useEffect(() => { if (liveIdList) useMapFocus.setState({ liveIds: new Set(liveIdList) }); }, [liveIdList]);
   const act = useActivity();
-  const [boosted, setBoosted] = useState<Set<string>>(new Set());
+  const boostedList = useTick((t) => t.boosted);
+  const boosted = useMemo(() => new Set(boostedList ?? []), [boostedList]);
   const myBoost = useActiveBoost();
   const [tick, setTick] = useState(() => Date.now());
   useEffect(() => { const t = window.setInterval(() => setTick(Date.now()), 20_000); return () => window.clearInterval(t); }, []);
   const boostLeft = myBoost ? new Date(myBoost.ends_at).getTime() - tick : 0;
   const meBoosted = boostLeft > 0;
   const boostLabel = boostLeft >= 3_600_000 ? (boostLeft >= 86_400_000 ? `${Math.floor(boostLeft / 86_400_000)} j ${Math.floor((boostLeft % 86_400_000) / 3_600_000)} h` : `${Math.floor(boostLeft / 3_600_000)} h ${String(Math.floor((boostLeft % 3_600_000) / 60_000)).padStart(2, "0")}`) : `${Math.max(1, Math.ceil(boostLeft / 60_000))} min`;
-  useEffect(() => {
-    let stop = false;
-    const run = () => void listBoosted().then((ids) => !stop && setBoosted(new Set(ids))).catch(() => undefined);
-    run();
-    const id = window.setInterval(run, 60_000);
-    return () => {
-      stop = true;
-      window.clearInterval(id);
-    };
-  }, []);
   // Calques individuels (menu « couches ») ; les lieux partenaires sont un calque à part.
   const layers = useLayers((x) => x.layers);
   const setLayer = useLayers((x) => x.set);
@@ -1256,15 +1247,7 @@ export function PinFace({ id, pseudo }: { id: string; pseudo: string }) {
 }
 
 function LiveBadge() {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => alive && setN(0)); };
-    tick();
-    const t = setInterval(tick, 30_000 + Math.random() * 10_000);
-    document.addEventListener("visibilitychange", tick); window.addEventListener("focus", tick);
-    return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); window.removeEventListener("focus", tick); };
-  }, []);
+  const n = useLiveCount();
   return n > 0 ? (
     <span className="absolute -top-1.5 -end-1.5 flex items-center gap-0.5 rounded-full bg-night px-1.5 py-0.5 text-[10px] font-bold text-white">
       <span className="relative flex size-1.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-1.5 rounded-full bg-red-500" /></span>
