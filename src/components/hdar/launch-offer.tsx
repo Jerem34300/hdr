@@ -8,6 +8,7 @@ import { usePremium } from "@/lib/hdar/premium";
 import { playFavoriteSound } from "@/lib/hdar/sounds";
 import { approxGeo } from "@/lib/hdar/recent";
 import { regionFromPos } from "@/lib/hdar/ads";
+import { refreshActiveBoost } from "./boost";
 import {
   FIRST_CODE, adminFirstStats, firstAdBoost, firstRegion, type FirstRegion, firstBoost, firstMe, firstRedeem, firstRemaining, placesLabel, shareFirst, useLaunchOffer, type FirstMe,
 } from "@/lib/hdar/payments";
@@ -87,7 +88,7 @@ function FounderActions({ me, product, placeId, onClose }: { me: FirstMe; produc
     ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstAdBoost(placeId).then(() => { toast("Annonce boostée en France pour 24 h 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>📌 Booster mon annonce (France, 24 h)</button>
     : <p className="mt-4 text-center text-sm text-muted">Prochain boost d'annonce : {when(me.ad_boost_at!)}</p>;
   if (p.startsWith("boost_")) return ready(me.profile_boost_at)
-    ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstBoost().then(() => { toast("Boost d'1 h activé 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>🚀 Activer un boost d'1 h{me.profile_boosts_left != null ? ` (${me.profile_boosts_left}/3 aujourd'hui)` : ""}</button>
+    ? <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={() => void firstBoost().then(() => { refreshActiveBoost(); toast("Boost d'1 h activé 🚀"); onClose(); }).catch((e: Error) => toast(e.message))}>🚀 Activer un boost d'1 h{me.profile_boosts_left != null ? ` (${me.profile_boosts_left}/3 aujourd'hui)` : ""}</button>
     : <p className="mt-4 text-center text-sm text-muted">Prochain boost profil : {when(me.profile_boost_at!)}</p>;
   if (p.startsWith("hearts")) return <p className="mt-4 text-center text-sm text-muted">Tes cœurs sont rechargés à 100 chaque mois ❤️</p>;
   if (/^(listing|place_boost|pro_boost)/.test(p)) return <p className="mt-4 text-center text-sm text-muted">Les offres lieux et partenaires sont gratuites pendant le lancement : <a href="/contact" className="underline">écris-nous</a> et on active ta fiche.</p>;

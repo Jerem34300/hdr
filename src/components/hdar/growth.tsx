@@ -1,5 +1,6 @@
 import { FirstGiftCard, useFirstRemaining } from "./launch-offer";
 import { useLaunchOffer } from "@/lib/hdar/payments";
+import { refreshActiveBoost } from "./boost";
 import { CardHead, glowInner, glowOuter } from "./profile-card";
 import { captureAmb, tryAmbAttach } from "./ambassador";
 import { GiftReveal } from "./gift-reveal";
@@ -249,6 +250,7 @@ export function BoostCreditsCard({ demo }: { demo?: BoostCredits }) {
       if (demo) { setC({ ...c, used: c.used + 1, left: c.left - 1 }); toast("Boost activé ✨ (1 h)"); return; }
       const r = await boostCreditUse();
       setC({ ...c, used: c.used + 1, left: r.left });
+      refreshActiveBoost();
       toast(`Boost activé ✨ (${r.label})`);
     } catch (e) { toast(e instanceof Error ? e.message.replace(/^.*?: /, "") : "Impossible pour l'instant"); } finally { setBusy(false); }
   };

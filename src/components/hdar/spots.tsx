@@ -374,7 +374,8 @@ export function useLiveSpotsSync() {
         .catch(() => undefined);
     };
     load();
-    const id = window.setInterval(load, 15000);
+    // Liste des spots autour : leur chat a sa propre sonnette, la liste peut attendre 60 s.
+    const id = window.setInterval(load, 60_000);
     document.addEventListener("visibilitychange", load);
     return () => {
       stop = true;

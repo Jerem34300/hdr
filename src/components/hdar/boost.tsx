@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import { myBoosts, mySpots, paymentsEnabled, pricing, type MyBoost, type MySpot, type PriceRow } from "@/lib/hdar/live";
 import { deviceId } from "@/lib/hdar/device";
+import { sharedPoll } from "@/lib/hdar/shared-poll";
 import { useHdar } from "@/lib/hdar/store";
 import { PinFace } from "./map-view";
 import { Wordmark } from "./logo";
@@ -28,23 +29,23 @@ export function useNow(ms = 1000) {
   useEffect(() => { const t = setInterval(() => setN(Date.now()), ms); return () => clearInterval(t); }, [ms]);
   return n;
 }
-/** Boost actif de l'utilisateur (null si aucun / pas de profil). */
+/**
+ * Boost actif de l'utilisateur (null si aucun / pas de profil) : un seul relevé partagé par la carte, les
+ * bulles d'aide et le profil (5 min, au retour sur l'appli et à l'ouverture d'un écran si > 30 s) ;
+ * `refreshActiveBoost()` juste après avoir activé un boost.
+ */
+const activeBoost = sharedPoll<MyBoost | null>(
+  () => myBoosts().then((r) => r.find((x) => x.active) ?? null),
+  null,
+  5 * 60_000,
+);
+export const refreshActiveBoost = activeBoost.refresh;
 export function useActiveBoost() {
-  const [b, setB] = useState<MyBoost | null>(null);
-  useEffect(() => {
-    if (import.meta.env.DEV && location.search.includes("boostdemo")) {
-      const now = Date.now();
-      setB({ id: "demo", starts_at: new Date(now - 2 * 60_000).toISOString(), ends_at: new Date(now + 58 * 60_000 + 30_000).toISOString(), active: true, cancelled: false, views: 4, messages: 1 });
-      return;
-    }
-    // Rafraîchi régulièrement et au retour sur l'appli : un boost activé ailleurs (/boost, FIRST) apparaît vite.
-    const load = () => void myBoosts().then((r) => setB(r.find((x) => x.active) ?? null)).catch(() => undefined);
-    load();
-    const t = window.setInterval(load, 60_000);
-    const vis = () => document.visibilityState === "visible" && load();
-    document.addEventListener("visibilitychange", vis);
-    return () => { window.clearInterval(t); document.removeEventListener("visibilitychange", vis); };
-  }, []);
+  const b = activeBoost.use();
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("boostdemo")) {
+    const now = Date.now();
+    return { id: "demo", starts_at: new Date(now - 2 * 60_000).toISOString(), ends_at: new Date(now + 58 * 60_000 + 30_000).toISOString(), active: true, cancelled: false, views: 4, messages: 1 };
+  }
   return b;
 }
 

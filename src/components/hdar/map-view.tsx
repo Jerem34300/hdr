@@ -31,7 +31,7 @@ import { BoostNudge } from "./boost-nudge";
 import { useActiveBoost } from "./boost";
 import { liveIds } from "@/lib/hdar/live";
 import { useMapFocus } from "@/lib/hdar/map-focus";
-import { listBoosted, liveCount, liveMap, mapRecent, pulse, goDark, visitorPing, type LivePin, type RecentPin, type VisitorBubble } from "@/lib/hdar/live";
+import { listBoosted, liveMap, mapRecent, pulse, goDark, visitorPing, type LivePin, type RecentPin, type VisitorBubble } from "@/lib/hdar/live";
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
@@ -42,6 +42,7 @@ import { useHdar } from "@/lib/hdar/store";
 import { agoLabel, approxGeo, recentActivity, type Recent } from "@/lib/hdar/recent";
 import type { Zone } from "@/lib/hdar/data";
 import type { LivePerson, LiveSpot, Place } from "@/lib/hdar/scene";
+import { useLiveCount } from "@/lib/hdar/live-count";
 
 type Props = {
   place: Place;
@@ -100,7 +101,8 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     let stop = false;
     const run = () => void listBoosted().then((ids) => !stop && setBoosted(new Set(ids))).catch(() => undefined);
     run();
-    const id = window.setInterval(run, 60_000);
+    // Profils boostés : changent rarement (un boost dure au moins 1 h) → toutes les 3 min.
+    const id = window.setInterval(() => document.visibilityState === "visible" && run(), 3 * 60_000);
     return () => {
       stop = true;
       window.clearInterval(id);
@@ -1256,15 +1258,7 @@ export function PinFace({ id, pseudo }: { id: string; pseudo: string }) {
 }
 
 function LiveBadge() {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => alive && setN(0)); };
-    tick();
-    const t = setInterval(tick, 30_000 + Math.random() * 10_000);
-    document.addEventListener("visibilitychange", tick); window.addEventListener("focus", tick);
-    return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); window.removeEventListener("focus", tick); };
-  }, []);
+  const n = useLiveCount();
   return n > 0 ? (
     <span className="absolute -top-1.5 -end-1.5 flex items-center gap-0.5 rounded-full bg-night px-1.5 py-0.5 text-[10px] font-bold text-white">
       <span className="relative flex size-1.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-1.5 rounded-full bg-red-500" /></span>
