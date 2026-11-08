@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { deviceId } from "./device";
-import { pollSignals, sendSignal, turnCached, turnServers, type SignalRow } from "./live";
+import { myTopic, pollSignals, sendSignal, turnCached, turnServers, type SignalRow } from "./live";
+import { subscribeTopic } from "./rt";
 
 /**
  * One-to-one video calls over WebRTC. Signaling (offer / answer / hangup) goes
@@ -260,13 +261,27 @@ async function onSignal(row: SignalRow) {
   }
 }
 
-/** Polls for call signals; returns a stop function. Faster while a call is being set up. */
+/**
+ * Polls for call signals; returns a stop function. Faster while a call is being set up.
+ * When the personal Realtime doorbell is connected (v137: a « call » ring on each new signal), the idle
+ * poll slows to a safety net and each ring triggers an immediate read; without a profile (no topic, no
+ * incoming calls possible) it stays slow too.
+ */
 export function watchSignals() {
   let stopped = false;
   let after = 0;
   let timer = 0;
+  let live = false;
+  let noTopic = false;
+  let unsub: (() => void) | null = null;
+  let running = false;
+  let again = false;
   const tick = async () => {
     if (stopped) return;
+    // A ring during a read: read once more right after, never twice at once (signals are handled once).
+    if (running) { again = true; return; }
+    running = true;
+    window.clearTimeout(timer);
     if (document.visibilityState === "visible" || useCall.getState().phase !== "idle") {
       try {
         const rows = await pollSignals(deviceId(), after);
@@ -278,13 +293,32 @@ export function watchSignals() {
         // offline or not yet onboarded: try again next tick
       }
     }
+    running = false;
+    if (stopped) return;
+    if (again) { again = false; return void tick(); }
     const phase = useCall.getState().phase;
-    timer = window.setTimeout(tick, phase === "calling" || phase === "connecting" ? 1000 : 3000);
+    const idle = live ? 30_000 : noTopic ? 8000 : 3000;
+    timer = window.setTimeout(tick, phase === "calling" || phase === "connecting" ? 1000 : phase === "idle" ? idle : 3000);
   };
   void tick();
+  void myTopic()
+    .then((t) => {
+      if (stopped) return;
+      if (!t) { noTopic = true; return; }
+      unsub = subscribeTopic(t, (ev) => {
+        if (ev === "ready" || ev === "resync") { live = true; if (ev === "resync") void tick(); }
+        else if (ev === "down") { live = false; void tick(); }
+        else if (ev === "call") void tick();
+      });
+    })
+    .catch(() => undefined);
+  const onVis = () => document.visibilityState === "visible" && void tick();
+  document.addEventListener("visibilitychange", onVis);
   return () => {
     stopped = true;
     window.clearTimeout(timer);
+    unsub?.();
+    document.removeEventListener("visibilitychange", onVis);
   };
 }
 
