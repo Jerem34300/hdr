@@ -1261,7 +1261,7 @@ function LiveBadge() {
     let alive = true;
     const tick = () => { if (document.visibilityState === "visible") void liveCount().then((c) => alive && setN(Number(c) || 0)).catch(() => alive && setN(0)); };
     tick();
-    const t = setInterval(tick, 10000);
+    const t = setInterval(tick, 30_000 + Math.random() * 10_000);
     document.addEventListener("visibilitychange", tick); window.addEventListener("focus", tick);
     return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); window.removeEventListener("focus", tick); };
   }, []);
