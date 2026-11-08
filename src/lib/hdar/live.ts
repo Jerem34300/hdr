@@ -1845,3 +1845,14 @@ export async function tickRpc(lat: number | null, lng: number | null, areaSince:
     throw e;
   }
 }
+
+/** Photos de profil par lots (v139), sans compter de visite ; null = base pas à jour. */
+export async function photosOf(ids: string[]): Promise<Record<string, string> | null> {
+  try {
+    const rows = await rpc<{ id: string; photo: string | null }[]>("hdar_photos", { p_ids: ids });
+    return Object.fromEntries(rows.map((r) => [r.id, r.photo ?? ""]));
+  } catch (e) {
+    if (missingFn(e)) return null;
+    throw e;
+  }
+}
