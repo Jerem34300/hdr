@@ -24,13 +24,13 @@ export function cityHead(c: CityPayload | undefined, t: Theme, og?: string) {
   const title = t === "tchat-gay" ? `Tchat gay ${c.n} · LGBT-friendly, 18+ — hdar.`
     : t === "sortir-ce-soir" ? `Sortir ce soir ${a(c.n)} · autour de toi — hdar.`
     : pick(c.s, [
-      `${c.n} : tchat & rencontres autour de toi — hdar.`,
-      `Tchat et rencontre ${a(c.n)} · gratuit, 18+ — hdar.`,
-      `Rencontres ${a(c.n)} : tchat autour de toi — hdar.`,
+      `${c.n} : plans, tchat & rencontres — hdar.`,
+      `Plans et tchat ${a(c.n)} · autour de toi — hdar.`,
+      `Tchat & rencontres ${a(c.n)} · gratuit, 18+ — hdar.`,
     ]);
   const desc = t === "tchat-gay" ? `Tchat gay et LGBT-friendly ${a(c.n)}. Autour de toi, gratuit, anonyme, 18+. Carte en direct et messages privés.`
     : t === "sortir-ce-soir" ? `Sortir ce soir ${a(c.n)} ? Qui est autour de toi en direct. Gratuit, anonyme, 18+. Carte et chat du quartier.`
-    : (local?.description ?? `Tchat et rencontres ${a(c.n)}, autour de toi. Gratuit, anonyme, 18+. Carte en direct et chat du quartier, pour tout le monde.`);
+    : (local?.description ?? `Plans, tchat et rencontres ${a(c.n)}, autour de toi. Gratuit, anonyme, 18+. Carte en direct et chat du quartier, pour tout le monde.`);
   // Sous-pages thème = quasi-doublon de la page ville ; petites communes = gabarit : noindex, follow.
   const h = seoHead({ title, desc, path: path(c, t), og: og ?? local?.og, noindex: !!t || c.strong === false });
   return t ? h : { ...h, links: [...h.links, ...cityAlternates(c.s)] };
@@ -50,6 +50,7 @@ function intro(c: CityPayload) {
 
 const INTENTS = (c: CityPayload) => [
   { icon: "🌙", t: "Sortir ce soir", d: pick(c.s + "1", [`Regarde qui est dehors ${a(c.n)} ce soir et où ça bouge.`, `Une envie de sortir ? Le chat du quartier te dit où les gens sont, maintenant.`, `Crée un lieu pour ta soirée et retrouve les gens du coin en direct.`]) },
+  { icon: "🔥", t: "Plans autour de toi", d: pick(c.s + "p", [`Un plan ${a(c.n)} ce soir ? La carte montre qui est visible près de toi — allusif, 18+, sans catalogue national.`, `Envie d'un plan discret ${a(c.n)} : tchat d'abord, puis on voit. Position arrondie, tu disparais quand tu veux.`]) },
   { icon: "💘", t: "Rencontre amoureuse", d: pick(c.s + "2", [`Prends le temps de discuter avant de te voir : messages, vocaux, appel vidéo.`, `Fais connaissance tranquillement, sans profil interminable à remplir.`]) },
   { icon: "🤝", t: "Amitié, se faire des amis", d: pick(c.s + "3", [`Nouveau ${a(c.n)} ? Trouve des gens pour un verre, un sport, une balade.`, `Pas que pour draguer : beaucoup viennent juste pour rencontrer du monde.`]) },
   { icon: "💬", t: "Tchat en ligne, amis virtuels", d: pick(c.s + "4", [`Discute depuis ton canapé avec les gens du coin, sans obligation de se voir.`, `Le chat du quartier et les messages privés, même sans sortir de chez toi.`]) },
@@ -62,7 +63,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
   const url = SITE_URL + path(c, theme);
   const h1 = theme === "tchat-gay" ? <>Tchat gay et LGBT-friendly <span className="text-[#FA6F6C]">{a(c.n)}</span></>
     : theme === "sortir-ce-soir" ? <>Sortir ce soir <span className="text-[#FA6F6C]">{a(c.n)}</span></>
-    : <>Rencontres et sorties <span className="text-[#FA6F6C]">{a(c.n)}</span></>;
+    : <>Plans, tchat et rencontres <span className="text-[#FA6F6C]">{a(c.n)}</span></>;
   const faq = [
     { q: `Comment faire des rencontres ${a(c.n)} avec hdar ?`, a: `Ouvre hdar.chat, autorise ta position et touche « Se montrer » : tu apparais sur la carte autour de ${c.n} pour 1 h, 3 h ou toute la nuit. Touche un profil pour lui écrire, envoyer une photo, un vocal ou lancer un appel vidéo.` },
     { q: "hdar est-il gratuit ?", a: "Oui. La carte, le chat du quartier, les messages privés et les lieux sont gratuits. Une option payante (hdar+) ajoute des extras, mais elle n'est pas nécessaire." },
@@ -102,7 +103,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
           ...(theme ? [{ name: c.n, to: path(c, null) }] : []),
           { name: theme === "tchat-gay" ? "Tchat gay" : theme === "sortir-ce-soir" ? "Sortir ce soir" : c.n },
         ]} />
-        <h2 className="seo-reveal mt-10 font-display text-2xl font-bold">Ce que tu cherches {a(c.n)}</h2>
+        <h2 className="seo-reveal mt-10 font-display text-2xl font-bold">Plans et rencontres {a(c.n)}</h2>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">{INTENTS(c).map((i) => <Feature key={i.t} icon={i.icon} title={i.t}>{i.d}</Feature>)}</ul>
         <h2 className="seo-reveal mt-12 font-display text-2xl font-bold">Comment ça marche</h2>
         <ol className="seo-reveal mt-4 space-y-2 text-sm leading-relaxed">
@@ -111,6 +112,25 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
           <li><strong className="text-[#FA6F6C]">3.</strong> Écris dans le chat du quartier, crée un lieu ou envoie un message privé.</li>
         </ol>
         {theme === null && local?.body}
+        {theme === null && (
+          <section className="seo-reveal mt-12">
+            <h2 className="font-display text-2xl font-bold">Lieux de drague {a(c.n)}</h2>
+            <p className="mt-3 text-sm leading-relaxed">
+              Sur la carte hdar, les lieux publics (parcs, belvédères, spots signalés par la communauté) apparaissent via le calque
+              « Autres lieux publics » — à activer si besoin. Aucune adresse précise ici : seulement la carte en direct, pour les 18 ans et plus,
+              avec un rappel de discrétion et de respect des autres usagers.
+            </p>
+            <p className="mt-4">
+              <a
+                href={`/?layers=public&lat=${c.y}&lng=${c.x}&ville=${encodeURIComponent(c.n)}`}
+                className="inline-flex h-12 items-center rounded-full border border-[#FA6F6C]/40 bg-[#FA6F6C]/10 px-5 text-sm font-semibold text-[#FA6F6C] hover:bg-[#FA6F6C]/20"
+              >
+                Ouvrir la carte · calque lieux publics {a(c.n)}
+              </a>
+            </p>
+            <p className="mt-2 text-xs text-muted">18+ · calque opt-in · pas d&apos;adresses listées sur cette page.</p>
+          </section>
+        )}
         {c.isHub && c.around.length > 0 && (
           <section className="seo-reveal mt-12">
             <h2 className="font-display text-2xl font-bold">Autour de {c.n}</h2>

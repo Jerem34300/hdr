@@ -14,7 +14,7 @@ const ext = "underline underline-offset-2";
 export const LOCAL: Record<string, LocalContent> = {
   paris: {
     description:
-      "Tchat et rencontres à Paris, autour de toi. Gratuit, anonyme, 18+. Carte en direct Marais, Oberkampf, Pigalle — pour tout le monde.",
+      "Plans, tchat et rencontres à Paris, autour de toi. Gratuit, anonyme, 18+. Carte en direct Marais, Oberkampf, Pigalle — pour tout le monde.",
     nearby: ["boulogne-billancourt", "saint-denis", "montreuil", "argenteuil", "versailles"],
     faq: [
       {
@@ -79,7 +79,7 @@ export const LOCAL: Record<string, LocalContent> = {
   montpellier: {
     og: "/og-montpellier.jpg",
     description:
-      "Tchat et rencontres à Montpellier, autour de toi. Gratuit, anonyme, 18+. Écusson, Saint-Roch, Beaux-Arts — pour tout le monde.",
+      "Plans, tchat et rencontres à Montpellier, autour de toi. Gratuit, anonyme, 18+. Écusson, Saint-Roch, Beaux-Arts — pour tout le monde.",
     nearby: ["sete", "nimes", "agde", "cap-d-agde", "beziers"],
     faq: [
       {
@@ -199,20 +199,39 @@ export const LOCAL: Record<string, LocalContent> = {
   },
 
   lyon: {
-    description: "Tchat et rencontres à Lyon, autour de toi. Gratuit, anonyme, 18+. Carte en direct Pentes, Guillotière, Presqu'île.",
+    description: "Plans, tchat et rencontres à Lyon, autour de toi. Gratuit, anonyme, 18+. Pentes, Guillotière, Presqu'île.",
     nearby: ["villeurbanne", "venissieux", "saint-etienne", "grenoble"],
+    faq: [
+      {
+        q: "Où trouver un plan à Lyon ce soir ?",
+        a: "Ouvre la carte autour des Pentes, de la Guillotière ou de la Presqu'île : tu vois qui est visible près de toi, tu discutes d'abord, puis tu décides. 18+, position arrondie, sans adresse listée ici.",
+      },
+    ],
     body: (
       <>
-        <h2 className="mt-10 font-display text-xl font-bold">Lyon, entre Saône et Rhône</h2>
+        <h2 className="mt-10 font-display text-xl font-bold">Plans à Lyon, entre Saône et Rhône</h2>
         <p className="mt-3 text-sm leading-relaxed">
-          Des <strong>Pentes de la Croix-Rousse</strong> à la <strong>Guillotière</strong> et la Presqu&apos;île, Lyon se traverse à pied.
-          hdar montre qui est visible dans ton quartier plutôt qu&apos;une liste nationale. Ambiance suggestive, 18+, sans stats d&apos;utilisateurs inventées.
+          Lyon se joue à pied : les <strong>Pentes de la Croix-Rousse</strong> le soir, la <strong>Guillotière</strong> plus animée,
+          la <strong>Presqu&apos;île</strong> entre Bellecour et Hôtel de Ville, et les quais quand il fait doux. Un plan ici, c&apos;est souvent
+          d&apos;abord un message — puis un verre, une balade, ou simplement discuter. hdar montre qui est visible dans ton quartier,
+          pas une grille de toute la France. Ambiance allusive, 18+, sans stats d&apos;utilisateurs inventées.
         </p>
+        <p className="mt-3 text-sm leading-relaxed">
+          Le chat du quartier couvre environ 3 km : utile pour demander « qui sort côté Guillotière ? » sans te dévoiler plus que tu ne veux.
+          Tu te montres 1 h, 3 h ou toute la nuit ; ta position reste arrondie à environ 110 mètres.
+        </p>
+        <h2 className="mt-10 font-display text-xl font-bold">Quartiers où ça bouge</h2>
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed">
+          <li><strong>Pentes / Croix-Rousse</strong> — bars en escalier, terrasses serrées, premier contact à pied.</li>
+          <li><strong>Guillotière</strong> — plus tard, plus mixte, bon pour un plan spontané après un tchat.</li>
+          <li><strong>Presqu&apos;île</strong> — Bellecour, Cordeliers, Jacobins : central, facile à rejoindre.</li>
+          <li><strong>Confluence / quais</strong> — plutôt balade et rendez-vous au calme.</li>
+        </ul>
       </>
     ),
   },
   marseille: {
-    description: "Tchat et rencontres à Marseille, autour de toi. Gratuit, anonyme, 18+. Vieux-Port, cours Julien, plages.",
+    description: "Plans, tchat et rencontres à Marseille, autour de toi. Gratuit, anonyme, 18+. Vieux-Port, cours Julien, plages.",
     nearby: ["aix-en-provence", "toulon", "avignon"],
     body: (
       <>
@@ -225,7 +244,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   toulouse: {
-    description: "Tchat et rencontres à Toulouse, autour de toi. Gratuit, anonyme, 18+. Capitole, Carmes, Saint-Cyprien.",
+    description: "Plans, tchat et rencontres à Toulouse, autour de toi. Gratuit, anonyme, 18+. Capitole, Carmes, Saint-Cyprien.",
     nearby: ["montauban", "albi", "bordeaux"],
     body: (
       <>
@@ -238,7 +257,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   nice: {
-    description: "Tchat et rencontres à Nice, autour de toi. Gratuit, anonyme, 18+. Vieux-Nice, port, Promenade.",
+    description: "Plans, tchat et rencontres à Nice, autour de toi. Gratuit, anonyme, 18+. Vieux-Nice, port, Promenade.",
     nearby: ["cannes", "antibes", "toulon"],
     body: (
       <>
@@ -251,7 +270,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   nantes: {
-    description: "Tchat et rencontres à Nantes, autour de toi. Gratuit, anonyme, 18+. Bouffay, île de Nantes.",
+    description: "Plans, tchat et rencontres à Nantes, autour de toi. Gratuit, anonyme, 18+. Bouffay, île de Nantes.",
     nearby: ["angers", "rennes", "bordeaux"],
     body: (
       <>
@@ -263,7 +282,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   bordeaux: {
-    description: "Tchat et rencontres à Bordeaux, autour de toi. Gratuit, anonyme, 18+. Saint-Pierre, Chartrons, Victoire.",
+    description: "Plans, tchat et rencontres à Bordeaux, autour de toi. Gratuit, anonyme, 18+. Saint-Pierre, Chartrons, Victoire.",
     nearby: ["nantes", "toulouse"],
     body: (
       <>
@@ -275,7 +294,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   lille: {
-    description: "Tchat et rencontres à Lille, autour de toi. Gratuit, anonyme, 18+. Vieux-Lille, Wazemmes.",
+    description: "Plans, tchat et rencontres à Lille, autour de toi. Gratuit, anonyme, 18+. Vieux-Lille, Wazemmes.",
     nearby: ["roubaix", "tourcoing", "lens"],
     body: (
       <>
@@ -287,7 +306,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   strasbourg: {
-    description: "Tchat et rencontres à Strasbourg, autour de toi. Gratuit, anonyme, 18+. Grande Île, Krutenau.",
+    description: "Plans, tchat et rencontres à Strasbourg, autour de toi. Gratuit, anonyme, 18+. Grande Île, Krutenau.",
     nearby: ["mulhouse", "colmar", "nancy"],
     body: (
       <>
@@ -299,7 +318,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   rennes: {
-    description: "Tchat et rencontres à Rennes, autour de toi. Gratuit, anonyme, 18+. Centre, Sainte-Anne.",
+    description: "Plans, tchat et rencontres à Rennes, autour de toi. Gratuit, anonyme, 18+. Centre, Sainte-Anne.",
     nearby: ["nantes", "brest", "angers"],
     body: (
       <>
@@ -311,7 +330,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   grenoble: {
-    description: "Tchat et rencontres à Grenoble, autour de toi. Gratuit, anonyme, 18+. Centre et cuvette.",
+    description: "Plans, tchat et rencontres à Grenoble, autour de toi. Gratuit, anonyme, 18+. Centre et cuvette.",
     nearby: ["lyon", "chambery"],
     body: (
       <>
@@ -323,7 +342,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   toulon: {
-    description: "Tchat et rencontres à Toulon, autour de toi. Gratuit, anonyme, 18+. Centre et rade.",
+    description: "Plans, tchat et rencontres à Toulon, autour de toi. Gratuit, anonyme, 18+. Centre et rade.",
     nearby: ["nice", "marseille"],
     body: (
       <>
@@ -335,7 +354,7 @@ export const LOCAL: Record<string, LocalContent> = {
     ),
   },
   angers: {
-    description: "Tchat et rencontres à Angers, autour de toi. Gratuit, anonyme, 18+. Centre et Doutre.",
+    description: "Plans, tchat et rencontres à Angers, autour de toi. Gratuit, anonyme, 18+. Centre et Doutre.",
     nearby: ["nantes", "tours"],
     body: (
       <>
@@ -348,7 +367,7 @@ export const LOCAL: Record<string, LocalContent> = {
   },
   nimes: {
     nearby: ["montpellier", "avignon", "sete"],
-    description: "Tchat et rencontres à Nîmes, autour de toi. Gratuit, anonyme, 18+. Arènes et Écusson.",
+    description: "Plans, tchat et rencontres à Nîmes, autour de toi. Gratuit, anonyme, 18+. Arènes et Écusson.",
     body: (
       <>
         <h2 className="mt-10 font-display text-xl font-bold">Nîmes autour des Arènes</h2>
