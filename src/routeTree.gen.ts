@@ -29,6 +29,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TchatWebcamAleatoireRouteImport } from './routes/tchat-webcam-aleatoire'
 import { Route as WebcamGayLiveRouteImport } from './routes/webcam-gay-live'
+import { Route as LangSlugRouteImport } from './routes/$lang/$slug'
 import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
 import { Route as AnnoncesIndexRouteImport } from './routes/annonces.index'
 import { Route as AnnoncesIdRouteImport } from './routes/annonces.$id'
@@ -146,6 +147,11 @@ const WebcamGayLiveRoute = WebcamGayLiveRouteImport.update({
   path: '/webcam-gay-live',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangSlugRoute = LangSlugRouteImport.update({
+  id: '/$lang/$slug',
+  path: '/$lang/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AmbassadeurGuideRoute = AmbassadeurGuideRouteImport.update({
   id: '/ambassadeur_/guide',
   path: '/ambassadeur/guide',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
+  '/$lang/$slug': typeof LangSlugRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/annonces/$id': typeof AnnoncesIdRoute
   '/api/geo': typeof ApiGeoRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
+  '/$lang/$slug': typeof LangSlugRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/annonces/$id': typeof AnnoncesIdRoute
   '/api/geo': typeof ApiGeoRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tchat-webcam-aleatoire': typeof TchatWebcamAleatoireRoute
   '/webcam-gay-live': typeof WebcamGayLiveRoute
+  '/$lang/$slug': typeof LangSlugRoute
   '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
   '/annonces/$id': typeof AnnoncesIdRoute
   '/api/geo': typeof ApiGeoRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
+    | '/$lang/$slug'
     | '/ambassadeur/guide'
     | '/annonces/$id'
     | '/api/geo'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
+    | '/$lang/$slug'
     | '/ambassadeur/guide'
     | '/annonces/$id'
     | '/api/geo'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tchat-webcam-aleatoire'
     | '/webcam-gay-live'
+    | '/$lang/$slug'
     | '/ambassadeur_/guide'
     | '/annonces/$id'
     | '/api/geo'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TchatWebcamAleatoireRoute: typeof TchatWebcamAleatoireRoute
   WebcamGayLiveRoute: typeof WebcamGayLiveRoute
+  LangSlugRoute: typeof LangSlugRoute
   AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
   AnnoncesIdRoute: typeof AnnoncesIdRoute
   ApiGeoRoute: typeof ApiGeoRoute
@@ -642,6 +655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WebcamGayLiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/$slug': {
+      id: '/$lang/$slug'
+      path: '/$lang/$slug'
+      fullPath: '/$lang/$slug'
+      preLoaderRoute: typeof LangSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ambassadeur_/guide': {
       id: '/ambassadeur_/guide'
       path: '/ambassadeur/guide'
@@ -778,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TchatWebcamAleatoireRoute: TchatWebcamAleatoireRoute,
   WebcamGayLiveRoute: WebcamGayLiveRoute,
+  LangSlugRoute: LangSlugRoute,
   AmbassadeurGuideRoute: AmbassadeurGuideRoute,
   AnnoncesIdRoute: AnnoncesIdRoute,
   ApiGeoRoute: ApiGeoRoute,

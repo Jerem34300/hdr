@@ -11,7 +11,10 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = join(root, "node_modules/@electric-sql/pglite/dist");
-const targets = [join(root, ".netlify/functions-internal/server/_libs")];
+const targets = [
+  join(root, ".netlify/functions-internal/server/_libs"),
+  join(root, ".vercel/output/functions/__server.func/_libs"),
+];
 const files = ["pglite.wasm", "pglite.data", "initdb.wasm"];
 
 for (const dir of targets) {

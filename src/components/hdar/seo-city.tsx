@@ -8,17 +8,31 @@ export type Theme = "tchat-gay" | "sortir-ce-soir" | null;
 const size = (c: CityPayload) => (c.p >= 100000 ? "big" : c.p >= 20000 ? "mid" : c.p >= 2000 ? "small" : "tiny");
 const path = (c: CityPayload, t: Theme) => `/rencontre/${c.s}${t ? "/" + t : ""}`;
 const a = (n: string) => (n.startsWith("Le ") ? `au ${n.slice(3)}` : n.startsWith("Les ") ? `aux ${n.slice(4)}` : `à ${n}`);
+/** Prefers curated LOCAL.nearby slugs present in geo nearby, then the rest — intentional internal links. */
+function nearbyList(c: CityPayload, local?: { nearby?: string[] }) {
+  if (!local?.nearby?.length) return c.nearby;
+  const by = new Map(c.nearby.map((m) => [m.s, m]));
+  const curated = local.nearby.map((s) => by.get(s)).filter((m): m is NonNullable<typeof m> => !!m);
+  const rest = c.nearby.filter((m) => !local.nearby!.includes(m.s));
+  return [...curated, ...rest].slice(0, 12);
+}
 
 export function cityHead(c: CityPayload | undefined, t: Theme, og?: string) {
   if (!c) return seoHead({ title: "Ville introuvable — hdar.", desc: "", path: "/rencontre", noindex: true });
-  const title = t === "tchat-gay" ? `Tchat gay ${c.n} : rencontres LGBT-friendly en direct — hdar.`
-    : t === "sortir-ce-soir" ? `Sortir ce soir ${a(c.n)} : qui est dehors autour de toi — hdar.`
-    : pick(c.s, [`Rencontres et sorties ${a(c.n)} (${c.dep.code}) : la carte en direct — hdar.`, `Rencontre ${a(c.n)} : tchat, sorties et amis autour de toi — hdar.`, `${c.n} : rencontres, tchat et sorties ce soir — hdar.`]);
-  const desc = t === "tchat-gay" ? `Tchat gay et LGBT-friendly ${a(c.n)} (${c.dep.n}) : vois qui est visible autour de toi, discute en privé, photos, vocaux, vidéo. Gratuit, discret, 18+.`
-    : t === "sortir-ce-soir" ? `Envie de sortir ce soir ${a(c.n)} ? La carte hdar montre qui est visible autour de toi et les lieux du moment. Gratuit, sans compte, 18+.`
-    : `Rencontres ${a(c.n)} et autour (${c.dep.n}) : amour, amitié, tchat en ligne ou sortie ce soir. Carte en direct, chat du quartier, pour tout le monde et LGBT-friendly. Gratuit, discret, 18+.`;
-    // Sous-pages thème = quasi-doublon de la page ville ; petites communes = gabarit : noindex, follow.
-  const h = seoHead({ title, desc, path: path(c, t), og, noindex: !!t || c.strong === false });
+  const local = LOCAL[c.s];
+  // Titres ≤60, descriptions ≤155 : ville + tchat/rencontre/autour de toi + gratuit/anonyme/18+.
+  const title = t === "tchat-gay" ? `Tchat gay ${c.n} · LGBT-friendly, 18+ — hdar.`
+    : t === "sortir-ce-soir" ? `Sortir ce soir ${a(c.n)} · autour de toi — hdar.`
+    : pick(c.s, [
+      `${c.n} : tchat & rencontres autour de toi — hdar.`,
+      `Tchat et rencontre ${a(c.n)} · gratuit, 18+ — hdar.`,
+      `Rencontres ${a(c.n)} : tchat autour de toi — hdar.`,
+    ]);
+  const desc = t === "tchat-gay" ? `Tchat gay et LGBT-friendly ${a(c.n)}. Autour de toi, gratuit, anonyme, 18+. Carte en direct et messages privés.`
+    : t === "sortir-ce-soir" ? `Sortir ce soir ${a(c.n)} ? Qui est autour de toi en direct. Gratuit, anonyme, 18+. Carte et chat du quartier.`
+    : (local?.description ?? `Tchat et rencontres ${a(c.n)}, autour de toi. Gratuit, anonyme, 18+. Carte en direct et chat du quartier, pour tout le monde.`);
+  // Sous-pages thème = quasi-doublon de la page ville ; petites communes = gabarit : noindex, follow.
+  const h = seoHead({ title, desc, path: path(c, t), og: og ?? local?.og, noindex: !!t || c.strong === false });
   return t ? h : { ...h, links: [...h.links, ...cityAlternates(c.s)] };
 }
 
@@ -94,7 +108,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
         )}
         <section className="seo-reveal mt-12">
           <h2 className="font-display text-2xl font-bold">{c.isHub ? `Villes voisines de ${c.n}` : `Autour de ${c.n}`}</h2>
-          <CityChips list={c.nearby} showKm />
+          <CityChips list={nearbyList(c, local)} showKm />
           {!c.isHub && <p className="mt-4 text-sm">Grande ville la plus proche : <a className="text-[#FA6F6C] underline" href={`/rencontre/${c.hub.s}`}>rencontres à {c.hub.n}</a> ({c.hubKm} km).</p>}
           {c.top && <p className="mt-4 flex flex-wrap gap-2 text-sm">{theme !== null && <a className="underline" href={path(c, null)}>Rencontres {a(c.n)}</a>}{theme !== "tchat-gay" && <a className="underline" href={path(c, "tchat-gay")}>Tchat gay {c.n}</a>}{theme !== "sortir-ce-soir" && <a className="underline" href={path(c, "sortir-ce-soir")}>Sortir ce soir {a(c.n)}</a>}<a className="underline" href={`/rencontre/${c.s}/live-coquin`}>Live coquin {c.n}</a></p>}
         </section>

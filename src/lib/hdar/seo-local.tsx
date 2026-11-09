@@ -12,10 +12,74 @@ const ext = "underline underline-offset-2";
 
 /** Extra local content for some city pages. Only venues verified online are cited (oct. 2026). */
 export const LOCAL: Record<string, LocalContent> = {
+  paris: {
+    description:
+      "Tchat et rencontres à Paris, autour de toi. Gratuit, anonyme, 18+. Carte en direct Marais, Oberkampf, Pigalle — pour tout le monde.",
+    nearby: ["boulogne-billancourt", "saint-denis", "montreuil", "argenteuil", "versailles"],
+    faq: [
+      {
+        q: "Où sortir et rencontrer à Paris avec hdar ?",
+        a: "Ouvre la carte autour du Marais, d'Oberkampf, de Pigalle ou de ton arrondissement : tu vois qui est visible près de toi, tu écris dans le chat du quartier ou en privé. Premier rendez-vous plutôt en lieu public.",
+      },
+      {
+        q: "Quels lieux partenaires sont visibles à Paris ?",
+        a: "Seuls les établissements approuvés apparaissent : aujourd'hui L'Impact Bar et IDM Sauna (statut approved). Aucun chiffre d'utilisateurs n'est affiché.",
+      },
+    ],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Paris la nuit, sans catalogue national</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          À Paris, la distance se compte en stations, pas en kilomètres. Le <strong>Marais</strong>, <strong>Oberkampf</strong>,{" "}
+          <strong>Pigalle</strong>, les quais ou un coin du 11e : la carte hdar montre qui est visible autour de toi maintenant,
+          plutôt qu'une grille de profils de toute la France. L'ambiance reste allusive — un regard, un message, un verre plus tard —
+          sans galerie de nus sur la page publique, et sans inventer « combien de gens sont en ligne ».
+        </p>
+        <p className="mt-3 text-sm leading-relaxed">
+          Tu te montres 1 h, 3 h ou toute la nuit ; ta position est arrondie à environ 110 mètres. Le chat du quartier couvre à peu près
+          3 km. Pour un premier contact, un café en terrasse ou un bar bondé reste plus sage qu'un appartement.
+        </p>
+
+        <h2 className="mt-10 font-display text-xl font-bold">Quartiers et sorties</h2>
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed">
+          <li><strong>Le Marais</strong> — bars et terrasses denses, facile de se retrouver à pied.</li>
+          <li><strong>Oberkampf / Bastille</strong> — soirées plus longues, rues animées jusqu'à tard.</li>
+          <li><strong>Pigalle / South Pigalle</strong> — néons, clubs, ambiance plus chargée, toujours 18+.</li>
+          <li><strong>Canal Saint-Martin</strong> — plutôt balade et premier verre au calme.</li>
+        </ul>
+
+        <h2 className="mt-10 font-display text-xl font-bold">Chiffres officiels (pas des stats hdar)</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Population municipale <strong>2&nbsp;103&nbsp;778</strong> habitants (INSEE, recensement 2023) pour une superficie de{" "}
+          <strong>105,40&nbsp;km²</strong>. Source :{" "}
+          <a className={ext} href="https://www.insee.fr/fr/statistiques/2011101?geo=COM-75056" rel="noopener" target="_blank">
+            INSEE — dossier communal Paris (75056)
+          </a>
+          . Ce sont les chiffres de la ville, pas une estimation d'activité sur hdar.
+        </p>
+
+        <h2 className="mt-10 font-display text-xl font-bold">Lieux partenaires visibles sur la carte</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Uniquement des fiches <em>approved</em> en base — pas de lieux inventés :
+        </p>
+        <ul className="mt-3 space-y-2 text-sm">
+          <li><strong>L'Impact Bar</strong> — bar partenaire approuvé.</li>
+          <li><strong>IDM Sauna</strong> — sauna partenaire approuvé.</li>
+        </ul>
+
+        <h2 className="mt-10 font-display text-xl font-bold">Comment ça marche à Paris</h2>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">
+          <li>Ouvre hdar.chat, confirme 18 ans — pas d'e-mail.</li>
+          <li>Touche « Se montrer » : tu apparais sur la carte, position arrondie.</li>
+          <li>Chat du quartier ou message privé ; tu disparais quand tu choisis.</li>
+        </ol>
+      </>
+    ),
+  },
   montpellier: {
     og: "/og-montpellier.jpg",
     description:
-      "Sortir et rencontrer à Montpellier, pour tout le monde : la carte en direct de qui est visible dans l'Écusson, à Saint-Roch ou aux Beaux-Arts. Parcs, belvédères, places, lieux partenaires, conseils. Gratuit, discret, sans compte, 18+.",
+      "Tchat et rencontres à Montpellier, autour de toi. Gratuit, anonyme, 18+. Écusson, Saint-Roch, Beaux-Arts — pour tout le monde.",
     nearby: ["sete", "nimes", "agde", "cap-d-agde", "beziers"],
     faq: [
       {
@@ -133,5 +197,166 @@ export const LOCAL: Record<string, LocalContent> = {
       </>
     ),
   },
-  nimes: { nearby: ["montpellier", "avignon", "sete"] },
+
+  lyon: {
+    description: "Tchat et rencontres à Lyon, autour de toi. Gratuit, anonyme, 18+. Carte en direct Pentes, Guillotière, Presqu'île.",
+    nearby: ["villeurbanne", "venissieux", "saint-etienne", "grenoble"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Lyon, entre Saône et Rhône</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Des <strong>Pentes de la Croix-Rousse</strong> à la <strong>Guillotière</strong> et la Presqu&apos;île, Lyon se traverse à pied.
+          hdar montre qui est visible dans ton quartier plutôt qu&apos;une liste nationale. Ambiance suggestive, 18+, sans stats d&apos;utilisateurs inventées.
+        </p>
+      </>
+    ),
+  },
+  marseille: {
+    description: "Tchat et rencontres à Marseille, autour de toi. Gratuit, anonyme, 18+. Vieux-Port, cours Julien, plages.",
+    nearby: ["aix-en-provence", "toulon", "avignon"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Marseille côté Vieux-Port</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Du <strong>Vieux-Port</strong> au <strong>cours Julien</strong> et vers les plages, la ville vit dehors. La carte en direct t&apos;aide à voir
+          qui est dans le coin — discret, gratuit, 18+. Pas de témoignages fictifs.
+        </p>
+      </>
+    ),
+  },
+  toulouse: {
+    description: "Tchat et rencontres à Toulouse, autour de toi. Gratuit, anonyme, 18+. Capitole, Carmes, Saint-Cyprien.",
+    nearby: ["montauban", "albi", "bordeaux"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Toulouse la rose, le soir</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Autour du <strong>Capitole</strong>, des <strong>Carmes</strong> et de <strong>Saint-Cyprien</strong>, les terrasses restent longues.
+          hdar reste local : qui est visible près de toi, chat de quartier, anonymat.
+        </p>
+      </>
+    ),
+  },
+  nice: {
+    description: "Tchat et rencontres à Nice, autour de toi. Gratuit, anonyme, 18+. Vieux-Nice, port, Promenade.",
+    nearby: ["cannes", "antibes", "toulon"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Nice entre Promenade et Vieux-Nice</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          La <strong>Promenade des Anglais</strong>, le <strong>Vieux-Nice</strong> et le port : on se croise dehors. Sur hdar, tu choisis de
+          t&apos;afficher — position arrondie, 18+.
+        </p>
+      </>
+    ),
+  },
+  nantes: {
+    description: "Tchat et rencontres à Nantes, autour de toi. Gratuit, anonyme, 18+. Bouffay, île de Nantes.",
+    nearby: ["angers", "rennes", "bordeaux"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Nantes, Bouffay et l&apos;île</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Du <strong>Bouffay</strong> à l&apos;<strong>île de Nantes</strong>, les sorties restent à taille humaine. La carte montre le voisinage, 18+.
+        </p>
+      </>
+    ),
+  },
+  bordeaux: {
+    description: "Tchat et rencontres à Bordeaux, autour de toi. Gratuit, anonyme, 18+. Saint-Pierre, Chartrons, Victoire.",
+    nearby: ["nantes", "toulouse"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Bordeaux côté Chartrons</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          <strong>Saint-Pierre</strong>, les <strong>Chartrons</strong>, la Victoire : bars et quais. hdar reste discret — tu te montres quand tu veux.
+        </p>
+      </>
+    ),
+  },
+  lille: {
+    description: "Tchat et rencontres à Lille, autour de toi. Gratuit, anonyme, 18+. Vieux-Lille, Wazemmes.",
+    nearby: ["roubaix", "tourcoing", "lens"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Lille, Vieux-Lille et Wazemmes</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Entre le <strong>Vieux-Lille</strong> et <strong>Wazemmes</strong>, les soirées se jouent à quelques rues. Carte en direct, 18+.
+        </p>
+      </>
+    ),
+  },
+  strasbourg: {
+    description: "Tchat et rencontres à Strasbourg, autour de toi. Gratuit, anonyme, 18+. Grande Île, Krutenau.",
+    nearby: ["mulhouse", "colmar", "nancy"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Strasbourg sur la Grande Île</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          <strong>Grande Île</strong>, <strong>Krutenau</strong>, Neudorf : la ville se marche. hdar affiche le voisinage, 18+.
+        </p>
+      </>
+    ),
+  },
+  rennes: {
+    description: "Tchat et rencontres à Rennes, autour de toi. Gratuit, anonyme, 18+. Centre, Sainte-Anne.",
+    nearby: ["nantes", "brest", "angers"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Rennes autour de Sainte-Anne</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Centre historique et <strong>Sainte-Anne</strong> : sorties à taille humaine. Carte hdar locale et discrète, 18+.
+        </p>
+      </>
+    ),
+  },
+  grenoble: {
+    description: "Tchat et rencontres à Grenoble, autour de toi. Gratuit, anonyme, 18+. Centre et cuvette.",
+    nearby: ["lyon", "chambery"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Grenoble dans la cuvette</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Tout est près : centre, campus, quais. hdar sert à voir qui est visible dans la cuvette — 18+.
+        </p>
+      </>
+    ),
+  },
+  toulon: {
+    description: "Tchat et rencontres à Toulon, autour de toi. Gratuit, anonyme, 18+. Centre et rade.",
+    nearby: ["nice", "marseille"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Toulon et la rade</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Centre-ville et front de mer : on se croise vite. Sur hdar, position arrondie, chat de quartier, 18+.
+        </p>
+      </>
+    ),
+  },
+  angers: {
+    description: "Tchat et rencontres à Angers, autour de toi. Gratuit, anonyme, 18+. Centre et Doutre.",
+    nearby: ["nantes", "tours"],
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Angers, centre et Doutre</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          Entre le centre et la <strong>Doutre</strong>, les distances sont courtes. Carte de voisinage, 18+.
+        </p>
+      </>
+    ),
+  },
+  nimes: {
+    nearby: ["montpellier", "avignon", "sete"],
+    description: "Tchat et rencontres à Nîmes, autour de toi. Gratuit, anonyme, 18+. Arènes et Écusson.",
+    body: (
+      <>
+        <h2 className="mt-10 font-display text-xl font-bold">Nîmes autour des Arènes</h2>
+        <p className="mt-3 text-sm leading-relaxed">
+          <strong>Arènes</strong> et Écusson : tout est concentré. Idéal pour une carte en direct du centre, 18+.
+        </p>
+      </>
+    ),
+  },
+
 };

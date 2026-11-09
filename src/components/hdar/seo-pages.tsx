@@ -103,11 +103,11 @@ export const Cta = ({ label = "Ouvrir la carte" }: { label?: string }) => (
   </Link>
 );
 
-export function Faq({ items }: { items: { q: string; a: string }[] }) {
+export function Faq({ items, title = "Questions fréquentes" }: { items: { q: string; a: string }[]; title?: string }) {
   return (
     <section className="seo-reveal mt-12">
       <Ld data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: items.map((i) => ({ "@type": "Question", name: i.q, acceptedAnswer: { "@type": "Answer", text: i.a } })) }} />
-      <h2 className="font-display text-2xl font-bold">Questions fréquentes</h2>
+      <h2 className="font-display text-2xl font-bold">{title}</h2>
       <div className="mt-4 space-y-2">
         {items.map((i) => (
           <details key={i.q} className="seo-card px-4 py-3">
