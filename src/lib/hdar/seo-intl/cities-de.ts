@@ -1,16 +1,16 @@
 import type { CityText } from "./kit";
 
-/** Deutsch — einzigartige Texte pro Stadt. Anzüglich ohne Nacktheit, keine erfundenen Nutzerzahlen. */
+/** Deutsch — unique text per city. Cheeky without nudity, never invent user numbers. */
 export const CITIES_DE: Record<string, CityText> = {
   hamburg: {
     title: "Hamburg: Chat & Dates in deiner Nähe — hdar.",
     desc: "Chat, Dates und spontane Treffen in Hamburg. Kostenlos, anonym, ab 18. Live-Karte von St. Georg bis St. Pauli und Schanze.",
     h1: ["Chat & Dates in ", "Hamburg", ", gleich um die Ecke"],
-    lead: "Hamburg flirtet leise und feiert laut. Zwischen Lange Reihe, Reeperbahn und Schanze zeigt dir die Karte, wer gerade unterwegs ist — ohne Profile aus ganz Norddeutschland.",
+    lead: "Hamburg flirtet leise und feiert laut. Zwischen Lange Reihe, Reeperbahn und Schanze zeigt dir die Karte, wer gerade unterwegs ist. Niemand in der Nähe? Zoom die Karte raus und schau, wer woanders Lust hat, oder wechsle oben rechts die Stadt.",
     introTitle: "Zwischen Alster und Elbe",
     intro: [
       "In **St. Georg** rund um die **Lange Reihe** sitzt man seit Jahrzehnten in Cafés und Bars, die queer, entspannt und mitten in der Stadt sind. Ein paar Stationen weiter wird es auf **St. Pauli** und an der **Reeperbahn** lauter, später und spontaner. Die **Schanze** und **Ottensen** liegen dazwischen: Kneipen, Terrassen, Leute, die nach Feierabend einfach sitzen bleiben.",
-      "hdar passt zu diesem Tempo. Du bist sichtbar, solange du willst, und weg, sobald du dich ausblendest. Ein Blick auf die Karte, eine Nachricht im Viertel-Chat, vielleicht ein Alsterwasser an der Alster — mehr Andeutung als Ansage.",
+      "hdar passt zu diesem Tempo. Du bist sichtbar, solange du willst, und weg, sobald du dich ausblendest. Ein Blick auf die Karte, eine Nachricht im Viertel-Chat, vielleicht ein Alsterwasser an der Alster — der Rest bleibt unter euch.",
     ],
     quartersTitle: "Viertel für Pläne in Hamburg",
     quarters: [
@@ -33,7 +33,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Glockenbach, Isar und ein bisschen mehr",
     intro: [
       "Das **Glockenbachviertel** und der **Gärtnerplatz** sind seit Langem das Zentrum der queeren Münchner Szene: kleine Bars, volle Bürgersteige an warmen Abenden, Blicke, die etwas länger bleiben. In **Schwabing** und der **Maxvorstadt** ist es studentischer, an der **Isar** treffen sich im Sommer alle, die Sonne und ein wenig Publikum mögen.",
-      "Mit hdar entscheidest du, wann man dich sieht — eine Stunde, drei Stunden, die ganze Nacht. Dein Standort ist auf etwa 110 Meter gerundet. Kein öffentlicher Katalog, keine Nacktfotos auf dieser Seite: nur ein Hinweis, ein Chat und vielleicht ein Treffen auf ein Helles.",
+      "Mit hdar entscheidest du, wann man dich sieht — eine Stunde, drei Stunden, die ganze Nacht. Dein Standort ist auf etwa 110 Meter gerundet. Ein Blick, ein Chat und vielleicht ein Treffen auf ein Helles. Niemand in der Nähe? Zoom die Karte raus und schau, wer woanders Lust hat, oder wechsle oben rechts die Stadt.",
     ],
     quartersTitle: "Wo in München etwas geht",
     quarters: [
@@ -56,7 +56,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Eine Stadt, die gern feiert",
     intro: [
       "Köln hat eine der bekanntesten queeren Szenen Deutschlands, und **ColognePride** füllt jedes Jahr die Innenstadt. Rund um den **Rudolfplatz** und die Schaafenstraße liegen Bars nah beieinander, rund um den **Heumarkt** und in der **Altstadt** wird es touristischer. Im **Belgischen Viertel** und in **Ehrenfeld** geht es kreativer und etwas später los.",
-      "hdar setzt auf den rheinischen Charme ohne Übertreibung: Du zeigst dich, wann du willst, schreibst im Viertel-Chat und triffst dich auf ein Kölsch. Nichts Explizites auf der öffentlichen Seite, keine erfundenen Zahlen.",
+      "hdar setzt auf den rheinischen Charme ohne Übertreibung: Du zeigst dich, wann du willst, schreibst im Viertel-Chat und triffst dich auf ein Kölsch. Frech, aber nie plump.",
     ],
     quartersTitle: "Pläne in Köln, Viertel für Viertel",
     quarters: [
@@ -102,7 +102,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Kurze Wege, lange Abende",
     intro: [
       "Im **Bohnenviertel** und rund um das **Leonhardsviertel** mischen sich alte Gassen, Weinstuben und Bars. Entlang der **Theodor-Heuss-Straße** wird am Wochenende gefeiert, **Stuttgart-West** ist eher Café, Altbau und Nachbarschaft. Rund um den **Schlossplatz** trifft man sich bei Sonne einfach auf der Wiese.",
-      "hdar passt zur schwäbischen Diskretion: Du bestimmst, wann und wie lange man dich sieht, und dein Standort bleibt gerundet. Ein Chat im Viertel, ein Viertele später — die Andeutung reicht.",
+      "hdar passt zur schwäbischen Diskretion: Du bestimmst, wann und wie lange man dich sieht, und dein Standort bleibt gerundet. Ein Chat im Viertel, ein Viertele später — und dann schaut ihr weiter.",
     ],
     quartersTitle: "Viertel für Pläne in Stuttgart",
     quarters: [
@@ -125,7 +125,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Altbier, Rhein und ein Blick zu viel",
     intro: [
       "Die **Altstadt** ist berühmt für ihre vielen Kneipen auf engem Raum — ideal, um sich zu verabreden und dann weiterzuziehen. Am **Rheinufer** flaniert man, im **Medienhafen** wird es moderner. **Flingern** und **Unterbilk** sind die Viertel, in denen man eher Leute aus der Nachbarschaft trifft.",
-      "hdar macht das Treffen leicht und diskret: Du zeigst dich nur, wenn du willst, dein Standort ist gerundet, und die Stimmung bleibt andeutungsvoll. Keine erfundenen „online“-Zahlen, keine Nacktfotos auf der öffentlichen Seite.",
+      "hdar macht das Treffen leicht und diskret: Du zeigst dich nur, wenn du willst, dein Standort ist gerundet, und der Rest bleibt unter euch. Niemand in der Nähe? Zoom die Karte raus und schau, wer woanders Lust hat, oder wechsle oben rechts die Stadt.",
     ],
     quartersTitle: "Pläne in Düsseldorf",
     quarters: [
@@ -148,7 +148,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Hypezig ohne Hype",
     intro: [
       "Die **Karl-Liebknecht-Straße** — kurz „Karli“ — in der **Südvorstadt** ist Leipzigs lange Ausgehmeile mit Bars, Imbissen und Leuten auf dem Gehweg. **Connewitz** ist alternativer, **Plagwitz** mit seinen alten Fabriken und Kanälen kreativer. In der **Innenstadt** rund um den Drallewatsch wird eher klassisch gefeiert.",
-      "hdar ist für Leipzigs Tempo gemacht: kein Profilkatalog, sondern eine Live-Karte. Du bist so lange sichtbar, wie du willst, dein Standort ist gerundet. Ein Chat, ein Bier auf der Karli — und der Rest bleibt unter euch.",
+      "hdar ist für Leipzigs Tempo gemacht: eine Live-Karte, die zeigt, wer gerade in der Nähe ist. Du bist so lange sichtbar, wie du willst, dein Standort ist gerundet. Ein Chat, ein Bier auf der Karli — und der Rest bleibt unter euch.",
     ],
     quartersTitle: "Viertel in Leipzig",
     quarters: [
@@ -171,7 +171,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Ruhrpott, ehrlich und nah",
     intro: [
       "Das **Kreuzviertel** ist Dortmunds Kneipenviertel: Altbau, kleine Bars, Studierende und Leute aus der Nachbarschaft. In der **Innenstadt** rund um Brückstraße und Wall wird am Wochenende gefeiert, am **Phoenix-See** spaziert man, wo früher Stahl gekocht wurde. Die **Nordstadt** ist bunt, gemischt und lebendig.",
-      "hdar passt zur direkten Art: Du siehst, wer in der Nähe ist, schreibst kurz und triffst dich. Gleichzeitig bleibt es diskret — Sichtbarkeit auf Zeit, gerundeter Standort, nichts Explizites auf der öffentlichen Seite.",
+      "hdar passt zur direkten Art: Du siehst, wer in der Nähe ist, schreibst kurz und triffst dich. Gleichzeitig bleibt es diskret — Sichtbarkeit auf Zeit, gerundeter Standort, ab 18.",
     ],
     quartersTitle: "Wo man sich in Dortmund trifft",
     quarters: [
@@ -194,7 +194,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Von der Zeche an die Rü",
     intro: [
       "**Rüttenscheid**, von allen nur „Rü“ genannt, ist Essens Ausgehstraße: Restaurants, Bars, Terrassen bis spät. In der **Innenstadt** geht es geschäftiger zu, die **Zeche Zollverein** zeigt, wie viel Industriegeschichte in der Stadt steckt. Am **Baldeneysee** im Süden trifft man sich zum Spazieren und Sonnen.",
-      "Mit hdar bist du sichtbar, wenn du willst, und unsichtbar, sobald es reicht. Dein Standort ist gerundet, die Stimmung bleibt andeutungsvoll. Ein Blick auf die Karte, eine Nachricht — und vielleicht ein Drink auf der Rü.",
+      "Mit hdar bist du sichtbar, wenn du willst, und unsichtbar, sobald es reicht. Dein Standort ist gerundet. Ein Blick auf die Karte, eine Nachricht — und vielleicht ein Drink auf der Rü.",
     ],
     quartersTitle: "Viertel in Essen",
     quarters: [
@@ -217,7 +217,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Hanseatisch, aber nicht steif",
     intro: [
       "**Das Viertel** — Ostertor und Steintor — ist Bremens buntestes Quartier: Kneipen, Bars, kleine Läden, viele Leute auf der Straße. An der **Schlachte** an der Weser sitzt man im Sommer am Wasser, im **Schnoor** wird es eng und historisch. Die **Neustadt** auf der anderen Weserseite ist ruhiger und nachbarschaftlich.",
-      "hdar zeigt dich nur, wenn du es willst, für eine Stunde oder die ganze Nacht. Ein Chat im Viertel, ein Treffen auf ein Bier — und keine erfundenen Zahlen, wie viele gerade online sein sollen.",
+      "hdar zeigt dich nur, wenn du es willst, für eine Stunde oder die ganze Nacht. Ein Chat im Viertel, ein Treffen auf ein Bier — und wenn es ruhig ist, zoomst du die Karte raus oder wechselst oben rechts die Stadt.",
     ],
     quartersTitle: "Wo Bremen ausgeht",
     quarters: [
@@ -240,7 +240,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Barock trifft Kneipenviertel",
     intro: [
       "Die **Äußere Neustadt** ist Dresdens Ausgehviertel: Hinterhöfe, Bars, Spätis und eine Szene, die gern länger bleibt. Die **Altstadt** mit Frauenkirche und Zwinger ist eher Kulisse für einen Spaziergang. An den **Elbwiesen** treffen sich im Sommer alle, und das **Hechtviertel** ist ruhiger, aber nicht weniger charmant.",
-      "Mit hdar entscheidest du selbst: sichtbar für eine Stunde, drei Stunden oder die ganze Nacht, Standort auf etwa 110 Meter gerundet. Ein Blick, ein Chat — der Rest bleibt eine Andeutung.",
+      "Mit hdar entscheidest du selbst: sichtbar für eine Stunde, drei Stunden oder die ganze Nacht, Standort auf etwa 110 Meter gerundet. Ein Blick, ein Chat — der Rest bleibt unter euch.",
     ],
     quartersTitle: "Viertel in Dresden",
     quarters: [
@@ -263,7 +263,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Unterschätzt und genau richtig",
     intro: [
       "**Linden** rund um die **Limmerstraße** ist Hannovers lebendigstes Viertel: Kioske, Kneipen, Leute auf der Straße bis spät. In der **List** ist es bürgerlicher, rund um das **Steintor** liegt das Nachtleben der Innenstadt. Am **Maschsee** und in der **Eilenriede** spaziert man, joggt man — oder trifft sich.",
-      "hdar passt zu einer Stadt, die nicht viel Aufhebens macht: sichtbar, wenn du willst, unsichtbar, wenn nicht. Dein Standort ist gerundet, die Stimmung bleibt andeutungsvoll — ein Chat und ein Drink in Linden.",
+      "hdar passt zu einer Stadt, die nicht viel Aufhebens macht: sichtbar, wenn du willst, unsichtbar, wenn nicht. Dein Standort ist gerundet — ein Chat und ein Drink in Linden.",
     ],
     quartersTitle: "Wo man sich in Hannover trifft",
     quarters: [
@@ -286,7 +286,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Burg, Gassen und GoHo",
     intro: [
       "Die **Altstadt** innerhalb der Stadtmauer ist klein genug, um alles zu Fuß zu erreichen — Kneipen, Bars und Plätze, auf denen man sich zufällig begegnet. **Gostenhof**, kurz „GoHo“, ist das kreative Viertel mit Cafés und Bars, die **Südstadt** ist gemischt und lebendig. An der **Pegnitz** und auf der **Wöhrder Wiese** trifft man sich bei gutem Wetter.",
-      "Mit hdar bist du sichtbar, solange du willst, und dein Standort bleibt gerundet. Kein Katalog, keine Nacktbilder auf der öffentlichen Seite — ein Blick, ein Chat und vielleicht ein Rotbier.",
+      "Mit hdar bist du sichtbar, solange du willst, und dein Standort bleibt gerundet. Ein Blick, ein Chat und vielleicht ein Rotbier. Niemand in der Nähe? Zoom die Karte raus und schau, wer woanders Lust hat, oder wechsle oben rechts die Stadt.",
     ],
     quartersTitle: "Viertel in Nürnberg",
     quarters: [
@@ -309,7 +309,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Diskret, aber nicht verschlafen",
     intro: [
       "Rund um die **Langstrasse** im **Kreis 4** liegt Zürichs dichtestes Nachtleben: Bars, Clubs, viel Bewegung bis in den Morgen. **Zürich-West** im Kreis 5 hat alte Industriehallen in Ausgehorte verwandelt. Das **Niederdorf** in der Altstadt ist enger und klassischer, und am **Seebecken** trifft man sich, sobald die Sonne scheint.",
-      "hdar passt zur Zürcher Diskretion: Du bist nur sichtbar, wenn du willst, dein Standort ist auf etwa 110 Meter gerundet, und auf der öffentlichen Seite gibt es nichts Explizites. Ein Chat, ein Apéro — und der Rest bleibt eine Andeutung.",
+      "hdar passt zur Zürcher Diskretion: Du bist nur sichtbar, wenn du willst, dein Standort ist auf etwa 110 Meter gerundet, ab 18. Ein Chat, ein Apéro — und der Rest bleibt unter euch.",
     ],
     quartersTitle: "Kreise für Pläne in Zürich",
     quarters: [
@@ -332,7 +332,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Zwei Ufer, drei Länder",
     intro: [
       "**Kleinbasel** auf der rechten Rheinseite, rund um die **Rheingasse**, ist das lebendigere Ufer mit Bars und Buvetten am Wasser. In **Grossbasel** liegt die Altstadt mit Münster und Gassen. Im Sommer lassen sich viele im **Rhein** treiben, und Quartiere wie **St. Johann** oder das **Gundeli** sind lokal und entspannt.",
-      "hdar passt zu einer Stadt an drei Grenzen: Du bist sichtbar, wann du willst, Position gerundet, Chat im Quartier. Keine Fotos ohne Kleider auf der öffentlichen Seite, keine erfundenen Zahlen.",
+      "hdar passt zu einer Stadt an drei Grenzen: Du bist sichtbar, wann du willst, Position gerundet, Chat im Quartier. Niemand in der Nähe? Zoom die Karte raus und schau, wer woanders Lust hat, oder wechsle oben rechts die Stadt.",
     ],
     quartersTitle: "Quartiere für Pläne in Basel",
     quarters: [
@@ -355,7 +355,7 @@ export const CITIES_DE: Record<string, CityText> = {
     introTitle: "Gemütlich, aber nicht langweilig",
     intro: [
       "Die **Altstadt** mit ihren **Lauben** und Kellerbars ist klein und voller Ecken für ein erstes Treffen. In der **Lorraine** ist es alternativ und quartiernah, das **Breitenrain** lokal und lebendig. Im Sommer treibt halb Bern in der **Aare**, und am **Marzili** wird gesonnt und geschaut.",
-      "hdar ist für Berns Tempo gemacht: kein Stress, keine Profile aus der ganzen Schweiz, nur eine Live-Karte. Sichtbar auf Zeit, Standort gerundet, und ein Chat im Quartier — vielleicht ein Glas in einer Kellerbar.",
+      "hdar ist für Berns Tempo gemacht: kein Stress, nur eine Live-Karte mit den Leuten in deiner Nähe. Sichtbar auf Zeit, Standort gerundet, und ein Chat im Quartier — vielleicht ein Glas in einer Kellerbar.",
     ],
     quartersTitle: "Quartiere in Bern",
     quarters: [

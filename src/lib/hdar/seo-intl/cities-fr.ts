@@ -1,6 +1,6 @@
 import type { CityText } from "./kit";
 
-/** Français (Belgique / Suisse romande) — texte unique par ville. Coquin sans nudité, aucun chiffre d'utilisateurs inventé. */
+/** Français (BE / CH) — unique text per city. Cheeky without nudity, never invent user numbers. */
 export const CITIES_FR: Record<string, CityText> = {
   bruxelles: {
     title: "Bruxelles : tchat et plans autour de toi — hdar.",
@@ -33,7 +33,7 @@ export const CITIES_FR: Record<string, CityText> = {
     introTitle: "Entre lac et quartiers vivants",
     intro: [
       "Les **Pâquis**, derrière la gare, sont le quartier le plus mélangé de la ville : bars, petits restos et, côté lac, les **Bains des Pâquis** où l'on se retrouve à toute saison. **Plainpalais** est étudiant et animé, les **Eaux-Vives** plus résidentielles mais pleines de terrasses, et **Carouge**, avec son air de petite ville sarde, est parfait pour un verre tranquille.",
-      "Dans une ville où beaucoup ne font que passer, hdar aide à voir qui est vraiment dans le coin. Visible le temps que tu veux, position arrondie, tchat du quartier — et rien d'explicite sur les pages publiques.",
+      "Dans une ville où beaucoup ne font que passer, hdar aide à voir qui est vraiment dans le coin. Visible le temps que tu veux, position arrondie, tchat du quartier. Personne autour ? Dézoome la carte pour voir qui est chaud ailleurs, ou change de ville en haut à droite.",
     ],
     quartersTitle: "Quartiers de Genève",
     quarters: [
@@ -56,7 +56,7 @@ export const CITIES_FR: Record<string, CityText> = {
     introTitle: "Du Flon au bord du lac",
     intro: [
       "Le **Flon**, ancien quartier d'entrepôts au creux de la ville, concentre bars et clubs. Au-dessus, la **Cité** et la vieille ville autour de la cathédrale offrent des ruelles plus calmes, et la place de la **Riponne** est un point de rendez-vous central. En bas, **Ouchy** et ses quais au bord du Léman sont faits pour se balader au coucher du soleil.",
-      "Avec hdar, tu décides quand on te voit et pour combien de temps. Position arrondie, tchat du quartier, aucune nudité sur les pages publiques : un regard, un message, un verre de chasselas.",
+      "Avec hdar, tu décides quand on te voit et pour combien de temps. Position arrondie, tchat du quartier : un regard, un message, un verre de chasselas.",
     ],
     quartersTitle: "Quartiers de Lausanne",
     quarters: [

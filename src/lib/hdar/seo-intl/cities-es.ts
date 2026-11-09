@@ -1,12 +1,12 @@
 import type { CityText } from "./kit";
 
-/** Español — textos únicos por ciudad. Picante sin desnudos, sin cifras de usuarios inventadas. */
+/** Español — unique text per city. Cheeky without nudity, never invent user numbers. */
 export const CITIES_ES: Record<string, CityText> = {
   madrid: {
     title: "Madrid: chat y planes cerca de ti — hdar.",
     desc: "Chat, planes y encuentros en Madrid, cerca de ti. Gratis, anónimo, +18. Mapa en directo por Chueca, Malasaña, La Latina y Lavapiés.",
     h1: ["Chat y planes en ", "Madrid", ", a dos calles"],
-    lead: "Madrid no se va a dormir pronto. Entre Chueca, Malasaña y La Latina, un vistazo al mapa basta para ver quién anda cerca ahora mismo — sin catálogos de perfiles de media España.",
+    lead: "Madrid no se va a dormir pronto. Entre Chueca, Malasaña y La Latina, un vistazo al mapa basta para ver quién anda cerca ahora mismo. ¿No hay nadie cerca? Aleja el mapa para ver quién tiene ganas en otra zona, o cambia de ciudad arriba a la derecha.",
     introTitle: "Una ciudad que sale de cañas",
     intro: [
       "**Chueca** lleva décadas siendo el corazón LGTBI de Madrid: terrazas llenas, bares pequeños y miradas que se quedan un segundo de más. Al lado, **Malasaña** es más indie y nocturna. Los domingos, **La Latina** se llena de cañas y vermú, y **Lavapiés** mezcla de todo, hasta tarde.",
@@ -33,7 +33,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "Entre el Eixample y el mar",
     intro: [
       "El **Gaixample**, en la Esquerra de l'Eixample, concentra muchos de los bares y clubs LGTBI de la ciudad. **Gràcia** es de plazas y terrazas, el **Born** de callejones con encanto, y la **Barceloneta** es la playa urbana donde todo el mundo mira y se deja mirar en verano.",
-      "Con hdar eres visible solo cuando quieres y desapareces en cuanto te ocultas. La ubicación va redondeada, no hay galerías de desnudos en las páginas públicas y no inventamos cifras de «gente conectada». Un mensaje, un vermut, y lo demás se insinúa.",
+      "Con hdar eres visible solo cuando quieres y desapareces en cuanto te ocultas. La ubicación va redondeada. Un mensaje, un vermut, y lo demás queda entre vosotros.",
     ],
     quartersTitle: "Planes en Barcelona",
     quarters: [
@@ -56,7 +56,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "Terrazas, Turia y playa",
     intro: [
       "**Ruzafa** es el barrio de moda: bares, terrazas y un ambiente diverso que se alarga hasta tarde. **El Carmen**, en Ciutat Vella, es laberinto de callejuelas, copas y fachadas con grafitis. **Benimaclet** tiene aire de pueblo universitario, y la **Malvarrosa** es la playa de la ciudad.",
-      "hdar va al ritmo valenciano: eres visible el tiempo que quieras, con la ubicación redondeada, y escribes en el chat del barrio. Una mirada, una horchata o una copa — el resto, insinuado.",
+      "hdar va al ritmo valenciano: eres visible el tiempo que quieras, con la ubicación redondeada, y escribes en el chat del barrio. Una mirada, una horchata o una copa — el resto, entre vosotros.",
     ],
     quartersTitle: "Barrios de Valencia",
     quarters: [
@@ -79,7 +79,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "La Alameda, el río y el calor",
     intro: [
       "La **Alameda de Hércules** es el punto de encuentro más diverso de Sevilla: terrazas, bares y gente de todo tipo hasta la madrugada. Al otro lado del Guadalquivir, **Triana** tiene su propio carácter, más de barrio. **Santa Cruz** es callejuela y azahar, y el **Arenal** junta tapas y paseo junto al río.",
-      "hdar encaja con el ritmo sevillano: te muestras cuando quieres, la ubicación va redondeada y el chat del barrio hace el resto. Picante, sí; explícito, no — y sin cifras inventadas.",
+      "hdar encaja con el ritmo sevillano: te muestras cuando quieres, la ubicación va redondeada y el chat del barrio hace el resto. Picante, sí; vulgar, no. ¿No hay nadie cerca? Aleja el mapa para ver quién tiene ganas en otra zona, o cambia de ciudad arriba a la derecha.",
     ],
     quartersTitle: "Planes en Sevilla",
     quarters: [
@@ -125,7 +125,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "Centro, Soho y playa",
     intro: [
       "El **Centro histórico** alrededor de **calle Larios** se llena de terrazas y bares cada noche. El **Soho** de Málaga, junto al puerto, es arte urbano y locales nuevos. La **Malagueta** es la playa de al lado del centro, y **El Palo** guarda ese aire marinero de espetos y chiringuitos. Y a un paso está **Torremolinos**, con su ambiente LGTBI conocido en toda Europa.",
-      "Con hdar decides cuándo te ven y durante cuánto tiempo. La ubicación va redondeada y las páginas públicas no tienen nada explícito: una mirada, un mensaje y quizá un tinto de verano.",
+      "Con hdar decides cuándo te ven y durante cuánto tiempo. La ubicación va redondeada +18: una mirada, un mensaje y quizá un tinto de verano.",
     ],
     quartersTitle: "Planes en Málaga",
     quarters: [
@@ -148,7 +148,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "Más allá de la postal",
     intro: [
       "El **casco antiguo**, a la sombra de la catedral, es de callejuelas y terrazas escondidas. **Santa Catalina**, el antiguo barrio de pescadores, es hoy uno de los más animados para cenar y tomar algo. El **Paseo Marítimo** concentra bares y clubs, y **Portixol** es el rincón marinero para un plan más tranquilo.",
-      "En una ciudad con tanto visitante, hdar ayuda a ver quién está realmente cerca. Visible el tiempo que quieras, ubicación redondeada y chat del barrio. Sin desnudos en las páginas públicas, sin cifras inventadas.",
+      "En una ciudad con tanto visitante, hdar ayuda a ver quién está realmente cerca. Visible el tiempo que quieras, ubicación redondeada y chat del barrio. ¿No hay nadie cerca? Aleja el mapa para ver quién tiene ganas en otra zona, o cambia de ciudad arriba a la derecha.",
     ],
     quartersTitle: "Barrios de Palma",
     quarters: [
@@ -194,7 +194,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "Siete Calles y mucho más",
     intro: [
       "El **Casco Viejo** y sus **Siete Calles** son el punto de partida de cualquier ronda de pintxos. **Bilbao La Vieja**, al otro lado de la ría, es el barrio más alternativo y diverso. **Indautxu** y **Abando** son más de ensanche y terraza, y el paseo de la **ría** junto al Guggenheim es perfecto para quedar.",
-      "hdar va con la forma de salir bilbaína: te ves, te escribes, quedas. Pero siempre discreto: visibilidad temporal, ubicación redondeada y nada explícito en las páginas públicas.",
+      "hdar va con la forma de salir bilbaína: te ves, te escribes, quedas. Pero siempre discreto: visibilidad temporal, ubicación redondeada y solo +18.",
     ],
     quartersTitle: "Planes en Bilbao",
     quarters: [
@@ -217,7 +217,7 @@ export const CITIES_ES: Record<string, CityText> = {
     introTitle: "El Barrio, la Explanada y el mar",
     intro: [
       "**El Barrio**, el casco antiguo a los pies del castillo de Santa Bárbara, es callejuela, bares y fiesta hasta tarde. La **Explanada de España** es el paseo de palmeras para quedar, el **puerto** suma terrazas y copas, y la **playa del Postiguet** está a un paso del centro.",
-      "Con hdar eres visible solo cuando quieres, durante el tiempo que elijas, y la ubicación va redondeada. Un mensaje en el chat del barrio, una cerveza en El Barrio — sin desnudos ni cifras inventadas.",
+      "Con hdar eres visible solo cuando quieres, durante el tiempo que elijas, y la ubicación va redondeada. Un mensaje en el chat del barrio, una cerveza en El Barrio. ¿No hay nadie cerca? Aleja el mapa para ver quién tiene ganas en otra zona, o cambia de ciudad arriba a la derecha.",
     ],
     quartersTitle: "Zonas de Alicante",
     quarters: [

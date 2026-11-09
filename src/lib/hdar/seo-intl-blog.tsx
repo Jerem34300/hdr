@@ -24,13 +24,13 @@ export type NativeBlog = {
   foot: string;
 };
 
-/** Berlin — einzigartiger DE-Text, anzüglich ohne Nacktheit, keine erfundenen Nutzerzahlen. */
+/** Berlin — unique DE text, cheeky without nudity, never invent user numbers. */
 export const BERLIN_DE: NativeBlog = {
   title: "Berlin: Chat & Treffen in deiner Nähe — hdar.",
   desc: "Chat und Treffen in Berlin, in deiner Nähe. Kostenlos, anonym, ab 18. Live-Karte um Schöneberg, Kreuzberg, Prenzlauer Berg.",
   h1: <>Treffen & Nächte in <span className="text-[#FA6F6C]">Berlin</span></>,
   lead:
-    "Berlin bleibt spät wach. Zwischen Nollendorfplatz, Kreuzberg und dem Prenzlauer Berg reicht oft ein Blick auf die Karte: wer gerade sichtbar ist, wohin es zieht — ohne Profilkatalog aus ganz Deutschland.",
+    "Berlin bleibt spät wach. Zwischen Nollendorfplatz, Kreuzberg und dem Prenzlauer Berg reicht oft ein Blick auf die Karte: wer gerade sichtbar ist, wohin es zieht. Niemand in der Nähe? Zoom die Karte raus und schau, wer woanders Lust hat, oder wechsle oben rechts die Stadt.",
   cta: "Karte öffnen",
   sub: "Kostenlos · anonym · Standort gerundet · ab 18",
   facts: ["Einwohner", "Fläche", "Alter"],
@@ -45,9 +45,8 @@ export const BERLIN_DE: NativeBlog = {
         draußen. hdar zeigt dich nur, wenn du es willst: eine Stunde, drei Stunden oder die ganze Nacht — Position auf etwa 110 Meter gerundet.
       </p>
       <p className="mt-3 text-sm leading-relaxed">
-        Die Stimmung bleibt andeutungsvoll: ein Blick, ein Chat im Viertel, vielleicht ein Drink später. Keine Galerie mit Nacktfotos auf der
-        öffentlichen Seite, kein Zählen von „wer gerade online ist“ als Marketingzahl. Was du auf der Karte siehst, ist live — und verschwindet,
-        wenn du dich ausblendest.
+        Ein Blick, ein Chat im Viertel, vielleicht ein Drink später — der Rest bleibt unter euch. Was du auf der Karte siehst, ist live
+        und verschwindet, wenn du dich ausblendest.
       </p>
 
       <h2 className="mt-10 font-display text-xl font-bold">Kieze, die man kennt</h2>
@@ -58,11 +57,10 @@ export const BERLIN_DE: NativeBlog = {
         <li><strong>Prenzlauer Berg</strong> — eher Café und Spaziergang, gut für ein erstes Treffen bei Licht.</li>
       </ul>
 
-      <h2 className="mt-10 font-display text-xl font-bold">Zahlen mit Quelle (keine hdar-Statistik)</h2>
+      <h2 className="mt-10 font-display text-xl font-bold">Berlin in Zahlen</h2>
       <p className="mt-3 text-sm leading-relaxed">
         Zum Stichtag 31.12.2024 meldet die amtliche Statistik <strong>3.685.265 Einwohner</strong> und eine Fläche von{" "}
-        <strong>891,12 km²</strong> (Destatis / Amt für Statistik Berlin-Brandenburg, Fortschreibung auf Basis Zensus 2022). Das sind
-        Stadtzahlen — keine Nutzerzahlen von hdar. Wir erfinden keine „X Leute gerade online in Berlin“.
+        <strong>891,12 km²</strong> (Destatis / Amt für Statistik Berlin-Brandenburg, Fortschreibung auf Basis Zensus 2022).
       </p>
 
       <h2 className="mt-10 font-display text-xl font-bold">So bleibt es diskret</h2>
@@ -80,9 +78,9 @@ export const BERLIN_DE: NativeBlog = {
   cruisingCta: "Karte öffnen · öffentliche Orte in Berlin",
   cruisingNote: "18+ · Ebene nur auf Wunsch · keine Adressen auf dieser Seite.",
   placesTitle: "Orte auf der hdar-Karte",
-  placesIntro: "Nur freigeschaltete Einträge aus der Karte (approved). Keine erfundenen Adressen.",
+  placesIntro: "Die Partner-Orte, die schon auf der Karte sind:",
   placesEmpty:
-    "Partner-Bars, Saunen und Clubs für Berlin sind in der Datenbank noch in Prüfung (Prospection EU, Status pending) und erscheinen deshalb hier nicht als sichtbare Partner. Öffentliche, freigeschaltete Orte (Parks, ausgewiesene FKK-Stellen u. a.) bleiben auf der Live-Karte sichtbar, sobald du die Schicht aktivierst — ohne Nutzerzahlen dazu.",
+    "In Berlin sind noch keine Partner-Bars, -Saunen oder -Clubs auf der hdar-Karte. Parks und andere öffentliche Orte siehst du trotzdem, sobald du die Ebene „Andere öffentliche Orte“ einschaltest. Du betreibst eine Bar oder Sauna? Schreib uns über die Kontaktseite.",
   nearTitle: "Andere Städte in Deutschland",
   faqTitle: "Häufige Fragen",
   faq: [

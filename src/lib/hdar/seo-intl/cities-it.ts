@@ -1,12 +1,12 @@
 import type { CityText } from "./kit";
 
-/** Italiano — testi unici per città. Malizioso senza nudità, nessun numero di utenti inventato. */
+/** Italiano — unique text per city. Cheeky without nudity, never invent user numbers. */
 export const CITIES_IT: Record<string, CityText> = {
   roma: {
     title: "Roma: chat e incontri vicino a te — hdar.",
     desc: "Chat, incontri e serate a Roma, vicino a te. Gratis, anonimo, 18+. Mappa in tempo reale tra Gay Street, Monti, Trastevere, Testaccio e Pigneto.",
     h1: ["Chat e incontri a ", "Roma", ", a due passi"],
-    lead: "Roma è enorme, ma la tua serata no. Tra Monti, Trastevere e Testaccio basta un'occhiata alla mappa per vedere chi è nei paraggi adesso — senza cataloghi di profili da mezza Italia.",
+    lead: "Roma è enorme, ma la tua serata no. Tra Monti, Trastevere e Testaccio basta un'occhiata alla mappa per vedere chi è in giro adesso. Nessuno nei paraggi? Allarga la mappa per vedere chi ha voglia altrove, o cambia città in alto a destra.",
     introTitle: "La città eterna, di notte",
     intro: [
       "Ai piedi del Colosseo, la **Gay Street** in via di San Giovanni in Laterano è da anni un punto di ritrovo LGBT+: tavolini fuori, sguardi che durano un secondo in più. Poco più in là, **Monti** è fatto di vicoli e aperitivi, **Trastevere** si riempie ogni sera, e **Testaccio** con **Ostiense** porta la notte fino a tardi. Il **Pigneto** è più alternativo e di quartiere.",
@@ -33,7 +33,7 @@ export const CITIES_IT: Record<string, CityText> = {
     introTitle: "Porta Venezia, Navigli e oltre",
     intro: [
       "**Porta Venezia**, soprattutto intorno a **via Lecco**, è il cuore LGBT+ di Milano: bar con i tavolini sul marciapiede e aperitivi che diventano serate. I **Navigli** sono il classico dell'aperitivo sull'acqua, **Isola** è più giovane e creativa, e **Brera** è elegante, perfetta per un primo drink tranquillo.",
-      "Con hdar sei visibile solo quando vuoi e sparisci appena ti nascondi. La posizione è arrotondata, nelle pagine pubbliche niente nudità e nessun numero inventato di «persone online». Un messaggio, un Negroni sbagliato, e il resto si intuisce.",
+      "Con hdar sei visibile solo quando vuoi e sparisci appena ti nascondi. La posizione è arrotondata. Un messaggio, un Negroni sbagliato, e il resto si intuisce.",
     ],
     quartersTitle: "Quartieri per uscire a Milano",
     quarters: [
@@ -56,7 +56,7 @@ export const CITIES_IT: Record<string, CityText> = {
     introTitle: "Vicoli, mare e baretti",
     intro: [
       "Il **centro storico**, intorno a **Spaccanapoli** e piazza Bellini, è fatto di vicoli, librerie e bar dove si fa tardi. **Chiaia** è la zona dei «baretti» e della movida più elegante, il **Vomero** è più residenziale e tranquillo, e il **lungomare** di via Caracciolo è la passeggiata per eccellenza, con il Vesuvio sullo sfondo.",
-      "hdar va al ritmo di Napoli: ti mostri quando vuoi, la posizione è arrotondata e la chat di quartiere fa il resto. Malizioso sì, esplicito no — e niente numeri inventati.",
+      "hdar va al ritmo di Napoli: ti mostri quando vuoi, la posizione è arrotondata e la chat di quartiere fa il resto. Malizioso sì, volgare no. Nessuno nei paraggi? Allarga la mappa per vedere chi ha voglia altrove, o cambia città in alto a destra.",
     ],
     quartersTitle: "Zone di Napoli",
     quarters: [
@@ -79,7 +79,7 @@ export const CITIES_IT: Record<string, CityText> = {
     introTitle: "Portici, Po e aperitivo",
     intro: [
       "Il **Quadrilatero Romano** è un intreccio di vie strette, piole e locali. **San Salvario**, dietro Porta Nuova, è il quartiere della movida più varia, mentre **Vanchiglia** è universitaria e rilassata. Lungo il Po, i **Murazzi** e il **parco del Valentino** sono i posti dove ci si ritrova quando fa bello.",
-      "Con hdar decidi tu quando farti vedere e per quanto tempo. La posizione è arrotondata, niente cataloghi né foto esplicite nelle pagine pubbliche: uno sguardo, un messaggio, un vermut sotto i portici.",
+      "Con hdar decidi tu quando farti vedere e per quanto tempo. La posizione è arrotondata, solo 18+: uno sguardo, un messaggio, un vermut sotto i portici.",
     ],
     quartersTitle: "Quartieri di Torino",
     quarters: [
@@ -102,7 +102,7 @@ export const CITIES_IT: Record<string, CityText> = {
     introTitle: "Oltrarno, piazze e tramonti",
     intro: [
       "In **Oltrarno**, piazza **Santo Spirito** è il salotto serale della città, con gente seduta sui gradini fino a tardi. **Sant'Ambrogio** ha il mercato e bar di quartiere, **Santa Croce** si anima di locali dopo cena, e i **lungarni** e piazzale Michelangelo sono il posto per un tramonto in compagnia.",
-      "In una città piena di turisti, hdar ti aiuta a vedere chi è davvero vicino. Visibile per il tempo che vuoi, posizione arrotondata e chat di quartiere — senza nudità nelle pagine pubbliche e senza numeri inventati.",
+      "In una città piena di turisti, hdar ti aiuta a vedere chi è davvero vicino. Visibile per il tempo che vuoi, posizione arrotondata e chat di quartiere. Nessuno nei paraggi? Allarga la mappa per vedere chi ha voglia altrove, o cambia città in alto a destra.",
     ],
     quartersTitle: "Zone di Firenze",
     quarters: [

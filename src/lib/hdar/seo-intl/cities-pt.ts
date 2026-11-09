@@ -1,6 +1,6 @@
 import type { CityText } from "./kit";
 
-/** Português (PT) — texto único por cidade. Atrevido sem nudez, sem números de utilizadores inventados. */
+/** Português (PT) — unique text per city. Cheeky without nudity, never invent user numbers. */
 export const CITIES_PT: Record<string, CityText> = {
   lisboa: {
     title: "Lisboa: chat e encontros perto de ti — hdar.",
@@ -33,7 +33,7 @@ export const CITIES_PT: Record<string, CityText> = {
     introTitle: "Granito, rio e noites longas",
     intro: [
       "A **Ribeira**, à beira do Douro, é postal e esplanada ao mesmo tempo. Na **Baixa**, a zona das **Galerias de Paris** e das ruas à volta concentra bares e noite até tarde. **Cedofeita** e a **rua de Miguel Bombarda** são mais criativas, com galerias e cafés, e a **Foz** é o sítio para ver o pôr do sol junto ao mar.",
-      "Com a hdar estás visível só quando queres, pelo tempo que escolheres, e a localização é arredondada. Uma mensagem no chat do bairro, um copo de vinho do Porto — sem nudez nas páginas públicas e sem números inventados.",
+      "Com a hdar estás visível só quando queres, pelo tempo que escolheres, e a localização é arredondada. Uma mensagem no chat do bairro, um copo de vinho do Porto. Ninguém por perto? Afasta o mapa para ver quem está com vontade noutro lado, ou muda de cidade no canto superior direito.",
     ],
     quartersTitle: "Zonas do Porto",
     quarters: [

@@ -58,7 +58,7 @@ function buildBlog(c: IntlCityPayload, kit: Kit, t: CityText, nf: Intl.NumberFor
         )}
         {pop && (
           <>
-            <h2 className={H2}>{kit.numbersTitle}</h2>
+            <h2 className={H2}>{kit.numbersTitle(c.n)}</h2>
             <p className={P}>{rich(kit.numbers({ n: c.n, pop, area, source: c.source }))}</p>
           </>
         )}

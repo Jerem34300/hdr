@@ -1,6 +1,6 @@
 import type { CityText } from "./kit";
 
-/** Nederlands — unieke tekst per stad. Ondeugend zonder naakt, geen verzonnen gebruikersaantallen. */
+/** Nederlands — unique text per city. Cheeky without nudity, never invent user numbers. */
 export const CITIES_NL: Record<string, CityText> = {
   amsterdam: {
     title: "Amsterdam: chat & afspraakjes bij jou in de buurt — hdar.",
@@ -33,7 +33,7 @@ export const CITIES_NL: Record<string, CityText> = {
     introTitle: "Skyline, havens en kroegen",
     intro: [
       "Het gebied rond de **Witte de Withstraat** en de **Nieuwe Binnenweg** is het hart van het uitgaansleven: bars, restaurants en lange avonden. De **Oude Haven** bij de kubuswoningen heeft terrassen aan het water, de **Kop van Zuid** is modern met uitzicht op de Erasmusbrug, en **Kralingen** is groener en rustiger.",
-      "hdar past bij die directe stijl: je ziet wie er in de buurt is, stuurt een bericht en spreekt af. Maar wel discreet — zichtbaarheid op tijd, afgeronde locatie en niets expliciets op de openbare pagina.",
+      "hdar past bij die directe stijl: je ziet wie er in de buurt is, stuurt een bericht en spreekt af. Maar wel discreet — zichtbaarheid op tijd, afgeronde locatie en alleen 18+.",
     ],
     quartersTitle: "Waar Rotterdam uitgaat",
     quarters: [
@@ -79,7 +79,7 @@ export const CITIES_NL: Record<string, CityText> = {
     introTitle: "Werfkelders en fietsen",
     intro: [
       "De **Oudegracht** met zijn **werfkelders** aan het water is uniek: terrassen een verdieping lager dan de straat. Rond de **Neude** zitten kroegen en restaurants, **Lombok** is multicultureel en levendig, en **Wittevrouwen** is een rustige buurt vol oude huizen en cafés.",
-      "hdar past bij een stad waar je alles op de fiets doet: je ziet wie er in de buurt is, zonder profielen uit heel Nederland. Zichtbaar op tijd, locatie afgerond, en een biertje aan de werf.",
+      "hdar past bij een stad waar je alles op de fiets doet: je ziet wie er in de buurt is. Niemand in de buurt? Zoom uit om te zien wie er elders zin in heeft, of kies rechtsboven een andere stad. Zichtbaar op tijd, locatie afgerond, en een biertje aan de werf.",
     ],
     quartersTitle: "Plekken voor plannen in Utrecht",
     quarters: [
@@ -102,7 +102,7 @@ export const CITIES_NL: Record<string, CityText> = {
     introTitle: "Van Stratumseind tot Strijp-S",
     intro: [
       "**Stratumseind** is een van de bekendste kroegstraten van het land — kroeg na kroeg, vooral in het weekend. **Strijp-S**, het voormalige Philips-terrein, is nu een creatieve wijk met restaurants en evenementen. Rond het **Wilhelminaplein** en het **Markt**-gebied vind je terrassen en wat rustigere bars.",
-      "hdar is handig in een stad met veel expats en nieuwkomers: je ziet wie er echt in de buurt is. Zichtbaar zolang jij wilt, locatie afgerond, niets expliciets op de openbare pagina.",
+      "hdar is handig in een stad met veel expats en nieuwkomers: je ziet wie er echt in de buurt is. Zichtbaar zolang jij wilt, locatie afgerond. Niemand in de buurt? Zoom uit om te zien wie er elders zin in heeft, of kies rechtsboven een andere stad.",
     ],
     quartersTitle: "Buurten in Eindhoven",
     quarters: [
@@ -125,7 +125,7 @@ export const CITIES_NL: Record<string, CityText> = {
     introTitle: "Studentenstad van het Noorden",
     intro: [
       "Rond de **Grote Markt** en in de **Poelestraat** en **Peperstraat** zit het uitgaansleven dicht op elkaar — en het gaat vaak tot diep in de nacht. Het **Noorderplantsoen** is het park waar iedereen in de zomer zit, en in de **Folkingestraat** vind je kleine winkels en cafés.",
-      "hdar past bij een stad vol studenten en nachtbrakers: je ziet wie er in de buurt is, schrijft in de buurtchat en spreekt af. Zichtbaar zolang je wilt, locatie afgerond, en geen verzonnen aantallen.",
+      "hdar past bij een stad vol studenten en nachtbrakers: je ziet wie er in de buurt is, schrijft in de buurtchat en spreekt af. Zichtbaar zolang je wilt, locatie afgerond. Niemand in de buurt? Zoom uit om te zien wie er elders zin in heeft, of kies rechtsboven een andere stad.",
     ],
     quartersTitle: "Plekken in Groningen",
     quarters: [
