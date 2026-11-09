@@ -28,7 +28,7 @@ export const LONDON_EN: NativeBlog = {
   desc: "Chat, plans and meetups in London, around you. Free, anonymous, 18+. Live map from Soho to Vauxhall and Shoreditch.",
   h1: <>Chat, plans &amp; late nights in <span className="text-[#FA6F6C]">London</span></>,
   lead:
-    "London is huge, but your evening isn't. Whether you're finishing a drink in Soho or heading south to Vauxhall, a quick look at the map shows who's around right now — not a catalogue of profiles from the other side of the M25.",
+    "London is huge, but your evening isn't. Whether you're finishing a drink in Soho or heading south to Vauxhall, a quick look at the map shows who's around right now. Nobody around? Zoom out the map to see who's up for it elsewhere, or switch city at the top right.",
   cta: "Open the map",
   sub: "Free · anonymous · rounded location · 18+",
   facts: ["Residents", "Area", "Age"],
@@ -40,11 +40,11 @@ export const LONDON_EN: NativeBlog = {
         Londoners don&apos;t really live in &ldquo;London&rdquo; — they live in their bit of it. <strong>Soho</strong>, around Old Compton Street,
         is still where a lot of nights start: small bars, people spilling onto the pavement, a wink across the street.{" "}
         <strong>Vauxhall</strong> keeps the late crowd south of the river. <strong>Shoreditch</strong> and <strong>Dalston</strong> are louder,
-        younger and more spontaneous. hdar works the same way: it shows what&apos;s happening near you, not across 32 boroughs.
+        younger and more spontaneous. hdar works the same way: it shows what&apos;s happening near you.
       </p>
       <p className={P}>
         You decide when you&apos;re visible — one hour, three hours or the whole night — and you vanish from the map the moment you hide.
-        No nude gallery on the public pages, no &ldquo;thousands online now&rdquo; headline. Just a glance, a message, maybe a pint later.
+        Just a glance, a message, maybe a pint later. Nobody around? Zoom out the map to see who&apos;s up for it elsewhere, or tap the city name at the top right to switch city.
       </p>
 
       <h2 className={H2}>Plans in London, area by area</h2>
@@ -55,11 +55,10 @@ export const LONDON_EN: NativeBlog = {
         <li><strong>Clapham &amp; Brixton</strong> — neighbourhood pubs, good for meeting someone who actually lives nearby.</li>
       </ul>
 
-      <h2 className={H2}>Numbers with a source (not hdar stats)</h2>
+      <h2 className={H2}>London in numbers</h2>
       <p className={P}>
         The Office for National Statistics estimates Greater London&apos;s population at <strong>9,122,909</strong> at mid-2025, over an area of{" "}
-        <strong>1,571.96 km²</strong> (ONS mid-year estimates, table MYE5, published 29 July 2026). Those are city figures, not hdar user numbers —
-        we won&apos;t invent a &ldquo;people online in London&rdquo; counter.
+        <strong>1,571.96 km²</strong> (ONS mid-year estimates, table MYE5, published 29 July 2026).
       </p>
 
       <h2 className={H2}>Keeping it discreet</h2>
@@ -72,9 +71,9 @@ export const LONDON_EN: NativeBlog = {
   cruisingCta: "Open the map · public spots layer in London",
   cruisingNote: "18+ · opt-in layer · no addresses listed on this page.",
   placesTitle: "Venues on the hdar map",
-  placesIntro: "Only approved entries from the map. No made-up addresses.",
+  placesIntro: "Partner venues already on the map:",
   placesEmpty:
-    "There are no approved partner venues in London on the hdar map yet, so none are listed here. Bars, saunas or clubs that want to appear can get in touch via the contact page.",
+    "No partner venues in London on the hdar map yet. Run a bar, sauna or club? Get in touch via the contact page.",
   nearTitle: "Other cities",
   faqTitle: "FAQ",
   faq: [
@@ -105,8 +104,9 @@ export const MANCHESTER_EN: NativeBlog = {
         hdar fits that rhythm: a quick look, a message in the neighbourhood chat, and you&apos;re meeting at the corner.
       </p>
       <p className={P}>
-        Nothing on show that you don&apos;t choose to share. You appear for as long as you like and disappear with one tap. The fun stays in the
-        hint, the reply, the &ldquo;where are you now?&rdquo;.
+        Nothing on show that you don&apos;t choose to share. You appear for as long as you like and disappear with one tap. The fun is in the
+        reply, the &ldquo;where are you now?&rdquo;. Nobody around? Zoom out the map to see who&apos;s up for it elsewhere, or tap the city
+        name at the top right to switch city.
       </p>
 
       <h2 className={H2}>Where plans start in Manchester</h2>
@@ -117,11 +117,11 @@ export const MANCHESTER_EN: NativeBlog = {
         <li><strong>Deansgate &amp; Castlefield</strong> — canals, terraces and after-work drinks.</li>
       </ul>
 
-      <h2 className={H2}>Numbers with a source (not hdar stats)</h2>
+      <h2 className={H2}>Manchester in numbers</h2>
       <p className={P}>
         According to the ONS, Manchester&apos;s local authority area had an estimated <strong>588,256</strong> residents at mid-2025, on{" "}
         <strong>115.65 km²</strong> (mid-year estimates, table MYE5, published 29 July 2026). That&apos;s the city council area, not Greater
-        Manchester — and definitely not a count of hdar users.
+        Manchester.
       </p>
 
       <h2 className={H2}>Keeping it discreet</h2>
@@ -134,9 +134,9 @@ export const MANCHESTER_EN: NativeBlog = {
   cruisingCta: "Open the map · public spots layer in Manchester",
   cruisingNote: "18+ · opt-in layer · no addresses listed on this page.",
   placesTitle: "Venues on the hdar map",
-  placesIntro: "Only approved entries from the map. No made-up addresses.",
+  placesIntro: "Partner venues already on the map:",
   placesEmpty:
-    "No approved partner venues in Manchester on the hdar map yet. Venues in the Village or elsewhere in the city can reach us through the contact page.",
+    "No partner venues in Manchester on the hdar map yet. Venues in the Village or elsewhere in the city can reach us through the contact page.",
   nearTitle: "Other cities",
   faqTitle: "FAQ",
   faq: [
@@ -168,7 +168,7 @@ export const BRIGHTON_EN: NativeBlog = {
       </p>
       <p className={P}>
         You choose when you&apos;re on the map and for how long. A flirty message, a drink on the beach, a little mystery — that&apos;s the
-        tone. No explicit photos on the public pages and no made-up crowd numbers.
+        tone. Nobody around? Zoom out the map to see who&apos;s up for it elsewhere, or tap the city name at the top right to switch city.
       </p>
 
       <h2 className={H2}>Plans in Brighton</h2>
@@ -179,11 +179,11 @@ export const BRIGHTON_EN: NativeBlog = {
         <li><strong>Hove</strong> — calmer, more local, still only a short walk away.</li>
       </ul>
 
-      <h2 className={H2}>Numbers with a source (not hdar stats)</h2>
+      <h2 className={H2}>Brighton in numbers</h2>
       <p className={P}>
         The ONS estimates the population of Brighton and Hove at <strong>284,170</strong> at mid-2025, on an area of{" "}
         <strong>82.82 km²</strong> (mid-year estimates, table MYE5, published 29 July 2026). These figures cover the whole Brighton and Hove
-        unitary authority. They are not hdar user numbers.
+        unitary authority.
       </p>
 
       <h2 className={H2}>Keeping it discreet</h2>
@@ -196,9 +196,9 @@ export const BRIGHTON_EN: NativeBlog = {
   cruisingCta: "Open the map · public spots layer in Brighton",
   cruisingNote: "18+ · opt-in layer · no addresses listed on this page.",
   placesTitle: "Venues on the hdar map",
-  placesIntro: "Only approved entries from the map. No made-up addresses.",
+  placesIntro: "Partner venues already on the map:",
   placesEmpty:
-    "No approved partner venues in Brighton on the hdar map yet. Kemptown bars or other venues that want a spot can contact us via the contact page.",
+    "No partner venues in Brighton on the hdar map yet. Kemptown bars or other venues that want a spot can contact us via the contact page.",
   nearTitle: "Other cities",
   faqTitle: "FAQ",
   faq: [
@@ -229,8 +229,8 @@ export const BIRMINGHAM_EN: NativeBlog = {
         glass of something. hdar keeps it local: who&apos;s near you, right now.
       </p>
       <p className={P}>
-        Your visibility is yours to set — an hour, three, or the whole night. Suggestive is fine; explicit isn&apos;t what the public pages are for.
-        And we never pad things out with fake &ldquo;online now&rdquo; numbers.
+        Your visibility is yours to set — an hour, three, or the whole night. A cheeky message, a drink in Southside, and the rest
+        stays between you. Nobody around? Zoom out the map to see who&apos;s up for it elsewhere, or tap the city name at the top right to switch city.
       </p>
 
       <h2 className={H2}>Where Birmingham plans happen</h2>
@@ -241,11 +241,10 @@ export const BIRMINGHAM_EN: NativeBlog = {
         <li><strong>Moseley &amp; Kings Heath</strong> — neighbourhood pubs south of the centre.</li>
       </ul>
 
-      <h2 className={H2}>Numbers with a source (not hdar stats)</h2>
+      <h2 className={H2}>Birmingham in numbers</h2>
       <p className={P}>
         The ONS puts Birmingham&apos;s population at an estimated <strong>1,176,960</strong> at mid-2025, over <strong>267.78 km²</strong>{" "}
-        (mid-year estimates, table MYE5, published 29 July 2026) — the largest local authority in England by population. City figures only,
-        not hdar users.
+        (mid-year estimates, table MYE5, published 29 July 2026) — the largest local authority in England by population.
       </p>
 
       <h2 className={H2}>Keeping it discreet</h2>
@@ -258,9 +257,9 @@ export const BIRMINGHAM_EN: NativeBlog = {
   cruisingCta: "Open the map · public spots layer in Birmingham",
   cruisingNote: "18+ · opt-in layer · no addresses listed on this page.",
   placesTitle: "Venues on the hdar map",
-  placesIntro: "Only approved entries from the map. No made-up addresses.",
+  placesIntro: "Partner venues already on the map:",
   placesEmpty:
-    "No approved partner venues in Birmingham on the hdar map yet. Venues in Southside or elsewhere can get in touch through the contact page.",
+    "No partner venues in Birmingham on the hdar map yet. Venues in Southside or elsewhere can get in touch through the contact page.",
   nearTitle: "Other cities",
   faqTitle: "FAQ",
   faq: [
@@ -288,11 +287,11 @@ export const DUBLIN_EN: NativeBlog = {
         Most Dublin nights start somewhere in the <strong>city centre</strong>. <strong>South Great George&apos;s Street</strong> and the streets
         around it have long been a hub for LGBT+ bars, while <strong>Temple Bar</strong> pulls in visitors and live music. North of the river,{" "}
         <strong>Smithfield</strong> and <strong>Stoneybatter</strong> have a more local, laid-back feel. hdar keeps things close: who&apos;s
-        visible within walking distance, not across the whole county.
+        visible within walking distance.
       </p>
       <p className={P}>
         You set how long you stay on the map and you can disappear any time. A cheeky message, a pint, a bit of chat — that&apos;s the spirit.
-        No explicit content on the public pages, and no invented user counts.
+        Nobody around? Zoom out the map to see who&apos;s up for it elsewhere, or tap the city name at the top right to switch city.
       </p>
 
       <h2 className={H2}>Plans in Dublin</h2>
@@ -303,11 +302,10 @@ export const DUBLIN_EN: NativeBlog = {
         <li><strong>Portobello &amp; Rathmines</strong> — canal-side walks and neighbourhood spots.</li>
       </ul>
 
-      <h2 className={H2}>Numbers with a source (not hdar stats)</h2>
+      <h2 className={H2}>Dublin in numbers</h2>
       <p className={P}>
         In Census 2022, the Central Statistics Office counted <strong>592,713</strong> people in the Dublin City Council area — the most
-        populous local authority on the island of Ireland (CSO, Census 2022). That&apos;s Dublin City, not County Dublin, and it has nothing to
-        do with hdar user numbers.
+        populous local authority on the island of Ireland (CSO, Census 2022). That&apos;s Dublin City, not County Dublin.
       </p>
 
       <h2 className={H2}>Keeping it discreet</h2>
@@ -320,9 +318,9 @@ export const DUBLIN_EN: NativeBlog = {
   cruisingCta: "Open the map · public spots layer in Dublin",
   cruisingNote: "18+ · opt-in layer · no addresses listed on this page.",
   placesTitle: "Venues on the hdar map",
-  placesIntro: "Only approved entries from the map. No made-up addresses.",
+  placesIntro: "Partner venues already on the map:",
   placesEmpty:
-    "No approved partner venues in Dublin on the hdar map yet. Bars or clubs that want to be listed can contact us through the contact page.",
+    "No partner venues in Dublin on the hdar map yet. Bars or clubs that want to be listed can contact us through the contact page.",
   nearTitle: "Other cities",
   faqTitle: "FAQ",
   faq: [
