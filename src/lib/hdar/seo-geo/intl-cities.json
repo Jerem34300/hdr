@@ -6,20 +6,241 @@
       "pathWord": null,
       "priority": 1,
       "cities": [
-        {"s":"berlin","n":"Berlin","lat":52.52,"lng":13.405,"pop":3685265,"area_km2":891.12,"pop_year":2024,"area_year":2024,"source":"Destatis / Amt für Statistik Berlin-Brandenburg, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["hamburg","muenchen","koeln","frankfurt","leipzig"]},
-        {"s":"hamburg","n":"Hamburg","lat":53.551,"lng":9.994,"pop":1892122,"area_km2":755.09,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024 (Gemeindeverzeichnis)","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["berlin","bremen","hannover"]},
-        {"s":"muenchen","n":"München","lat":48.137,"lng":11.576,"pop":1510378,"area_km2":310.71,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["nuernberg","stuttgart"]},
-        {"s":"koeln","n":"Köln","lat":50.938,"lng":6.96,"pop":1085664,"area_km2":405.01,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["duesseldorf","frankfurt","essen"]},
-        {"s":"frankfurt","n":"Frankfurt am Main","lat":50.11,"lng":8.682,"pop":773068,"area_km2":248.31,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["koeln","stuttgart","mannheim"]},
-        {"s":"stuttgart","n":"Stuttgart","lat":48.775,"lng":9.182,"pop":632865,"area_km2":207.35,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["frankfurt","muenchen"]},
-        {"s":"duesseldorf","n":"Düsseldorf","lat":51.227,"lng":6.774,"pop":629203,"area_km2":217.41,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["koeln","essen","dortmund"]},
-        {"s":"leipzig","n":"Leipzig","lat":51.34,"lng":12.375,"pop":616093,"area_km2":297.8,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["berlin","dresden","nuernberg"]},
-        {"s":"dortmund","n":"Dortmund","lat":51.514,"lng":7.465,"pop":595255,"area_km2":280.71,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["essen","duesseldorf","koeln"]},
-        {"s":"essen","n":"Essen","lat":51.456,"lng":7.012,"pop":574614,"area_km2":210.34,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["dortmund","duesseldorf","koeln"]},
-        {"s":"bremen","n":"Bremen","lat":53.079,"lng":8.802,"pop":577026,"area_km2":326.21,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["hamburg","hannover"]},
-        {"s":"dresden","n":"Dresden","lat":51.05,"lng":13.738,"pop":566227,"area_km2":328.48,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["leipzig","berlin"]},
-        {"s":"hannover","n":"Hannover","lat":52.375,"lng":9.732,"pop":545851,"area_km2":204.14,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["hamburg","bremen","berlin"]},
-        {"s":"nuernberg","n":"Nürnberg","lat":49.452,"lng":11.077,"pop":526109,"area_km2":186.46,"pop_year":2024,"area_year":2024,"source":"Destatis, Stand 31.12.2024","source_url":"https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html","nearby":["muenchen","stuttgart"]}
+        {
+          "s": "berlin",
+          "n": "Berlin",
+          "lat": 52.52,
+          "lng": 13.405,
+          "pop": 3685265,
+          "area_km2": 891.12,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "hamburg",
+            "muenchen",
+            "koeln",
+            "frankfurt",
+            "leipzig"
+          ]
+        },
+        {
+          "s": "hamburg",
+          "n": "Hamburg",
+          "lat": 53.551,
+          "lng": 9.994,
+          "pop": 1862565,
+          "area_km2": 755.09,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "berlin",
+            "bremen",
+            "hannover"
+          ]
+        },
+        {
+          "s": "muenchen",
+          "n": "München",
+          "lat": 48.137,
+          "lng": 11.576,
+          "pop": 1505005,
+          "area_km2": 310.7,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "nuernberg",
+            "stuttgart"
+          ]
+        },
+        {
+          "s": "koeln",
+          "n": "Köln",
+          "lat": 50.938,
+          "lng": 6.96,
+          "pop": 1024621,
+          "area_km2": 405.02,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "duesseldorf",
+            "frankfurt",
+            "essen"
+          ]
+        },
+        {
+          "s": "frankfurt",
+          "n": "Frankfurt am Main",
+          "lat": 50.11,
+          "lng": 8.682,
+          "pop": 756021,
+          "area_km2": 248.31,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "koeln",
+            "stuttgart",
+            "mannheim"
+          ]
+        },
+        {
+          "s": "stuttgart",
+          "n": "Stuttgart",
+          "lat": 48.775,
+          "lng": 9.182,
+          "pop": 612663,
+          "area_km2": 207.33,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "frankfurt",
+            "muenchen"
+          ]
+        },
+        {
+          "s": "duesseldorf",
+          "n": "Düsseldorf",
+          "lat": 51.227,
+          "lng": 6.774,
+          "pop": 618685,
+          "area_km2": 217.41,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "koeln",
+            "essen",
+            "dortmund"
+          ]
+        },
+        {
+          "s": "leipzig",
+          "n": "Leipzig",
+          "lat": 51.34,
+          "lng": 12.375,
+          "pop": 611850,
+          "area_km2": 297.8,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "berlin",
+            "dresden",
+            "nuernberg"
+          ]
+        },
+        {
+          "s": "dortmund",
+          "n": "Dortmund",
+          "lat": 51.514,
+          "lng": 7.465,
+          "pop": 603462,
+          "area_km2": 280.71,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "essen",
+            "duesseldorf",
+            "koeln"
+          ]
+        },
+        {
+          "s": "essen",
+          "n": "Essen",
+          "lat": 51.456,
+          "lng": 7.012,
+          "pop": 574682,
+          "area_km2": 210.34,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "dortmund",
+            "duesseldorf",
+            "koeln"
+          ]
+        },
+        {
+          "s": "bremen",
+          "n": "Bremen",
+          "lat": 53.079,
+          "lng": 8.802,
+          "pop": 586271,
+          "area_km2": 318.2,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "hamburg",
+            "hannover"
+          ]
+        },
+        {
+          "s": "dresden",
+          "n": "Dresden",
+          "lat": 51.05,
+          "lng": 13.738,
+          "pop": 564904,
+          "area_km2": 328.48,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "leipzig",
+            "berlin"
+          ]
+        },
+        {
+          "s": "hannover",
+          "n": "Hannover",
+          "lat": 52.375,
+          "lng": 9.732,
+          "pop": 522131,
+          "area_km2": 204.3,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "hamburg",
+            "bremen",
+            "berlin"
+          ]
+        },
+        {
+          "s": "nuernberg",
+          "n": "Nürnberg",
+          "lat": 49.452,
+          "lng": 11.077,
+          "pop": 529508,
+          "area_km2": 186.44,
+          "pop_year": 2024,
+          "area_year": 2024,
+          "source": "Destatis, Gemeindeverzeichnis — Städte nach Fläche und Bevölkerung, Stand 31.12.2024",
+          "source_url": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/05-staedte.html",
+          "nearby": [
+            "muenchen",
+            "stuttgart"
+          ]
+        }
       ]
     },
     "ES": {
@@ -28,16 +249,170 @@
       "pathWord": null,
       "priority": 1,
       "cities": [
-        {"s":"madrid","n":"Madrid","lat":40.417,"lng":-3.703,"pop":3334730,"area_km2":604.45,"pop_year":2024,"area_year":2024,"source":"INE — Padron municipal / cifras oficiales de población (consultar año en ficha INE)","source_url":"https://www.ine.es/","nearby":["barcelona","valencia","sevilla"]},
-        {"s":"barcelona","n":"Barcelona","lat":41.387,"lng":2.168,"pop":1692000,"area_km2":101.35,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["madrid","valencia","zaragoza"]},
-        {"s":"valencia","n":"Valencia","lat":39.47,"lng":-0.376,"pop":807693,"area_km2":134.65,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["barcelona","madrid","alicante"]},
-        {"s":"sevilla","n":"Sevilla","lat":37.389,"lng":-5.984,"pop":684024,"area_km2":140.8,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["malaga","madrid"]},
-        {"s":"zaragoza","n":"Zaragoza","lat":41.649,"lng":-0.889,"pop":682513,"area_km2":973.78,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["barcelona","madrid","valencia"]},
-        {"s":"malaga","n":"Málaga","lat":36.721,"lng":-4.421,"pop":586384,"area_km2":395.0,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["sevilla","granada"]},
-        {"s":"palma","n":"Palma","lat":39.57,"lng":2.65,"pop":431521,"area_km2":208.63,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["barcelona","valencia"]},
-        {"s":"las-palmas","n":"Las Palmas de Gran Canaria","lat":28.124,"lng":-15.43,"pop":378517,"area_km2":100.55,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["madrid","sevilla"]},
-        {"s":"bilbao","n":"Bilbao","lat":43.263,"lng":-2.935,"pop":346405,"area_km2":41.6,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["madrid","zaragoza"]},
-        {"s":"alicante","n":"Alicante","lat":38.345,"lng":-0.483,"pop":349282,"area_km2":201.27,"pop_year":2024,"area_year":2024,"source":"INE — cifras oficiales de población","source_url":"https://www.ine.es/","nearby":["valencia","murcia"]}
+        {
+          "s": "madrid",
+          "n": "Madrid",
+          "lat": 40.417,
+          "lng": -3.703,
+          "pop": 3506730,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "barcelona",
+            "valencia",
+            "sevilla"
+          ]
+        },
+        {
+          "s": "barcelona",
+          "n": "Barcelona",
+          "lat": 41.387,
+          "lng": 2.168,
+          "pop": 1731649,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "madrid",
+            "valencia",
+            "zaragoza"
+          ]
+        },
+        {
+          "s": "valencia",
+          "n": "Valencia",
+          "lat": 39.47,
+          "lng": -0.376,
+          "pop": 840792,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "barcelona",
+            "madrid",
+            "alicante"
+          ]
+        },
+        {
+          "s": "sevilla",
+          "n": "Sevilla",
+          "lat": 37.389,
+          "lng": -5.984,
+          "pop": 689423,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "malaga",
+            "madrid"
+          ]
+        },
+        {
+          "s": "zaragoza",
+          "n": "Zaragoza",
+          "lat": 41.649,
+          "lng": -0.889,
+          "pop": 693091,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "barcelona",
+            "madrid",
+            "valencia"
+          ]
+        },
+        {
+          "s": "malaga",
+          "n": "Málaga",
+          "lat": 36.721,
+          "lng": -4.421,
+          "pop": 599063,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "sevilla",
+            "granada"
+          ]
+        },
+        {
+          "s": "palma",
+          "n": "Palma",
+          "lat": 39.57,
+          "lng": 2.65,
+          "pop": 434786,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "barcelona",
+            "valencia"
+          ]
+        },
+        {
+          "s": "las-palmas",
+          "n": "Las Palmas de Gran Canaria",
+          "lat": 28.124,
+          "lng": -15.43,
+          "pop": 381868,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "madrid",
+            "sevilla"
+          ]
+        },
+        {
+          "s": "bilbao",
+          "n": "Bilbao",
+          "lat": 43.263,
+          "lng": -2.935,
+          "pop": 351124,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "madrid",
+            "zaragoza"
+          ]
+        },
+        {
+          "s": "alicante",
+          "n": "Alicante",
+          "lat": 38.345,
+          "lng": -0.483,
+          "pop": 366221,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "INE — Revisión del Padrón municipal, cifras oficiales a 1 de enero de 2025",
+          "source_url": "https://www.ine.es/dynt3/inebase/es/index.htm?padre=517",
+          "nearby": [
+            "valencia",
+            "murcia"
+          ]
+        }
       ]
     },
     "NL": {
@@ -46,21 +421,524 @@
       "pathWord": null,
       "priority": 1,
       "cities": [
-        {"s":"amsterdam","n":"Amsterdam","lat":52.367,"lng":4.904,"pop":921468,"area_km2":219.32,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["rotterdam","utrecht","den-haag"]},
-        {"s":"rotterdam","n":"Rotterdam","lat":51.924,"lng":4.478,"pop":664311,"area_km2":324.14,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["amsterdam","den-haag","utrecht"]},
-        {"s":"den-haag","n":"Den Haag","lat":52.078,"lng":4.289,"pop":562839,"area_km2":98.12,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["rotterdam","amsterdam","utrecht"]},
-        {"s":"utrecht","n":"Utrecht","lat":52.091,"lng":5.122,"pop":367951,"area_km2":99.21,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["amsterdam","rotterdam","den-haag"]},
-        {"s":"eindhoven","n":"Eindhoven","lat":51.441,"lng":5.47,"pop":246353,"area_km2":88.92,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["rotterdam","utrecht"]},
-        {"s":"groningen","n":"Groningen","lat":53.219,"lng":6.567,"pop":238147,"area_km2":83.75,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["amsterdam"]},
-        {"s":"tilburg","n":"Tilburg","lat":51.56,"lng":5.092,"pop":227728,"area_km2":119.18,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["eindhoven","rotterdam"]},
-        {"s":"maastricht","n":"Maastricht","lat":50.851,"lng":5.691,"pop":122397,"area_km2":60.12,"pop_year":2024,"area_year":2024,"source":"CBS — bevolkingscijfers gemeenten","source_url":"https://www.cbs.nl/","nearby":["eindhoven"]}
+        {
+          "s": "amsterdam",
+          "n": "Amsterdam",
+          "lat": 52.367,
+          "lng": 4.904,
+          "pop": 934526,
+          "area_km2": 188.12,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "rotterdam",
+            "utrecht",
+            "den-haag"
+          ]
+        },
+        {
+          "s": "rotterdam",
+          "n": "Rotterdam",
+          "lat": 51.924,
+          "lng": 4.478,
+          "pop": 672960,
+          "area_km2": 218.42,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "amsterdam",
+            "den-haag",
+            "utrecht"
+          ]
+        },
+        {
+          "s": "den-haag",
+          "n": "Den Haag",
+          "lat": 52.078,
+          "lng": 4.289,
+          "pop": 568945,
+          "area_km2": 82.44,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "rotterdam",
+            "amsterdam",
+            "utrecht"
+          ]
+        },
+        {
+          "s": "utrecht",
+          "n": "Utrecht",
+          "lat": 52.091,
+          "lng": 5.122,
+          "pop": 376757,
+          "area_km2": 93.77,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "amsterdam",
+            "rotterdam",
+            "den-haag"
+          ]
+        },
+        {
+          "s": "eindhoven",
+          "n": "Eindhoven",
+          "lat": 51.441,
+          "lng": 5.47,
+          "pop": 249035,
+          "area_km2": 88.02,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "rotterdam",
+            "utrecht"
+          ]
+        },
+        {
+          "s": "groningen",
+          "n": "Groningen",
+          "lat": 53.219,
+          "lng": 6.567,
+          "pop": 244441,
+          "area_km2": 185.53,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "amsterdam"
+          ]
+        },
+        {
+          "s": "tilburg",
+          "n": "Tilburg",
+          "lat": 51.56,
+          "lng": 5.092,
+          "pop": 230357,
+          "area_km2": 125.89,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "eindhoven",
+            "rotterdam"
+          ]
+        },
+        {
+          "s": "maastricht",
+          "n": "Maastricht",
+          "lat": 50.851,
+          "lng": 5.691,
+          "pop": 125563,
+          "area_km2": 55.79,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "CBS StatLine — Regionale kerncijfers Nederland (70072ned), bevolking op 1 januari 2025, landoppervlakte",
+          "source_url": "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70072ned/table",
+          "nearby": [
+            "eindhoven"
+          ]
+        }
       ]
     },
-    "IT": {"lang":"it","name":"Italia","pathWord":null,"priority":2,"cities":[{"s":"roma","n":"Roma","lat":41.902,"lng":12.496,"pop":2748109,"area_km2":1287.36,"pop_year":2024,"area_year":2024,"source":"Istat — popolazione residente","source_url":"https://www.istat.it/","nearby":["milano","napoli"]},{"s":"milano","n":"Milano","lat":45.464,"lng":9.19,"pop":1371498,"area_km2":181.67,"pop_year":2024,"area_year":2024,"source":"Istat — popolazione residente","source_url":"https://www.istat.it/","nearby":["roma","torino"]},{"s":"napoli","n":"Napoli","lat":40.851,"lng":14.268,"pop":913462,"area_km2":119.02,"pop_year":2024,"area_year":2024,"source":"Istat — popolazione residente","source_url":"https://www.istat.it/","nearby":["roma"]},{"s":"torino","n":"Torino","lat":45.07,"lng":7.687,"pop":848748,"area_km2":130.17,"pop_year":2024,"area_year":2024,"source":"Istat — popolazione residente","source_url":"https://www.istat.it/","nearby":["milano"]},{"s":"firenze","n":"Firenze","lat":43.77,"lng":11.254,"pop":367150,"area_km2":102.32,"pop_year":2024,"area_year":2024,"source":"Istat — popolazione residente","source_url":"https://www.istat.it/","nearby":["roma","milano"]}]},
-    "PT": {"lang":"pt","name":"Portugal","pathWord":null,"priority":2,"cities":[{"s":"lisboa","n":"Lisboa","lat":38.722,"lng":-9.139,"pop":545796,"area_km2":100.05,"pop_year":2024,"area_year":2024,"source":"INE Portugal — estimativas de população","source_url":"https://www.ine.pt/","nearby":["porto"]},{"s":"porto","n":"Porto","lat":41.158,"lng":-8.629,"pop":231962,"area_km2":41.42,"pop_year":2024,"area_year":2024,"source":"INE Portugal — estimativas de população","source_url":"https://www.ine.pt/","nearby":["lisboa"]}]},
-    "BE": {"lang":"fr","langs":["fr","nl"],"name":"Belgique / België","pathWord":null,"priority":2,"cities":[{"s":"bruxelles","n":"Bruxelles","n_nl":"Brussel","lat":50.85,"lng":4.35,"pop":1226329,"area_km2":162.45,"pop_year":2024,"area_year":2024,"source":"Statbel — population légale","source_url":"https://statbel.fgov.be/","nearby":["anvers","gand"]},{"s":"anvers","n":"Anvers","n_nl":"Antwerpen","lat":51.22,"lng":4.4,"pop":562005,"area_km2":204.51,"pop_year":2024,"area_year":2024,"source":"Statbel — population légale","source_url":"https://statbel.fgov.be/","nearby":["bruxelles","gand"]},{"s":"gand","n":"Gand","n_nl":"Gent","lat":51.054,"lng":3.717,"pop":270251,"area_km2":156.18,"pop_year":2024,"area_year":2024,"source":"Statbel — population légale","source_url":"https://statbel.fgov.be/","nearby":["bruxelles","anvers"]}]},
-    "CH": {"lang":"de","langs":["de","fr"],"name":"Schweiz / Suisse","pathWord":null,"priority":2,"cities":[{"s":"zuerich","n":"Zürich","lat":47.377,"lng":8.54,"pop":443037,"area_km2":87.88,"pop_year":2024,"area_year":2024,"source":"BFS — Statistik der Bevölkerung","source_url":"https://www.bfs.admin.ch/","nearby":["bern","basel","genf"]},{"s":"genf","n":"Genève","n_de":"Genf","lat":46.204,"lng":6.143,"pop":203856,"area_km2":15.93,"pop_year":2024,"area_year":2024,"source":"BFS — Statistik der Bevölkerung","source_url":"https://www.bfs.admin.ch/","nearby":["lausanne","zuerich"]},{"s":"basel","n":"Basel","lat":47.56,"lng":7.59,"pop":173863,"area_km2":23.91,"pop_year":2024,"area_year":2024,"source":"BFS — Statistik der Bevölkerung","source_url":"https://www.bfs.admin.ch/","nearby":["zuerich","bern"]},{"s":"bern","n":"Bern","n_fr":"Berne","lat":46.948,"lng":7.447,"pop":134794,"area_km2":51.62,"pop_year":2024,"area_year":2024,"source":"BFS — Statistik der Bevölkerung","source_url":"https://www.bfs.admin.ch/","nearby":["zuerich","basel"]},{"s":"lausanne","n":"Lausanne","lat":46.52,"lng":6.632,"pop":146481,"area_km2":41.38,"pop_year":2024,"area_year":2024,"source":"BFS — Statistik der Bevölkerung","source_url":"https://www.bfs.admin.ch/","nearby":["genf","bern"]}]},
-    "GB": {"lang": "en", "name": "United Kingdom", "pathWord": null, "priority": 2, "cities": [{"s": "london", "n": "London", "lat": 51.507, "lng": -0.128, "pop": 9122909, "area_km2": 1571.96, "pop_year": 2025, "area_year": 2025, "source": "ONS — mid-year population estimates, table MYE5, published 29 July 2026", "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales", "nearby": ["manchester", "brighton", "birmingham", "dublin"]}, {"s": "birmingham", "n": "Birmingham", "lat": 52.486, "lng": -1.89, "pop": 1176960, "area_km2": 267.78, "pop_year": 2025, "area_year": 2025, "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026", "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales", "nearby": ["manchester", "london"]}, {"s": "manchester", "n": "Manchester", "lat": 53.481, "lng": -2.243, "pop": 588256, "area_km2": 115.65, "pop_year": 2025, "area_year": 2025, "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026", "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales", "nearby": ["birmingham", "london", "dublin"]}, {"s": "brighton", "n": "Brighton", "lat": 50.822, "lng": -0.137, "pop": 284170, "area_km2": 82.82, "pop_year": 2025, "area_year": 2025, "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026", "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales", "nearby": ["london", "birmingham"]}]},
-    "IE": {"lang": "en", "name": "Ireland", "pathWord": null, "priority": 2, "cities": [{"s": "dublin", "n": "Dublin", "lat": 53.35, "lng": -6.26, "pop": 592713, "area_km2": null, "pop_year": 2022, "area_year": null, "source": "CSO — Census of Population, Dublin City Council area", "source_url": "https://www.cso.ie/en/releasesandpublications/ep/p-cpini/irelandandnorthernireland-ajointcensuspublication2021-2022/populationandage/", "nearby": ["manchester", "london"]}]}
+    "IT": {
+      "lang": "it",
+      "name": "Italia",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "roma",
+          "n": "Roma",
+          "lat": 41.902,
+          "lng": 12.496,
+          "pop": 2747290,
+          "area_km2": 1288.19,
+          "pop_year": 2025,
+          "area_year": 2021,
+          "source": "Istat — popolazione residente al 1° gennaio 2025; superficie comunale al 31.12.2021",
+          "source_url": "https://demo.istat.it/app/?i=POS&l=it",
+          "nearby": [
+            "milano",
+            "napoli"
+          ]
+        },
+        {
+          "s": "milano",
+          "n": "Milano",
+          "lat": 45.464,
+          "lng": 9.19,
+          "pop": 1365698,
+          "area_km2": 181.84,
+          "pop_year": 2025,
+          "area_year": 2021,
+          "source": "Istat — popolazione residente al 1° gennaio 2025; superficie comunale al 31.12.2021",
+          "source_url": "https://demo.istat.it/app/?i=POS&l=it",
+          "nearby": [
+            "roma",
+            "torino"
+          ]
+        },
+        {
+          "s": "napoli",
+          "n": "Napoli",
+          "lat": 40.851,
+          "lng": 14.268,
+          "pop": 909013,
+          "area_km2": 119.24,
+          "pop_year": 2025,
+          "area_year": 2021,
+          "source": "Istat — popolazione residente al 1° gennaio 2025; superficie comunale al 31.12.2021",
+          "source_url": "https://demo.istat.it/app/?i=POS&l=it",
+          "nearby": [
+            "roma"
+          ]
+        },
+        {
+          "s": "torino",
+          "n": "Torino",
+          "lat": 45.07,
+          "lng": 7.687,
+          "pop": 853196,
+          "area_km2": 130.05,
+          "pop_year": 2025,
+          "area_year": 2021,
+          "source": "Istat — popolazione residente al 1° gennaio 2025; superficie comunale al 31.12.2021",
+          "source_url": "https://demo.istat.it/app/?i=POS&l=it",
+          "nearby": [
+            "milano"
+          ]
+        },
+        {
+          "s": "firenze",
+          "n": "Firenze",
+          "lat": 43.77,
+          "lng": 11.254,
+          "pop": 361705,
+          "area_km2": 102.31,
+          "pop_year": 2025,
+          "area_year": 2021,
+          "source": "Istat — popolazione residente al 1° gennaio 2025; superficie comunale al 31.12.2021",
+          "source_url": "https://demo.istat.it/app/?i=POS&l=it",
+          "nearby": [
+            "roma",
+            "milano"
+          ]
+        }
+      ]
+    },
+    "PT": {
+      "lang": "pt",
+      "name": "Portugal",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "lisboa",
+          "n": "Lisboa",
+          "lat": 38.722,
+          "lng": -9.139,
+          "pop": 655542,
+          "area_km2": null,
+          "pop_year": 2023,
+          "area_year": null,
+          "source": "INE Portugal — Estimativas anuais da população residente, 2023",
+          "source_url": "https://www.ine.pt/xportal/xmain?xpid=INE&xpgid=ine_indicadores&indOcorrCod=0008273",
+          "nearby": [
+            "porto"
+          ]
+        },
+        {
+          "s": "porto",
+          "n": "Porto",
+          "lat": 41.158,
+          "lng": -8.629,
+          "pop": 267236,
+          "area_km2": null,
+          "pop_year": 2023,
+          "area_year": null,
+          "source": "INE Portugal — Estimativas anuais da população residente, 2023",
+          "source_url": "https://www.ine.pt/xportal/xmain?xpid=INE&xpgid=ine_indicadores&indOcorrCod=0008273",
+          "nearby": [
+            "lisboa"
+          ]
+        }
+      ]
+    },
+    "BE": {
+      "lang": "fr",
+      "langs": [
+        "fr",
+        "nl"
+      ],
+      "name": "Belgique / België",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "bruxelles",
+          "n": "Bruxelles",
+          "n_nl": "Brussel",
+          "lat": 50.85,
+          "lng": 4.35,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "",
+          "source_url": "",
+          "nearby": [
+            "anvers",
+            "gand"
+          ]
+        },
+        {
+          "s": "anvers",
+          "n": "Anvers",
+          "n_nl": "Antwerpen",
+          "lat": 51.22,
+          "lng": 4.4,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "",
+          "source_url": "",
+          "nearby": [
+            "bruxelles",
+            "gand"
+          ],
+          "primary": "nl"
+        },
+        {
+          "s": "gand",
+          "n": "Gand",
+          "n_nl": "Gent",
+          "lat": 51.054,
+          "lng": 3.717,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "",
+          "source_url": "",
+          "nearby": [
+            "bruxelles",
+            "anvers"
+          ],
+          "primary": "nl"
+        }
+      ]
+    },
+    "CH": {
+      "lang": "de",
+      "langs": [
+        "de",
+        "fr"
+      ],
+      "name": "Schweiz / Suisse",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "zuerich",
+          "n": "Zürich",
+          "lat": 47.377,
+          "lng": 8.54,
+          "pop": 440935,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "BFS — Ständige Wohnbevölkerung am 31.12.2025 (Demografische Bilanz nach Gemeinden)",
+          "source_url": "https://www.pxweb.bfs.admin.ch/pxweb/de/px-x-0102020000_201/px-x-0102020000_201.px/",
+          "nearby": [
+            "bern",
+            "basel",
+            "genf"
+          ],
+          "n_fr": "Zurich"
+        },
+        {
+          "s": "genf",
+          "n": "Genève",
+          "n_de": "Genf",
+          "lat": 46.204,
+          "lng": 6.143,
+          "pop": 211152,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "BFS — Ständige Wohnbevölkerung am 31.12.2025 (Demografische Bilanz nach Gemeinden)",
+          "source_url": "https://www.pxweb.bfs.admin.ch/pxweb/de/px-x-0102020000_201/px-x-0102020000_201.px/",
+          "nearby": [
+            "lausanne",
+            "zuerich"
+          ],
+          "primary": "fr"
+        },
+        {
+          "s": "basel",
+          "n": "Basel",
+          "lat": 47.56,
+          "lng": 7.59,
+          "pop": 180097,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "BFS — Ständige Wohnbevölkerung am 31.12.2025 (Demografische Bilanz nach Gemeinden)",
+          "source_url": "https://www.pxweb.bfs.admin.ch/pxweb/de/px-x-0102020000_201/px-x-0102020000_201.px/",
+          "nearby": [
+            "zuerich",
+            "bern"
+          ],
+          "n_fr": "Bâle"
+        },
+        {
+          "s": "bern",
+          "n": "Bern",
+          "n_fr": "Berne",
+          "lat": 46.948,
+          "lng": 7.447,
+          "pop": 138562,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "BFS — Ständige Wohnbevölkerung am 31.12.2025 (Demografische Bilanz nach Gemeinden)",
+          "source_url": "https://www.pxweb.bfs.admin.ch/pxweb/de/px-x-0102020000_201/px-x-0102020000_201.px/",
+          "nearby": [
+            "zuerich",
+            "basel"
+          ]
+        },
+        {
+          "s": "lausanne",
+          "n": "Lausanne",
+          "lat": 46.52,
+          "lng": 6.632,
+          "pop": 145596,
+          "area_km2": null,
+          "pop_year": 2025,
+          "area_year": null,
+          "source": "BFS — Ständige Wohnbevölkerung am 31.12.2025 (Demografische Bilanz nach Gemeinden)",
+          "source_url": "https://www.pxweb.bfs.admin.ch/pxweb/de/px-x-0102020000_201/px-x-0102020000_201.px/",
+          "nearby": [
+            "genf",
+            "bern"
+          ],
+          "primary": "fr"
+        }
+      ]
+    },
+    "GB": {
+      "lang": "en",
+      "name": "United Kingdom",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "london",
+          "n": "London",
+          "lat": 51.507,
+          "lng": -0.128,
+          "pop": 9122909,
+          "area_km2": 1571.96,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — mid-year population estimates, table MYE5, published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "manchester",
+            "brighton",
+            "birmingham",
+            "dublin"
+          ]
+        },
+        {
+          "s": "birmingham",
+          "n": "Birmingham",
+          "lat": 52.486,
+          "lng": -1.89,
+          "pop": 1176960,
+          "area_km2": 267.78,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "manchester",
+            "london"
+          ]
+        },
+        {
+          "s": "manchester",
+          "n": "Manchester",
+          "lat": 53.481,
+          "lng": -2.243,
+          "pop": 588256,
+          "area_km2": 115.65,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "birmingham",
+            "london",
+            "dublin"
+          ]
+        },
+        {
+          "s": "brighton",
+          "n": "Brighton",
+          "lat": 50.822,
+          "lng": -0.137,
+          "pop": 284170,
+          "area_km2": 82.82,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "london",
+            "birmingham"
+          ]
+        }
+      ]
+    },
+    "IE": {
+      "lang": "en",
+      "name": "Ireland",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "dublin",
+          "n": "Dublin",
+          "lat": 53.35,
+          "lng": -6.26,
+          "pop": 592713,
+          "area_km2": null,
+          "pop_year": 2022,
+          "area_year": null,
+          "source": "CSO — Census of Population, Dublin City Council area",
+          "source_url": "https://www.cso.ie/en/releasesandpublications/ep/p-cpini/irelandandnorthernireland-ajointcensuspublication2021-2022/populationandage/",
+          "nearby": [
+            "manchester",
+            "london"
+          ]
+        }
+      ]
+    }
   }
 }
