@@ -2184,5 +2184,12 @@
 "🟢 En ligne maintenant": "🟢 Online now",
 "🤖 C'est le robot d'accueil de hdar : il ne lit pas les messages.": "🤖 It's hdar's welcome bot: it doesn't read messages.",
 "🧪 Données d'exemple": "🧪 Sample data",
-"🧪 exemple": "🧪 sample"
+"🧪 exemple": "🧪 sample",
+  "Les gens chauds près de toi. Utilise les calques pour discuter dans les lieux du quartier.": "Hot people near you. Use the layers to chat in neighbourhood spots.",
+  "Gratuit, discret, sans inscription.": "Free, discreet, no sign-up.",
+  "Les gens chauds près de toi.": "Hot people near you.",
+  "Utilise les": "Use the",
+  "calques": "layers",
+  "pour discuter dans les lieux du quartier.": "to chat in neighbourhood spots.",
+  "Personne autour de toi ? Dézoome la carte pour voir qui est chaud ailleurs, ou change de ville en haut à droite.": "Nobody around you? Zoom out to see who's hot elsewhere, or change city at the top right."
 }

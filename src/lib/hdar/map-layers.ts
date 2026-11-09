@@ -5,8 +5,10 @@ import type { PlaceKind } from "./live";
 export type LayerKey = "station" | "metro" | "bus" | "airport" | "beach" | "nature" | "public" | "toilets" | "ads" | "partners";
 export const LAYER_ORDER: LayerKey[] = ["partners", "station", "metro", "bus", "airport", "beach", "nature", "public", "toilets", "ads"];
 export type Layers = Record<LayerKey, boolean>;
-const KEY = "hdar-layers-v2";
-const DEFAULTS: Layers = { station: true, metro: true, bus: true, airport: true, beach: true, nature: true, public: true, toilets: true, ads: false, partners: true };
+/** v3 : calques publics importés OFF par défaut ; partenaires ON. Les lieux membres
+ *  (bars, clubs, propositions…) restent visibles hors calques (voir map-view). */
+const KEY = "hdar-layers-v3";
+const DEFAULTS: Layers = { station: false, metro: false, bus: false, airport: false, beach: false, nature: false, public: false, toilets: false, ads: false, partners: true };
 
 /** Groupe d'un lieu de la carte (les partenaires ne sont jamais mélangés aux lieux publics). */
 export function layerOfPlace(kind: PlaceKind, partner: boolean): LayerKey {
