@@ -43,6 +43,7 @@ import { Route as RencontreSlugRouteImport } from './routes/rencontre/$slug'
 import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
 import { Route as LangCitySlugRouteImport } from './routes/$lang/city.$slug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiPubFnRouteImport } from './routes/api/pub.$fn'
 import { Route as RencontreSlugThemeRouteImport } from './routes/rencontre/$slug_.$theme'
 import { Route as RencontreDepartementSlugRouteImport } from './routes/rencontre/departement.$slug'
 import { Route as RencontreRegionSlugRouteImport } from './routes/rencontre/region.$slug'
@@ -218,6 +219,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPubFnRoute = ApiPubFnRouteImport.update({
+  id: '/api/pub/$fn',
+  path: '/api/pub/$fn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RencontreSlugThemeRoute = RencontreSlugThemeRouteImport.update({
   id: '/rencontre/$slug_/$theme',
   path: '/rencontre/$slug/$theme',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/rencontre/': typeof RencontreIndexRoute
   '/$lang/city/$slug': typeof LangCitySlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/pub/$fn': typeof ApiPubFnRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
   '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/rencontre': typeof RencontreIndexRoute
   '/$lang/city/$slug': typeof LangCitySlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/pub/$fn': typeof ApiPubFnRoute
   '/rencontre/$slug/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
   '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
@@ -349,6 +357,7 @@ export interface FileRoutesById {
   '/rencontre/': typeof RencontreIndexRoute
   '/$lang/city/$slug': typeof LangCitySlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/pub/$fn': typeof ApiPubFnRoute
   '/rencontre/$slug_/$theme': typeof RencontreSlugThemeRoute
   '/rencontre/departement/$slug': typeof RencontreDepartementSlugRoute
   '/rencontre/region/$slug': typeof RencontreRegionSlugRoute
@@ -390,6 +399,7 @@ export interface FileRouteTypes {
     | '/rencontre/'
     | '/$lang/city/$slug'
     | '/api/auth/$'
+    | '/api/pub/$fn'
     | '/rencontre/$slug/$theme'
     | '/rencontre/departement/$slug'
     | '/rencontre/region/$slug'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/rencontre'
     | '/$lang/city/$slug'
     | '/api/auth/$'
+    | '/api/pub/$fn'
     | '/rencontre/$slug/$theme'
     | '/rencontre/departement/$slug'
     | '/rencontre/region/$slug'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/rencontre/'
     | '/$lang/city/$slug'
     | '/api/auth/$'
+    | '/api/pub/$fn'
     | '/rencontre/$slug_/$theme'
     | '/rencontre/departement/$slug'
     | '/rencontre/region/$slug'
@@ -508,6 +520,7 @@ export interface RootRouteChildren {
   RencontreIndexRoute: typeof RencontreIndexRoute
   LangCitySlugRoute: typeof LangCitySlugRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiPubFnRoute: typeof ApiPubFnRoute
   RencontreSlugThemeRoute: typeof RencontreSlugThemeRoute
   RencontreDepartementSlugRoute: typeof RencontreDepartementSlugRoute
   RencontreRegionSlugRoute: typeof RencontreRegionSlugRoute
@@ -753,6 +766,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/pub/$fn': {
+      id: '/api/pub/$fn'
+      path: '/api/pub/$fn'
+      fullPath: '/api/pub/$fn'
+      preLoaderRoute: typeof ApiPubFnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rencontre/$slug_/$theme': {
       id: '/rencontre/$slug_/$theme'
       path: '/rencontre/$slug/$theme'
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   RencontreIndexRoute: RencontreIndexRoute,
   LangCitySlugRoute: LangCitySlugRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiPubFnRoute: ApiPubFnRoute,
   RencontreSlugThemeRoute: RencontreSlugThemeRoute,
   RencontreDepartementSlugRoute: RencontreDepartementSlugRoute,
   RencontreRegionSlugRoute: RencontreRegionSlugRoute,

@@ -1,3 +1,4 @@
+import { pubGet } from "@/lib/hdar/pub";
 import { OnlineSheet } from "./online-sheet";
 import { ONLINE_DEMO } from "./online-demo";
 import { useEffect, useRef, useState } from "react";
@@ -18,7 +19,13 @@ import { useTick } from "@/lib/hdar/tick";
 import { cachedRpc } from "@/lib/hdar/local-cache";
 
 /** Nombre d'annonces de la région : gardé 10 min sur le téléphone (il change peu). */
-const cachedAdsCount = (region: string) => cachedRpc(`ads-count:${region}`, 10 * 60_000, () => adsCount(region).then((v) => Number(v) || 0));
+// Tous les comptes en un relevé partagé par le CDN (v141) ; repli sur le compte direct de la région.
+const cachedAdsCount = (region: string) =>
+  cachedRpc(`ads-count:${region}`, 10 * 60_000, async () => {
+    const c = await pubGet<{ total?: number; regions?: Record<string, number> } | null>("ads-counts", {}, async () => null);
+    if (c?.regions) return Number(region ? c.regions[region] : c.total) || 0;
+    return adsCount(region).then((v) => Number(v) || 0);
+  });
 
 export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
   const liveN = useLiveCount();
