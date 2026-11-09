@@ -4,6 +4,17 @@ import { SEO_PLACES } from "@/lib/hdar/seo-places-snapshot";
 import { Hero, Ld, SeoShell, seoHead, Cta, Faq, Feature } from "./seo-pages";
 import { BERLIN_DE, type NativeBlog } from "@/lib/hdar/seo-intl-blog";
 
+const OPEN_LABEL: Record<string, string> = {
+  de: "App öffnen",
+  es: "Abrir la app",
+  nl: "App openen",
+  en: "Open the app",
+  it: "Apri l'app",
+  pt: "Abrir a app",
+  ar: "افتح التطبيق",
+  fr: "Ouvrir l'appli",
+};
+
 const BLOG: Record<string, NativeBlog> = {
   "de:berlin": BERLIN_DE,
 };
@@ -56,7 +67,7 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
       <SeoShell>
         <div lang={c.lang} data-noi18n>
           <Ld data={{ "@context": "https://schema.org", "@type": "WebPage", url: SITE_URL + c.path, inLanguage: c.lang, name: blog.h1, about: { "@type": "City", name: c.n, geo: { "@type": "GeoCoordinates", latitude: c.lat, longitude: c.lng } } }} />
-          <Hero seed={c.s} kicker={`${c.countryName} · 18+`} title={<>{blog.h1}</>}>
+          <Hero seed={c.s} open={OPEN_LABEL[c.lang] ?? OPEN_LABEL.fr} home={`/?lang=${c.lang}`} kicker={`${c.countryName} · 18+`} title={<>{blog.h1}</>}>
             <p className="mt-4 text-lg leading-snug text-ink/85">{blog.lead}</p>
             <Cta label={blog.cta} />
             <p className="mt-3 text-xs text-muted">{blog.sub}</p>
@@ -119,7 +130,7 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
   return (
     <SeoShell>
       <div lang={c.lang} data-noi18n>
-        <Hero seed={c.s} kicker={c.countryName} title={<>{c.n}</>}>
+        <Hero seed={c.s} open={OPEN_LABEL[c.lang] ?? OPEN_LABEL.fr} home={`/?lang=${c.lang}`} kicker={c.countryName} title={<>{c.n}</>}>
           <p className="mt-4 text-lg leading-snug text-ink/85">{defaultDesc(c)}</p>
           <Cta />
           {(pop || area) && (

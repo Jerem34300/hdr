@@ -87,9 +87,21 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
             : <div className="seo-card px-2 py-3"><dt className="text-[11px] text-muted">de {c.hub.n}</dt><dd className="font-display text-xl font-bold"><Count value={c.hubKm} suffix=" km" /></dd></div>}
           <div className="seo-card px-2 py-3"><dt className="text-[11px] text-muted">rayon du chat</dt><dd className="font-display text-xl font-bold">~3 km</dd></div>
         </dl>
+        <p className="mt-3 text-xs text-muted">
+          Source habitants :{" "}
+          <a className="underline" href="https://www.insee.fr/fr/information/2382986" rel="noopener" target="_blank">INSEE</a>
+          {" "}via geo.api.gouv.fr (populations communales, réf. 2023).
+        </p>
       </Hero>
       <article className="mx-auto max-w-2xl px-5">
-        <Crumbs items={[{ name: "hdar.", to: "/" }, { name: c.reg.n, to: `/rencontre/region/${c.reg.s}` }, { name: c.dep.n, to: `/rencontre/departement/${c.dep.s}` }, ...(theme ? [{ name: c.n, to: path(c, null) }] : []), { name: theme === "tchat-gay" ? "Tchat gay" : theme === "sortir-ce-soir" ? "Sortir ce soir" : c.n }]} />
+        <Crumbs items={[
+          { name: "hdar.", to: "/" },
+          { name: c.reg.n, to: `/rencontre/region/${c.reg.s}` },
+          // Paris, Lyon… : le département porte le même nom que la ville — on saute ce cran.
+          ...(c.dep.n === c.n ? [] : [{ name: c.dep.n, to: `/rencontre/departement/${c.dep.s}` }]),
+          ...(theme ? [{ name: c.n, to: path(c, null) }] : []),
+          { name: theme === "tchat-gay" ? "Tchat gay" : theme === "sortir-ce-soir" ? "Sortir ce soir" : c.n },
+        ]} />
         <h2 className="seo-reveal mt-10 font-display text-2xl font-bold">Ce que tu cherches {a(c.n)}</h2>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">{INTENTS(c).map((i) => <Feature key={i.t} icon={i.icon} title={i.t}>{i.d}</Feature>)}</ul>
         <h2 className="seo-reveal mt-12 font-display text-2xl font-bold">Comment ça marche</h2>
