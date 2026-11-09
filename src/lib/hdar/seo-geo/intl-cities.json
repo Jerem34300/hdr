@@ -840,6 +840,105 @@
           "primary": "fr"
         }
       ]
+    },
+    "GB": {
+      "lang": "en",
+      "name": "United Kingdom",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "london",
+          "n": "London",
+          "lat": 51.507,
+          "lng": -0.128,
+          "pop": 9122909,
+          "area_km2": 1571.96,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — mid-year population estimates, table MYE5, published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "manchester",
+            "brighton",
+            "birmingham",
+            "dublin"
+          ]
+        },
+        {
+          "s": "birmingham",
+          "n": "Birmingham",
+          "lat": 52.486,
+          "lng": -1.89,
+          "pop": 1176960,
+          "area_km2": 267.78,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "manchester",
+            "london"
+          ]
+        },
+        {
+          "s": "manchester",
+          "n": "Manchester",
+          "lat": 53.481,
+          "lng": -2.243,
+          "pop": 588256,
+          "area_km2": 115.65,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "birmingham",
+            "london",
+            "dublin"
+          ]
+        },
+        {
+          "s": "brighton",
+          "n": "Brighton",
+          "lat": 50.822,
+          "lng": -0.137,
+          "pop": 284170,
+          "area_km2": 82.82,
+          "pop_year": 2025,
+          "area_year": 2025,
+          "source": "ONS — Mid-2025 population estimates (table MYE5), published 29 July 2026",
+          "source_url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales",
+          "nearby": [
+            "london",
+            "birmingham"
+          ]
+        }
+      ]
+    },
+    "IE": {
+      "lang": "en",
+      "name": "Ireland",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "dublin",
+          "n": "Dublin",
+          "lat": 53.35,
+          "lng": -6.26,
+          "pop": 592713,
+          "area_km2": null,
+          "pop_year": 2022,
+          "area_year": null,
+          "source": "CSO — Census of Population, Dublin City Council area",
+          "source_url": "https://www.cso.ie/en/releasesandpublications/ep/p-cpini/irelandandnorthernireland-ajointcensuspublication2021-2022/populationandage/",
+          "nearby": [
+            "manchester",
+            "london"
+          ]
+        }
+      ]
     }
   }
 }

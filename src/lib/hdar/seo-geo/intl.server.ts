@@ -37,6 +37,7 @@ export const LANG_COUNTRY: Record<string, string> = {
   nl: "NL",
   it: "IT",
   pt: "PT",
+  en: "GB",
 };
 
 const byLangSlug = new Map<string, { country: string; city: IntlCity; meta: IntlCountry }>();

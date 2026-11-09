@@ -330,7 +330,11 @@ const en: Kit = {
   placesEmpty: (n) => `No partner venues in ${n} on the hdar map yet. Run one? Get in touch via the contact page.`,
   nearTitle: "Other cities",
   faqTitle: "FAQ",
-  faqBase: (n) => [{ q: `Is hdar free in ${n}?`, a: "Yes. The map, the neighbourhood chat and private messages are free. hdar+ is optional." }],
+  faqBase: (n) => [
+    { q: `Is hdar free in ${n}?`, a: "Yes. The map, the neighbourhood chat and private messages are free. hdar+ is optional." },
+    { q: "Do I need an account?", a: "No. A nickname and an 18+ confirmation are enough. No email, no password." },
+    { q: "Can people see my exact address?", a: "No. Others see a position rounded to about 110 metres and an approximate distance — never your door." },
+  ],
   foot: "hdar. — outings and meetups around you, for everyone. Free, discreet, 18+ only.",
   footer: { tagline: "hdar. — outings and meetups around you, for everyone. Free, discreet, 18+ only.", all: "All cities", faq: "FAQ", terms: "Terms", privacy: "Privacy", contact: "Contact" },
   kinds: { bar: "Bar", sauna: "Sauna", club: "Club", sexshop: "Shop", other: "Venue" },

@@ -11,9 +11,10 @@ import { CITIES_NL } from "@/lib/hdar/seo-intl/cities-nl";
 import { CITIES_IT } from "@/lib/hdar/seo-intl/cities-it";
 import { CITIES_PT } from "@/lib/hdar/seo-intl/cities-pt";
 import { CITIES_FR } from "@/lib/hdar/seo-intl/cities-fr";
+import { CITIES_EN } from "@/lib/hdar/seo-intl/cities-en";
 
 /** Unique long-form text per `${lang}:${slug}` (primary language of each city). */
-const TEXTS: Record<string, Record<string, CityText>> = { de: CITIES_DE, es: CITIES_ES, nl: CITIES_NL, it: CITIES_IT, pt: CITIES_PT, fr: CITIES_FR };
+const TEXTS: Record<string, Record<string, CityText>> = { de: CITIES_DE, es: CITIES_ES, nl: CITIES_NL, it: CITIES_IT, pt: CITIES_PT, fr: CITIES_FR, en: CITIES_EN };
 
 export function nativePath(lang: string, slug: string) {
   return `/${lang}/${slug}`;
@@ -101,7 +102,7 @@ export function intlNativeHead(c: IntlCityPayload | undefined) {
   const og = c.numberLocale.replace("-", "_");
   h.meta = h.meta.map((m) => ("property" in m && m.property === "og:locale" ? { ...m, content: og } : m));
   if (!c.isPrimary) return h;
-  const hl = c.country === "CH" || c.country === "BE" ? c.numberLocale : c.lang;
+  const hl = ["CH", "BE", "GB", "IE"].includes(c.country) ? c.numberLocale : c.lang;
   const alts = [
     { rel: "alternate" as const, hrefLang: hl, href: SITE_URL + c.path },
     { rel: "alternate" as const, hrefLang: "x-default", href: SITE_URL + c.path },
