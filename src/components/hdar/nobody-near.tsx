@@ -110,8 +110,8 @@ export function NobodyNear({ at, nearest, onNearest, visible, onClose, children 
         onClick={() => { try { localStorage.setItem(CLOSED_KEY, String(Date.now())); } catch { /* */ } onClose(); }}>
         <X className="size-4" />
       </button>
-      <p className="px-6 font-display text-sm font-bold">Personne près de chez toi</p>
-      <p className="mt-0.5 text-xs text-muted">Discute ou crée un salon en attendant.</p>
+      <p className="px-6 font-display text-sm font-bold">Tu es parmi les premiers ici 🔥</p>
+      <p className="mt-0.5 text-xs text-muted">Lance la discussion ou crée ton salon, les autres arrivent.</p>
       <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
         <button type="button" data-act="nobody-chat" className={chip + " bg-signal text-night"} onClick={chat}>
           <MessageCircle className="size-4 shrink-0" aria-hidden />
