@@ -7,29 +7,42 @@ import { SEO_CITIES, SITE_URL } from "@/lib/hdar/seo";
 import { ensureClock, useHdar, hydrateHdar } from "@/lib/hdar/store";
 
 export const Route = createFileRoute("/")({
-  head: ({ match }) => ({
-    meta: [
-      ...((match?.search as { r?: string } | undefined)?.r
-        ? [
-            { property: "og:title", content: "Viens sur hdar. : 3 jours hdar+ offerts 🎁" },
-            { property: "og:description", content: "La carte des sorties et rencontres en direct, pour tout le monde, 100 % discret. Ton ami t'invite : 3 jours de hdar+ offerts pour vous deux." },
-            { property: "og:image", content: `${SITE_URL}/og-invite.png?v=discret2` },
-            { property: "og:image:width", content: "1200" },
-            { property: "og:image:height", content: "630" },
-            { name: "twitter:card", content: "summary_large_image" },
-            { name: "twitter:image", content: `${SITE_URL}/og-invite.png?v=discret2` },
-          ]
-        : []),
-      { title: "hdar. — Sorties et rencontres autour de toi, pour tout le monde" },
-      {
-        name: "description",
-        content:
-          "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+. Vois qui est visible et où sortir autour de toi : carte en direct, lieux, chat du quartier, messages, vocaux et vidéo.",
-      },
-      { name: "robots", content: "index, follow" },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
-  }),
+  head: ({ match }) => {
+    const search = match?.search as { r?: string; lang?: string } | undefined;
+    const invite = Boolean(search?.r);
+    // ?lang=xx is a client i18n switch on the same homepage — noindex to avoid duplicate URLs.
+    const langDup = Boolean(search?.lang);
+    return {
+      meta: [
+        ...(invite
+          ? [
+              { property: "og:title", content: "Viens sur hdar. : 3 jours hdar+ offerts 🎁" },
+              { property: "og:description", content: "La carte des sorties et rencontres en direct, pour tout le monde, 100 % discret. Ton ami t'invite : 3 jours de hdar+ offerts pour vous deux." },
+              { property: "og:image", content: `${SITE_URL}/og-invite.png?v=discret2` },
+              { property: "og:image:width", content: "1200" },
+              { property: "og:image:height", content: "630" },
+              { name: "twitter:card", content: "summary_large_image" },
+              { name: "twitter:image", content: `${SITE_URL}/og-invite.png?v=discret2` },
+            ]
+          : [
+              { property: "og:title", content: "hdar. — Sorties et rencontres autour de toi, pour tout le monde" },
+              { property: "og:description", content: "Sorties et rencontres autour de toi. Gratuit, anonyme, 18+. Carte en direct, chat du quartier." },
+              { property: "og:url", content: `${SITE_URL}/` },
+              { property: "og:type", content: "website" },
+              { property: "og:locale", content: "fr_FR" },
+            ]),
+        { title: "hdar. — Sorties et rencontres autour de toi, pour tout le monde" },
+        {
+          name: "description",
+          content:
+            "Sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, 18+. Vois qui est visible et où sortir autour de toi : carte en direct, lieux, chat du quartier, messages, vocaux et vidéo.",
+        },
+        { name: "robots", content: langDup ? "noindex, follow" : "index, follow" },
+      ],
+      // Always canonical to apex without query string (covers ?lang=xx duplicates).
+      links: [{ rel: "canonical", href: `${SITE_URL}/` }],
+    };
+  },
   component: Home,
 });
 

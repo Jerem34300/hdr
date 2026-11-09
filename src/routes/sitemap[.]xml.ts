@@ -7,8 +7,10 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async ({ request }) => {
         const origin = new URL(request.url).origin;
         const { allUrls } = await import("@/lib/hdar/seo-geo/geo.server");
+        const { intlNativeUrls } = await import("@/lib/hdar/seo-geo/intl.server");
         const n = Math.ceil(allUrls().cities.length / 10000);
-        const parts = ["core", "intl", ...Array.from({ length: n }, (_, i) => `villes-${i + 1}`)];
+        const countryMaps = Object.keys(intlNativeUrls(2)); // de, es, nl + it, pt later
+        const parts = ["core", "intl", ...countryMaps.map((c) => `country-${c}`), ...Array.from({ length: n }, (_, i) => `villes-${i + 1}`)];
         const body = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
           parts.map((p) => `  <sitemap><loc>${origin}/sitemaps/${p}.xml</loc></sitemap>`).join("\n") + `\n</sitemapindex>\n`;
         return new Response(body, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });

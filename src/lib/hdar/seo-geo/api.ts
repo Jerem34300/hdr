@@ -73,3 +73,7 @@ export const getAdShareCity = createServerFn({ method: "GET" }).validator((d: st
     return null;
   }
 });
+
+export const getIntlCity = createServerFn({ method: "GET" })
+  .validator((d: { lang: string; slug: string }) => d)
+  .handler(async ({ data }) => (await import("./intl.server")).intlCityPayload(data.lang, data.slug));

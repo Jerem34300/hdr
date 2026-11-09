@@ -5,6 +5,25 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Canonical host: www → apex (Primary domain Netlify UI = hdar.chat).
+[[redirects]]
+  from = "https://www.hdar.chat/*"
+  to = "https://hdar.chat/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.hdar.chat/*"
+  to = "https://hdar.chat/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://hdar.chat/*"
+  to = "https://hdar.chat/:splat"
+  status = 301
+  force = true
+
 # Liens courts partenaires / promos : hdar.chat/x/<nom> → /?ref=<ref> (stats admin « Provenance »).
 [[redirects]]
   from = "/x/expose"
