@@ -16,6 +16,8 @@ import { cn } from "@/lib/cn";
 import { logClientError } from "@/lib/hdar/media";
 import { isExpired, remainingLabel } from "@/lib/hdar/rules";
 import { useHdar, type Tab } from "@/lib/hdar/store";
+import { useLayers, type LayerKey } from "@/lib/hdar/map-layers";
+import { flyTo } from "@/lib/hdar/map-focus";
 import { Around } from "./around";
 import { MapTips } from "./map-tips";
 import { ProfileReminder } from "./profile-reminder";
@@ -102,6 +104,23 @@ export function App() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     if (q.has("annonces") || q.get("annonce")) useHdar.getState().openAnnonces(q.get("annonce"));
+  }, []);
+
+  // SEO / deep-link : /?layers=public&lat=&lng= (lieux de drague / lieux publics).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const raw = q.get("layers");
+    if (raw) {
+      const setLayer = useLayers.getState().set;
+      useLayers.getState().init();
+      for (const part of raw.split(",")) {
+        const k = part.trim() as LayerKey;
+        if (k) setLayer(k, true);
+      }
+    }
+    const lat = parseFloat(q.get("lat") || "");
+    const lng = parseFloat(q.get("lng") || "");
+    if (Number.isFinite(lat) && Number.isFinite(lng)) flyTo(lat, lng, 13);
   }, []);
 
   useEffect(() => { void resyncProfileFromServer().then((reload) => { if (reload) window.location.reload(); }); }, []);
