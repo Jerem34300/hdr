@@ -6,7 +6,7 @@ import { PIN_ERRORS, pinClear, pinSet, posChosen } from "@/lib/hdar/live";
 import { toast as pinToast } from "sonner";
 import { toast } from "sonner";
 import { VectorBase } from "./vector-base";
-import { useLang } from "@/lib/hdar/i18n";
+import { t, useLang } from "@/lib/hdar/i18n";
 const areaCache = new Map<string, string>();
 import { MapPrivacyToggle } from "./notify-settings";
 import { RegionTeaser, useFirstRegion } from "./launch-offer";
@@ -101,15 +101,24 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const layers = useLayers((x) => x.layers);
   const setLayer = useLayers((x) => x.set);
   useEffect(() => useLayers.getState().init(), []);
-  // Toujours chargés : les lieux partenaires restent sur la carte quels que soient les calques.
+  // Lieux membres + partenaires (hdar_places) toujours chargés ; les calques ne les masquent pas.
+  // placesOn=true ne contourne PAS les calques OSM : outings/toilettes/transit suivent layers.*.
   const placesOn = true;
   const toiletsOn = layers.toilets;
+  const outingsOn = layers.nature || layers.public;
   const transitOn = layers.station || layers.metro || layers.bus || layers.airport;
   const adsOn = layers.ads;
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [transitStop, setTransitStop] = useState<TransitStop | null>(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("stopdemo") ? (location.search.includes("stopdemo=agde-bus") ? { ref: "osm:way/202628237", kind: "bus", name: "Gare SNCF", lat: 43.316946, lng: 3.4660526 } : location.search.includes("stopdemo=agde") ? { ref: "osm:node/agde", kind: "station", name: "Agde", lat: 43.3171, lng: 3.4659 } : { ref: "node/demo", kind: "station", name: "La Crau", lat: 43.1497, lng: 6.0735 }) : null));
   const [proposing, setProposing] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [layersTip, setLayersTip] = useState(() => {
+    try { return localStorage.getItem("hdar-layers-tip") !== "1"; } catch { return true; }
+  });
+  const dismissLayersTip = () => {
+    try { localStorage.setItem("hdar-layers-tip", "1"); } catch { /* ignore */ }
+    setLayersTip(false);
+  };
   const [view, setView] = useState<View>({ lat: place.lat, lng: place.lng, zoom: place.slug === "ici" ? 15 : 13 });
   // First launch (no saved position): hide the default city until the GPS answers.
   const [finding, setFinding] = useState(place.slug !== "ici");
@@ -451,7 +460,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     zoom,
   );
   const outings = useOutings(
-    placesOn,
+    outingsOn,
     {
       s: latFromY((top + size.h) / scale, z),
       n: latFromY(top / scale, z),
@@ -476,7 +485,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     w: lngFromX(left / scale, z), e: lngFromX((left + size.w) / scale, z),
   };
   const adsPins = useAdPins(adsOn && zoom >= 9, adsBox);
-  const places = (toilets.length || outings.length ? [...basePlaces, ...outings, ...toilets] : basePlaces).filter((pl) => pl.partner || layers[layerOfPlace(pl.kind, pl.partner)]);
+  // Par défaut : partenaires + lieux créés / tenus par des membres (bars, clubs, propositions…).
+  // Calques publics importés (outings OSM, toilettes, transports, plages) : OFF jusqu'à activation.
+  const community = basePlaces.filter((pl) => pl.partner || pl.kind !== "beach" || layers.beach);
+  const osmLayered = [...outings, ...toilets].filter((pl) => layers[layerOfPlace(pl.kind, false)]);
+  const places = [...community, ...osmLayered];
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {
@@ -620,6 +633,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     fitNearest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finding, nearestHidden]);
+
+  useEffect(() => {
+    if (pins.length === 0 && !finding && !visible && !meetOn && !(geoDenied && !myPin) && !picking) track("empty_map");
+  }, [pins.length, finding, visible, meetOn, geoDenied, myPin, picking]);
 
   /** Vol rapide (≈0,8 s) vers ma position, zoom élevé. Sans position connue : localisation habituelle. */
   function flyToMe() {
@@ -845,7 +862,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <p className="font-display text-sm font-bold">Sois le premier à te montrer sur la carte</p>
+          <p className="font-display text-sm font-bold">{t("Personne autour de toi ? Dézoome la carte pour voir qui est chaud ailleurs, ou change de ville en haut à droite.")}</p>
           {approx && <p className="mt-0.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
           <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
             {/* Même action que le gros bouton « Se montrer » de la barre du bas. */}
@@ -1167,6 +1184,30 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         >
           <Layers className="size-5" />
         </button>
+        {layersTip && !layersOpen && !finding && (
+          <div
+            data-act="layers-tip"
+            className="absolute start-14 top-0 z-30 w-[min(16.5rem,calc(100vw-5.5rem))] rounded-2xl border border-line bg-night/95 px-3 py-2 pe-8 text-start shadow-xl"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <span className="absolute -start-1.5 top-4 size-3 rotate-45 border-b border-s border-line bg-night/95" aria-hidden />
+            <p className="font-display text-[13px] font-bold leading-snug">{t("Les gens chauds près de toi.")}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-muted">
+              {t("Utilise les")}{" "}
+              <button
+                type="button"
+                className="font-bold text-signal underline"
+                onClick={() => { setLayersOpen(true); dismissLayersTip(); }}
+              >
+                {t("calques")}
+              </button>{" "}
+              {t("pour discuter dans les lieux du quartier.")}
+            </p>
+            <button type="button" aria-label={t("Fermer")} className="absolute top-1 end-1 grid size-7 place-items-center text-muted" onClick={dismissLayersTip}>
+              <XIcon className="size-3.5" />
+            </button>
+          </div>
+        )}
         {layersOpen && (
           <div data-sheet-root className="mt-2 w-56 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
             <p className="px-2 pt-1 text-[11px] font-bold tracking-wider text-muted uppercase">Lieux publics</p>

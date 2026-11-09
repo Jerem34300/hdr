@@ -1,5 +1,5 @@
 import { CompressionBar, VideoSection } from "./video-section";
-import { useLang } from "@/lib/hdar/i18n";
+import { t, useLang } from "@/lib/hdar/i18n";
 import { BOT_DEFAULTS } from "./bot-demo";
 import { LiveChat } from "./live-chat";
 import { BotTab } from "./admin-bot";
@@ -230,8 +230,9 @@ function AdultGateInner({ children }: { children: ReactNode }) {
         </div>
       </div>
       <form className="relative z-10 w-full shrink-0 space-y-2.5 px-5 pt-1 sm:max-w-sm [@media(min-height:760px)]:space-y-3" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }} onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <h1 className="text-center text-[22px] leading-tight font-bold tracking-tight [@media(min-height:760px)]:text-2xl">Qui est autour de toi, ce soir ?</h1>
-        <p className="text-center text-sm text-white/65">Sorties et rencontres près de toi. Gratuit, discret, sans inscription.</p>
+        <h1 className="text-center text-[22px] leading-tight font-bold tracking-tight [@media(min-height:760px)]:text-2xl">{t("Qui est autour de toi, ce soir ?")}</h1>
+        <p className="text-center text-sm text-white/65">{t("Les gens chauds près de toi. Utilise les calques pour discuter dans les lieux du quartier.")}</p>
+        <p className="text-center text-xs text-white/45">{t("Gratuit, discret, sans inscription.")}</p>
         {/* Turnstile en mode « interaction seulement » : invisible la plupart du temps, cadre sombre s'il demande un clic. */}
         <div className={challenge ? "rounded-2xl border border-white/10 bg-white/5 p-2" : "h-0 overflow-hidden"} data-act="gate-captcha">
           {challenge && <p className="mb-1.5 flex items-center justify-center gap-1.5 text-xs text-white/70"><ShieldCheck className="size-3.5" strokeWidth={2} />Petite vérification anti-robot</p>}
