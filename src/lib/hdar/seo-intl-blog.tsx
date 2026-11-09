@@ -10,6 +10,11 @@ export type NativeBlog = {
   facts: [string, string, string];
   sourceLabel: string;
   body: ReactNode;
+  /** Optional « lieux de drague » section → live map, public-places layer (no addresses). */
+  cruisingTitle?: string;
+  cruisingText?: string;
+  cruisingCta?: string;
+  cruisingNote?: string;
   placesTitle: string;
   placesIntro: string;
   placesEmpty?: string;
