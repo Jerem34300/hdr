@@ -10,6 +10,11 @@ export type NativeBlog = {
   facts: [string, string, string];
   sourceLabel: string;
   body: ReactNode;
+  /** « Lieux de drague » equivalent → live map, public-places layer (no addresses). */
+  cruisingTitle?: string;
+  cruisingText?: string;
+  cruisingCta?: string;
+  cruisingNote?: string;
   placesTitle: string;
   placesIntro: string;
   placesEmpty?: string;
@@ -69,6 +74,11 @@ export const BERLIN_DE: NativeBlog = {
       </ol>
     </>
   ),
+  cruisingTitle: "Cruising-Orte in Berlin",
+  cruisingText:
+    "Parks und andere öffentliche Orte, die die Community meldet, liegen auf der Kartenebene „Andere öffentliche Orte“. Sie ist standardmäßig aus — schalte sie ein, wenn du sehen willst, was es in Berlin gibt. Keine Adressen hier, nur die Live-Karte, ab 18, mit Diskretion und Rücksicht auf andere.",
+  cruisingCta: "Karte öffnen · öffentliche Orte in Berlin",
+  cruisingNote: "18+ · Ebene nur auf Wunsch · keine Adressen auf dieser Seite.",
   placesTitle: "Orte auf der hdar-Karte",
   placesIntro: "Nur freigeschaltete Einträge aus der Karte (approved). Keine erfundenen Adressen.",
   placesEmpty:
