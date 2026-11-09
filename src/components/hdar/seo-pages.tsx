@@ -97,11 +97,17 @@ export function Hero({ seed, kicker, title, children, open, home }: { seed: stri
   );
 }
 
-export const Cta = ({ label = "Ouvrir la carte" }: { label?: string }) => (
-  <Link to="/" className="seo-cta mt-7 inline-flex h-14 items-center gap-2 rounded-full px-7 font-semibold text-night">
-    {label} <span aria-hidden>→</span>
-  </Link>
-);
+export const Cta = ({ label = "Ouvrir la carte", href }: { label?: string; href?: string }) =>
+  href ? (
+    // Full page load (not client nav) so the app reads ?lang/&lat/&lng and opens centred on the city.
+    <a href={href} className="seo-cta mt-7 inline-flex h-14 items-center gap-2 rounded-full px-7 font-semibold text-night">
+      {label} <span aria-hidden>→</span>
+    </a>
+  ) : (
+    <Link to="/" className="seo-cta mt-7 inline-flex h-14 items-center gap-2 rounded-full px-7 font-semibold text-night">
+      {label} <span aria-hidden>→</span>
+    </Link>
+  );
 
 export function Faq({ items, title = "Questions fréquentes" }: { items: { q: string; a: string }[]; title?: string }) {
   return (
@@ -134,11 +140,21 @@ export function CityChips({ list, showKm }: { list: Mini[]; showKm?: boolean }) 
   );
 }
 
-export function SeoShell({ children }: { children: ReactNode }) {
+export type SeoFooter = { lang: string; tagline: string; all: string; faq: string; terms: string; privacy: string; contact: string };
+
+export function SeoShell({ children, footer }: { children: ReactNode; footer?: SeoFooter }) {
   return (
     <main className="h-dvh overflow-y-auto bg-night text-ink">
       <Ld data={ORG} />
       {children}
+      {footer ? (
+        <footer lang={footer.lang} data-noi18n className="mx-auto max-w-2xl border-t border-line px-5 py-8 text-xs text-muted">
+          <p>{footer.tagline}</p>
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            <a href="/rencontre">{footer.all}</a><a href="/live-coquin">Live</a><a href="/faq">{footer.faq}</a><a href="/cgu">{footer.terms}</a><a href="/confidentialite">{footer.privacy}</a><a href="/contact">{footer.contact}</a>
+          </p>
+        </footer>
+      ) : (
       <footer className="mx-auto max-w-2xl border-t border-line px-5 py-8 text-xs text-muted">
         <p>hdar. — sorties et rencontres autour de toi, pour tout le monde. Gratuit, discret, réservé aux 18 ans et plus.</p>
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
@@ -146,6 +162,7 @@ export function SeoShell({ children }: { children: ReactNode }) {
         </p>
         <p className="mt-2">Données communes : INSEE via geo.api.gouv.fr.</p>
       </footer>
+      )}
     </main>
   );
 }

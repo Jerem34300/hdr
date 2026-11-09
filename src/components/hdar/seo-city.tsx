@@ -41,7 +41,7 @@ function intro(c: CityPayload) {
   const where = c.isHub ? `pôle de ${c.aroundCount > 0 ? fmt(c.aroundCount) + " communes alentour" : "sa région"}` : `à ${c.hubKm} km de ${c.hub.n}`;
   const v: Record<string, string[]> = {
     big: [`Avec ${pop} habitants, ${c.n} est la ${c.rankInDep === 1 ? "plus grande ville" : `${c.rankInDep}e commune`} du département ${c.dep.n}. Il y a toujours quelqu'un dehors, encore faut-il savoir où.`, `${c.n} compte ${pop} habitants et des quartiers qui vivent jusque tard. hdar te montre qui est visible autour de toi, maintenant.`],
-    mid: [`${c.n} (${pop} habitants, ${c.dep.n}) est une ville à taille humaine, ${where}. Sur hdar, tu vois qui est visible près de toi plutôt qu'une grille de profils de toute la France.`, `Ville de ${pop} habitants ${c.isHub ? "au cœur de sa région" : where}, ${c.n} a ses habitués et ses soirées. La carte en direct t'aide à les trouver.`],
+    mid: [`${c.n} (${pop} habitants, ${c.dep.n}) est une ville à taille humaine, ${where}. Sur hdar, tu vois qui est visible près de toi ; si c'est calme, dézoome la carte pour voir qui est chaud ailleurs.`, `Ville de ${pop} habitants ${c.isHub ? "au cœur de sa région" : where}, ${c.n} a ses habitués et ses soirées. La carte en direct t'aide à les trouver.`],
     small: [`${c.n} compte ${pop} habitants, ${where}. Dans une ville de cette taille, la bonne personne est souvent à quelques rues : la carte te le montre.`, `À ${c.n} (${c.dep.n}, ${pop} habitants), pas besoin de faire des kilomètres pour discuter. hdar couvre la commune et les villes voisines.`],
     tiny: [`${c.n} est une petite commune de ${pop} habitants du département ${c.dep.n}, ${where}. hdar marche aussi ici : la carte regroupe les gens visibles dans les communes autour.`, `Même dans une commune de ${pop} habitants comme ${c.n}, tu peux voir qui est visible dans le coin, jusqu'à ${c.hub.n} (${c.hubKm} km).`],
   };
@@ -50,7 +50,7 @@ function intro(c: CityPayload) {
 
 const INTENTS = (c: CityPayload) => [
   { icon: "🌙", t: "Sortir ce soir", d: pick(c.s + "1", [`Regarde qui est dehors ${a(c.n)} ce soir et où ça bouge.`, `Une envie de sortir ? Le chat du quartier te dit où les gens sont, maintenant.`, `Crée un lieu pour ta soirée et retrouve les gens du coin en direct.`]) },
-  { icon: "🔥", t: "Plans autour de toi", d: pick(c.s + "p", [`Un plan ${a(c.n)} ce soir ? La carte montre qui est visible près de toi — allusif, 18+, sans catalogue national.`, `Envie d'un plan discret ${a(c.n)} : tchat d'abord, puis on voit. Position arrondie, tu disparais quand tu veux.`]) },
+  { icon: "🔥", t: "Plans autour de toi", d: pick(c.s + "p", [`Un plan ${a(c.n)} ce soir ? La carte montre qui est visible près de toi, 18+. Personne autour ? Dézoome ou change de ville en haut à droite.`, `Envie d'un plan discret ${a(c.n)} ? Tchat d'abord, puis on voit. Personne autour ? Dézoome la carte ou change de ville en haut à droite.`]) },
   { icon: "💘", t: "Rencontre amoureuse", d: pick(c.s + "2", [`Prends le temps de discuter avant de te voir : messages, vocaux, appel vidéo.`, `Fais connaissance tranquillement, sans profil interminable à remplir.`]) },
   { icon: "🤝", t: "Amitié, se faire des amis", d: pick(c.s + "3", [`Nouveau ${a(c.n)} ? Trouve des gens pour un verre, un sport, une balade.`, `Pas que pour draguer : beaucoup viennent juste pour rencontrer du monde.`]) },
   { icon: "💬", t: "Tchat en ligne, amis virtuels", d: pick(c.s + "4", [`Discute depuis ton canapé avec les gens du coin, sans obligation de se voir.`, `Le chat du quartier et les messages privés, même sans sortir de chez toi.`]) },
@@ -128,7 +128,7 @@ export function CityPage({ c, theme }: { c: CityPayload; theme: Theme }) {
                 Ouvrir la carte · calque lieux publics {a(c.n)}
               </a>
             </p>
-            <p className="mt-2 text-xs text-muted">18+ · calque opt-in · pas d&apos;adresses listées sur cette page.</p>
+            <p className="mt-2 text-xs text-muted">18+ · calque à activer · aucune adresse sur cette page.</p>
           </section>
         )}
         {c.isHub && c.around.length > 0 && (

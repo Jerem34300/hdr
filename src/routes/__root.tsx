@@ -1,5 +1,5 @@
 import { LiveDock } from "@/components/hdar/live-dock";
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet, Scripts, useRouterState } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { useEffect } from "react";
@@ -45,8 +45,19 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
-  component: () => (
-    <html lang="fr" translate="no" className="notranslate" suppressHydrationWarning>
+  component: RootDoc,
+});
+
+/** <html lang> follows native intl pages (/de/…, /es/…, /en/…); everything else stays French. */
+function docLang(path: string) {
+  const m = /^\/(de|es|nl|it|pt|en|ar)(\/|$)/.exec(path);
+  return m ? m[1] : "fr";
+}
+
+function RootDoc() {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <html lang={docLang(path)} translate="no" className="notranslate" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -68,5 +79,5 @@ export const Route = createRootRoute({
         />
       </body>
     </html>
-  ),
-});
+  );
+}

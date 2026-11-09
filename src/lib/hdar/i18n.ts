@@ -256,7 +256,7 @@ export function startI18n() {
     fitLabels();
     useLang.setState((s) => ({ ready: s.ready + 1 }));
   };
-  const blocked = () => SEO_FR.test(location.pathname) || /^\/(en|es|de|it|pt|ar)\//.test(location.pathname);
+  const blocked = () => SEO_FR.test(location.pathname) || /^\/(en|es|de|it|pt|ar|nl)\//.test(location.pathname);
   observer = new MutationObserver((muts) => {
     if (blocked()) return;
     const lang = useLang.getState().lang;
