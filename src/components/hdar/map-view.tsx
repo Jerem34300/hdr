@@ -19,6 +19,7 @@ import { TransitPin, TransitSheet } from "./transit";
 import { EyeIcon } from "./visibility-button";
 import { setTransitLayer, transitLayerOn, useTransit, type TransitStop } from "@/lib/hdar/transit";
 import { TrainFront } from "lucide-react";
+import { TipBubble } from "./tip-bubble";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
@@ -487,7 +488,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const adsPins = useAdPins(adsOn && zoom >= 9, adsBox);
   // Par défaut : partenaires + lieux créés / tenus par des membres (bars, clubs, propositions…).
   // Calques publics importés (outings OSM, toilettes, transports, plages) : OFF jusqu'à activation.
-  const community = basePlaces.filter((pl) => pl.partner || pl.kind !== "beach" || layers.beach);
+  // Lieux importés (OSM : parcs, plages, drague, places, belvédères, transports…) : seulement si leur calque est coché.
+  const OSM_KINDS = new Set(["airport", "beach", "bus", "cruising", "metro", "park", "garden", "promenade", "square", "station", "toilets", "viewpoint"]);
+  const layerOfBase = (k: string): LayerKey => (k === "station" || k === "metro" || k === "bus" || k === "airport" ? k : layerOfPlace(k as never, false));
+  const community = basePlaces.filter((pl) => pl.partner || !OSM_KINDS.has(pl.kind) || layers[layerOfBase(pl.kind)]);
   const osmLayered = [...outings, ...toilets].filter((pl) => layers[layerOfPlace(pl.kind, false)]);
   const places = [...community, ...osmLayered];
   const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
@@ -1185,27 +1189,15 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           <Layers className="size-5" />
         </button>
         {layersTip && !layersOpen && !finding && (
-          <div
-            data-act="layers-tip"
-            className="absolute start-14 top-0 z-30 w-[min(16.5rem,calc(100vw-5.5rem))] rounded-2xl border border-line bg-night/95 px-3 py-2 pe-8 text-start shadow-xl"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <span className="absolute -start-1.5 top-4 size-3 rotate-45 border-b border-s border-line bg-night/95" aria-hidden />
-            <p className="font-display text-[13px] font-bold leading-snug">{t("Les gens chauds près de toi.")}</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-muted">
-              {t("Utilise les")}{" "}
-              <button
-                type="button"
-                className="font-bold text-signal underline"
-                onClick={() => { setLayersOpen(true); dismissLayersTip(); }}
-              >
-                {t("calques")}
-              </button>{" "}
-              {t("pour discuter dans les lieux du quartier.")}
-            </p>
-            <button type="button" aria-label={t("Fermer")} className="absolute top-1 end-1 grid size-7 place-items-center text-muted" onClick={dismissLayersTip}>
-              <XIcon className="size-3.5" />
-            </button>
+          <div data-act="layers-tip" className="absolute start-14 top-1 z-30" onPointerDown={(e) => e.stopPropagation()}>
+            <TipBubble arrow="left" onClose={dismissLayersTip} testId="layers-tip">
+              <span className="block">{t("Les gens chauds près de toi.")}</span>
+              <span className="mt-0.5 block text-[11px] font-normal leading-snug text-muted">
+                {t("Utilise les")}{" "}
+                <button type="button" className="font-bold text-signal underline" onClick={() => { setLayersOpen(true); dismissLayersTip(); }}>{t("calques")}</button>{" "}
+                {t("pour discuter dans les lieux du quartier.")}
+              </span>
+            </TipBubble>
           </div>
         )}
         {layersOpen && (
