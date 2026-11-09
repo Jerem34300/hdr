@@ -1,0 +1,18 @@
+name: Test de charge hdar
+on:
+  workflow_dispatch:
+    inputs:
+      stages: { description: "Paliers (personnes simulées)", default: "25,50,100,200,300" }
+  push:
+    paths: ["loadtest/**"]
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node loadtest/hdar-load.mjs
+        env:
+          STAGES: ${{ github.event.inputs.stages || '25,50,100,200,300' }}
