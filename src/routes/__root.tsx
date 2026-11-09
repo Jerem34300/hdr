@@ -23,7 +23,29 @@ function LandingMemo() {
   return null;
 }
 
+/**
+ * Cache CDN (v141) des pages qui sont les mêmes pour tout le monde : pages publiques (SEO) et accueil de l'appli.
+ * Un robot qui parcourt les milliers de communes, ou 1 000 personnes qui ouvrent l'appli, sont servis par le CDN
+ * de Netlify sans relancer le rendu serveur ni lire la base. Le navigateur, lui, revérifie à chaque fois
+ * (max-age=0), et Netlify vide ce cache à chaque mise en ligne. Jamais pour les pages d'erreur ou introuvables.
+ */
+const SEO_ROUTES = new Set([
+  "/alternative-chatroulette", "/alternative-omegle", "/cam-to-cam", "/cgu", "/confidentialite", "/faq", "/live-coquin",
+  "/tchat-webcam-aleatoire", "/webcam-gay-live", "/$lang/$slug", "/$lang/city/$slug", "/fr/sortir-rencontrer-{$ville}",
+  "/petites-annonces/", "/petites-annonces/$slug", "/rencontre/", "/rencontre/$slug", "/rencontre/$slug_/$theme",
+  "/rencontre/departement/$slug", "/rencontre/region/$slug",
+]);
+type MatchLite = { routeId: string; status: string; _notFound?: boolean; globalNotFound?: boolean };
+function cdnHeaders(matches: MatchLite[]): Record<string, string> | undefined {
+  if (!matches.length || matches.some((m) => m.status !== "success" || m._notFound || m.globalNotFound)) return undefined;
+  const leaf = matches[matches.length - 1].routeId;
+  const ttl = SEO_ROUTES.has(leaf) ? 3600 : leaf === "/" ? 300 : 0;
+  if (!ttl) return undefined;
+  return { "Cache-Control": "public, max-age=0, must-revalidate", "Netlify-CDN-Cache-Control": `public, durable, s-maxage=${ttl}, stale-while-revalidate=86400` };
+}
+
 export const Route = createRootRoute({
+  headers: ({ matches }) => cdnHeaders(matches as unknown as MatchLite[]),
   head: () => ({
     meta: [
       { charSet: "utf-8" },

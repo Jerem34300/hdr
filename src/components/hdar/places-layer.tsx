@@ -1,3 +1,4 @@
+import { pubGet } from "@/lib/hdar/pub";
 import { VideoSection } from "./video-section";
 import { startPoll } from "@/lib/hdar/poll";
 import { GoButton } from "./go-sheet";
@@ -110,7 +111,10 @@ let loading: Promise<PlacePin[]> | null = null;
 const PLACES_TTL = 10 * 60_000;
 // Une seule RPC monde (cache serveur v134, ~2 000 pins) ; le filtre ville se fait côté client.
 // Avant : jusqu'à 12 RPC cases de 1° en parallèle → saturait le pool PostgREST (10) dès 1-2 utilisateurs.
-const loadWorld = () => (loading ??= listPlaces(-90, -180, 90, 180).then((r) => { cache = r; cacheAt = Date.now(); return r; }).finally(() => (loading = null)));
+// v141 : la même carte pour tout le monde, servie par le CDN (la base n'est lue qu'une fois par période) ;
+// repli sur l'appel direct si le CDN ou la base ne répond pas.
+const worldDirect = () => listPlaces(-90, -180, 90, 180);
+const loadWorld = () => (loading ??= pubGet<PlacePin[] | null>("places", {}, worldDirect).then((r) => (Array.isArray(r) ? r : worldDirect())).then((r) => { cache = r; cacheAt = Date.now(); return r; }).finally(() => (loading = null)));
 export type PlacesView = { s: number; w: number; n: number; e: number };
 function inView(p: PlacePin, vb: PlacesView) {
   if (p.lat < vb.s || p.lat > vb.n) return false;
