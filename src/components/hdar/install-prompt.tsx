@@ -19,6 +19,10 @@ if (typeof window !== "undefined") {
   });
 }
 
+/** Vrai si l'appli peut proposer son installation maintenant (bouton Android capté, ou iPhone hors appli installée). */
+export function canOfferInstall() {
+  return typeof window !== "undefined" && !standalone() && (!!deferred || isIos());
+}
 function standalone() {
   return (
     window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -44,7 +48,14 @@ export function InstallPrompt() {
       if (deferred) setMode("android");
       else if (isIos()) setMode("ios");
     }, 45000);
-    return () => window.clearTimeout(t);
+    // Ouverture demandée (ex. « Préviens-moi » sur le radar, quand les notifications exigent l'appli installée).
+    const open = () => {
+      if (standalone()) return;
+      if (deferred) setMode("android");
+      else if (isIos()) setMode("ios");
+    };
+    window.addEventListener("hdar-install-open", open);
+    return () => { window.clearTimeout(t); window.removeEventListener("hdar-install-open", open); };
   }, []);
   if (mode === "none") return null;
   const dismiss = () => {

@@ -321,7 +321,7 @@ function ActiveDot({ at }: { at: number }) {
 
 const EMOJIS = ["💬", "🔥", "🌈", "🍻", "🎉", "🌙", "☀️", "🎮", "🎵", "🏋️", "🍿", "✈️"];
 
-function CreateSalon({ cc, onClose, onCreated }: { cc: string; onClose: () => void; onCreated: (id: string, name: string) => void }) {
+export function CreateSalon({ cc, onClose, onCreated }: { cc: string; onClose: () => void; onCreated: (id: string, name: string) => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [emoji, setEmoji] = useState("💬");

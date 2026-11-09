@@ -1,6 +1,6 @@
 // hdar service worker: makes the web app installable and shows a page offline.
 // Never caches API traffic (Supabase) or private data.
-const CACHE = "hdar-v9";
+const CACHE = "hdar-v10";
 const CFG = "hdar-cfg"; // adresse + clé publique Supabase et langue, envoyées par l'appli (pour « Refuser » depuis la notif)
 const SHELL = ["/", "/offline.html", "/manifest.webmanifest", "/icon-192.png", "/badge-96.png", "/favicon.svg"];
 
@@ -56,6 +56,17 @@ const MEET_TXT = {
   ar: ["يقترح {n} أن تلتقيا (15 دقيقة)", "{n} لا يجدك: ارفع هاتفك", "قبول", "رفض", "شخص ما"],
 };
 
+// « Quelqu'un arrive près de toi » (v140) : jamais de pseudo ni de position.
+const NEAR_TXT = {
+  fr: ["Quelqu'un vient d'arriver près de toi", "Ouvre le radar pour voir qui est là."],
+  en: ["Someone just showed up near you", "Open the radar to see who's there."],
+  es: ["Alguien acaba de llegar cerca de ti", "Abre el radar para ver quién está."],
+  de: ["Jemand ist gerade in deiner Nähe aufgetaucht", "Öffne das Radar und sieh nach, wer da ist."],
+  it: ["Qualcuno è appena arrivato vicino a te", "Apri il radar per vedere chi c'è."],
+  pt: ["Alguém acabou de chegar perto de ti", "Abre o radar para ver quem está."],
+  ar: ["وصل شخص ما بالقرب منك للتو", "افتح الرادار لترى من هناك."],
+};
+
 // Web Push: private messages only (one notification per conversation, collapsed by tag).
 self.addEventListener("push", (e) => {
   let d = {};
@@ -65,10 +76,23 @@ self.addEventListener("push", (e) => {
     d = { title: "hdar.", body: e.data ? e.data.text() : "" };
   }
   const meet = d.type === "meet" || d.type === "meetflash";
+  const near = d.type === "near";
   e.waitUntil(
-    Promise.all([self.clients.matchAll({ type: "window", includeUncontrolled: true }), meet ? cfg() : null]).then(([wins, c]) => {
+    Promise.all([self.clients.matchAll({ type: "window", includeUncontrolled: true }), meet || near ? cfg() : null]).then(([wins, c]) => {
       // App open and visible: it already plays its own sound + toast.
       if (wins.some((w) => w.visibilityState === "visible" || w.focused)) return;
+      if (near) {
+        const T = NEAR_TXT[(c && c.lang) || "fr"] || NEAR_TXT.fr;
+        return self.registration.showNotification(T[0], {
+          body: T[1],
+          tag: "hdar-near",
+          renotify: true,
+          icon: "/icon-192.png",
+          badge: "/badge-96.png",
+          vibrate: [60, 40, 60],
+          data: { url: "/" },
+        });
+      }
       if (meet) {
         const T = MEET_TXT[(c && c.lang) || "fr"] || MEET_TXT.fr;
         const who = d.pseudo || T[4];
