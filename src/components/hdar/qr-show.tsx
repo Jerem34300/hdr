@@ -52,7 +52,7 @@ export function QrShow({ onClose, demo }: { onClose: () => void; demo?: Demo }) 
   const me = useHdar((s) => s.me);
   const [url, setUrl] = useState(demo?.url ?? "");
   const [err, setErr] = useState("");
-  const variant: QrVariant = demo?.variant ?? "light";
+  const variant: QrVariant = demo?.variant ?? "dark";
   const pseudo = demo?.pseudo ?? me.pseudo ?? "";
   const photo = demo?.photo ?? myPhotos(me)[0] ?? me.photo ?? "";
 

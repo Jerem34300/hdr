@@ -267,7 +267,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
   if (location.search.includes("qrshow")) {
-    const dark = location.search.includes("dark");
+    const light = location.search.includes("light");
     return (
       <main className="h-dvh bg-night text-ink">
         <QrShow
@@ -275,7 +275,7 @@ function DevPreview() {
             pseudo: "Lucas34",
             photo: "/avatars/03.jpg",
             url: "https://hdar.chat/?u=00000000-0000-4000-8000-000000000001&r=ADB6FD0&src=qr&n=Lucas34",
-            variant: dark ? "dark" : "light",
+            variant: light ? "light" : "dark",
           }}
           onClose={() => undefined}
         />
