@@ -40,6 +40,7 @@ import { SpotRoom, Spots, useLiveSpotsSync } from "./spots";
 import { bindTap, installTouchTap } from "./tap";
 import { VisibilityButton } from "./visibility-button";
 import { track } from "@/lib/hdar/track";
+import { openQrTarget } from "./qr-show";
 import { SalonRoom } from "./salons";
 import { Annonces } from "./annonces";
 import { useSalonInbox, useSalonInboxPolling } from "@/lib/hdar/salon-inbox";
@@ -105,6 +106,9 @@ export function App() {
     const q = new URLSearchParams(window.location.search);
     if (q.has("annonces") || q.get("annonce")) useHdar.getState().openAnnonces(q.get("annonce"));
   }, []);
+
+  // QR / lien de fiche : /?u=<id>&r=<code>&src=qr
+  useEffect(() => { openQrTarget(); }, []);
 
   // SEO / deep-link : /?layers=public&lat=&lng= (lieux de drague / lieux publics).
   useEffect(() => {

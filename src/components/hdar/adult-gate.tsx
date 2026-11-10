@@ -25,6 +25,7 @@ import { ProDashboard, demoDash } from "./pro-dashboard";
 import { PremiumPage } from "./premium";
 import { ProLanding } from "./pro-landing";
 import { BoostCreditsCard, InviteCard, MapGiftButton, PremiumCard, SurprisePopup } from "./growth";
+import { QrShow } from "./qr-show";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RecoverAccountSettings, RecoverLink } from "./recover";
 import { LockScreen, LogoutButton, PinGate, PinSettings } from "./security";
@@ -265,6 +266,22 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 
 /** Aperçus de dev uniquement (captures d'écran). */
 function DevPreview() {
+  if (location.search.includes("qrshow")) {
+    const light = location.search.includes("light");
+    return (
+      <main className="h-dvh bg-night text-ink">
+        <QrShow
+          demo={{
+            pseudo: "Lucas34",
+            photo: "/avatars/03.jpg",
+            url: "https://hdar.chat/?u=00000000-0000-4000-8000-000000000001&r=ADB6FD0&src=qr&n=Lucas34",
+            variant: light ? "light" : "dark",
+          }}
+          onClose={() => undefined}
+        />
+      </main>
+    );
+  }
   if (location.search.includes("groupchat")) return <><GroupChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
   if (location.search.includes("dmchat")) return <><LiveChatDemo /><LeaveConfirm /><Toaster theme="dark" position="top-center" /></>;
   if (location.search.includes("reflinks")) return <RefLinksDemo />;

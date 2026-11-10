@@ -31,6 +31,7 @@ import { GENDERS, getProfile, identityLine, setIdentity } from "@/lib/hdar/live"
 import { usePremium } from "@/lib/hdar/premium";
 import { Link } from "@tanstack/react-router";
 import { PremiumBadge } from "./premium";
+import { QrShow, QrShowButton } from "./qr-show";
 
 const MAX_VOICE_SEC = 10;
 
@@ -45,6 +46,7 @@ export function Me() {
   const [bio, setBio] = useState(me.bio);
   const [note, setNote] = useState(me.note ?? "");
   const [settings, setSettings] = useState(false);
+  const [qr, setQr] = useState(false);
   const MAX_PHOTOS = usePremium((s) => s.photoLimit);
   const isPrem = usePremium((s) => s.premium);
   // Offre FIRST ouverte (ou inconnue) : FIRST d'abord ; terminée : le parrainage repasse en premier.
@@ -113,6 +115,7 @@ export function Me() {
   }
 
   return (
+    <>
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-28">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Mon profil</h1>
@@ -133,10 +136,17 @@ export function Me() {
           <HeartsCount id={deviceId()} className="mt-0.5" />
           {identityLine(iam, seeking) && <p className="text-xs font-bold text-ink/80">{identityLine(iam, seeking)}</p>}
           <p className={"mt-0.5 text-sm break-words " + (me.note ? "italic" : "text-muted")}>{me.note ? `💬 « ${me.note} »` : "Ajoute ta phrase du moment ci-dessous"}</p>
-          <button type="button" disabled={!me.onboarded} onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
-            className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-bold text-night disabled:opacity-40">
-            <Eye className="size-3.5" /> Voir mon profil
-          </button>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <button type="button" disabled={!me.onboarded} onClick={() => openProfile(deviceId(), me.pseudo || "Moi")}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-bold text-night disabled:opacity-40">
+              <Eye className="size-3.5" /> Voir mon profil
+            </button>
+            <QrShowButton
+              disabled={!me.onboarded}
+              onOpen={() => setQr(true)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#FA6F6C]/50 bg-night px-3 text-xs font-bold text-ink disabled:opacity-40"
+            />
+          </div>
         </div>
       </div>
       {me.onboarded && <BoostButton />}
@@ -367,6 +377,8 @@ export function Me() {
       <Favorites />
       <ProfileAmb where="bottom" />
     </div>
+    {qr && <QrShow onClose={() => setQr(false)} />}
+    </>
   );
 }
 

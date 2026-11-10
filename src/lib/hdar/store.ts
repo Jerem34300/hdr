@@ -94,7 +94,8 @@ export type Intent =
   | { type: "line"; id: string }
   | { type: "join"; id: string }
   | { type: "ad-reply"; id: string }
-  | { type: "ad-create" };
+  | { type: "ad-create" }
+  | { type: "talk"; userId: string; pseudo: string };
 
 export type Sheet =
   | null
@@ -227,6 +228,7 @@ type State = {
   openChat: (personId: string) => void;
   closeView: () => void;
   openLive: (userId: string, pseudo: string) => void;
+  openTalk: (userId: string, pseudo: string) => void;
   openProfile: (userId: string, pseudo: string) => void;
   /** Petites annonces (vue plein écran, derrière l'écran 18+). `adAction` = réponse/création à reprendre après l'inscription. */
   openAnnonces: (focus?: string | null) => void;
@@ -396,6 +398,7 @@ export const useHdar = create<State>()(
         else if (intent && intent.type === "join") get().joinSpot(intent.id);
         else if (intent && intent.type === "ad-create") set({ view: { name: "annonces" }, adAction: { type: "create" } });
         else if (intent && intent.type === "ad-reply") set({ view: { name: "annonces", focus: intent.id }, adAction: { type: "reply", id: intent.id } });
+        else if (intent && intent.type === "talk") get().openLive(intent.userId, intent.pseudo);
       },
       setTonight: ({ desires, places, note, len }) => {
         const hours = LENGTHS.find((l) => l.id === len)?.hours ?? 3;
@@ -503,6 +506,13 @@ export const useHdar = create<State>()(
       openLive: (userId, pseudo) => {
         get().markSeen(userId);
         set({ view: { name: "live", userId, pseudo }, sheet: null, returnTo: returnFrom(get()) });
+      },
+      openTalk: (userId, pseudo) => {
+        if (!get().me.onboarded) {
+          set({ sheet: "gate", intent: { type: "talk", userId, pseudo } });
+          return;
+        }
+        get().openLive(userId, pseudo);
       },
       openAnnonces: (focus = null) => set({ view: { name: "annonces", focus }, sheet: null, returnTo: null }),
       adAction: null,
