@@ -16,7 +16,7 @@ import { consumeNear } from "./live-share";
 import { noticeLiveFavorites, useFavorites } from "@/lib/hdar/favorites";
 import { useActivity } from "@/lib/hdar/activity";
 import { TransitPin, TransitSheet } from "./transit";
-import { EyeIcon } from "./visibility-button";
+import { NEAR_M, NobodyNear, nobodyNearClosed } from "./nobody-near";
 import { setTransitLayer, transitLayerOn, useTransit, type TransitStop } from "@/lib/hdar/transit";
 import { TrainFront } from "lucide-react";
 import { TipBubble } from "./tip-bubble";
@@ -183,6 +183,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const [pulseAt, setPulseAt] = useState(0);
   const [ring, setRing] = useState<{ x: number; y: number; k: number } | null>(null);
   const [live, setLive] = useState<LivePin[]>([]);
+  // Vrai après la première réponse du serveur : pas de bandeau « Personne près de chez toi » pendant le chargement.
+  const [liveReady, setLiveReady] = useState(false);
+  const [nobodyClosed, setNobodyClosed] = useState(false);
+  useEffect(() => setNobodyClosed(nobodyNearClosed()), []);
   // Activité anonyme des dernières 24 h (carreaux ~5 km) : la carte n'est jamais vide.
   const [recent, setRecent] = useState<Recent | null>(null);
   const [approx, setApprox] = useState<string | null>(null);
@@ -210,7 +214,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           throw e;
         })
         .then((rows) => {
-          if (!stop) setLive(rows);
+          if (!stop) { setLive(rows); setLiveReady(true); }
           useMapFocus.setState({ pins: Object.fromEntries(rows.map((r) => [r.id, { lat: r.lat, lng: r.lng }])) });
           noticeLiveFavorites(rows);
         })
@@ -618,6 +622,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   }, null);
   const halfViewM = (156543.03392 * Math.cos((view.lat * Math.PI) / 180) * (Math.min(size.w, size.h) / 2 - 40)) / 2 ** zoom;
   const nearestHidden = nearest != null && nearest.d > halfViewM;
+  // Personne à moins de 30 km : bandeau « Personne près de chez toi » (discuter, créer un salon, être prévenu).
+  const nobodyNear = liveReady && (!nearest || nearest.d > NEAR_M) && !finding && !meetOn && !(geoDenied && !myPin) && !picking && !nobodyClosed
+    && !(import.meta.env.DEV && typeof location !== "undefined" && /pindemo|tip=/.test(location.search));
 
   /** Zooms out (centred on you) until the nearest connected person is on screen. */
   function fitNearest() {
@@ -860,28 +867,15 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </span>
         );
       })}
-      {pins.length === 0 && !finding && !visible && !meetOn && !(geoDenied && !myPin) && !picking && (
-        <div
-          data-act="empty-banner"
-          className="absolute top-3 end-3 start-[4.25rem] z-30 mx-auto max-w-[22rem] rounded-2xl border border-line bg-night/90 px-3 py-2 text-center shadow-xl backdrop-blur"
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <p className="font-display text-sm font-bold">{t("Personne autour de toi ? Dézoome la carte pour voir qui est chaud ailleurs, ou change de ville en haut à droite.")}</p>
-          {approx && <p className="mt-0.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
-          <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
-            {/* Même action que le gros bouton « Se montrer » de la barre du bas. */}
-            <button type="button" data-act="banner-show" className="vis-btn vis-off relative flex items-center gap-1.5 overflow-hidden rounded-full px-4 py-1.5 font-bold whitespace-nowrap text-white"
-              onClick={() => document.querySelector<HTMLElement>('[data-act="tonight"]')?.click()}>
-              <EyeIcon open={false} className="relative z-10 size-4 shrink-0" />
-              <span className="relative z-10">Se montrer</span>
-              <span className="vis-shine" />
-            </button>
-          </div>
+      {nobodyNear && (
+        <NobodyNear at={you} visible={visible} onClose={() => setNobodyClosed(true)}
+          nearest={nearest && nearestHidden ? bucketDistance(nearest.d) : null} onNearest={fitNearest}>
+          {approx && <p className="mt-1.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
           {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
           {!onboardedMe && <MapCityTeaser />}
-        </div>
+        </NobodyNear>
       )}
-      {nearest && nearestHidden && !finding && (
+      {nearest && nearestHidden && !finding && !nobodyNear && (
         <button
           type="button"
           className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full bg-night/90 px-4 py-2 text-xs text-ink"

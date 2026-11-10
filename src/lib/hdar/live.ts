@@ -761,6 +761,18 @@ export async function pushSubscribe(self: string, endpoint: string, p256dh: stri
   });
 }
 
+/** « Préviens-moi quand quelqu'un arrive près de moi » (v140) : une alerte par personne, position arrondie à ~1 km. */
+export const nearAlertSet = (lat: number, lng: number, on: boolean) => rpc<boolean>("hdar_near_alert_set", { p_lat: lat, p_lng: lng, p_on: on });
+/** null = base pas encore en v140 : le bouton ne s'affiche pas. */
+export async function nearAlertGet(): Promise<boolean | null> {
+  try {
+    return !!(await rpc<boolean>("hdar_near_alert_get", {}));
+  } catch (e) {
+    if (missingFn(e)) return null;
+    throw e;
+  }
+}
+
 export async function pushUnsubscribe(self: string, endpoint: string | null) {
   await rpc("hdar_push_unsubscribe", { p_self: selfId(self), p_endpoint: endpoint });
 }

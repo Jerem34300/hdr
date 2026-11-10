@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { disablePush, enablePush, pushActive, pushSupported } from "@/lib/hdar/push";
+import { resolvePlace } from "@/lib/hdar/scene";
 import { useHdar } from "@/lib/hdar/store";
+import { nearAlertSet } from "@/lib/hdar/live";
+import { turnOnNearAlert, useNearAlert } from "./nobody-near";
 import { hideOfflineGet, hideOfflineSet, setVisitorHidden, visitorHidden } from "@/lib/hdar/live";
 import { playMessageSound, playSoftSound, setSoftEnabled, setSoundEnabled, softEnabled, soundEnabled, type SoftKind } from "@/lib/hdar/sounds";
 
@@ -57,7 +60,37 @@ export function NotifySettings() {
           />
         </label>
       )}
+      {canPush && <NearAlertToggle onPush={() => setPush(true)} />}
     </section>
+  );
+}
+
+/** « Préviens-moi quand quelqu'un arrive près de moi » : même alerte que le bouton du radar vide. */
+function NearAlertToggle({ onPush }: { onPush: () => void }) {
+  const [on, setOn] = useNearAlert();
+  if (on === null) return null;
+  const at = () => {
+    const s = useHdar.getState();
+    if (s.here) return s.here;
+    const p = resolvePlace(s.cityId, s.customCenter);
+    return { lat: p.lat, lng: p.lng };
+  };
+  return (
+    <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
+      <span>Quelqu'un arrive près de moi<span className="block text-xs text-muted">Une notification au plus toutes les 12 h, sans pseudo ni position.</span></span>
+      <input
+        type="checkbox"
+        data-act="near-alert"
+        checked={on}
+        onChange={(e) => {
+          const want = e.target.checked;
+          setOn(want);
+          void (want ? turnOnNearAlert(at()).then((ok) => { if (ok) onPush(); return ok; }) : nearAlertSet(0, 0, false).then(() => false))
+            .then((ok) => setOn(ok))
+            .catch(() => { setOn(!want); toast("Notifications indisponibles"); });
+        }}
+      />
+    </label>
   );
 }
 
