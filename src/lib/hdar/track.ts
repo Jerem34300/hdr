@@ -17,6 +17,7 @@ export function rememberLanding() {
     let source = "direct";
     const utm = q.get("utm_source");
     if (utm) source = `utm:${utm}`;
+    else if (q.get("src") === "qr") source = "qr";
     else if (q.get("r")) source = "parrainage";
     else if (document.referrer) {
       try {

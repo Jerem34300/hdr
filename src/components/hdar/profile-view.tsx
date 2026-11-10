@@ -29,6 +29,7 @@ import { bucketDistance, haversine } from "@/lib/hdar/rules";
 import { reportUser } from "@/lib/hdar/report";
 import { useHdar } from "@/lib/hdar/store";
 import { openProChat, ProGiftSheet, useMyPro } from "./pro-tools";
+import { QrShow, QrShowButton } from "./qr-show";
 
 const ICON: Record<string, string> = { verre: "🍸", discuter: "💬", plan: "🔥", balade: "🌆", sortir: "🎉", "chez-moi": "🏠", "chez-toi": "🚪", dehors: "🌳" };
 const genderLabel = (id: string | null | undefined) => (id ? GENDERS.find((g) => g.id === id)?.label ?? "" : "");
@@ -64,7 +65,10 @@ const label = (id: string) => DESIRES.find((d) => d.id === id)?.label ?? PLACES.
 export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: string; /** Aperçu de dev : profil fixe, pas de serveur. */ demo?: PublicProfile }) {
   const closeView = useHdar((s) => s.closeView);
   const openLive = useHdar((s) => s.openLive);
+  const openTalk = useHdar((s) => s.openTalk);
   const here = useHdar((s) => s.here);
+  const onboarded = useHdar((s) => s.me.onboarded);
+  const [qr, setQr] = useState(false);
   const [chosen, setChosen] = useState(false);
   useEffect(() => {
     if (import.meta.env.DEV && location.search.includes("pindemo")) return setChosen(true);
@@ -82,6 +86,8 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
   const bot = isBot(userId);
   const favs = useFavorites();
   const fav = favs.some((f) => f.id === userId);
+  const guestPreview = !!demo && import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("guest");
+  const isGuest = !self && !bot && (demo ? guestPreview : !onboarded);
 
   useEffect(() => {
     if (demo) { setProfile(demo); setState("ok"); return; }
@@ -126,7 +132,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
         <p className="min-w-0 flex-1 truncate font-display font-bold">
           {self ? "Mon profil, vu par les autres" : "Profil"}
         </p>
-        {!self && (
+        {!self && !isGuest && (
           <button
             type="button"
             className="flex size-11 items-center justify-center"
@@ -237,7 +243,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
             <audio controls preload="metadata" src={extras.voice} className="mt-2 h-10 w-full" />
           </section>
         )}
-        {!self && !bot && (
+        {!self && !bot && !isGuest && (
           <div className="mt-8 flex justify-center gap-5 text-[11px] text-muted/70">
             <button type="button" className="hover:underline" onClick={() => void reportUser(userId, name).then((sent) => sent && closeView())}>Signaler</button>
             <button
@@ -258,7 +264,11 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
       {bot ? (
         <BotComposer />
       ) : self ? (
-        <div className="dock border-t border-line px-4 pt-3">
+        <div className="dock space-y-2 border-t border-line px-4 pt-3">
+          <QrShowButton
+            onOpen={() => setQr(true)}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#FA6F6C]/50 bg-surface font-bold text-ink active:scale-[.98]"
+          />
           <button
             type="button"
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-signal font-bold text-night"
@@ -269,6 +279,19 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
           >
             <Pencil className="size-5" />
             Modifier mon profil
+          </button>
+        </div>
+      ) : isGuest ? (
+        <div className="dock border-t border-line px-4 pt-3">
+          <button
+            type="button"
+            data-act="talk-cta"
+            disabled={state === "gone"}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#ff8f6b] font-display text-lg font-extrabold text-night shadow-[0_0_24px_rgba(250,111,108,.55)] active:scale-[.98] disabled:opacity-40"
+            onClick={() => (demo ? undefined : openTalk(userId, name))}
+          >
+            <MessageCircle className="size-5" />
+            {t("Lui parler")}
           </button>
         </div>
       ) : (
@@ -300,6 +323,7 @@ export function ProfileView({ userId, pseudo, demo }: { userId: string; pseudo: 
         </div>
       )}
       {giftOpen && <ProGiftSheet places={pros} to={userId} pseudo={name} via="profile" onClose={() => setGiftOpen(false)} />}
+      {qr && <QrShow onClose={() => setQr(false)} />}
     </div>
   );
 }
