@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { VectorBase } from "./vector-base";
 import { t, useLang } from "@/lib/hdar/i18n";
 const areaCache = new Map<string, string>();
-import { MapPrivacyToggle } from "./notify-settings";
 import { RegionTeaser, useFirstRegion } from "./launch-offer";
 function MapCityTeaser() { const c = useFirstRegion(); return <RegionTeaser c={c} className="mt-2 text-xs" />; }
 import { MapGiftButton } from "./growth";
@@ -871,7 +870,6 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         <NobodyNear at={you} visible={visible} onClose={() => setNobodyClosed(true)}
           nearest={nearest && nearestHidden ? bucketDistance(nearest.d) : null} onNearest={fitNearest}>
           {approx && <p className="mt-1.5 text-xs text-muted">📍 Position approximative : {approx}</p>}
-          {!onboardedMe && located && <div className="mt-2"><MapPrivacyToggle compact /></div>}
           {!onboardedMe && <MapCityTeaser />}
         </NobodyNear>
       )}
