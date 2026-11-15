@@ -12,9 +12,10 @@ import { CITIES_IT } from "@/lib/hdar/seo-intl/cities-it";
 import { CITIES_PT } from "@/lib/hdar/seo-intl/cities-pt";
 import { CITIES_FR } from "@/lib/hdar/seo-intl/cities-fr";
 import { CITIES_EN } from "@/lib/hdar/seo-intl/cities-en";
+import { CITIES_AR } from "@/lib/hdar/seo-intl/cities-ar";
 
 /** Unique long-form text per `${lang}:${slug}` (primary language of each city). */
-const TEXTS: Record<string, Record<string, CityText>> = { de: CITIES_DE, es: CITIES_ES, nl: CITIES_NL, it: CITIES_IT, pt: CITIES_PT, fr: CITIES_FR, en: CITIES_EN };
+const TEXTS: Record<string, Record<string, CityText>> = { de: CITIES_DE, es: CITIES_ES, nl: CITIES_NL, it: CITIES_IT, pt: CITIES_PT, fr: CITIES_FR, en: CITIES_EN, ar: CITIES_AR };
 
 export function nativePath(lang: string, slug: string) {
   return `/${lang}/${slug}`;
@@ -67,10 +68,10 @@ function buildBlog(c: IntlCityPayload, kit: Kit, t: CityText, nf: Intl.NumberFor
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">{kit.steps.map((s) => <li key={s}>{s}</li>)}</ol>
       </>
     ),
-    cruisingTitle: kit.cruisingTitle(c.n),
-    cruisingText: t.cruising,
-    cruisingCta: kit.cruisingCta(c.n),
-    cruisingNote: kit.cruisingNote,
+    cruisingTitle: t.cruising ? kit.cruisingTitle(c.n) : "",
+    cruisingText: t.cruising ?? "",
+    cruisingCta: t.cruising ? kit.cruisingCta(c.n) : "",
+    cruisingNote: t.cruising ? kit.cruisingNote : "",
     placesTitle: kit.placesTitle,
     placesIntro: kit.placesIntro,
     placesEmpty: kit.placesEmpty(c.n),
@@ -83,9 +84,17 @@ function buildBlog(c: IntlCityPayload, kit: Kit, t: CityText, nf: Intl.NumberFor
 
 function blogFor(c: IntlCityPayload): NativeBlog | null {
   if (c.lang === "de" && c.s === "berlin") return BERLIN_DE;
-  const kit = kitFor(c.lang);
+  const kit = kitFor(c.lang, c.country);
   const t = cityText(c, kit);
   return t ? buildBlog(c, kit, t, new Intl.NumberFormat(c.numberLocale)) : null;
+}
+
+function regionName(cc: string, lang: string, fallback: string) {
+  try {
+    return new Intl.DisplayNames([lang], { type: "region" }).of(cc) ?? fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 /** App deep link: language + centred on the city (+ optional public-places layer). */
@@ -102,7 +111,7 @@ export function intlNativeHead(c: IntlCityPayload | undefined) {
   const og = c.numberLocale.replace("-", "_");
   h.meta = h.meta.map((m) => ("property" in m && m.property === "og:locale" ? { ...m, content: og } : m));
   if (!c.isPrimary) return h;
-  const hl = ["CH", "BE", "GB", "IE"].includes(c.country) ? c.numberLocale : c.lang;
+  const hl = ["CH", "BE", "GB", "IE", "US", "CA", "MX", "AR", "CO", "BR", "MA", "DZ", "TN", "RE", "MQ", "GP"].includes(c.country) ? c.numberLocale : c.lang;
   const alts = [
     { rel: "alternate" as const, hrefLang: hl, href: SITE_URL + c.path },
     { rel: "alternate" as const, hrefLang: "x-default", href: SITE_URL + c.path },
@@ -111,7 +120,7 @@ export function intlNativeHead(c: IntlCityPayload | undefined) {
 }
 
 export function IntlNativePage({ c }: { c: IntlCityPayload }) {
-  const kit = kitFor(c.lang);
+  const kit = kitFor(c.lang, c.country);
   const blog = blogFor(c);
   const places = SEO_PLACES[c.s] ?? [];
   const nf = new Intl.NumberFormat(c.numberLocale);
@@ -122,9 +131,9 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
 
   return (
     <SeoShell footer={footer}>
-      <div lang={c.lang} data-noi18n>
+      <div lang={c.lang} dir={c.lang === "ar" ? "rtl" : "ltr"} data-noi18n>
         <Ld data={{ "@context": "https://schema.org", "@type": "WebPage", url: SITE_URL + c.path, inLanguage: c.lang, name: blog.title, about: { "@type": "City", name: c.n, geo: { "@type": "GeoCoordinates", latitude: c.lat, longitude: c.lng } } }} />
-        <Hero seed={c.s} open={kit.open} home={`/?lang=${appLang(c.lang)}`} kicker={`${c.countryName} · 18+`} title={<>{blog.h1}</>}>
+        <Hero seed={c.s} open={kit.open} home={`/?lang=${appLang(c.lang)}`} kicker={`${regionName(c.country, c.lang, c.countryName)} · 18+`} title={<>{blog.h1}</>}>
           <p className="mt-4 text-lg leading-snug text-ink/85">{blog.lead}</p>
           <Cta label={blog.cta} href={appHref(c)} />
           <p className="mt-3 text-xs text-muted">{blog.sub}</p>
@@ -137,7 +146,7 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
           )}
         </Hero>
         <article className="mx-auto max-w-2xl px-5 pb-16">
-          {c.source && (
+          {c.source && pop && (
             <p className="text-xs text-muted">
               {blog.sourceLabel}{" "}
               <a className="underline" href={c.source_url} rel="noopener" target="_blank">{c.source}</a>.

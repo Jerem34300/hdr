@@ -939,6 +939,555 @@
           ]
         }
       ]
+    },
+    "DZ": {
+      "lang": "fr",
+      "langs": [
+        "fr",
+        "ar"
+      ],
+      "indexAll": true,
+      "name": "Algérie",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "alger",
+          "n": "Alger",
+          "lat": 36.753,
+          "lng": 3.058,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Chiffre officiel non affiché : une source nationale vérifiable n'était pas disponible de façon suffisamment précise au moment de la rédaction.",
+          "source_url": "https://www.ons.dz/",
+          "nearby": [
+            "oran",
+            "tunis",
+            "casablanca"
+          ],
+          "n_ar": "الجزائر"
+        },
+        {
+          "s": "oran",
+          "n": "Oran",
+          "lat": 35.697,
+          "lng": -0.633,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Chiffre officiel non affiché : une source nationale vérifiable n'était pas disponible de façon suffisamment précise au moment de la rédaction.",
+          "source_url": "https://www.ons.dz/",
+          "nearby": [
+            "alger",
+            "casablanca",
+            "rabat"
+          ],
+          "n_ar": "وهران"
+        }
+      ]
+    },
+    "MA": {
+      "lang": "fr",
+      "langs": [
+        "fr",
+        "ar"
+      ],
+      "indexAll": true,
+      "name": "Maroc",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "casablanca",
+          "n": "Casablanca",
+          "lat": 33.573,
+          "lng": -7.589,
+          "pop": 3215935,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Haut-Commissariat au Plan, RGPH 2024, population légale de la commune de Casablanca au 1er septembre 2024",
+          "source_url": "https://www.hcp.ma/Population-legale-du-Royaume-du-Maroc-repartie-par-regions-provinces-et-prefectures-et-communes-selon-les-resultats-du_a3975.html",
+          "nearby": [
+            "rabat",
+            "marrakech"
+          ],
+          "n_ar": "الدار البيضاء",
+          "source_ar": "المندوبية السامية للتخطيط، الإحصاء العام للسكان والسكنى 2024، السكان القانونيون لجماعة الدار البيضاء في 1 شتنبر 2024"
+        },
+        {
+          "s": "marrakech",
+          "n": "Marrakech",
+          "lat": 31.629,
+          "lng": -7.981,
+          "pop": 1002697,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Haut-Commissariat au Plan, RGPH 2024, population légale de la commune de Marrakech au 1er septembre 2024",
+          "source_url": "https://www.hcp.ma/Population-legale-du-Royaume-du-Maroc-repartie-par-regions-provinces-et-prefectures-et-communes-selon-les-resultats-du_a3975.html",
+          "nearby": [
+            "casablanca",
+            "rabat"
+          ],
+          "n_ar": "مراكش",
+          "source_ar": "المندوبية السامية للتخطيط، الإحصاء العام للسكان والسكنى 2024، السكان القانونيون لجماعة مراكش في 1 شتنبر 2024"
+        },
+        {
+          "s": "rabat",
+          "n": "Rabat",
+          "lat": 34.02,
+          "lng": -6.841,
+          "pop": 509916,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Haut-Commissariat au Plan, RGPH 2024, population légale de la commune de Rabat au 1er septembre 2024",
+          "source_url": "https://www.hcp.ma/Population-legale-du-Royaume-du-Maroc-repartie-par-regions-provinces-et-prefectures-et-communes-selon-les-resultats-du_a3975.html",
+          "nearby": [
+            "casablanca",
+            "marrakech"
+          ],
+          "n_ar": "الرباط",
+          "source_ar": "المندوبية السامية للتخطيط، الإحصاء العام للسكان والسكنى 2024، السكان القانونيون لجماعة الرباط في 1 شتنبر 2024"
+        }
+      ]
+    },
+    "TN": {
+      "lang": "fr",
+      "langs": [
+        "fr",
+        "ar"
+      ],
+      "indexAll": true,
+      "name": "Tunisie",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "tunis",
+          "n": "Tunis",
+          "lat": 36.806,
+          "lng": 10.181,
+          "pop": 1075306,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Institut national de la statistique (Tunisie), recensement général de la population et de l'habitat 2024, gouvernorat de Tunis",
+          "source_url": "https://www.ins.tn/enquetes/recensement-general-de-la-population-et-de-lhabitat-2024",
+          "nearby": [
+            "alger",
+            "casablanca"
+          ],
+          "n_ar": "تونس",
+          "source_ar": "المعهد الوطني للإحصاء (تونس)، التعداد العام للسكان والسكنى 2024، ولاية تونس"
+        }
+      ]
+    },
+    "SN": {
+      "lang": "fr",
+      "name": "Sénégal",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "dakar",
+          "n": "Dakar",
+          "lat": 14.716,
+          "lng": -17.467,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Chiffre officiel non affiché : une source nationale vérifiable n'était pas disponible de façon suffisamment précise au moment de la rédaction.",
+          "source_url": "https://www.ansd.sn/donnees-recensements",
+          "nearby": [
+            "abidjan"
+          ]
+        }
+      ]
+    },
+    "CI": {
+      "lang": "fr",
+      "name": "Côte d'Ivoire",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "abidjan",
+          "n": "Abidjan",
+          "lat": 5.36,
+          "lng": -4.008,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Chiffre officiel non affiché : une source nationale vérifiable n'était pas disponible de façon suffisamment précise au moment de la rédaction.",
+          "source_url": "https://www.ins.ci/",
+          "nearby": [
+            "dakar",
+            "douala"
+          ]
+        }
+      ]
+    },
+    "CM": {
+      "lang": "fr",
+      "name": "Cameroun",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "douala",
+          "n": "Douala",
+          "lat": 4.051,
+          "lng": 9.767,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Chiffre officiel non affiché : une source nationale vérifiable n'était pas disponible de façon suffisamment précise au moment de la rédaction.",
+          "source_url": "https://ins-cameroun.cm/",
+          "nearby": [
+            "abidjan"
+          ]
+        }
+      ]
+    },
+    "US": {
+      "lang": "en",
+      "name": "United States",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "new-york",
+          "n": "New York",
+          "lat": 40.713,
+          "lng": -74.006,
+          "pop": 8478072,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "U.S. Census Bureau, Vintage 2024 Population Estimates, New York city, July 1, 2024",
+          "source_url": "https://www.census.gov/newsroom/press-releases/2025/vintage-2024-popest.html",
+          "nearby": [
+            "chicago",
+            "miami"
+          ]
+        },
+        {
+          "s": "los-angeles",
+          "n": "Los Angeles",
+          "lat": 34.052,
+          "lng": -118.244,
+          "pop": 3878704,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "U.S. Census Bureau, Vintage 2024 Population Estimates, Los Angeles city, July 1, 2024",
+          "source_url": "https://www.census.gov/newsroom/press-releases/2025/vintage-2024-popest.html",
+          "nearby": [
+            "san-francisco",
+            "new-york"
+          ]
+        },
+        {
+          "s": "miami",
+          "n": "Miami",
+          "lat": 25.762,
+          "lng": -80.191,
+          "pop": 487014,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "U.S. Census Bureau, Vintage 2024 Population Estimates, Miami city, July 1, 2024",
+          "source_url": "https://www.census.gov/newsroom/press-releases/2025/vintage-2024-popest.html",
+          "nearby": [
+            "new-york",
+            "los-angeles"
+          ]
+        },
+        {
+          "s": "san-francisco",
+          "n": "San Francisco",
+          "lat": 37.775,
+          "lng": -122.419,
+          "pop": 827526,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "U.S. Census Bureau, Vintage 2024 Population Estimates, San Francisco city, July 1, 2024",
+          "source_url": "https://www.census.gov/quickfacts/fact/table/sanfranciscocitycalifornia,US/PST045218",
+          "nearby": [
+            "los-angeles"
+          ]
+        },
+        {
+          "s": "chicago",
+          "n": "Chicago",
+          "lat": 41.878,
+          "lng": -87.63,
+          "pop": 2721308,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "U.S. Census Bureau, Vintage 2024 Population Estimates, Chicago city, July 1, 2024",
+          "source_url": "https://www.census.gov/newsroom/press-releases/2025/vintage-2024-popest.html",
+          "nearby": [
+            "new-york"
+          ]
+        }
+      ]
+    },
+    "CA": {
+      "lang": "en",
+      "langs": [
+        "en",
+        "fr"
+      ],
+      "name": "Canada",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "montreal",
+          "n": "Montréal",
+          "lat": 45.502,
+          "lng": -73.567,
+          "pop": 4615154,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Statistique Canada, estimations de la population des régions métropolitaines de recensement, 1er juillet 2024, RMR de Montréal",
+          "source_url": "https://www150.statcan.gc.ca/n1/daily-quotidien/250116/dq250116b-fra.htm",
+          "nearby": [
+            "toronto",
+            "vancouver"
+          ],
+          "primary": "fr",
+          "n_fr": "Montréal"
+        },
+        {
+          "s": "toronto",
+          "n": "Toronto",
+          "lat": 43.653,
+          "lng": -79.383,
+          "pop": 7106379,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Statistics Canada, population estimates for census metropolitan areas, July 1, 2024, Toronto CMA",
+          "source_url": "https://www150.statcan.gc.ca/n1/daily-quotidien/250116/dq250116b-eng.htm",
+          "nearby": [
+            "montreal",
+            "vancouver"
+          ],
+          "primary": "en"
+        },
+        {
+          "s": "vancouver",
+          "n": "Vancouver",
+          "lat": 49.282,
+          "lng": -123.121,
+          "pop": 3108941,
+          "area_km2": null,
+          "pop_year": 2024,
+          "area_year": null,
+          "source": "Statistics Canada, population estimates for census metropolitan areas, July 1, 2024, Vancouver CMA",
+          "source_url": "https://www150.statcan.gc.ca/n1/daily-quotidien/250116/dq250116b-eng.htm",
+          "nearby": [
+            "toronto",
+            "montreal"
+          ],
+          "primary": "en"
+        }
+      ]
+    },
+    "MX": {
+      "lang": "es",
+      "name": "México",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "mexico",
+          "n": "Ciudad de México",
+          "lat": 19.432,
+          "lng": -99.133,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Cifra municipal no mostrada: no se citó aquí una fuente INEGI verificada con suficiente precisión al redactar la página.",
+          "source_url": "https://www.inegi.org.mx/",
+          "nearby": [
+            "bogota"
+          ]
+        }
+      ]
+    },
+    "AR": {
+      "lang": "es",
+      "name": "Argentina",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "buenos-aires",
+          "n": "Buenos Aires",
+          "lat": -34.604,
+          "lng": -58.382,
+          "pop": 3121707,
+          "area_km2": null,
+          "pop_year": 2022,
+          "area_year": null,
+          "source": "INDEC, Censo Nacional de Población, Hogares y Viviendas 2022, datos definitivos, Ciudad Autónoma de Buenos Aires",
+          "source_url": "https://censo.gob.ar/index.php/datos_definitivos_caba/",
+          "nearby": [
+            "mexico",
+            "bogota"
+          ]
+        }
+      ]
+    },
+    "CO": {
+      "lang": "es",
+      "name": "Colombia",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "bogota",
+          "n": "Bogotá",
+          "lat": 4.711,
+          "lng": -74.072,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Cifra municipal no mostrada: no se citó aquí una proyección DANE verificada con suficiente precisión al redactar la página.",
+          "source_url": "https://www.dane.gov.co/index.php/estadisticas-por-tema/demografia-y-poblacion/proyecciones-de-poblacion",
+          "nearby": [
+            "mexico",
+            "buenos-aires"
+          ]
+        }
+      ]
+    },
+    "BR": {
+      "lang": "pt",
+      "name": "Brasil",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "sao-paulo",
+          "n": "São Paulo",
+          "lat": -23.551,
+          "lng": -46.633,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Número municipal não exibido: não foi citada aqui uma estimativa IBGE verificada com precisão suficiente no momento da redação.",
+          "source_url": "https://www.ibge.gov.br/estatisticas/sociais/populacao/9103-estimativas-de-populacao.html",
+          "nearby": [
+            "rio-de-janeiro"
+          ],
+          "n_pt": "São Paulo"
+        },
+        {
+          "s": "rio-de-janeiro",
+          "n": "Rio de Janeiro",
+          "lat": -22.907,
+          "lng": -43.173,
+          "pop": null,
+          "area_km2": null,
+          "pop_year": null,
+          "area_year": null,
+          "source": "Número municipal não exibido: não foi citada aqui uma estimativa IBGE verificada com precisão suficiente no momento da redação.",
+          "source_url": "https://www.ibge.gov.br/estatisticas/sociais/populacao/9103-estimativas-de-populacao.html",
+          "nearby": [
+            "sao-paulo"
+          ]
+        }
+      ]
+    },
+    "RE": {
+      "lang": "fr",
+      "name": "La Réunion",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "la-reunion",
+          "n": "La Réunion",
+          "lat": -20.878,
+          "lng": 55.448,
+          "pop": 889679,
+          "area_km2": null,
+          "pop_year": 2023,
+          "area_year": null,
+          "source": "Insee, populations de référence 2023 (en vigueur au 1er janvier 2026), département de La Réunion, population municipale",
+          "source_url": "https://www.insee.fr/fr/statistiques/8680659?sommaire=8681011",
+          "nearby": [
+            "martinique",
+            "guadeloupe"
+          ]
+        }
+      ]
+    },
+    "MQ": {
+      "lang": "fr",
+      "name": "Martinique",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "martinique",
+          "n": "Martinique",
+          "lat": 14.603,
+          "lng": -61.07,
+          "pop": 360630,
+          "area_km2": null,
+          "pop_year": 2023,
+          "area_year": null,
+          "source": "Insee, populations de référence 2023 (en vigueur au 1er janvier 2026), département de la Martinique, population municipale",
+          "source_url": "https://www.insee.fr/fr/statistiques/8680659?sommaire=8681011",
+          "nearby": [
+            "guadeloupe",
+            "la-reunion"
+          ]
+        }
+      ]
+    },
+    "GP": {
+      "lang": "fr",
+      "name": "Guadeloupe",
+      "pathWord": null,
+      "priority": 2,
+      "cities": [
+        {
+          "s": "guadeloupe",
+          "n": "Guadeloupe",
+          "lat": 16.241,
+          "lng": -61.533,
+          "pop": 384160,
+          "area_km2": null,
+          "pop_year": 2023,
+          "area_year": null,
+          "source": "Insee, populations de référence 2023 (en vigueur au 1er janvier 2026), département de la Guadeloupe, population municipale",
+          "source_url": "https://www.insee.fr/fr/statistiques/8680659?sommaire=8681011",
+          "nearby": [
+            "martinique",
+            "la-reunion"
+          ]
+        }
+      ]
     }
   }
 }

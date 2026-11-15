@@ -48,4 +48,36 @@ export const CITIES_PT: Record<string, CityText> = {
       { q: "Para quem é a hdar?", a: "Para toda a gente com 18 anos ou mais, de qualquer orientação." },
     ],
   },
+
+  "sao-paulo": {
+    title: "São Paulo: planos e encontros perto de você — hdar.",
+    desc: "Planos e encontros em São Paulo, perto de você. Grátis, anônimo, +18. Mapa ao vivo na Augusta, na Vila Madalena, no Centro e na Paulista.",
+    h1: ["Planos e encontros em ", "São Paulo"],
+    lead: "São Paulo é enorme, mas a sua noite cabe em alguns bairros. Um olhar no mapa, e você vê quem está perto de você — na Augusta, na Vila Madalena ou um pouco mais para o centro. Ninguém por perto? Afaste o zoom, ou troque de cidade no alto à direita.",
+    introTitle: "Uma cidade de bairros, não de distâncias infinitas",
+    intro: [
+      "A **Augusta**, a **Paulista** e o **Baixo Augusta** ainda concentram muita saída, a pé ou de metrô. A **Vila Madalena** e **Pinheiros** têm outro ritmo, mais de bar de bairro e de primeiro encontro. O **Centro** e a **República** mudam o ar, mais de rua, e bairros como **Moema** ou a **Zona Oeste** funcionam igual no hdar: você vê quem está perto, não quem está a uma hora de trânsito.",
+      "Você aparece o tempo que quiser — uma hora, três ou a noite toda —, com a posição arredondada, e some quando decidir. Uma mensagem, um plano perto de você, para todo mundo, maiores de 18.",
+    ],
+    quartersTitle: "Planos em São Paulo, bairro a bairro",
+    quarters: [["Augusta, Paulista e Baixo Augusta", "o ponto de partida mais óbvio, tudo perto do metrô."], ["Vila Madalena e Pinheiros", "bares de bairro, um primeiro encontro mais calmo."], ["Centro e República", "outro ar, mais de rua."], ["Moema, Zona Oeste e outros bairros", "o mapa segue você, não fica preso a um único centro."]],
+    cruising: "No mapa do hdar, os lugares públicos apontados pela comunidade — parques e outros espaços ao ar livre — ficam numa camada opcional, «Outros lugares públicos». Ela permanece desligada até você ligar. Nesta página não há endereços: só o mapa ao vivo, para maiores de 18, com um lembrete de ser discreto e respeitar as outras pessoas.",
+    faq: [{"q": "Funciona também na Grande São Paulo?", "a": "Sim. O mapa mostra quem está visível perto de você, esteja você no centro ou mais longe."}, {"q": "É só para homens gays?", "a": "Não. É aberto a todas as orientações, acolhedor para todo mundo, e só para maiores de 18."}],
+  },
+  "rio-de-janeiro": {
+    title: "Rio de Janeiro: planos e encontros perto de você — hdar.",
+    desc: "Planos e encontros no Rio, perto de você. Grátis, anônimo, +18. Mapa ao vivo de Copacabana a Ipanema, à Lapa e à Zona Norte.",
+    h1: ["Planos e encontros no ", "Rio de Janeiro"],
+    lead: "No Rio, a noite muda de bairro com o bonde e o metrô. Um olhar no mapa, e você vê quem está perto de você — em Copacabana, na Lapa ou do outro lado da cidade. Ninguém por perto? Afaste o zoom, ou troque de cidade no alto à direita.",
+    introTitle: "Praia, centro, outros ritmos",
+    intro: [
+      "**Copacabana** e **Ipanema** são o cartão-postal e, ao mesmo tempo, um ponto de partida real: orla, bares, um primeiro encontro à vista do mar. A **Lapa** e o **Centro** puxam a noite mais longa, mais de rua. **Botafogo** e **Flamengo** ficam no meio do caminho, práticos, e a **Zona Norte** ou a **Barra** entram no mesmo mapa quando é aí que você está — o hdar não finge que todo mundo mora na orla.",
+      "Você aparece o tempo que quiser, com a posição arredondada, e some com um toque. Uma mensagem, um plano perto de você, para todo mundo, +18.",
+    ],
+    quartersTitle: "Planos no Rio",
+    quarters: [["Copacabana e Ipanema", "a orla, um primeiro encontro simples."], ["Lapa e Centro", "a noite mais longa, mais de rua."], ["Botafogo e Flamengo", "no caminho, prático para se encontrar."], ["Zona Norte, Barra e o restante", "o mapa segue onde você está, não só a Zona Sul."]],
+    cruising: "Os lugares públicos apontados pela comunidade — parques, orla, outros espaços ao ar livre — ficam numa camada opcional do mapa, «Outros lugares públicos», desligada por padrão. Sem endereços nesta página: só o mapa ao vivo, para maiores de 18, com um lembrete de ser discreto e respeitar as outras pessoas.",
+    faq: [{"q": "Funciona fora da Zona Sul?", "a": "Sim. O mapa mostra quem está visível perto de você, em qualquer parte da cidade."}, {"q": "É só para um público?", "a": "Não. O hdar é para todas as orientações, acolhedor para todo mundo, e só para maiores de 18."}],
+  },
+
 };

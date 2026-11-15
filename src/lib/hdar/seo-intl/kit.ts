@@ -15,7 +15,8 @@ export type CityText = {
   intro: string[];
   quartersTitle: string;
   quarters: [string, string][];
-  cruising: string;
+  /** Absent on purpose in countries where homosexuality is criminalized. */
+  cruising?: string;
   faq: Faq[];
 };
 
@@ -340,5 +341,118 @@ const en: Kit = {
   kinds: { bar: "Bar", sauna: "Sauna", club: "Club", sexshop: "Shop", other: "Venue" },
 };
 
-export const KITS: Record<string, Kit> = { de, fr, nl, es, it, pt, en };
-export const kitFor = (lang: string): Kit => KITS[lang] ?? fr;
+
+const ar: Kit = {
+  open: "فتح التطبيق",
+  cta: "فتح الخريطة",
+  sub: "مجاني · بسرية · موقع مقرب · 18+",
+  facts: ["السكان", "المساحة", "العمر"],
+  sourceLabel: "أرقام رسمية:",
+  numbersTitle: (n) => `${n} بالأرقام`,
+  numbers: ({ n, pop, area, source }) =>
+    `وفق الإحصاءات الرسمية (${source})، يبلغ عدد سكان ${n} **${pop} نسمة**${area ? ` على مساحة **${area} كم²**` : ""}.`,
+  discreetTitle: "كيف تبقى الأمور سرية",
+  steps: [
+    "افتح hdar.chat وأكد أن عمرك 18 عاماً أو أكثر — بدون بريد إلكتروني.",
+    "اضغط «أظهر نفسي»: تظهر على الخريطة، مع موقع مقرب إلى نحو 110 أمتار.",
+    "دردشة الحي (حوالي 3 كم) أو رسالة خاصة — صورة أو صوت أو فيديو فقط إذا أردت.",
+    "لا أحد قريباً؟ صغّر الخريطة لترى من لديه رغبة في مكان آخر، أو اضغط على اسم المدينة في الأعلى يميناً وغيّر المدينة.",
+    "للقاء الأول، الأفضل مكان عام (مقهى، فضاء مفتوح) وإخبار شخص تثق به.",
+  ],
+  cruisingTitle: (n) => `أماكن اللقاء في ${n}`,
+  cruisingCta: (n) => `فتح الخريطة · أماكن عامة في ${n}`,
+  cruisingNote: "18+ · الطبقة اختيارية · لا عناوين في هذه الصفحة.",
+  placesTitle: "أماكن على خريطة hdar",
+  placesIntro: "الأماكن الشريكة الموجودة سلفاً على الخريطة:",
+  placesEmpty: (n) =>
+    `لا توجد بعد حانات أو نوادٍ شريكة في ${n} على خريطة hdar. هل تدير مكاناً؟ اكتب لنا عبر صفحة الاتصال.`,
+  nearTitle: "مدن أخرى",
+  faqTitle: "أسئلة شائعة",
+  faqBase: (n) => [
+    { q: `هل hdar مجاني في ${n}؟`, a: "نعم. الخريطة ودردشة الحي والرسائل الخاصة مجانية. hdar+ اختياري." },
+    { q: "هل أحتاج إلى حساب؟", a: "لا. يكفي اسم مستعار وتأكيد أنك فوق 18 عاماً. بدون بريد، بدون كلمة مرور." },
+    { q: "هل يرى الآخرون عنواني بالضبط؟", a: "لا. يرى الآخرون موقعاً مقرباً إلى نحو 110 أمتار ومسافة تقريبية." },
+  ],
+  foot: "hdar. — خروج ولقاءات حولك، للجميع. مجاني، بسرية، لمن هم فوق 18 عاماً فقط.",
+  footer: { tagline: "hdar. — خروج ولقاءات حولك، للجميع. مجاني، بسرية، لمن هم فوق 18 عاماً فقط.", all: "كل المدن", faq: "الأسئلة", terms: "الشروط", privacy: "الخصوصية", contact: "اتصل بنا" },
+  kinds: { bar: "بار", sauna: "ساونا", club: "نادي", sexshop: "متجر", other: "مكان" },
+};
+
+
+const enUS: Kit = {
+  open: "Open the app",
+  cta: "Open the map",
+  sub: "Free · anonymous · rounded location · 18+",
+  facts: ["Residents", "Area", "Age"],
+  sourceLabel: "Official figures:",
+  numbersTitle: (n) => `${n} in numbers`,
+  numbers: ({ n, pop, area, source }) =>
+    `According to official statistics (${source}), ${n} has **${pop} residents**${area ? ` over **${area} km²**` : ""}.`,
+  discreetTitle: "Keeping it discreet",
+  steps: [
+    "Open hdar.chat and confirm you're 18+. No email, no password.",
+    "Tap “Show me”: you appear on the map, position rounded to roughly 110 meters.",
+    "Use the neighborhood chat (about 3 km) or a private message.",
+    "Nobody around? Zoom out the map to see who's up for it elsewhere, or tap the city name at the top right to switch city.",
+    "For a first meet, pick somewhere public and let a friend know.",
+  ],
+  cruisingTitle: (n) => `Cruising spots in ${n}`,
+  cruisingCta: (n) => `Open the map · public spots in ${n}`,
+  cruisingNote: "18+ · layer you switch on · no addresses on this page.",
+  placesTitle: "Venues on the hdar map",
+  placesIntro: "Partner venues already on the map:",
+  placesEmpty: (n) => `No partner venues in ${n} on the hdar map yet. Run one? Get in touch via the contact page.`,
+  nearTitle: "Other cities",
+  faqTitle: "FAQ",
+  faqBase: (n) => [
+    { q: `Is hdar free in ${n}?`, a: "Yes. The map, the neighborhood chat and private messages are free. hdar+ is optional." },
+    { q: "Do I need an account?", a: "No. A nickname and an 18+ confirmation are enough. No email, no password." },
+    { q: "Can people see my exact address?", a: "No. Others see a position rounded to about 110 meters and an approximate distance — never your door." },
+  ],
+  foot: "hdar. — outings and meetups around you, for everyone. Free, discreet, 18+ only.",
+  footer: { tagline: "hdar. — outings and meetups around you, for everyone. Free, discreet, 18+ only.", all: "All cities", faq: "FAQ", terms: "Terms", privacy: "Privacy", contact: "Contact" },
+  kinds: { bar: "Bar", sauna: "Sauna", club: "Club", sexshop: "Shop", other: "Venue" },
+};
+
+const ptBR: Kit = {
+  open: "Abrir o app",
+  cta: "Abrir o mapa",
+  sub: "Grátis · anônimo · localização aproximada · +18",
+  facts: ["Habitantes", "Área", "Idade"],
+  sourceLabel: "Números oficiais:",
+  numbersTitle: (n) => `${n} em números`,
+  numbers: ({ n, pop, area, source }) =>
+    `Segundo as estatísticas oficiais (${source}), ${n} tem **${pop} habitantes**${area ? ` em **${area} km²**` : ""}.`,
+  discreetTitle: "Como permanece discreto",
+  steps: [
+    "Abra o hdar.chat e confirme que você tem 18 anos ou mais — sem e-mail.",
+    "Toque em “Me mostrar”: você aparece no mapa, com a posição arredondada a cerca de 110 metros.",
+    "Use o chat do bairro (cerca de 3 km) ou uma mensagem privada.",
+    "Ninguém por perto? Afaste o zoom do mapa para ver quem está a fim em outro lugar, ou toque no nome da cidade no alto à direita e troque de cidade.",
+    "No primeiro encontro, escolha um lugar público e avise alguém de confiança.",
+  ],
+  cruisingTitle: (n) => `Pontos de encontro em ${n}`,
+  cruisingCta: (n) => `Abrir o mapa · lugares públicos em ${n}`,
+  cruisingNote: "18+ · camada opcional · nenhum endereço nesta página.",
+  placesTitle: "Lugares no mapa hdar",
+  placesIntro: "Os estabelecimentos parceiros que já estão no mapa:",
+  placesEmpty: (n) =>
+    `Ainda não há bares, saunas ou clubes parceiros em ${n} no mapa hdar. Você tem um lugar? Fale com a gente pela página de contato.`,
+  nearTitle: "Outras cidades",
+  faqTitle: "Perguntas frequentes",
+  faqBase: (n) => [
+    { q: `O hdar é grátis em ${n}?`, a: "Sim. O mapa, o chat do bairro e as mensagens privadas são grátis. O hdar+ é opcional." },
+    { q: "Preciso de uma conta?", a: "Não. Basta um apelido e confirmar que você tem 18 anos. Sem e-mail, sem senha." },
+    { q: "Dá para ver o meu endereço exato?", a: "Não. As outras pessoas veem uma posição arredondada a cerca de 110 metros e uma distância aproximada." },
+  ],
+  foot: "hdar. — saídas e encontros perto de você, para todo mundo. Grátis, discreto, só +18.",
+  footer: { tagline: "hdar. — saídas e encontros perto de você, para todo mundo. Grátis, discreto, só +18.", all: "Todas as cidades", faq: "FAQ", terms: "Termos", privacy: "Privacidade", contact: "Contato" },
+  kinds: { bar: "Bar", sauna: "Sauna", club: "Clube", sexshop: "Loja", other: "Local" },
+};
+
+export const KITS: Record<string, Kit> = { de, fr, nl, es, it, pt, en, ar };
+export const kitFor = (lang: string, country?: string): Kit => {
+  if (country === "US" || (country === "CA" && lang === "en")) return enUS;
+  if (country === "BR") return ptBR;
+  return KITS[lang] ?? fr;
+};
