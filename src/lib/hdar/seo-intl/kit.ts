@@ -3,6 +3,8 @@
  * City-specific long-form text lives in ./cities-<lang>.ts — this file only holds shared wording.
  */
 
+import { isRiskCountry } from "@/lib/hdar/safe-countries";
+
 export type Faq = { q: string; a: string };
 
 /** Unique long-form text for one city (Berlin standard). `**x**` marks bold. */
@@ -450,9 +452,81 @@ const ptBR: Kit = {
   kinds: { bar: "Bar", sauna: "Sauna", club: "Clube", sexshop: "Loja", other: "Local" },
 };
 
+const frSafe: Partial<Kit> = {
+  sub: "Gratuit · discret · position floutée (~1 km) · 18+",
+  discreetTitle: "Rester discret",
+  steps: [
+    "Choisis un pseudo, pas ton vrai nom.",
+    "Au début, pas de photo de visage.",
+    "La position vue par les autres est floutée, à environ 1 km.",
+    "Pour un premier rendez-vous, choisis un lieu public (un café, une place).",
+    "Préviens un ami de confiance avant d'y aller.",
+  ],
+  faqBase: (n) => [
+    { q: `hdar est-il gratuit à ${n} ?`, a: "Oui. La carte, le tchat du quartier et les messages privés sont gratuits. hdar+ est optionnel." },
+    { q: "Faut-il créer un compte ?", a: "Non. Un pseudo et la confirmation de tes 18 ans suffisent. Ni e-mail, ni mot de passe." },
+    { q: "Voit-on mon adresse exacte ?", a: "Non. Dans ce pays, les autres voient une position floutée, à environ 1 km, et une distance approximative." },
+  ],
+  foot: "hdar. — sorties, amis et rencontres autour de toi, pour tout le monde. Gratuit, discret, réservé aux 18 ans et plus.",
+  footer: { tagline: "hdar. — sorties, amis et rencontres autour de toi, pour tout le monde. Gratuit, discret, réservé aux 18 ans et plus.", all: "Toutes les villes", faq: "FAQ", terms: "CGU", privacy: "Confidentialité", contact: "Contact" },
+  placesEmpty: (n) => `Pas encore de lieux partenaires à ${n} sur la carte hdar.`,
+  generic: (n) => ({
+    title: `${n} : sorties, amis et rencontres autour de toi — hdar.`,
+    desc: `Sorties, amis et rencontres à ${n}, autour de toi. Gratuit, discret, 18+. Carte en direct, pour tout le monde.`,
+    h1: ["Sorties, amis et rencontres à ", n],
+    lead: `Un coup d'œil sur la carte suffit pour voir qui est autour de toi à ${n}. Gratuit, discret, réservé aux 18 ans et plus.`,
+    introTitle: `hdar à ${n}`,
+    intro: [
+      "Tu n'apparais que si tu le veux, le temps que tu choisis. La position vue par les autres est floutée, à environ 1 km. Des sorties, des amis et des rencontres pour tout le monde.",
+    ],
+    quartersTitle: "",
+    quarters: [],
+    faq: [],
+  }),
+};
+
+const arSafe: Partial<Kit> = {
+  sub: "مجاني · بسرية · موقع ضبابي (نحو 1 كم) · 18+",
+  discreetTitle: "البقاء في السرية",
+  steps: [
+    "اختر اسماً مستعاراً، وليس اسمك الحقيقي.",
+    "في البداية، بلا صورة للوجه.",
+    "الموقع الذي يراه الآخرون ضبابي، على بعد نحو كيلومتر واحد.",
+    "اللقاء الأول في مكان عام (مقهى، ساحة).",
+    "أخبر صديقاً تثق به قبل الذهاب.",
+  ],
+  faqBase: (n) => [
+    { q: `هل hdar مجاني في ${n}؟`, a: "نعم. الخريطة ودردشة الحي والرسائل الخاصة مجانية. hdar+ اختياري." },
+    { q: "هل أحتاج إلى حساب؟", a: "لا. يكفي اسم مستعار وتأكيد أنك فوق 18 عاماً. بدون بريد، بدون كلمة مرور." },
+    { q: "هل يرى الآخرون عنواني بالضبط؟", a: "لا. في هذا البلد، يرى الآخرون موقعاً ضبابياً على بعد نحو كيلومتر واحد، ومسافة تقريبية." },
+  ],
+  foot: "hdar. — خروج، صداقات ولقاءات حولك، للجميع. مجاني، بسرية، لمن هم فوق 18 عاماً فقط.",
+  footer: { tagline: "hdar. — خروج، صداقات ولقاءات حولك، للجميع. مجاني، بسرية، لمن هم فوق 18 عاماً فقط.", all: "كل المدن", faq: "الأسئلة", terms: "الشروط", privacy: "الخصوصية", contact: "اتصل بنا" },
+  placesEmpty: (n) => `لا توجد بعد أماكن شريكة في ${n} على خريطة hdar.`,
+  generic: (n) => ({
+    title: `${n}: خروج، صداقات ولقاءات حولك — hdar.`,
+    desc: `خروج، صداقات ولقاءات في ${n}، حولك. مجاني، بسرية، 18+. خريطة مباشرة، للجميع.`,
+    h1: ["خروج، صداقات ولقاءات في ", n],
+    lead: `نظرة إلى الخريطة تكفي لترى من حولك في ${n}. مجاني، بسرية، لمن هم فوق 18 عاماً.`,
+    introTitle: `hdar في ${n}`,
+    intro: [
+      "لا تظهر إلا إذا أردت، وللمدة التي تختارها. الموقع الذي يراه الآخرون ضبابي، على بعد نحو كيلومتر واحد. خروج، صداقات ولقاءات للجميع.",
+    ],
+    quartersTitle: "",
+    quarters: [],
+    faq: [],
+  }),
+};
+
 export const KITS: Record<string, Kit> = { de, fr, nl, es, it, pt, en, ar };
 export const kitFor = (lang: string, country?: string): Kit => {
-  if (country === "US" || (country === "CA" && lang === "en")) return enUS;
-  if (country === "BR") return ptBR;
-  return KITS[lang] ?? fr;
+  let base: Kit;
+  if (country === "US" || (country === "CA" && lang === "en")) base = enUS;
+  else if (country === "BR") base = ptBR;
+  else base = KITS[lang] ?? fr;
+  if (country && isRiskCountry(country)) {
+    const extra = lang === "ar" ? arSafe : frSafe;
+    return { ...base, ...extra };
+  }
+  return base;
 };

@@ -13,6 +13,7 @@ import { CITIES_PT } from "@/lib/hdar/seo-intl/cities-pt";
 import { CITIES_FR } from "@/lib/hdar/seo-intl/cities-fr";
 import { CITIES_EN } from "@/lib/hdar/seo-intl/cities-en";
 import { CITIES_AR } from "@/lib/hdar/seo-intl/cities-ar";
+import { isRiskCountry } from "@/lib/hdar/safe-countries";
 
 /** Unique long-form text per `${lang}:${slug}` (primary language of each city). */
 const TEXTS: Record<string, Record<string, CityText>> = { de: CITIES_DE, es: CITIES_ES, nl: CITIES_NL, it: CITIES_IT, pt: CITIES_PT, fr: CITIES_FR, en: CITIES_EN, ar: CITIES_AR };
@@ -132,7 +133,7 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
   return (
     <SeoShell footer={footer}>
       <div lang={c.lang} dir={c.lang === "ar" ? "rtl" : "ltr"} data-noi18n>
-        <Ld data={{ "@context": "https://schema.org", "@type": "WebPage", url: SITE_URL + c.path, inLanguage: c.lang, name: blog.title, about: { "@type": "City", name: c.n, geo: { "@type": "GeoCoordinates", latitude: c.lat, longitude: c.lng } } }} />
+        <Ld data={{ "@context": "https://schema.org", "@type": "WebPage", url: SITE_URL + c.path, inLanguage: c.lang, name: blog.title, description: blog.desc, about: { "@type": "City", name: c.n, geo: { "@type": "GeoCoordinates", latitude: c.lat, longitude: c.lng } } }} />
         <Hero seed={c.s} open={kit.open} home={`/?lang=${appLang(c.lang)}`} kicker={`${regionName(c.country, c.lang, c.countryName)} · 18+`} title={<>{blog.h1}</>}>
           <p className="mt-4 text-lg leading-snug text-ink/85">{blog.lead}</p>
           <Cta label={blog.cta} href={appHref(c)} />
@@ -168,7 +169,7 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
               {blog.cruisingNote && <p className="mt-2 text-xs text-muted">{blog.cruisingNote}</p>}
             </section>
           )}
-          {places.length > 0 ? (
+          {!isRiskCountry(c.country) && (places.length > 0 ? (
             <section className="seo-reveal mt-12">
               <h2 className="font-display text-2xl font-bold">{blog.placesTitle}</h2>
               <p className="mt-2 text-sm text-muted">{blog.placesIntro}</p>
@@ -186,7 +187,7 @@ export function IntlNativePage({ c }: { c: IntlCityPayload }) {
               <h2 className="font-display text-2xl font-bold">{blog.placesTitle}</h2>
               <p className="mt-2 text-sm leading-relaxed">{blog.placesEmpty}</p>
             </section>
-          ) : null}
+          ) : null)}
           {c.nearby.length > 0 && (
             <section className="seo-reveal mt-12">
               <h2 className="font-display text-2xl font-bold">{blog.nearTitle}</h2>
