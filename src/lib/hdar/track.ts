@@ -88,10 +88,21 @@ const gateSent = new Set<string>();
 export function trackGate(kind: "gate_view" | "gate_check" | "gate_click" | "gate_verified" | "gate_enter" | "gate_error" | "gate_captcha_fail") {
   if (typeof window === "undefined" || gateSent.has(kind)) return;
   gateSent.add(kind);
-  void fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_gate`, {
+  const lang = /^[a-z]{2}$/.test((navigator.language || "").slice(0, 2).toLowerCase())
+    ? (navigator.language || "").slice(0, 2).toLowerCase()
+    : "zz";
+  // Le pays est lu côté serveur (en-tête Netlify / équivalent), jamais l'IP.
+  void fetch("/api/gate", {
     method: "POST",
-    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ p_kind: kind }),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ kind, lang }),
     keepalive: true,
-  }).catch(() => undefined);
+  }).catch(() => {
+    void fetch(`${SUPABASE_URL}/rest/v1/rpc/hdar_gate`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ p_kind: kind, p_lang: lang }),
+      keepalive: true,
+    }).catch(() => undefined);
+  });
 }

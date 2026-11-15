@@ -33,6 +33,7 @@ import { Route as LangSlugRouteImport } from './routes/$lang/$slug'
 import { Route as AmbassadeurGuideRouteImport } from './routes/ambassadeur_.guide'
 import { Route as AnnoncesIndexRouteImport } from './routes/annonces.index'
 import { Route as AnnoncesIdRouteImport } from './routes/annonces.$id'
+import { Route as ApiGateRouteImport } from './routes/api/gate'
 import { Route as ApiGeoRouteImport } from './routes/api/geo'
 import { Route as FrSortirRencontrerChar123villeChar125RouteImport } from './routes/fr/sortir-rencontrer-{$ville}'
 import { Route as LiveCodeRouteImport } from './routes/live_.$code'
@@ -167,6 +168,11 @@ const AnnoncesIdRoute = AnnoncesIdRouteImport.update({
   path: '/annonces/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGateRoute = ApiGateRouteImport.update({
+  id: '/api/gate',
+  path: '/api/gate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGeoRoute = ApiGeoRouteImport.update({
   id: '/api/geo',
   path: '/api/geo',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/$lang/$slug': typeof LangSlugRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/annonces/$id': typeof AnnoncesIdRoute
+  '/api/gate': typeof ApiGateRoute
   '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/$lang/$slug': typeof LangSlugRoute
   '/ambassadeur/guide': typeof AmbassadeurGuideRoute
   '/annonces/$id': typeof AnnoncesIdRoute
+  '/api/gate': typeof ApiGateRoute
   '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live/$code': typeof LiveCodeRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/$lang/$slug': typeof LangSlugRoute
   '/ambassadeur_/guide': typeof AmbassadeurGuideRoute
   '/annonces/$id': typeof AnnoncesIdRoute
+  '/api/gate': typeof ApiGateRoute
   '/api/geo': typeof ApiGeoRoute
   '/fr/sortir-rencontrer-{$ville}': typeof FrSortirRencontrerChar123villeChar125Route
   '/live_/$code': typeof LiveCodeRoute
@@ -379,6 +388,7 @@ export interface FileRouteTypes {
     | '/$lang/$slug'
     | '/ambassadeur/guide'
     | '/annonces/$id'
+    | '/api/gate'
     | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/$lang/$slug'
     | '/ambassadeur/guide'
     | '/annonces/$id'
+    | '/api/gate'
     | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live/$code'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/$lang/$slug'
     | '/ambassadeur_/guide'
     | '/annonces/$id'
+    | '/api/gate'
     | '/api/geo'
     | '/fr/sortir-rencontrer-{$ville}'
     | '/live_/$code'
@@ -497,6 +509,7 @@ export interface RootRouteChildren {
   LangSlugRoute: typeof LangSlugRoute
   AmbassadeurGuideRoute: typeof AmbassadeurGuideRoute
   AnnoncesIdRoute: typeof AnnoncesIdRoute
+  ApiGateRoute: typeof ApiGateRoute
   ApiGeoRoute: typeof ApiGeoRoute
   FrSortirRencontrerChar123villeChar125Route: typeof FrSortirRencontrerChar123villeChar125Route
   LiveCodeRoute: typeof LiveCodeRoute
@@ -683,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnnoncesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/gate': {
+      id: '/api/gate'
+      path: '/api/gate'
+      fullPath: '/api/gate'
+      preLoaderRoute: typeof ApiGateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/geo': {
       id: '/api/geo'
       path: '/api/geo'
@@ -801,6 +821,7 @@ const rootRouteChildren: RootRouteChildren = {
   LangSlugRoute: LangSlugRoute,
   AmbassadeurGuideRoute: AmbassadeurGuideRoute,
   AnnoncesIdRoute: AnnoncesIdRoute,
+  ApiGateRoute: ApiGateRoute,
   ApiGeoRoute: ApiGeoRoute,
   FrSortirRencontrerChar123villeChar125Route:
     FrSortirRencontrerChar123villeChar125Route,
