@@ -15,6 +15,8 @@ import { track } from "./track";
 import { deviceId } from "./device";
 import { PAYMENTS_ENABLED, showLaunchOffer } from "./payments";
 import { withRpcGate } from "./gate";
+import { useCountry } from "./country";
+import { devOverride, isRiskCountry, locatedInRiskCountry, publishPos } from "./safe-countries";
 
 export type LivePin = {
   id: string;
@@ -153,6 +155,11 @@ function otherId(value: string) {
     .toLowerCase();
 }
 
+function riskNow() {
+  const s = useCountry.getState();
+  return locatedInRiskCountry(s.auto, s.cdn) || isRiskCountry(devOverride());
+}
+
 // Presence ---------------------------------------------------------------
 
 export async function pulse({
@@ -161,19 +168,20 @@ export async function pulse({
   data: { self: string; lat: number; lng: number; pseudo: string; desires: string; hours: number; note?: string; chosen?: boolean };
 }) {
   if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return;
+  const published = publishPos(data.lat, data.lng, riskNow());
   // Le GPS donne une position ~1 fois/s : on n'envoie qu'au plus toutes les 30 s (ou tout de suite si on a bougé de
   // ~150 m, changé d'envies, ou choisi sa place), et on se tait 60 s après un refus anti-spam (12/min côté serveur).
   const now = Date.now(), key = `${data.desires}|${data.note ?? ""}|${data.pseudo}`;
-  const moved = pulseLast ? Math.hypot(data.lat - pulseLast.lat, (data.lng - pulseLast.lng) * Math.cos((data.lat * Math.PI) / 180)) > 0.00135 : true;
+  const moved = pulseLast ? Math.hypot(published.lat - pulseLast.lat, (published.lng - pulseLast.lng) * Math.cos((published.lat * Math.PI) / 180)) > 0.00135 : true;
   if (now < pulseMuteUntil) return;
   if (pulseLast && !data.chosen && key === pulseLast.key && !moved && now - pulseLast.at < 30_000) return;
   if (pulseLast && now - pulseLast.at < 5000 && !data.chosen) return;
-  pulseLast = { lat: data.lat, lng: data.lng, key, at: now };
+  pulseLast = { lat: published.lat, lng: published.lng, key, at: now };
   await rpc("hdar_pulse", {
     p_chosen: !!data.chosen,
     p_self: selfId(data.self),
-    p_lat: data.lat,
-    p_lng: data.lng,
+    p_lat: published.lat,
+    p_lng: published.lng,
     p_pseudo:
       cleanPseudo(String(data.pseudo || "Anonyme")).slice(0, 24) || "Anonyme",
     p_desires: String(data.desires || "").slice(0, 80),
@@ -190,9 +198,10 @@ let pulseMuteUntil = 0;
 
 /** Épingle « Place-toi sur la carte » (géolocalisation refusée) : arrondie ~200 m côté serveur. */
 export async function pinSet(lat: number, lng: number) {
-  const r = await rpc<{ lat: number; lng: number }[]>("hdar_pin_set", { p_lat: lat, p_lng: lng });
+  const at = publishPos(lat, lng, riskNow());
+  const r = await rpc<{ lat: number; lng: number }[]>("hdar_pin_set", { p_lat: at.lat, p_lng: at.lng });
   const row = Array.isArray(r) ? r[0] : null;
-  return row ? { lat: Number(row.lat), lng: Number(row.lng) } : { lat: Math.round(lat * 500) / 500, lng: Math.round(lng * 500) / 500 };
+  return row ? { lat: Number(row.lat), lng: Number(row.lng) } : { lat: Math.round(at.lat * 500) / 500, lng: Math.round(at.lng * 500) / 500 };
 }
 export const pinClear = () => rpc("hdar_pin_clear", {});
 /** Parmi ces profils, ceux dont la position est choisie (badge). */
@@ -1691,7 +1700,8 @@ let lastPing = 0;
 export function visitorPing(lat: number, lng: number) {
   if (visitorHidden() || Date.now() - lastPing < 10 * 60_000) return;
   lastPing = Date.now();
-  void rpc("hdar_visitor_ping", { p_lat: Math.round(lat * 100) / 100, p_lng: Math.round(lng * 100) / 100 }).catch(() => undefined);
+  const at = publishPos(lat, lng, riskNow());
+  void rpc("hdar_visitor_ping", { p_lat: Math.round(at.lat * 100) / 100, p_lng: Math.round(at.lng * 100) / 100 }).catch(() => undefined);
 }
 export const hideOfflineGet = () => rpc<boolean>("hdar_map_hide_offline_get", {});
 export const hideOfflineSet = (on: boolean) => rpc("hdar_map_hide_offline_set", { p_on: on });

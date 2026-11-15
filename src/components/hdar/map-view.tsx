@@ -31,6 +31,7 @@ import { BoostNudge } from "./boost-nudge";
 import { useActiveBoost } from "./boost";
 import { useMapFocus } from "@/lib/hdar/map-focus";
 import { liveMap, mapRecent, pulse, goDark, visitorPing, type LivePin, type RecentPin, type VisitorBubble } from "@/lib/hdar/live";
+import { detectCountry } from "@/lib/hdar/country";
 import { usePremium } from "@/lib/hdar/premium";
 import { FilterButton, FilterSheet, PremiumBadge } from "./premium";
 import { deviceId } from "@/lib/hdar/device";
@@ -268,6 +269,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
     setYou({ lat, lng });
     setLocated(true);
     useHdar.setState({ here: { lat, lng } });
+    void detectCountry(lat, lng);
     const first = !locked.current;
     if (first) {
       locked.current = true;

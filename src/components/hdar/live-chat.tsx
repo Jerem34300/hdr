@@ -3,6 +3,7 @@ import { startPoll } from "@/lib/hdar/poll";
 import { typingTopic } from "@/lib/hdar/live";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
 import { locale, tBot, useLang } from "@/lib/hdar/i18n";
+import { useSafeCountry } from "@/lib/hdar/safe-mode";
 import { BotAvatar, BotBadge, BotComposer } from "./bot";
 import { typingText, useTyping } from "@/lib/hdar/typing";
 import { TypingBar } from "./rich-text";
@@ -178,7 +179,12 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
 
   const refresh = () => readThread({ data: { self: deviceId(), withId: userId } }).then(setMsgs);
 
+  const safeCountry = useSafeCountry();
   async function shareExactLocation() {
+    if (safeCountry) {
+      toast("Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.");
+      return;
+    }
     const ok = await askConfirm({
       title: `Envoyer ta position exacte à ${pseudo} ?`,
       body: `Seul ${pseudo} la verra, dans cette conversation, pendant 1 h. Sur la carte, ta position reste arrondie.`,
@@ -404,6 +410,10 @@ export function LiveChat({ userId, pseudo, demo }: { userId: string; pseudo: str
               onClick={() => {
                 setMenu(false);
                 if (!onboarded) return openGate();
+                if (safeCountry) {
+                  toast("Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.");
+                  return;
+                }
                 void meet.propose().catch((e: Error) => toast(e.message));
               }}
             >

@@ -1,7 +1,9 @@
 import { MeetRunner } from "./meetup";
 import { useAppearance } from "@/lib/hdar/appearance";
 import { botSeen, botWelcomeCc } from "@/lib/hdar/live";
-import { currentCountry, useCountry } from "@/lib/hdar/country";
+import { currentCountry, detectCdnCountry, useCountry } from "@/lib/hdar/country";
+import { useSafeCountry } from "@/lib/hdar/safe-mode";
+import { QuickExitButton } from "./quick-exit";
 import { LeaveConfirm } from "./rich-text";
 import "@/lib/hdar/appearance";
 import { resyncProfileFromServer } from "@/lib/hdar/recover";
@@ -65,8 +67,10 @@ export function App() {
   useProfileSync();
   useConversationsSync();
   const banned = useHeartbeat();
+  const safe = useSafeCountry();
 
   useEffect(() => {
+    void detectCdnCountry();
     installTouchTap();
     const id = window.setInterval(() => useHdar.setState({ now: Date.now() }), 20000);
     const onError = (e: ErrorEvent) => logClientError(e.message || "error", "window");
@@ -177,6 +181,11 @@ export function App() {
           <p className="text-xs text-muted">Distances arrondies · position exacte jamais publiée</p>
         </aside>
         <section data-tip-root className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-night">
+          {safe && view.name !== "tabs" && (
+            <div className="absolute top-3 end-3 z-40">
+              <QuickExitButton className="h-8 flex-none shadow-lg" />
+            </div>
+          )}
           {view.name === "chat" ? (
             <Chat />
           ) : view.name === "live" ? (
@@ -198,6 +207,11 @@ export function App() {
               {tab === "inbox" && <Inbox />}
               {tab === "me" && <Me />}
               {tab === "around" && <MapTips />}
+              {safe && (
+                <div className="relative z-20 flex shrink-0 justify-end bg-night px-3 pb-1">
+                  <QuickExitButton className="h-8 flex-none" />
+                </div>
+              )}
               <nav className="dock relative z-20 grid shrink-0 grid-cols-5 items-end border-t border-line bg-night px-1 pt-1">
                 <DockButton id="around" label="Carte" current={tab} icon={<Radar className="size-5" />} onClick={setTab} />
                 <DockButton id="spots" label="Lieux" tip="spots" current={tab} badge={act.unread.size + act.fresh.size + act.places.size > 0} icon={<MapPin className="size-5" />} onClick={setTab} />

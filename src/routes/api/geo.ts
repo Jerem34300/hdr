@@ -1,8 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Ville approximative du visiteur, d'après la géolocalisation de Netlify (en-tête x-nf-geo).
- *  Rien n'est stocké ici : ni IP ni coordonnées. Renvoie le nom de ville et un point arrondi à 0,1°
- *  (~10 km), utilisé seulement pour centrer la carte quand la position est refusée. */
+/** Ville approximative du visiteur, d'après la géolocalisation de Netlify (en-tête x-nf-geo)
+ *  ou un en-tête pays CDN (x-nf-country, x-country, cf-ipcountry…).
+ *  Rien n'est stocké ici : ni IP ni coordonnées. Renvoie le nom de ville, un point arrondi à 0,1°
+ *  (~10 km) et le code pays à deux lettres, utilisés pour centrer la carte et pour les protections
+ *  des pays à risque. */
+function countryFrom(request: Request): string | null {
+  const h = request.headers;
+  for (const name of ["x-nf-country", "x-country", "cf-ipcountry", "x-vercel-ip-country", "x-country-code"]) {
+    const v = h.get(name)?.trim().toUpperCase();
+    if (v && /^[A-Z]{2}$/.test(v) && v !== "XX" && v !== "T1") return v;
+  }
+  try {
+    const raw = h.get("x-nf-geo");
+    if (!raw) return null;
+    const g = JSON.parse(Buffer.from(raw, "base64").toString("utf8")) as { country?: { code?: string } | string };
+    const cc = (typeof g.country === "string" ? g.country : g.country?.code)?.trim().toUpperCase();
+    if (cc && /^[A-Z]{2}$/.test(cc) && cc !== "XX" && cc !== "T1") return cc;
+  } catch { /* en-tête absent ou illisible */ }
+  return null;
+}
+
 export const Route = createFileRoute("/api/geo")({
   server: {
     handlers: {
@@ -10,6 +28,7 @@ export const Route = createFileRoute("/api/geo")({
         let city: string | null = null;
         let lat: number | null = null;
         let lng: number | null = null;
+        const country = countryFrom(request);
         try {
           const raw = request.headers.get("x-nf-geo");
           if (raw) {
@@ -23,7 +42,7 @@ export const Route = createFileRoute("/api/geo")({
         } catch {
           city = null;
         }
-        return new Response(JSON.stringify({ city, lat, lng }), { headers: { "content-type": "application/json", "cache-control": "no-store" } });
+        return new Response(JSON.stringify({ city, lat, lng, country }), { headers: { "content-type": "application/json", "cache-control": "no-store" } });
       },
     },
   },

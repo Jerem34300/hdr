@@ -16,6 +16,7 @@ import { Link } from "@tanstack/react-router";
 import { useLiveCount } from "@/lib/hdar/live-count";
 import { useTick } from "@/lib/hdar/tick";
 import { cachedRpc } from "@/lib/hdar/local-cache";
+import { QuickExitButton } from "./quick-exit";
 
 /** Nombre d'annonces de la région : gardé 10 min sur le téléphone (il change peu). */
 const cachedAdsCount = (region: string) => cachedRpc(`ads-count:${region}`, 10 * 60_000, () => adsCount(region).then((v) => Number(v) || 0));
@@ -73,6 +74,7 @@ export function Around({ demoTicker }: { demoTicker?: Ad[] } = {}) {
             <span>Live</span>
             {liveN > 0 && <Badge n={liveN} cls="bg-[#f472b6]" />}
           </Link>
+          <QuickExitButton />
         </div>
       </header>
       <div className="relative min-h-0 flex-1">

@@ -2199,5 +2199,9 @@
   "C'est noté : on te prévient dès que quelqu'un arrive": "Anotado: avisamos-te assim que chegar alguém",
   "Installe l'appli pour être prévenu": "Instala a app para receberes avisos",
   "Quelqu'un arrive près de moi": "Alguém chega perto de mim",
-  "Une notification au plus toutes les 12 h, sans pseudo ni position.": "No máximo uma notificação a cada 12 h, sem nome nem localização."
+  "Une notification au plus toutes les 12 h, sans pseudo ni position.": "No máximo uma notificação a cada 12 h, sem nome nem localização.",
+  "Sortie rapide": "Saída rápida",
+  "Quitter tout de suite et ouvrir une page neutre": "Sair agora e abrir uma página neutra",
+  "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "Partilhar a posição exata não está disponível aqui. Os outros já veem uma posição desfocada, a cerca de 1 km.",
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Encontrar-se não está disponível aqui: partilharia a tua posição exata."
 }
