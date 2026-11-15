@@ -6,6 +6,7 @@ import {
   admin,
   admin58,
   type GateCompare,
+  type GateGeo,
   adminLive,
   adminMedia,
   adminReports,
@@ -23,6 +24,7 @@ import {
   type AdminVisitors,
   type Breakdown,
   type VisitorRow, adminRefs, type AdminRefs, type RefRow, adminRefNetwork, type RefNetworkRow } from "@/lib/hdar/live";
+import { countryName } from "@/lib/hdar/i18n";
 
 function useLoad<T>(load: () => Promise<T>, everyMs = 0) {
   const [data, setData] = useState<T | null>(null);
@@ -187,6 +189,7 @@ export function VisitorsTab({ adminKey }: { adminKey: string }) {
           </div>
 
           <GateCompareCard adminKey={adminKey} />
+          <GateGeoCard adminKey={adminKey} days={days} />
 
           <div className="grid gap-3 md:grid-cols-3">
             <BreakdownList title="D'où ils viennent" rows={data.sources} />
@@ -821,6 +824,38 @@ function GateCompareCard({ adminKey }: { adminKey: string }) {
         <Tile label="Avant" value={b == null ? "—" : `${b} %`} hint={`${data.before.gate_enter ?? 0} / ${data.before.gate_view ?? 0}`} />
         <Tile label="Après" value={a == null ? "—" : `${a} %`} hint={`${data.after.gate_enter ?? 0} / ${data.after.gate_view ?? 0}`} />
         <Tile label="Profils en position choisie" value={data.chosen} hint="épingle active" />
+      </div>
+    </div>
+  );
+}
+
+/** Arrivées à l'écran 18+ par pays (en-tête CDN, sans IP) et langue du navigateur. Agrégats seulement. */
+function GateGeoCard({ adminKey, days }: { adminKey: string; days: number }) {
+  const load = useCallback(() => admin58.gateGeo(adminKey, days).catch(() => null), [adminKey, days]);
+  const { data } = useLoad<GateGeo | null>(load, 60_000);
+  if (!data || ((!data.countries || !data.countries.length) && (!data.langs || !data.langs.length))) return null;
+  const labelCountry = (k: string) => (k === "ZZ" ? "Pays inconnu" : (countryName(k) || k));
+  const labelLang = (k: string) => (k === "zz" ? "Langue inconnue" : k);
+  const List = ({ title, rows, name }: { title: string; rows: { k: string; n: number }[]; name: (k: string) => string }) => (
+    <div>
+      <h4 className="mb-1 text-xs font-bold text-muted">{title}</h4>
+      <ul className="space-y-1 text-sm">
+        {rows.map((r) => (
+          <li key={r.k} className="flex justify-between gap-3">
+            <span className="truncate">{name(r.k)}</span>
+            <span className="shrink-0 font-bold">{r.n}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-4" data-act="gate-geo">
+      <h3 className="font-display font-bold">Arrivées 18+ par pays et langue</h3>
+      <p className="mb-3 text-xs text-muted">Compteurs horaires anonymes : code pays du CDN (jamais d'IP) et langue du téléphone, sur {data.days} j. Uniquement les visites de l'écran d'entrée.</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <List title="Pays" rows={data.countries ?? []} name={labelCountry} />
+        <List title="Langue" rows={data.langs ?? []} name={labelLang} />
       </div>
     </div>
   );
