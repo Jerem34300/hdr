@@ -110,6 +110,15 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   const [teaser, setTeaser] = useState<{ city: string | null; near: number; total: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
+  // Premier rendu = français (hydratation). On n'affiche le gate que quand la langue du téléphone est appliquée.
+  const i18nReady = useLang((s) => s.ready > 0);
+  const [i18nGaveUp, setI18nGaveUp] = useState(false);
+  useEffect(() => {
+    if (i18nReady) return;
+    const id = window.setTimeout(() => setI18nGaveUp(true), 2000);
+    return () => window.clearTimeout(id);
+  }, [i18nReady]);
+  const langReady = i18nReady || i18nGaveUp;
 
   useEffect(() => {
     if (import.meta.env.DEV && location.pathname === "/live" && location.search.includes("demo")) return setState("ok"); // capture d'écran de dev
@@ -128,8 +137,9 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (state !== "ask") return;
+    if (state !== "ask" || !langReady) return;
     trackGate("gate_view");
+    const lang = useLang.getState().lang;
     let alive = true;
     void loadTurnstile().then((ts) => {
       if (!alive) return;
@@ -142,7 +152,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           appearance: "interaction-only",
           "before-interactive-callback": () => setChallenge(true),
           "after-interactive-callback": () => setChallenge(false),
-          language: ({ pt: "pt-br" } as Record<string, string>)[useLang.getState().lang] ?? useLang.getState().lang,
+          language: ({ pt: "pt-br" } as Record<string, string>)[lang] ?? lang,
           callback: (t: string) => {
             setToken(t);
             setError("");
@@ -167,13 +177,13 @@ function AdultGateInner({ children }: { children: ReactNode }) {
       alive = false;
       window.clearTimeout(t);
     };
-  }, [state]);
+  }, [state, langReady]);
 
   // « Entrer » touché avant la fin de la vérification : on entre dès qu'elle répond.
   useEffect(() => { if (waiting && (token || widgetFailed)) submitRef.current(); }, [waiting, token, widgetFailed]);
 
   if (state === "ok") return <PinGate>{children}</PinGate>;
-  if (state === "loading") return null;
+  if (state === "loading" || !langReady) return null;
   const needsAdult = !adult;
 
   const submit = () => {

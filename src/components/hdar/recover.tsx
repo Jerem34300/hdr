@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { newsSet, newsStatus } from "@/lib/hdar/live";
 import { linkedEmail, linkEmailStart, linkEmailVerify, recoverStart, recoverVerify } from "@/lib/hdar/recover";
+import { useLang } from "@/lib/hdar/i18n";
 
 const input = "h-11 w-full rounded-full border border-line bg-night px-4 text-base text-ink outline-none focus-visible:border-signal";
 
@@ -47,7 +48,7 @@ export function ProtectProfileCard() {
       <p className="mt-1 text-sm text-muted">Retrouve-le facilement si tu le supprimes ou si tu nettoies ton téléphone. Facultatif, jamais affiché.</p>
       {step === "email" ? (
         <div className="mt-3 flex gap-2">
-          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="ton@email.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <button type="button" disabled={busy || !/^\S+@\S+\.\S+$/.test(email)} onClick={() => void run(async () => { await linkEmailStart(email); setStep("code"); toast("Code envoyé par email"); })}
             className="h-11 shrink-0 rounded-full bg-[#FA6F6C] px-4 text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Recevoir le code"}</button>
         </div>
@@ -121,7 +122,7 @@ export function RecoverLink({ captchaToken, onUsed, startOpen, beforeVerify, onC
       {!sent ? (
         <>
           <p className="text-xs text-muted">Avec l'email que tu as lié à ton profil (« Protège ton profil »).</p>
-          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="ton@email.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <button type="button" disabled={busy || !emailOk} onClick={send}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Recevoir un code"}</button>
           <button type="button" disabled={!emailOk} onClick={toCode} className="w-full text-xs font-bold text-ink underline disabled:opacity-40">J'ai déjà reçu un code</button>
@@ -157,7 +158,8 @@ export function RecoverAccountSettings() {
       if (!alive || !ts || !box.current || widget.current) return;
       try {
         widget.current = ts.render(box.current, {
-          sitekey: TURNSTILE_SITE_KEY, theme: "dark", size: "flexible", language: "fr",
+          sitekey: TURNSTILE_SITE_KEY, theme: "dark", size: "flexible",
+          language: (({ pt: "pt-br" } as Record<string, string>)[useLang.getState().lang] ?? useLang.getState().lang),
           callback: (t: string) => setToken(t), "expired-callback": () => setToken(""), "error-callback": () => setToken(""),
         });
       } catch { /* widget indisponible */ }
