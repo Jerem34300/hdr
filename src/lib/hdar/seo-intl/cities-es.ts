@@ -232,4 +232,51 @@ export const CITIES_ES: Record<string, CityText> = {
       { q: "¿Para quién es hdar?", a: "Para todo el mundo mayor de 18, cualquier orientación." },
     ],
   },
+
+  mexico: {
+    title: "Ciudad de México: planes y quedadas cerca de ti — hdar.",
+    desc: "Planes y quedadas en la Ciudad de México, cerca de ti. Gratis, anónimo, +18. Mapa en directo por la Roma, la Condesa, el Centro y Zona Rosa.",
+    h1: ["Planes y quedadas en la ", "Ciudad de México"],
+    lead: "La ciudad es enorme, pero tu noche no. Una mirada al mapa basta para ver quién hay cerca de ti: en la Roma, en la Condesa o un poco más al centro. ¿Nadie alrededor? Aleja el mapa, o cambia de ciudad arriba a la derecha.",
+    introTitle: "Una ciudad de barrios, no de distancias imposibles",
+    intro: [
+      "La **Roma** y la **Condesa** concentran terrazas, bares y primeras quedadas que se alargan. El **Centro Histórico** es otro ritmo, más de calle y de encuentro improvisado. La **Zona Rosa** y **Colonia Juárez** siguen siendo un punto de partida conocido para mucha gente, y **Coyoacán** o **Tlalpan**, más al sur, funcionan igual en hdar: ves a quien está cerca, no a quien está a una hora.",
+      "Apareces el tiempo que quieras — una hora, tres o toda la noche —, con una posición redondeada, y desapareces cuando lo decides. Un mensaje, un plan cerca de ti, para todo el mundo, mayores de 18.",
+    ],
+    quartersTitle: "Planes en la Ciudad de México, barrio a barrio",
+    quarters: [["Roma y Condesa", "terrazas, bares, un primer encuentro fácil."], ["Centro Histórico", "calles largas, otro aire, todo a pie."], ["Zona Rosa y Juárez", "un punto de partida conocido para muchas noches."], ["Coyoacán y el sur", "más local, en el mismo mapa."]],
+    cruising: "En el mapa de hdar, los lugares públicos que señala la comunidad — parques y otros sitios al aire libre — están en una capa opcional, «Otros lugares públicos». Permanece apagada hasta que tú la actives. Aquí no hay direcciones: solo el mapa en directo, para mayores de 18, con un recordatorio de ser discreto y respetar a las demás personas.",
+    faq: [{"q": "¿Funciona también en el Estado de México o más lejos del centro?", "a": "Sí. El mapa muestra a quien está visible cerca de ti, estés donde estés."}, {"q": "¿Es solo para hombres gay?", "a": "No. Está abierto a todas las orientaciones, es LGBT-friendly y solo para mayores de 18."}],
+  },
+  "buenos-aires": {
+    title: "Buenos Aires: planes y quedadas cerca de ti — hdar.",
+    desc: "Planes y quedadas en Buenos Aires, cerca de ti. Gratis, anónimo, +18. Mapa en directo por Palermo, San Telmo, Recoleta y el Centro.",
+    h1: ["Planes y quedadas en ", "Buenos Aires"],
+    lead: "Buenos Aires se recorre de barrio en barrio, y las noches empiezan tarde. Una mirada al mapa, y ves quién hay cerca de ti: en Palermo, en San Telmo o más al centro. ¿Nadie alrededor? Aleja el mapa, o cambia de ciudad arriba a la derecha.",
+    introTitle: "Barrios que se caminan",
+    intro: [
+      "**Palermo** — Soho, Hollywood, las plazas — es donde mucha gente queda para el primer trago. **San Telmo** y **Monserrat** tienen otra densidad, más de calle y de noche larga. **Recoleta** y **Barrio Norte** son más calmos, prácticos para un primer encuentro, y el **Centro** junto a **Congreso** concentra salidas después del trabajo. hdar se queda en esa escala: quien está cerca, ahora.",
+      "Tú eliges cuánto tiempo apareces, con una posición redondeada, y te ocultas cuando quieres. Un mensaje, un plan cerca de ti, para todo el mundo, +18.",
+    ],
+    quartersTitle: "Planes en Buenos Aires",
+    quarters: [["Palermo", "el punto de partida más habitual, todo caminable."], ["San Telmo y Monserrat", "calles más estrechas, noches más largas."], ["Recoleta y Barrio Norte", "más calmo, bien para una primera quedada."], ["Centro y Congreso", "después del trabajo, en el medio de todo."]],
+    cruising: "Los lugares públicos que marca la comunidad — parques y otros sitios al aire libre — están en una capa opcional del mapa, «Otros lugares públicos», apagada por defecto. No hay direcciones en esta página: solo el mapa en directo, para mayores de 18, y un recordatorio de ser discreto y respetar a las demás personas.",
+    faq: [{"q": "¿Sirve también en el conurbano?", "a": "Sí. El mapa muestra a quien está visible cerca de ti, no solo en el centro de la ciudad."}, {"q": "¿Es solo para un público?", "a": "No. hdar es para todas las orientaciones, LGBT-friendly y solo para mayores de 18."}],
+  },
+  bogota: {
+    title: "Bogotá: planes y quedadas cerca de ti — hdar.",
+    desc: "Planes y quedadas en Bogotá, cerca de ti. Gratis, anónimo, +18. Mapa en directo por Chapinero, la Zona G, la Candelaria y el parque de la 93.",
+    h1: ["Planes y quedadas en ", "Bogotá"],
+    lead: "Bogotá es larga de norte a sur, así que «cerca de ti» importa de verdad. Una mirada al mapa, y ves quién hay alrededor: en Chapinero, en la Zona G o más al centro. ¿Nadie cerca? Aleja el mapa, o cambia de ciudad arriba a la derecha.",
+    introTitle: "De un barrio al otro, sin cruzar toda la ciudad",
+    intro: [
+      "**Chapinero** y el **chapinero alto** concentran muchas salidas, con un ambiente conocido para mucha gente. La **Zona G** y la **Zona T**, hacia la 93, son más de restaurantes y de primer trago. La **Candelaria** y el centro tienen otro ritmo, más de calle, y los barrios del norte o del sur oeste funcionan igual en hdar: ves a quien está cerca, no a quien está a una hora de TransMilenio.",
+      "Apareces el tiempo que quieras, con una posición redondeada, y te ocultas de un toque. Un mensaje, un plan cerca de ti, para todo el mundo, mayores de 18.",
+    ],
+    quartersTitle: "Planes en Bogotá",
+    quarters: [["Chapinero", "un punto de partida habitual, todo relativamente junto."], ["Zona G, Zona T y la 93", "un primer encuentro más sentado, después del trabajo."], ["La Candelaria y el centro", "otro aire, más de calle."], ["Otros barrios, norte o sur", "el mapa te sigue, no se queda en un solo sector."]],
+    cruising: "Los lugares públicos que señala la comunidad — parques y otros sitios al aire libre — aparecen en una capa opcional, «Otros lugares públicos». Permanece oculta hasta que tú la actives. Aquí no hay direcciones: solo el mapa en directo, +18, con un recordatorio de ser discreto y respetar a las demás personas.",
+    faq: [{"q": "¿Funciona en toda la sabana, no solo en el centro?", "a": "Sí. El mapa muestra a quien está visible cerca de ti, donde sea que lo abras."}, {"q": "¿Es solo para hombres gay?", "a": "No. Está abierto a todas las orientaciones, es LGBT-friendly y solo para mayores de 18."}],
+  },
+
 };

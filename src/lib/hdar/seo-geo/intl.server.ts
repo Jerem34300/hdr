@@ -17,6 +17,14 @@ export type IntlCity = {
   nearby: string[];
   /** Indexable language for this city when the country has several (e.g. Genève → fr). */
   primary?: string;
+  n_ar?: string;
+  n_es?: string;
+  n_pt?: string;
+  n_en?: string;
+  source_ar?: string;
+  source_en?: string;
+  source_es?: string;
+  source_pt?: string;
 };
 
 export type IntlCountry = {
@@ -25,6 +33,8 @@ export type IntlCountry = {
   name: string;
   pathWord: string | null;
   priority: number;
+  /** If true, every language in `langs` is indexed and listed in the sitemap (e.g. Maghreb fr+ar). */
+  indexAll?: boolean;
   cities: IntlCity[];
 };
 
@@ -38,6 +48,8 @@ export const LANG_COUNTRY: Record<string, string> = {
   it: "IT",
   pt: "PT",
   en: "GB",
+  fr: "FR",
+  ar: "MA",
 };
 
 const byLangSlug = new Map<string, { country: string; city: IntlCity; meta: IntlCountry }>();
@@ -52,9 +64,18 @@ for (const [cc, meta] of Object.entries(DATA.countries)) {
 
 /** Number locale per country + page language (de-CH uses ’ grouping, pt-PT spaces…). */
 function numberLocale(country: string, lang: string) {
-  const map: Record<string, string> = { DE: "de-DE", ES: "es-ES", NL: "nl-NL", IT: "it-IT", PT: "pt-PT", GB: "en-GB", IE: "en-IE" };
+  const map: Record<string, string> = {
+    DE: "de-DE", ES: "es-ES", NL: "nl-NL", IT: "it-IT", PT: "pt-PT", GB: "en-GB", IE: "en-IE",
+    US: "en-US", CA: "en-CA", MX: "es-MX", AR: "es-AR", CO: "es-CO", BR: "pt-BR",
+    MA: "fr-MA", DZ: "fr-DZ", TN: "fr-TN", SN: "fr-SN", CI: "fr-CI", CM: "fr-CM",
+    RE: "fr-RE", MQ: "fr-MQ", GP: "fr-GP",
+  };
   if (country === "CH") return lang === "fr" ? "fr-CH" : "de-CH";
   if (country === "BE") return lang === "nl" ? "nl-BE" : "fr-BE";
+  if (country === "CA") return lang === "fr" ? "fr-CA" : "en-CA";
+  if (country === "MA" && lang === "ar") return "ar-MA";
+  if (country === "DZ" && lang === "ar") return "ar-DZ";
+  if (country === "TN" && lang === "ar") return "ar-TN";
   return map[country] ?? lang;
 }
 
@@ -62,6 +83,10 @@ function displayName(city: IntlCity, lang: string) {
   return lang === "nl" && city.n_nl ? city.n_nl
     : lang === "de" && city.n_de ? city.n_de
     : lang === "fr" && city.n_fr ? city.n_fr
+    : lang === "ar" && city.n_ar ? city.n_ar
+    : lang === "es" && city.n_es ? city.n_es
+    : lang === "pt" && city.n_pt ? city.n_pt
+    : lang === "en" && city.n_en ? city.n_en
     : city.n;
 }
 
@@ -92,12 +117,16 @@ export function intlCityPayload(lang: string, slug: string) {
     area_km2: city.area_km2,
     pop_year: city.pop_year,
     area_year: city.area_year,
-    source: city.source,
+    source: (lang === "ar" && city.source_ar) ? city.source_ar
+      : (lang === "en" && city.source_en) ? city.source_en
+      : (lang === "es" && city.source_es) ? city.source_es
+      : (lang === "pt" && city.source_pt) ? city.source_pt
+      : city.source,
     source_url: city.source_url,
     nearby,
     path: `/${lang}/${city.s}`,
     /** false for secondary-language variants (e.g. /fr/zuerich) → noindex, not in sitemap. */
-    isPrimary: lang === primary,
+    isPrimary: lang === primary || !!meta.indexAll,
     primaryPath: `/${primary}/${city.s}`,
     numberLocale: numberLocale(country, lang),
   };
@@ -110,7 +139,9 @@ export function intlNativeUrls(priorityMax = 1) {
   const out: Record<string, string[]> = {};
   for (const [cc, meta] of Object.entries(DATA.countries)) {
     if (meta.priority > priorityMax) continue;
-    out[cc.toLowerCase()] = meta.cities.map((c) => `/${c.primary ?? meta.lang}/${c.s}`);
+    const langsFor = (c: IntlCity) =>
+      meta.indexAll ? (meta.langs ?? [meta.lang]) : [c.primary ?? meta.lang];
+    out[cc.toLowerCase()] = meta.cities.flatMap((c) => langsFor(c).map((l) => `/${l}/${c.s}`));
   }
   return out;
 }
