@@ -16,9 +16,10 @@ function fromLocale(): string {
 }
 const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 
-export const useCountry = create<{ auto: string | null; autoRegion: string | null; chosen: string | null; choose: (cc: string | null) => void }>((set) => ({
+export const useCountry = create<{ auto: string | null; autoRegion: string | null; cdn: string | null; chosen: string | null; choose: (cc: string | null) => void }>((set) => ({
   auto: null,
   autoRegion: null,
+  cdn: null,
   chosen: typeof window === "undefined" ? null : read(KEY),
   choose: (cc) => {
     try { if (cc) localStorage.setItem(KEY, cc); else localStorage.removeItem(KEY); } catch { /* ignore */ }
@@ -39,9 +40,20 @@ export async function detectCountry(lat: number, lng: number) {
     const j = (await r.json()) as { address?: { country_code?: string; "ISO3166-2-lvl4"?: string } };
     const rg = j.address?.["ISO3166-2-lvl4"] ?? null;
     const cc = j.address?.country_code?.toUpperCase();
-    if (cc && (COUNTRIES as readonly string[]).includes(cc)) {
+    // Tout code ISO à 2 lettres : la liste des salons ne doit pas bloquer un pays à risque nouvellement ajouté.
+    if (cc && /^[A-Z]{2}$/.test(cc)) {
       useCountry.setState({ auto: cc, autoRegion: rg });
       try { localStorage.setItem(CACHE, JSON.stringify({ cell, cc, rg })); } catch { /* ignore */ }
     }
   } catch { /* réseau : on garde la langue du téléphone */ }
+}
+
+/** Pays d'après l'en-tête CDN (via /api/geo). Aucune IP n'est lue ni stockée côté client. */
+export async function detectCdnCountry() {
+  try {
+    const r = await fetch("/api/geo", { cache: "no-store" });
+    const g = (await r.json()) as { country?: string | null };
+    const cc = g.country?.toUpperCase();
+    if (cc && /^[A-Z]{2}$/.test(cc)) useCountry.setState({ cdn: cc });
+  } catch { /* réseau : on s'appuiera sur le géocodage */ }
 }

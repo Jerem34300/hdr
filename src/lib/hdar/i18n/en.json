@@ -2204,5 +2204,9 @@
   "Installe l'appli pour être prévenu": "Install the app to get notified",
   "Quelqu'un arrive près de moi": "Someone shows up near me",
   "Une notification au plus toutes les 12 h, sans pseudo ni position.": "One notification every 12 hours at most, with no name or location.",
-  "Recevoir un code": "Get a code"
+  "Recevoir un code": "Get a code",
+  "Sortie rapide": "Quick exit",
+  "Quitter tout de suite et ouvrir une page neutre": "Leave now and open a neutral page",
+  "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "Sharing your exact location isn't available here. Others already see a blurred position, about 1 km off.",
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Meeting up isn't available here: it would share your exact location."
 }

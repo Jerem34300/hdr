@@ -1,5 +1,6 @@
 /** Activité anonyme des dernières 24 h (carreaux ~5 km) + position approximative (IP, ville).
  *  Sert à ne jamais afficher une carte vide, y compris avant l'écran 18+ (clé publique, sans session). */
+import { useCountry } from "./country";
 import { SUPABASE_KEY, SUPABASE_URL } from "./session";
 
 export type RecentCell = { lat: number; lng: number; n: number; h: number };
@@ -25,8 +26,12 @@ let geoPromise: Promise<ApproxGeo | null> | null = null;
 /** Ville approximative d'après le réseau (rien n'est stocké côté serveur). */
 export function approxGeo(): Promise<ApproxGeo | null> {
   geoPromise ??= fetch("/api/geo")
-    .then((r) => r.json() as Promise<{ city: string | null; lat: number | null; lng: number | null }>)
-    .then((g) => (g.lat != null && g.lng != null ? { city: g.city, lat: g.lat, lng: g.lng } : null))
+    .then((r) => r.json() as Promise<{ city: string | null; lat: number | null; lng: number | null; country?: string | null }>)
+    .then((g) => {
+      const cc = g.country?.toUpperCase();
+      if (cc && /^[A-Z]{2}$/.test(cc)) useCountry.setState({ cdn: cc });
+      return g.lat != null && g.lng != null ? { city: g.city, lat: g.lat, lng: g.lng } : null;
+    })
     .catch(() => null);
   return geoPromise;
 }

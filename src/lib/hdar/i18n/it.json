@@ -2197,5 +2197,9 @@
   "Installe l'appli pour être prévenu": "Installa l'app per ricevere gli avvisi",
   "Quelqu'un arrive près de moi": "Qualcuno arriva vicino a me",
   "Une notification au plus toutes les 12 h, sans pseudo ni position.": "Al massimo una notifica ogni 12 ore, senza nickname né posizione.",
-  "Recevoir un code": "Ricevi un codice"
+  "Recevoir un code": "Ricevi un codice",
+  "Sortie rapide": "Uscita rapida",
+  "Quitter tout de suite et ouvrir une page neutre": "Esci subito e apri una pagina neutra",
+  "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "Condividere la posizione esatta non è disponibile qui. Gli altri vedono già una posizione sfocata, a circa 1 km.",
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Ritrovarsi non è disponibile qui: condividerebbe la tua posizione esatta."
 }

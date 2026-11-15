@@ -12,6 +12,7 @@ import { LeaveConfirm } from "./rich-text";
 import { toast } from "sonner";
 import { ConfirmSheet } from "./confirm-sheet";
 import { useHdar } from "@/lib/hdar/store";
+import { useCountry } from "@/lib/hdar/country";
 import { Around } from "./around";
 import { Annonces, demoAds } from "./annonces";
 import { regionFromPos, teaserAds, type TeaserAd } from "@/lib/hdar/ads";
@@ -86,7 +87,13 @@ export function loadTurnstile(): Promise<Turnstile | null> {
 export function AdultGate({ children }: { children: ReactNode }) {
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("reveal=")) return <SurprisePopup />;
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("prolanding")) return <div className="min-h-dvh bg-night px-4 text-ink"><ProLanding prices={[]} onCreate={() => undefined} /></div>;
-  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("devpreview")) return <DevPreview />;
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("devpreview")) {
+    if (location.search.includes("safemap")) {
+      seedSafeMapPreview();
+      return <>{children}</>;
+    }
+    return <DevPreview />;
+  }
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("adsdemo=")) return <AdsDemo />;
   return <AdultGateInner>{children}</AdultGateInner>;
 }
@@ -275,6 +282,23 @@ function AdultGateInner({ children }: { children: ReactNode }) {
 }
 
 /** Aperçus de dev uniquement (captures d'écran). */
+let safeMapSeeded = false;
+/** Aperçu dev : profil d'exemple à Casablanca, sans photo de visage, protections pays à risque activées. */
+function seedSafeMapPreview() {
+  if (safeMapSeeded) return;
+  safeMapSeeded = true;
+  useCountry.setState({ auto: "MA", cdn: "MA" });
+  const me = useHdar.getState().me;
+  useHdar.setState({
+    me: { ...me, onboarded: true, adult: true, pseudo: "Nour", age: 28, photo: "", photos: [], bio: "" },
+    customCenter: { lat: 33.5731, lng: -7.5898 },
+    cityId: "ici",
+    here: { lat: 33.5731, lng: -7.5898 },
+    tab: "around",
+    cover: false,
+  });
+}
+
 function DevPreview() {
   if (location.search.includes("qrshow")) {
     const light = location.search.includes("light");

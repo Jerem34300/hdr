@@ -2204,5 +2204,9 @@
   "Installe l'appli pour être prévenu": "ثبّت التطبيق لتصلك الإشعارات",
   "Quelqu'un arrive près de moi": "وصول شخص بالقرب مني",
   "Une notification au plus toutes les 12 h, sans pseudo ni position.": "إشعار واحد كل 12 ساعة على الأكثر، دون اسم أو موقع.",
-  "Recevoir un code": "استلام رمز"
+  "Recevoir un code": "استلام رمز",
+  "Sortie rapide": "خروج سريع",
+  "Quitter tout de suite et ouvrir une page neutre": "اخرج فوراً وافتح صفحة محايدة",
+  "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "مشاركة الموقع الدقيق غير متاحة هنا. الآخرون يرون سلفاً موقعاً ضبابياً، على بعد نحو كيلومتر واحد.",
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "ميزة الالتقاء غير متاحة هنا: لأنها تشارك موقعك الدقيق."
 }
