@@ -71,7 +71,7 @@ export const LOCAL: Record<string, LocalContent> = {
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">
           <li>Ouvre hdar.chat, confirme 18 ans — pas d'e-mail.</li>
           <li>Touche « Se montrer » : tu apparais sur la carte, position arrondie.</li>
-          <li>Chat du quartier ou message privé ; tu disparais quand tu choisis.</li>
+          <li>Chat du quartier ou message privé ; tu te caches quand tu veux (un pin estompé à ~400 m peut rester 48 h, retirable dans Paramètres).</li>
         </ol>
       </>
     ),

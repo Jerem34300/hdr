@@ -9,7 +9,10 @@ const km = (a: C, b: C) => {
   const x = Math.sin(dl / 2) ** 2 + Math.cos(a.y * r) * Math.cos(b.y * r) * Math.sin(dg / 2) ** 2;
   return 2 * 6371 * Math.asin(Math.sqrt(x));
 };
-const mini = (c: C, from?: C): Mini => ({ s: c.s, n: c.n, p: c.p, k: from ? Math.round(km(from, c)) : undefined });
+const nameCount = new Map<string, number>();
+for (const c of D.cities) nameCount.set(c.n, (nameCount.get(c.n) ?? 0) + 1);
+/** Homonymes (Saint-Denis 93 / 974…) : on joint le département pour les distinguer à l'écran. */
+const mini = (c: C, from?: C): Mini => ({ s: c.s, n: c.n, p: c.p, k: from ? Math.round(km(from, c)) : undefined, d: (nameCount.get(c.n) ?? 0) > 1 ? c.d : undefined });
 const dep = (code: string) => ({ code, ...D.deps[code] });
 const reg = (code: string) => ({ code, ...D.regs[code] });
 export const TOP30 = new Set(D.cities.slice(0, 30).map((c) => c.s));

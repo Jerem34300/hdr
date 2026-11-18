@@ -187,8 +187,8 @@ function Terms() {
         nette n'est jamais envoyée tant que tu ne choisis pas de te montrer, et personne ne peut te
         déflouter à ta place. Sont interdits : la présence de mineurs, l'exhibition non désirée,
         l'enregistrement ou la capture de l'autre personne. L'entrée dans le live suppose
-        l'acceptation de ces règles, dont la date est conservée. La vidéo passant d'appareil à appareil, ton adresse IP peut être visible par ton
-        interlocuteur. Les règles ci-dessus s'appliquent ; tout abus entraîne un bannissement.
+        l'acceptation de ces règles, dont la date est conservée. La vidéo passe par un serveur relais quand il est disponible, pour que ton adresse IP ne soit pas visible par ton
+        interlocuteur ; à défaut (connexion directe), elle peut l'être. Les règles ci-dessus s'appliquent ; tout abus entraîne un bannissement.
       </p>
       <h2>11. Mentions légales et contact</h2>
       <p>

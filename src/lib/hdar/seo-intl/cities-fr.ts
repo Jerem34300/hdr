@@ -80,7 +80,7 @@ export const CITIES_FR: Record<string, CityText> = {
     introTitle: "La ville, à ta mesure",
     intro: [
       "Le **centre** et les rues autour de la **Grande Poste** restent un point de départ simple pour une sortie. Plus bas, la **Corniche** et la mer donnent une autre allure à la soirée, plus ouverte, plus longue. Vers **Hydra** et **El Biar**, l'ambiance est plus de quartier : un café, une terrasse, un rendez-vous calme.",
-      "hdar reste discret. Tu décides quand tu apparais — une heure, trois heures ou toute la nuit — et tu disparais d'un geste. La position vue par les autres est arrondie. L'idée est simple : des sorties et des rencontres pour tout le monde, autour de toi, à 18 ans et plus.",
+      "hdar reste discret. Tu décides quand tu apparais — une heure, trois heures ou toute la nuit — et tu te caches d'un geste. La position vue par les autres est arrondie. L'idée est simple : des sorties et des rencontres pour tout le monde, autour de toi, à 18 ans et plus.",
     ],
     quartersTitle: "Autour de toi à Alger",
     quarters: [["Centre et Grande Poste", "un point de départ facile, des cafés et des rues passantes."], ["Corniche et front de mer", "l'air, la mer, une balade qui peut durer."], ["Hydra et El Biar", "des quartiers plus calmes, bien pour un premier verre."], ["Bab El Oued et la basse casbah", "le tissu serré de la ville, tout près du centre."]],
@@ -98,7 +98,7 @@ export const CITIES_FR: Record<string, CityText> = {
     ],
     quartersTitle: "Autour de toi à Oran",
     quarters: [["Front de mer", "se promener, s'asseoir, voir qui est dans le coin."], ["Centre-ville", "cafés et rues passantes, un premier rendez-vous simple."], ["Hauteurs et Saint-Pierre", "plus calme, plus local."], ["Côté mer, vers Ain El Turk", "quand tu as envie d'élargir un peu le cercle."]],
-    faq: [{"q": "C'est pour qui ?", "a": "Pour tout le monde, dès 18 ans. Gratuit et discret."}, {"q": "Dois-je créer un compte ?", "a": "Non. Un pseudo et la confirmation 18+ suffisent. Pas d'email, pas de mot de passe."}],
+    faq: [{"q": "C'est pour qui ?", "a": "Pour tout le monde, dès 18 ans. Gratuit et discret."}, {"q": "Dois-je créer un compte ?", "a": "Non. Un pseudo et la confirmation 18+ suffisent. Pas de mot de passe ; l'email est facultatif (seulement pour retrouver ton profil)."}],
   },
   casablanca: {
     title: "Casablanca : sorties, amis et rencontres autour de toi — hdar.",
@@ -164,7 +164,7 @@ export const CITIES_FR: Record<string, CityText> = {
     introTitle: "Une presqu'île, des rendez-vous tout près",
     intro: [
       "Le **Plateau** reste le centre facile à donner comme point de rendez-vous. La **corniche** ouest ouvre sur la mer, on y marche longtemps. Vers **Almadies** et **Ngor**, l'air change, plus de bord de mer, plus de terrasses. **Médina** et les quartiers d'à côté ont un rythme plus local, plus serré.",
-      "hdar te laisse visible le temps que tu choisis, avec une position arrondie. Un message, un lieu public, et tu disparais d'un geste. Des sorties, des amis et des rencontres pour tout le monde, autour de toi, à partir de 18 ans, en restant discret.",
+      "hdar te laisse visible le temps que tu choisis, avec une position arrondie. Un message, un lieu public, et tu te caches d'un geste. Des sorties, des amis et des rencontres pour tout le monde, autour de toi, à partir de 18 ans, en restant discret.",
     ],
     quartersTitle: "Autour de toi à Dakar",
     quarters: [["Plateau", "le centre, simple à rejoindre."], ["Corniche ouest", "la mer, une balade, le soir qui s'étire."], ["Almadies et Ngor", "terrasses et bord de mer."], ["Médina et quartiers proches", "plus local, tout près du centre."]],

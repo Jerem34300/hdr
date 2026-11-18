@@ -32,7 +32,7 @@ export function AdsPage({ c, city, region }: { c: CityPayload | null; city: numb
   const where = c ? a(c.n) : "près de chez toi";
   const faq = [
     { q: `Comment poster une petite annonce ${where} ?`, a: "Ouvre hdar.chat, confirme que tu as 18 ans et crée ton profil (un pseudo suffit). Dans Lieux, touche Petites annonces puis Poster : un titre, quelques mots, une catégorie, ta ville et la durée." },
-    { q: "C'est gratuit ?", a: "Oui, poster et répondre est gratuit, jusqu'à 3 annonces en ligne en même temps. Un boost payant et facultatif permet de remonter en tête de liste." },
+    { q: "C'est gratuit ?", a: "Oui, poster et répondre est gratuit, jusqu'à 3 annonces en ligne en même temps. Pendant le lancement, aucun paiement n'est demandé : même les options en plus sont offertes." },
     { q: "Qui voit mon annonce ?", a: "Seulement les adultes inscrits sur l'appli. Les annonces ne sont pas publiées sur Google ni sur cette page : ici, on affiche uniquement leur nombre." },
     { q: "Comment me répondre ?", a: "Les gens touchent Répondre : le message arrive dans tes Messages hdar, avec le titre de l'annonce. Tu peux bloquer ou signaler à tout moment." },
   ];

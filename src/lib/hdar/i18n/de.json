@@ -1844,7 +1844,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "Profilaufrufe und erhaltene Nachrichten während deines Boosts.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "Aufrufe, Klicks, Nachrichten und Herkunft Ihrer Besucher, Tag für Tag.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "Aufrufe, einzelne Besucher, Klicks auf Ihre Website, Herkunftsgebiete, Stoßzeiten.",
-"Vérification anti-robot échouée, réessaie.": "Bot-Prüfung fehlgeschlagen, versuch es erneut.",
+"Vérification anti-robot échouée. Recharge la page ou coupe ton VPN, puis réessaie.": "Bot-Prüfung fehlgeschlagen. Lade die Seite neu oder schalte dein VPN aus und versuch es erneut.",
 "Vérification…": "Wird geprüft…",
 "Vérifier": "Prüfen",
 "X / non-binaire": "X / nichtbinär",
@@ -2204,5 +2204,8 @@
   "Sortie rapide": "Schneller Ausgang",
   "Quitter tout de suite et ouvrir une page neutre": "Sofort verlassen und eine neutrale Seite öffnen",
   "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "Den genauen Standort kannst du hier nicht teilen. Andere sehen bereits eine ungefähre Position, etwa 1 km daneben.",
-  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Treffen ist hier nicht verfügbar: Das würde deinen genauen Standort teilen."
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Treffen ist hier nicht verfügbar: Das würde deinen genauen Standort teilen.",
+  "Ton email": "Deine E-Mail",
+  "Code à 8 chiffres reçu par email": "8-stelliger Code aus der E-Mail",
+  "Adresse email invalide (ex. nom@exemple.fr).": "Ungültige E-Mail-Adresse (z. B. name@beispiel.de)."
 }

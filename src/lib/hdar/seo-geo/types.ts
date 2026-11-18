@@ -1,4 +1,4 @@
-export type Mini = { s: string; n: string; p: number; k?: number };
+export type Mini = { s: string; n: string; p: number; k?: number; /** Département, seulement pour les communes homonymes (ex. Saint-Denis 93 / 974). */ d?: string };
 export type CityPayload = {
   s: string; n: string; p: number; x: number; y: number; hubKm: number; isHub: boolean; top: boolean; strong?: boolean;
   hub: Mini; dep: { s: string; n: string; code: string }; reg: { s: string; n: string };

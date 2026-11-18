@@ -20,8 +20,8 @@ function Privacy() {
     <LegalPage title="Politique de confidentialité">
       <p>
         hdar. est une appli de sorties et de rencontres pour tout le monde, <strong>anonyme</strong>, réservée aux{" "}
-        <strong>18 ans et plus</strong>. Pas d'email, pas de numéro de téléphone, pas de compte
-        Google ou réseau social. Cette page explique quelles données existent, pourquoi, et combien
+        <strong>18 ans et plus</strong>. Pas de numéro de téléphone ni de compte Google ou réseau social ;
+        l'email est <strong>facultatif</strong> (uniquement pour retrouver ton profil). Cette page explique quelles données existent, pourquoi, et combien
         de temps elles sont gardées.
       </p>
 
@@ -49,7 +49,7 @@ function Privacy() {
           Pendant les <strong>48 h</strong> qui suivent, ton pin peut rester visible <strong>estompé</strong> avec
           « vu il y a … », à une position <strong>arrondie à environ 400 m</strong> (jamais ta position exacte).
           Les personnes que tu as bloquées ne le voient pas. Tu peux le désactiver dans Paramètres :{" "}
-          <strong>« Me cacher de la carte quand je suis hors ligne »</strong>.
+          <strong>« Retirer aussi mon pin estompé quand je suis caché »</strong>.
         </li>
         <li>
           Sans profil, si tu acceptes la géolocalisation, nous enregistrons seulement un{" "}
@@ -153,8 +153,10 @@ function Privacy() {
           Nominatim, puis gardée en cache par zone : aucune coordonnée n'est envoyée à l'autre personne.
         </li>
         <li>
-          En connexion directe, ton <strong>adresse IP</strong> peut être visible techniquement par
-          la personne en face. Aucune distance ni position n'est affichée.
+          La vidéo passe par un <strong>serveur relais</strong> dès qu'il est disponible : ton{" "}
+          <strong>adresse IP</strong> n'est alors pas visible par la personne en face. Si le relais
+          est indisponible, la connexion devient directe et ton IP peut être visible techniquement.
+          Aucune distance ni position n'est affichée.
         </li>
         <li>
           Ta caméra est <strong>floutée par défaut</strong> ; c'est toi qui décides de la
@@ -277,7 +279,7 @@ function Privacy() {
 
       <h2>Durées de conservation</h2>
       <ul>
-        <li>Position sur la carte : effacée à la fin de la durée choisie (1, 3 ou 12 h).</li>
+        <li>Position « en ligne » sur la carte : retirée à la fin de la durée choisie (1 h, 3 h ou toute la nuit) ; pin estompé arrondi à ~400 m : 48 h au plus, sauf si tu le retires.</li>
         <li>Position exacte partagée en privé : 1 h.</li>
         <li>Signaux d'appel et de live vidéo : 1 h maximum. Le live n'est jamais enregistré.</li>
         <li>Chat de quartier et ses médias : 24 h. Lieux et leurs messages : 24 h après fermeture.</li>

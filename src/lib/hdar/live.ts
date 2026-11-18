@@ -1134,6 +1134,15 @@ export async function turnServers(): Promise<RTCIceServer[]> {
     return d.iceServers ?? [];
   } catch { return turnVal; }
 }
+/**
+ * Discrétion : dès qu'un serveur TURN est dispo, on force le passage par le relais
+ * (iceTransportPolicy "relay") pour que l'autre personne ne voie jamais ton adresse IP.
+ * Sans TURN configuré, on reste en connexion directe (sinon la vidéo ne passerait pas).
+ */
+export function icePolicy(servers: RTCIceServer[]): RTCIceTransportPolicy {
+  const hasTurn = servers.some((s) => (Array.isArray(s.urls) ? s.urls : [s.urls]).some((u) => /^turns?:/i.test(u)));
+  return hasTurn ? "relay" : "all";
+}
 export const LIVE_TERMS_VERSION = 1;
 export const liveAccept = () => rpc("hdar_live_accept", { p_version: LIVE_TERMS_VERSION });
 export const liveCount = async () => {

@@ -7,7 +7,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShareLiveButton } from "./live-share";
 import { Eye, Gift, Heart, MapPin, Pointer, ChevronUp, Crown, SwitchCamera, EyeOff, Flag, MoreHorizontal, Radio, MessageCircle, Mic, MicOff, RotateCcw, SlidersHorizontal, Video, VideoOff, X } from "lucide-react";
-import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, liveEvent, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
+import { heartSend, myHearts, LIVE_TERMS_VERSION, liveAccept, liveAsk, turnServers, turnCached, icePolicy, liveEvent, rouletteLeave, rouletteNext, roulettePoll, roulettePollSignals, rouletteReport, rouletteSignal, type LiveCard } from "@/lib/hdar/live";
 import { createBlurPipe, type BlurPipe } from "@/lib/hdar/blur-cam";
 import { useRegion } from "@/lib/hdar/map-focus";
 import { useHdar } from "@/lib/hdar/store";
@@ -187,7 +187,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
   const makePc = () => {
     closePc();
     setGotVideo(false);
-    const c = new RTCPeerConnection({ iceServers: ice() });
+    const servers = ice();
+    const c = new RTCPeerConnection({ iceServers: servers, iceTransportPolicy: icePolicy(servers) });
     const raw = localRef.current;
     if (raw) {
       const v = outgoing();
@@ -319,7 +320,8 @@ export function RouletteScreen({ demo, pro }: { demo?: { peer: LiveCard; premium
       blurRef.current = !pro; setBlurred(!pro);
       showPreview();
     } catch { return toast("Caméra ou micro refusé. Autorise-les dans ton navigateur."); }
-    void turnServers().then((l) => { if (l.length) turnCache = l; });
+    // TURN chargé AVANT la 1re connexion : sinon on partirait en direct (IP visible).
+    { const l = await turnServers(); if (l.length) turnCache = l; }
     running.current = true; (window as unknown as { __hdarLive?: boolean }).__hdarLive = true;
     try { const rows = await roulettePollSignals(0); after.current = rows.reduce((m, r) => Math.max(m, Number(r.id)), 0); } catch { /* */ }
     void loop();
