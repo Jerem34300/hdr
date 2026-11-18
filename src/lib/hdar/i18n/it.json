@@ -1843,7 +1843,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "Visualizzazioni del profilo e messaggi ricevuti durante il boost.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "Visualizzazioni, clic, messaggi e provenienza dei visitatori, giorno per giorno.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "Visualizzazioni, visitatori unici, clic al vostro sito, zone di provenienza, orari di punta.",
-"Vérification anti-robot échouée. Recharge la page ou coupe ton VPN, puis réessaie.": "Verifica anti-bot non riuscita. Ricarica la pagina o disattiva la VPN, poi riprova.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "Verifica anti-bot non riuscita. Disattiva la VPN (blocca la verifica e falsa la tua posizione), ricarica la pagina e riprova.",
 "Vérification…": "Verifica…",
 "Vérifier": "Verifica",
 "X / non-binaire": "X / non binario",

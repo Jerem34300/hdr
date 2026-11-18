@@ -104,6 +104,7 @@ export const FAQ: FaqSection[] = [
   {
     id: "technique", title: "Problèmes techniques", emoji: "🛠️",
     items: [
+      { q: "J'utilise un VPN, ça pose problème ?", a: "Oui : coupe ton VPN pour utiliser hdar. Il peut bloquer la vérification anti-robot à l'entrée, et il fausse ta position (tu apparais dans la ville du serveur VPN, pas autour de toi), donc la carte, le quartier et les lieux ne correspondent plus à là où tu es." },
       { q: "La page se recharge ou je reviens à l'écran d'entrée", a: "Les navigateurs ferment parfois les onglets en arrière-plan pour économiser la batterie. Ton profil reste lié à ton téléphone : rouvre hdar, il revient. Installer hdar sur l'écran d'accueil rend tout plus stable. Si ton profil ne revient pas, utilise « Retrouver mon compte » avec ton email." },
       { q: "Je ne reçois pas le code par email", a: "Attends une minute, puis regarde dans les spams, courriers indésirables ou l'onglet Promotions. Vérifie l'orthographe de ton email. Évite de redemander plusieurs codes d'affilée : seul le dernier code reçu est valable." },
       { q: "Je ne reçois pas les notifications", a: "Vérifie dans Paramètres → Notifications que « Notifications appli fermée » est activé, puis dans les réglages de ton téléphone que ton navigateur (ou l'appli hdar) a le droit d'envoyer des notifications. Sur iPhone, les notifications marchent quand hdar est installé sur l'écran d'accueil. Le mode économie d'énergie peut aussi les retarder." },

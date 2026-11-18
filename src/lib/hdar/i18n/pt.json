@@ -1845,7 +1845,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "Visualizações do perfil e mensagens recebidas durante o boost.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "Visualizações, cliques, mensagens e origem dos seus visitantes, dia a dia.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "Visualizações, visitantes únicos, cliques para o seu site, zonas de origem, horas de ponta.",
-"Vérification anti-robot échouée. Recharge la page ou coupe ton VPN, puis réessaie.": "A verificação anti-robô falhou. Recarrega a página ou desliga a VPN e tenta de novo.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "A verificação anti-robô falhou. Desliga a VPN (bloqueia a verificação e falseia a tua localização), recarrega a página e tenta de novo.",
 "Vérification…": "A verificar…",
 "Vérifier": "Verificar",
 "X / non-binaire": "X / não binário",

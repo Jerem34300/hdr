@@ -1848,7 +1848,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "مشاهدات ملفك والرسائل المستلمة أثناء التعزيز.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "المشاهدات والنقرات والرسائل ومصدر زوارك، يوماً بيوم.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "المشاهدات والزوار الفريدون والنقرات إلى موقعك ومناطق المصدر وساعات الذروة.",
-"Vérification anti-robot échouée. Recharge la page ou coupe ton VPN, puis réessaie.": "فشل التحقق من الروبوت. أعد تحميل الصفحة أو أوقف VPN، ثم أعد المحاولة.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "فشل التحقق من الروبوت. أوقف VPN (يمنع التحقق ويزيّف موقعك)، ثم أعد تحميل الصفحة وحاول مجددًا.",
 "Vérification…": "جارٍ التحقق…",
 "Vérifier": "تحقّق",
 "X / non-binaire": "X / غير ثنائي",

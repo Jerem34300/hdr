@@ -1848,7 +1848,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "Profile views and messages received during your boost.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "Views, clicks, messages and where your visitors come from, day by day.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "Views, unique visitors, clicks to your website, home areas, peak hours.",
-"Vérification anti-robot échouée. Recharge la page ou coupe ton VPN, puis réessaie.": "Bot check failed. Reload the page or turn off your VPN, then try again.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "Bot check failed. Turn off your VPN (it blocks the check and fakes your location), reload the page and try again.",
 "Vérification…": "Checking…",
 "Vérifier": "Verify",
 "X / non-binaire": "X / non-binary",

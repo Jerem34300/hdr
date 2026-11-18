@@ -170,7 +170,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           "expired-callback": () => setToken(""),
           "error-callback": () => {
             setToken("");
-            setError("Vérification anti-robot échouée. Recharge la page ou coupe ton VPN, puis réessaie.");
+            setError("Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.");
             trackGate("gate_captcha_fail");
             setWaiting(false);
             // Une seule nouvelle tentative automatique (le contrôle reste actif, on relance juste le widget).
