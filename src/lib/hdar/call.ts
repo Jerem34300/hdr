@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { deviceId } from "./device";
-import { myTopic, pollSignals, sendSignal, turnCached, turnServers, type SignalRow } from "./live";
+import { icePolicy, myTopic, pollSignals, sendSignal, turnCached, turnServers, type SignalRow } from "./live";
 import { subscribeTopic } from "./rt";
 
 /**
@@ -80,7 +80,8 @@ async function openCamera(): Promise<MediaStream | null> {
 }
 
 function makePeer(local: MediaStream) {
-  const conn = new RTCPeerConnection({ iceServers: iceServers() });
+  const servers = iceServers();
+  const conn = new RTCPeerConnection({ iceServers: servers, iceTransportPolicy: icePolicy(servers) });
   local.getTracks().forEach((t) => conn.addTrack(t, local));
   conn.ontrack = (e) => {
     const stream = e.streams[0] ?? new MediaStream([e.track]);

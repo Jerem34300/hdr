@@ -54,7 +54,7 @@ const INTENTS = (c: CityPayload) => [
   { icon: "💘", t: "Rencontre amoureuse", d: pick(c.s + "2", [`Prends le temps de discuter avant de te voir : messages, vocaux, appel vidéo.`, `Fais connaissance tranquillement, sans profil interminable à remplir.`]) },
   { icon: "🤝", t: "Amitié, se faire des amis", d: pick(c.s + "3", [`Nouveau ${a(c.n)} ? Trouve des gens pour un verre, un sport, une balade.`, `Pas que pour draguer : beaucoup viennent juste pour rencontrer du monde.`]) },
   { icon: "💬", t: "Tchat en ligne, amis virtuels", d: pick(c.s + "4", [`Discute depuis ton canapé avec les gens du coin, sans obligation de se voir.`, `Le chat du quartier et les messages privés, même sans sortir de chez toi.`]) },
-  { icon: "✨", t: "Sans prise de tête", d: pick(c.s + "5", [`Une rencontre d'un soir ou un simple café : chacun dit ce qu'il cherche, entre adultes consentants.`, `Spontané et sans pression : tu te connectes 1 h, 3 h ou toute la nuit, puis tu disparais.`]) },
+  { icon: "✨", t: "Sans prise de tête", d: pick(c.s + "5", [`Une rencontre d'un soir ou un simple café : chacun dit ce qu'il cherche, entre adultes consentants.`, `Spontané et sans pression : tu te connectes 1 h, 3 h ou toute la nuit, puis tu disparais (il ne reste qu'un repère flouté).`]) },
   { icon: "🏳️‍🌈", t: "Pour tout le monde, LGBT-friendly", d: `Hétéro, gay, lesbienne, bi, trans ou en questionnement : hdar est ouvert à tous ${a(c.n)}.` },
 ];
 

@@ -1848,7 +1848,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "Profile views and messages received during your boost.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "Views, clicks, messages and where your visitors come from, day by day.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "Views, unique visitors, clicks to your website, home areas, peak hours.",
-"Vérification anti-robot échouée, réessaie.": "Bot check failed, try again.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "Bot check failed. Turn off your VPN (it blocks the check and fakes your location), reload the page and try again.",
 "Vérification…": "Checking…",
 "Vérifier": "Verify",
 "X / non-binaire": "X / non-binary",
@@ -2208,5 +2208,8 @@
   "Sortie rapide": "Quick exit",
   "Quitter tout de suite et ouvrir une page neutre": "Leave now and open a neutral page",
   "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "Sharing your exact location isn't available here. Others already see a blurred position, about 1 km off.",
-  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Meeting up isn't available here: it would share your exact location."
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Meeting up isn't available here: it would share your exact location.",
+  "Ton email": "Your email",
+  "Code à 8 chiffres reçu par email": "8-digit code received by email",
+  "Adresse email invalide (ex. nom@exemple.fr).": "Invalid email address (e.g. name@example.com)."
 }

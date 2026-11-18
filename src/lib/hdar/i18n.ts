@@ -258,8 +258,10 @@ export function startI18n() {
   };
   const blocked = () => SEO_FR.test(location.pathname) || /^\/(en|es|de|it|pt|ar|nl)\//.test(location.pathname);
   observer = new MutationObserver((muts) => {
-    if (blocked()) return;
+    // Navigation interne : l'attribut lang suit la langue réellement affichée (fr sur les pages SEO).
+    if (blocked()) { if (document.documentElement.lang !== "fr") applyDoc("fr"); return; }
     const lang = useLang.getState().lang;
+    if (document.documentElement.lang !== lang && (lang === "fr" || dicts[lang])) applyDoc(lang);
     if (lang === "fr" && !document.documentElement.dataset.i18nWas) { fitLabels(); return; }
     for (const m of muts) {
       if (m.type === "characterData") walk(m.target, lang);

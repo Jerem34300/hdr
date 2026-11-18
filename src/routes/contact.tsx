@@ -1,17 +1,48 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AdultGate } from "@/components/hdar/adult-gate";
+import { GateOnDemand } from "@/components/hdar/gate-on-demand";
 import { LegalPage } from "@/components/hdar/legal";
 import { sendContact, type ContactSubject } from "@/lib/hdar/live";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({ meta: [{ title: "Contact — hdar." }] }),
   component: () => (
-    <AdultGate>
+    <GateOnDemand preview={(start) => <ContactIntro onStart={start} />}>
       <ContactForm />
-    </AdultGate>
+    </GateOnDemand>
   ),
 });
+
+/** Visible sans entrer : qui contacter et pourquoi. Le formulaire reste derrière l'entrée 18+ (anti-spam). */
+function ContactIntro({ onStart }: { onStart: () => void }) {
+  return (
+    <LegalPage title="Contact">
+      <p>Tu peux écrire à l'équipe hdar. pour :</p>
+      <ul>
+        <li>une demande RGPD : accès, rectification ou suppression de tes données ;</li>
+        <li>un signalement (profil, message, photo, Live) ;</li>
+        <li>une question, un bug, un partenariat.</li>
+      </ul>
+      <p className="text-muted">
+        La réponse est peut-être déjà dans la{" "}
+        <a className="font-bold text-signal underline" href="/faq">FAQ</a>. Pas besoin de profil.
+        Pour éviter le spam, on te demande juste de confirmer tes 18 ans et une vérification
+        anti-robot avant d'écrire.
+      </p>
+      <button
+        type="button"
+        onClick={onStart}
+        className="h-12 w-full rounded-full bg-signal font-bold text-night"
+      >
+        Écrire à l'équipe
+      </button>
+      <p className="text-xs text-muted">
+        Professionnel (bar, club, lieu) ? Voir{" "}
+        <a className="underline" href="/pro">l'espace pro</a>.
+      </p>
+    </LegalPage>
+  );
+}
 
 const OPTIONS: [ContactSubject, string][] = [
   ["rgpd", "RGPD / suppression de données"],
@@ -79,6 +110,8 @@ function ContactForm() {
           <span className="font-bold">Message</span>
           <textarea
             className={field + " min-h-40"}
+            required
+            aria-invalid={!!error && body.trim().length < 5}
             maxLength={4000}
             value={body}
             onChange={(e) => setBody(e.target.value)}

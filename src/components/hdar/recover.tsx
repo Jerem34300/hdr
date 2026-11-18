@@ -48,7 +48,7 @@ export function ProtectProfileCard() {
       <p className="mt-1 text-sm text-muted">Retrouve-le facilement si tu le supprimes ou si tu nettoies ton téléphone. Facultatif, jamais affiché.</p>
       {step === "email" ? (
         <div className="mt-3 flex gap-2">
-          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className={input} type="email" inputMode="email" autoComplete="email" aria-label="Ton email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <button type="button" disabled={busy || !/^\S+@\S+\.\S+$/.test(email)} onClick={() => void run(async () => { await linkEmailStart(email); setStep("code"); toast("Code envoyé par email"); })}
             className="h-11 shrink-0 rounded-full bg-[#FA6F6C] px-4 text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Recevoir le code"}</button>
         </div>
@@ -56,7 +56,7 @@ export function ProtectProfileCard() {
         <div className="mt-3 space-y-2">
           <p className="text-xs text-muted">Code envoyé à <b className="text-ink">{email}</b></p>
           <div className="flex gap-2">
-            <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
+            <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" aria-label="Code à 8 chiffres reçu par email" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
             <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(async () => { await linkEmailVerify(email, code); if (news) await newsSet(true).catch(() => undefined); setState({ email, pending: null }); toast("Profil protégé ✅"); })}
               className="h-11 shrink-0 rounded-full bg-[#FA6F6C] px-4 text-sm font-bold text-night disabled:opacity-40">Vérifier</button>
           </div>
@@ -105,6 +105,8 @@ export function RecoverLink({ captchaToken, onUsed, startOpen, beforeVerify, onC
   const [busy, setBusy] = useState(false);
   const run = async (f: () => Promise<void>) => { setBusy(true); try { await f(); } catch (e) { toast(e instanceof Error ? e.message : "Erreur"); } finally { setBusy(false); } };
   const emailOk = /^\S+@\S+\.\S+$/.test(email);
+  const [touched, setTouched] = useState(false);
+  const emailBad = touched && email.trim().length > 0 && !emailOk;
   const toCode = () => {
     try { localStorage.setItem(PENDING, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() })); } catch { /* stockage indisponible */ }
     setSent(true);
@@ -122,7 +124,8 @@ export function RecoverLink({ captchaToken, onUsed, startOpen, beforeVerify, onC
       {!sent ? (
         <>
           <p className="text-xs text-muted">Avec l'email que tu as lié à ton profil (« Protège ton profil »).</p>
-          <input className={input} type="email" inputMode="email" autoComplete="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className={input} type="email" inputMode="email" autoComplete="email" aria-label="Ton email" aria-invalid={emailBad} aria-describedby={emailBad ? "recover-email-err" : undefined} placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => setTouched(true)} />
+          {emailBad && <p id="recover-email-err" role="alert" className="px-2 text-xs text-red-400">Adresse email invalide (ex. nom@exemple.fr).</p>}
           <button type="button" disabled={busy || !emailOk} onClick={send}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Recevoir un code"}</button>
           <button type="button" disabled={!emailOk} onClick={toCode} className="w-full text-xs font-bold text-ink underline disabled:opacity-40">J'ai déjà reçu un code</button>
@@ -130,7 +133,7 @@ export function RecoverLink({ captchaToken, onUsed, startOpen, beforeVerify, onC
       ) : (
         <>
           <p className="text-xs text-muted">Entre le code à 8 chiffres reçu à <b className="text-ink">{email}</b> (pense aux spams). Tu peux aller lire ton mail et revenir ici : cette étape reste ouverte 1 h.</p>
-          <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
+          <input className={input + " tracking-[0.4em]"} inputMode="numeric" autoComplete="one-time-code" aria-label="Code à 8 chiffres reçu par email" maxLength={8} placeholder="Code reçu" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} />
           <button type="button" disabled={busy || code.length < 6 || code.length > 8} onClick={() => void run(async () => { if (beforeVerify && !(await beforeVerify())) return; await recoverVerify(email, code); try { localStorage.removeItem(PENDING); } catch { /* rien */ } })}
             className="h-11 w-full rounded-full bg-signal text-sm font-bold text-night disabled:opacity-40">{busy ? "…" : "Retrouver mon profil"}</button>
           <div className="flex justify-between text-xs">
@@ -139,7 +142,7 @@ export function RecoverLink({ captchaToken, onUsed, startOpen, beforeVerify, onC
           </div>
         </>
       )}
-      <button type="button" onClick={() => { setOpen(false); onCancel?.(); try { localStorage.removeItem(PENDING); } catch { /* rien */ } }} className="w-full text-xs text-muted">Annuler</button>
+      <button type="button" onClick={() => { setOpen(false); setEmail(""); setCode(""); setSent(false); setTouched(false); onCancel?.(); try { localStorage.removeItem(PENDING); } catch { /* rien */ } }} className="w-full text-xs text-muted">Annuler</button>
     </div>
   );
 }

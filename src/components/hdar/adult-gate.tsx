@@ -117,6 +117,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
   const [teaser, setTeaser] = useState<{ city: string | null; near: number; total: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
+  const autoRetried = useRef(false);
   // Premier rendu = français (hydratation). On n'affiche le gate que quand la langue du téléphone est appliquée.
   const i18nReady = useLang((s) => s.ready > 0);
   const [i18nGaveUp, setI18nGaveUp] = useState(false);
@@ -169,9 +170,14 @@ function AdultGateInner({ children }: { children: ReactNode }) {
           "expired-callback": () => setToken(""),
           "error-callback": () => {
             setToken("");
-            setError("Vérification anti-robot échouée, réessaie.");
+            setError("Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.");
             trackGate("gate_captcha_fail");
             setWaiting(false);
+            // Une seule nouvelle tentative automatique (le contrôle reste actif, on relance juste le widget).
+            if (!autoRetried.current) {
+              autoRetried.current = true;
+              window.setTimeout(() => { try { window.turnstile?.reset(widget.current ?? undefined); } catch { /* */ } }, 2500);
+            }
           },
         });
       } catch {
@@ -266,7 +272,7 @@ function AdultGateInner({ children }: { children: ReactNode }) {
             <span aria-hidden className="shrink-0 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] px-2 py-0.5 text-[11px] font-extrabold text-night shadow-[0_0_10px_rgba(250,111,108,.45)]">18+</span>
           </label>
         )}
-        {error && <p className="text-center text-sm text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-center text-sm text-red-400">{error}</p>}
         <button type="submit" data-act="gate-enter" disabled={busy || (needsAdult && !checked)} className="gate-enter flex h-12 [@media(min-height:760px)]:h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF8A80] to-[#FA6F6C] text-base font-bold text-night shadow-[0_8px_24px_-10px_rgba(250,111,108,.7)] active:scale-[.98] disabled:opacity-45 disabled:shadow-none">
           {busy || waiting ? <><Loader2 className="size-5 animate-spin" strokeWidth={2.5} />{busy ? "Connexion…" : "Vérification…"}</> : <>Entrer<ArrowRight className="size-5" strokeWidth={2.5} /></>}
         </button>

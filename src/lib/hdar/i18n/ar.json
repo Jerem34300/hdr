@@ -1848,7 +1848,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "مشاهدات ملفك والرسائل المستلمة أثناء التعزيز.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "المشاهدات والنقرات والرسائل ومصدر زوارك، يوماً بيوم.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "المشاهدات والزوار الفريدون والنقرات إلى موقعك ومناطق المصدر وساعات الذروة.",
-"Vérification anti-robot échouée, réessaie.": "فشل التحقق من الروبوت، أعد المحاولة.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "فشل التحقق من الروبوت. أوقف VPN (يمنع التحقق ويزيّف موقعك)، ثم أعد تحميل الصفحة وحاول مجددًا.",
 "Vérification…": "جارٍ التحقق…",
 "Vérifier": "تحقّق",
 "X / non-binaire": "X / غير ثنائي",
@@ -2208,5 +2208,8 @@
   "Sortie rapide": "خروج سريع",
   "Quitter tout de suite et ouvrir une page neutre": "اخرج فوراً وافتح صفحة محايدة",
   "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "مشاركة الموقع الدقيق غير متاحة هنا. الآخرون يرون سلفاً موقعاً ضبابياً، على بعد نحو كيلومتر واحد.",
-  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "ميزة الالتقاء غير متاحة هنا: لأنها تشارك موقعك الدقيق."
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "ميزة الالتقاء غير متاحة هنا: لأنها تشارك موقعك الدقيق.",
+  "Ton email": "بريدك الإلكتروني",
+  "Code à 8 chiffres reçu par email": "الرمز المكون من 8 أرقام المستلم بالبريد",
+  "Adresse email invalide (ex. nom@exemple.fr).": "عنوان بريد غير صالح (مثال name@example.com)."
 }

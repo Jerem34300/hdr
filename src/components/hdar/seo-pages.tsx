@@ -132,7 +132,7 @@ export function CityChips({ list, showKm }: { list: Mini[]; showKm?: boolean }) 
       {list.map((c) => (
         <li key={c.s}>
           <a href={`/rencontre/${c.s}`} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[.03] px-3 py-1.5 hover:border-[#FA6F6C]">
-            {c.n}{showKm && c.k !== undefined && <span className="text-xs text-muted">{c.k} km</span>}
+            {c.n}{c.d && <span className="text-xs text-muted">({c.d})</span>}{showKm && c.k !== undefined && <span className="text-xs text-muted">{c.k} km</span>}
           </a>
         </li>
       ))}

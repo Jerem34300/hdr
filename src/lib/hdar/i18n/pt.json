@@ -1845,7 +1845,7 @@
 "Vues de ton profil et messages reçus pendant ton boost.": "Visualizações do perfil e mensagens recebidas durante o boost.",
 "Vues, clics, messages et provenance de vos visiteurs, jour par jour.": "Visualizações, cliques, mensagens e origem dos seus visitantes, dia a dia.",
 "Vues, visiteurs uniques, clics vers votre site, zones d'origine, heures de pointe.": "Visualizações, visitantes únicos, cliques para o seu site, zonas de origem, horas de ponta.",
-"Vérification anti-robot échouée, réessaie.": "A verificação anti-robô falhou, tenta de novo.",
+"Vérification anti-robot échouée. Coupe ton VPN (il bloque la vérification et fausse ta position), recharge la page puis réessaie.": "A verificação anti-robô falhou. Desliga a VPN (bloqueia a verificação e falseia a tua localização), recarrega a página e tenta de novo.",
 "Vérification…": "A verificar…",
 "Vérifier": "Verificar",
 "X / non-binaire": "X / não binário",
@@ -2204,5 +2204,8 @@
   "Sortie rapide": "Saída rápida",
   "Quitter tout de suite et ouvrir une page neutre": "Sair agora e abrir uma página neutra",
   "Partager une position exacte n'est pas disponible ici. Ta position sur la carte est déjà floutée, à environ 1 km.": "Partilhar a posição exata não está disponível aqui. Os outros já veem uma posição desfocada, a cerca de 1 km.",
-  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Encontrar-se não está disponível aqui: partilharia a tua posição exata."
+  "Se retrouver n'est pas disponible ici : cela partagerait ta position exacte.": "Encontrar-se não está disponível aqui: partilharia a tua posição exata.",
+  "Ton email": "O teu email",
+  "Code à 8 chiffres reçu par email": "Código de 8 dígitos recebido por email",
+  "Adresse email invalide (ex. nom@exemple.fr).": "Endereço de email inválido (ex. nome@exemplo.pt)."
 }
