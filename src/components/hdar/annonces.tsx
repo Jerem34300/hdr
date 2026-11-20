@@ -11,9 +11,10 @@ import { MediaView } from "./media-composer";
 import { VideoPicker } from "./video-picker";
 import {
   AD_BOOSTS, AD_CATEGORIES, AD_DURATIONS, AD_REGIONS, MAX_ACTIVE_ADS, MAX_ACTIVE_ADS_PLUS, adsStatus, cleanTag, createAd, freeBoost, kmLabel, MAX_TAGS, SUGGESTED_TAGS, topTags, type AdsStatus, deleteAd, euros, getAd, listAds, myAds,
-  regionFromPos, regionName, ALERT_SCOPES, alertLabel, deleteAlert, myAlerts, saveAlert, type AdAlert, type AlertScope, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
+  regionFromPos, regionName, ALERT_SCOPES, alertLabel, deleteAlert, myAlerts, saveAlert, type AdAlert, type AlertScope, recordAdView, replyAd, reportAd, shareAd, slugify, type Ad, type AdCategory, type BoostScope,
 } from "@/lib/hdar/ads";
 import { pgTime } from "@/lib/hdar/live";
+import { t, tf, useLang } from "@/lib/hdar/i18n";
 import { PhotoViewer } from "./photo-viewer";
 
 const ms = (v: string) => (v.includes("T") ? Date.parse(v) : pgTime(v));
@@ -64,7 +65,7 @@ export function Annonces({ focus, demo, demoCreate, demoAlerts }: { focus?: stri
   const adAction = useHdar((s) => s.adAction);
   const setAdAction = useHdar((s) => s.setAdAction);
   const approx = useApproxPlace();
-  const [tab, setTab] = useState<"all" | "mine" | "alerts">(demoAlerts === "list" ? "alerts" : "all");
+  const [tab, setTab] = useState<"all" | "mine" | "alerts">(demoAlerts === "list" ? "alerts" : demo?.some((a) => a.mine) ? "mine" : "all");
   const [alerts, setAlerts] = useState<{ limit: number; alerts: AdAlert[] } | null>(null);
   const [alertSheet, setAlertSheet] = useState<null | { a: Partial<AdAlert> }>(null);
   const [region, setRegion] = useState("");
@@ -98,10 +99,11 @@ export function Annonces({ focus, demo, demoCreate, demoAlerts }: { focus?: stri
   const pickTag = (t: string) => { setTab("all"); setTag((cur) => (cur === t ? "" : t)); setTagQuery(""); };
   useEffect(() => { const t = window.setTimeout(load, city ? 350 : 0); return () => window.clearTimeout(t); }, [load, city]);
   const loadMine = useCallback(() => {
+    if (demo) { setMine(demo.filter((a) => a.mine)); return; }
     if (!onboarded) return;
     myAds().then(setMine).catch(() => setMine([]));
     adsStatus().then(setStatus).catch(() => undefined);
-  }, [onboarded]);
+  }, [onboarded, demo]);
   useEffect(loadMine, [loadMine]);
   const loadAlerts = useCallback(() => {
     if (demoAlerts) { setAlerts({ limit: 1, alerts: [{ id: "a1", scope: "ville", region: "occitanie", city: "Montpellier", category: "sortie", tags: ["ce soir"], created_at: "" }] }); return; }
@@ -119,7 +121,13 @@ export function Annonces({ focus, demo, demoCreate, demoAlerts }: { focus?: stri
   };
 
   // Lien direct (citation dans un message, retour de paiement) vers une annonce.
-  useEffect(() => { if (focus) void getAd(focus).then((a) => setFocused(a)).catch(() => undefined); }, [focus]);
+  useEffect(() => {
+    if (!focus || demo) return;
+    void getAd(focus).then((a) => {
+      setFocused(a);
+      if (a && !a.mine) void recordAdView(a.id);
+    }).catch(() => undefined);
+  }, [focus, demo]);
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("paid") === "1") toast("Boost activé dès la confirmation du paiement ✨");
   }, []);
@@ -142,6 +150,7 @@ export function Annonces({ focus, demo, demoCreate, demoAlerts }: { focus?: stri
   const list = tab === "all" ? ads : mine;
   const card = (a: Ad) => (
     <AdCard key={a.id} ad={a} onReply={() => onReply(a)} onBoost={() => setSheet({ t: "boost", ad: a })} near={!!near} onTag={pickTag} activeTag={tag} onReport={() => setSheet({ t: "report", ad: a })}
+      trackView={!demo && !a.mine}
       onDelete={() => { if (window.confirm("Supprimer cette annonce ?")) void deleteAd(a.id).then(() => { toast("Annonce supprimée"); load(); loadMine(); }); }} />
   );
 
@@ -258,7 +267,32 @@ function AdPhotos({ photos }: { photos: string[] }) {
   );
 }
 
-function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeTag }: { ad: Ad; onReply: () => void; onBoost: () => void; onReport: () => void; onDelete: () => void; near?: boolean; onTag?: (t: string) => void; activeTag?: string }) {
+/** Compte une vue unique quand la carte est réellement visible (~0,8 s, moitié de l'écran). */
+function useVisibleAdView(id: string, enabled: boolean) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    const el = ref.current;
+    if (!el) return;
+    let timer: number | undefined;
+    const io = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      if (e?.isIntersecting && e.intersectionRatio >= 0.5) {
+        timer ??= window.setTimeout(() => { void recordAdView(id); io.disconnect(); }, 800);
+      } else if (timer !== undefined) {
+        window.clearTimeout(timer);
+        timer = undefined;
+      }
+    }, { threshold: 0.5 });
+    io.observe(el);
+    return () => { if (timer !== undefined) window.clearTimeout(timer); io.disconnect(); };
+  }, [id, enabled]);
+  return ref;
+}
+
+function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeTag, trackView }: { ad: Ad; onReply: () => void; onBoost: () => void; onReport: () => void; onDelete: () => void; near?: boolean; onTag?: (t: string) => void; activeTag?: string; trackView?: boolean }) {
+  useLang((s) => s.lang);
+  const viewRef = useVisibleAdView(ad.id, !!trackView);
   const openProfile = useHdar((s) => s.openProfile);
   const openLive = useHdar((s) => s.openLive);
   const onboarded = useHdar((s) => s.me.onboarded);
@@ -266,7 +300,7 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
   const expired = ms(ad.expires_at) <= Date.now();
   const share = () => void shareAd(ad).then((r) => r === "copied" && toast("Lien copié"));
   return (
-    <article className={cn("rounded-2xl border bg-surface p-4", ad.boost_scope ? "partner-glow border-[#fbbf24]" : "border-line", expired && "opacity-60")}>
+    <article ref={viewRef} className={cn("rounded-2xl border bg-surface p-4", ad.boost_scope ? "partner-glow border-[#fbbf24]" : "border-line", expired && "opacity-60")}>
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
         <span className="rounded-full bg-white/10 px-2 py-0.5">{c.icon} {c.label}</span>
         {ad.boost_scope && <span className="rounded-full bg-[#fbbf24] px-2 py-0.5 font-bold text-night">✨ Boostée</span>}
@@ -292,7 +326,13 @@ function AdCard({ ad, onReply, onBoost, onReport, onDelete, near, onTag, activeT
         {" · "}{ago(ad.created_at)} · {expired ? "expirée" : `expire dans ${left(ad.expires_at)}`}
         {ad.boost_scope && ad.boost_until && ` · boost ${AD_BOOSTS.find((b) => b.scope === ad.boost_scope)?.label} encore ${left(ad.boost_until)}`}
       </p>
-      {ad.mine && typeof ad.replies === "number" && <p className="mt-1 text-xs font-bold text-online">💬 {ad.replies === 0 ? "Pas encore de réponse" : `${ad.replies} personne${ad.replies > 1 ? "s ont" : " a"} répondu`}</p>}
+      {ad.mine && (typeof ad.replies === "number" || typeof ad.views === "number") && (
+        <p className="mt-1 text-xs font-bold text-online">
+          {typeof ad.replies === "number" && <>💬 {ad.replies === 0 ? "Pas encore de réponse" : `${ad.replies} personne${ad.replies > 1 ? "s ont" : " a"} répondu`}</>}
+          {typeof ad.replies === "number" && typeof ad.views === "number" && " · "}
+          {typeof ad.views === "number" && <>👀 {ad.views === 0 ? t("Pas encore de vue") : ad.views === 1 ? t("1 vue") : tf("{n} vues", ad.views)}</>}
+        </p>
+      )}
       <div className="mt-3 flex gap-2">
         {ad.mine ? (
           <>
@@ -522,6 +562,15 @@ export function demoAds(): Ad[] {
     { ...base, id: "00000000-0000-0000-0000-000000000001", pseudo: "Sunny34", title: "Verre en terrasse ce soir vers la Comédie", tags: ["ce soir", "apéro", "sans prise de tête"], body: "Envie de discuter autour d'un verre après le boulot, plutôt 20 h. Ambiance tranquille, on voit si le courant passe 😊", category: "sortie", city: "Montpellier", city_slug: "montpellier", created_at: h(-2), expires_at: h(70), boost_scope: "region", boost_until: h(20), km: 1.4, premium: true },
     { ...base, id: "00000000-0000-0000-0000-000000000002", pseudo: "Theo_mtp", photos: ["demo/1.jpg", "demo/2.jpg"], videos: ["demo/v.mp4"], video_secs: [42], title: "Rencontre sérieuse, 30-40 ans", tags: ["sérieux", "balade", "resto"], body: "Je cherche quelqu'un pour des balades, des restos et plus si affinités. Discret et bienveillant.", category: "rencontre", city: "Montpellier", city_slug: "montpellier", created_at: h(-5), expires_at: h(160), km: 3.2 },
     { ...base, id: "00000000-0000-0000-0000-000000000003", pseudo: "Leo", title: "Plan kink entre adultes", tags: ["kink", "discret", "cuir"], body: "Curieux et respectueux, on en parle d'abord en privé. Consentement avant tout.", category: "kink", city: "Lattes", city_slug: "lattes", created_at: h(-20), expires_at: h(4), km: 6.8 },
+  ];
+}
+
+/** Annonces de l'auteur, pour les captures de dev (?adsdemo=mine). */
+export function demoMineAds(): Ad[] {
+  const ads = demoAds();
+  return [
+    { ...ads[0], mine: true, user_id: "me", replies: 3, views: 42 },
+    { ...ads[1], mine: true, user_id: "me", photos: [], videos: undefined, video_secs: undefined, replies: 0, views: 0, boost_scope: null, boost_until: null, premium: false },
   ];
 }
 

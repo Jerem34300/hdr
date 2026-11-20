@@ -71,7 +71,7 @@ export const euros = (c: number) => (c / 100).toFixed(2).replace(".", ",") + " �
 export type Ad = {
   id: string; user_id: string; pseudo: string; title: string; body: string; category: AdCategory;
   region: string; city: string; city_slug: string; photos: string[]; videos?: string[]; video_secs?: number[]; created_at: string; expires_at: string;
-  mine: boolean; boost_scope: BoostScope | null; boost_until: string | null; hidden?: boolean; replies?: number;
+  mine: boolean; boost_scope: BoostScope | null; boost_until: string | null; hidden?: boolean; replies?: number; views?: number;
   premium?: boolean; lat?: number | null; lng?: number | null; km?: number | null; tags?: string[];
 };
 export type AdminAd = Ad & { status: "active" | "expired" | "hidden"; reports: number; open_reports: number; reasons: string[] | null };
@@ -105,6 +105,8 @@ export const adsLayerOn = () => typeof localStorage !== "undefined" && localStor
 export const setAdsLayer = (on: boolean) => localStorage.setItem(ADS_LAYER, on ? "on" : "off");
 export const getAd = (id: string) => rpc<Ad | null>("hdar_ad_get", { p_id: id });
 export const myAds = () => rpc<Ad[]>("hdar_ads_mine", {});
+/** Vue unique : une personne (appareil / compte) compte une seule fois, jamais l'auteur. Échecs ignorés. */
+export const recordAdView = (id: string) => rpc("hdar_ad_view", { p_id: id }).catch(() => undefined);
 export const createAd = (a: { title: string; body: string; category: AdCategory; region: string; city: string; hours: number; photos: string[]; videos?: { path: string; duration: number }[]; pos?: { lat: number; lng: number } | null; tags?: string[] }) =>
   rpc<string>("hdar_ad_create", {
     p_title: a.title.trim(), p_body: a.body.trim(), p_category: a.category, p_region: a.region, p_city: a.city.trim(),

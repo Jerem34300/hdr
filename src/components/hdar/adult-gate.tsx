@@ -14,7 +14,7 @@ import { ConfirmSheet } from "./confirm-sheet";
 import { useHdar } from "@/lib/hdar/store";
 import { useCountry } from "@/lib/hdar/country";
 import { Around } from "./around";
-import { Annonces, demoAds } from "./annonces";
+import { Annonces, demoAds, demoMineAds } from "./annonces";
 import { regionFromPos, teaserAds, type TeaserAd } from "@/lib/hdar/ads";
 import { AdsTab } from "./admin";
 import { ProSpaceCard } from "./pro-tools";
@@ -422,7 +422,7 @@ function DevPreview() {
 
 function AdsDemo() {
   const mode = new URLSearchParams(location.search).get("adsdemo");
-  const ads = demoAds();
+  const ads = mode === "mine" ? demoMineAds() : demoAds();
   if (mode === "map") return <main className="flex h-dvh flex-col bg-night text-ink"><Around demoTicker={ads} /><Toaster theme="dark" position="top-center" /></main>;
   if (mode === "admin") {
     const rows = ads.map((a, i) => ({ ...a, status: (i === 2 ? "hidden" : "active") as "active" | "hidden", replies: [4, 1, 0][i], reports: [0, 0, 3][i], open_reports: [0, 0, 3][i], reasons: i === 2 ? ["Spam", "Arnaque ou argent", "Autre"] : null, hidden: i === 2 }));
