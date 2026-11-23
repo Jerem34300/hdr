@@ -1051,13 +1051,17 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         }
         const pl = c.items[0];
         const k = PLACE_KINDS[pl.kind];
+        const isPartner = pl.partner || pl.listing === "partner";
+        const isDiscover = pl.listing === "discover" || (!isPartner && (pl.kind === "bar" || pl.kind === "club" || pl.kind === "sauna"));
+        const status = isPartner ? "Partenaire" : isDiscover ? "Lieu à découvrir" : k.label;
         return (
           <button
             key={pl.id}
             type="button"
-            aria-label={`${k.label} : ${pl.name}`}
-            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "partner-glow z-[16] size-12 shadow-[0_0_24px_#fbbf24]" : pl.partner ? "partner-glow z-[15] size-10" : "z-10 size-8")}
-            style={{ left: c.x, top: c.y, borderColor: pl.pro_boost ? "#fbbf24" : k.color }}
+            data-listing={pl.listing ?? (isPartner ? "partner" : isDiscover ? "discover" : undefined)}
+            aria-label={`${status} : ${pl.name}`}
+            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "partner-glow z-[16] size-12 shadow-[0_0_24px_#fbbf24]" : isPartner ? "partner-glow z-[15] size-10" : isDiscover ? "z-[15] size-10" : "z-10 size-8")}
+            style={{ left: c.x, top: c.y, borderColor: pl.pro_boost ? "#fbbf24" : isPartner ? "#f472b6" : isDiscover ? "#fde68a" : k.color }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setPlaceId(pl.id)}
           >

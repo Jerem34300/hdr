@@ -14,6 +14,8 @@ import { ConfirmSheet } from "./confirm-sheet";
 import { useHdar } from "@/lib/hdar/store";
 import { useCountry } from "@/lib/hdar/country";
 import { Around } from "./around";
+import { DiscoverStandalone } from "./discover-sheet";
+import { seedDiscoverMap } from "@/lib/hdar/discover";
 import { Annonces, demoAds, demoMineAds } from "./annonces";
 import { regionFromPos, teaserAds, type TeaserAd } from "@/lib/hdar/ads";
 import { AdsTab } from "./admin";
@@ -87,10 +89,26 @@ export function loadTurnstile(): Promise<Turnstile | null> {
 export function AdultGate({ children }: { children: ReactNode }) {
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("reveal=")) return <SurprisePopup />;
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("prolanding")) return <div className="min-h-dvh bg-night px-4 text-ink"><ProLanding prices={[]} onCreate={() => undefined} /></div>;
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("discoverdemo")) {
+    const mode = new URLSearchParams(location.search).get("discoverdemo") || "paris";
+    if (mode === "paris" || mode === "berlin") {
+      seedDiscoverMap(mode);
+      return <>{children}</>;
+    }
+    return <><DiscoverStandalone mode={mode} /><Toaster theme="dark" position="top-center" /></>;
+  }
   if (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("devpreview")) {
     if (location.search.includes("safemap")) {
       seedSafeMapPreview();
       return <>{children}</>;
+    }
+    if (location.search.includes("discoverdemo")) {
+      const mode = new URLSearchParams(location.search).get("discoverdemo") || "paris";
+      if (mode === "paris" || mode === "berlin") {
+        seedDiscoverMap(mode);
+        return <>{children}</>;
+      }
+      return <><DiscoverStandalone mode={mode} /><Toaster theme="dark" position="top-center" /></>;
     }
     return <DevPreview />;
   }

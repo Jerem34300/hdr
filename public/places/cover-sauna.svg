@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Visuel par défaut sauna">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1208"/>
+      <stop offset="1" stop-color="#3a2410"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="80%" r="70%">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <rect width="1200" height="800" fill="url(#glow)"/>
+  <g fill="none" stroke="#fbbf24" stroke-opacity=".3" stroke-width="6">
+    <ellipse cx="600" cy="560" rx="280" ry="50"/>
+    <ellipse cx="600" cy="520" rx="220" ry="36"/>
+    <ellipse cx="600" cy="490" rx="160" ry="24"/>
+  </g>
+  <path d="M600 420 c-10-80 40-140 0-220" fill="none" stroke="#fde68a" stroke-opacity=".35" stroke-width="8" stroke-linecap="round"/>
+  <path d="M660 430 c10-70 50-110 30-200" fill="none" stroke="#fde68a" stroke-opacity=".25" stroke-width="6" stroke-linecap="round"/>
+  <path d="M540 430 c-8-70 -40-120 -20-200" fill="none" stroke="#fde68a" stroke-opacity=".25" stroke-width="6" stroke-linecap="round"/>
+</svg>

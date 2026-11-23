@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Visuel par défaut club">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b0b18"/>
+      <stop offset="1" stop-color="#1a1030"/>
+    </linearGradient>
+    <radialGradient id="p" cx="25%" cy="40%" r="50%">
+      <stop offset="0" stop-color="#818cf8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#818cf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="q" cx="80%" cy="60%" r="50%">
+      <stop offset="0" stop-color="#f472b6" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#f472b6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <rect width="1200" height="800" fill="url(#p)"/>
+  <rect width="1200" height="800" fill="url(#q)"/>
+  <g fill="#fff" fill-opacity=".08">
+    <circle cx="200" cy="160" r="8"/><circle cx="980" cy="120" r="6"/><circle cx="640" cy="80" r="5"/>
+    <circle cx="300" cy="700" r="7"/><circle cx="860" cy="680" r="5"/>
+  </g>
+  <rect x="360" y="500" width="480" height="80" rx="40" fill="#fff" fill-opacity=".08"/>
+</svg>

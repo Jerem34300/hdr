@@ -1,0 +1,51 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  emailMatchesWebsite, isDisplayableOutreach, kindNoun, listingLabel, maskEmail,
+  publicDescription, websiteDomain,
+} from "./discover-utils.ts";
+
+test("maskEmail cache le début et garde le domaine", () => {
+  assert.equal(maskEmail("contact@lecomptoir.fr"), "c***@lecomptoir.fr");
+  assert.equal(maskEmail("  A@Site.COM "), "a***@site.com");
+  assert.equal(maskEmail("pas-un-email"), null);
+});
+
+test("emailMatchesWebsite accepte le même domaine ou un sous-domaine", () => {
+  assert.equal(emailMatchesWebsite("toi@lecomptoir.fr", "https://www.lecomptoir.fr/horaires"), true);
+  assert.equal(emailMatchesWebsite("hello@mail.lecomptoir.fr", "https://lecomptoir.fr"), true);
+  assert.equal(emailMatchesWebsite("toi@gmail.com", "https://lecomptoir.fr"), false);
+  assert.equal(emailMatchesWebsite("toi@lecomptoir.fr", ""), false);
+});
+
+test("websiteDomain retire www et ignore le chemin", () => {
+  assert.equal(websiteDomain("https://www.Exemple.hdar.chat/x"), "exemple.hdar.chat");
+  assert.equal(websiteDomain("exemple.hdar.chat"), "exemple.hdar.chat");
+});
+
+test("isDisplayableOutreach exclut refus, désinscrits, rebonds et l'absence de coordonnées", () => {
+  assert.equal(isDisplayableOutreach({ status: "sent", lat: 48.8, lng: 2.3 }), true);
+  assert.equal(isDisplayableOutreach({ status: "ready", lat: 48.8, lng: 2.3 }), true);
+  assert.equal(isDisplayableOutreach({ status: "bounced", lat: 48.8, lng: 2.3 }), false);
+  assert.equal(isDisplayableOutreach({ status: "sent", refused_at: "2026-01-01", lat: 48.8, lng: 2.3 }), false);
+  assert.equal(isDisplayableOutreach({ status: "suppressed", lat: 48.8, lng: 2.3 }), false);
+  assert.equal(isDisplayableOutreach({ status: "sent", lat: null, lng: 2.3 }), false);
+});
+
+test("listingLabel distingue découvrir, vérifié et partenaire", () => {
+  assert.equal(listingLabel("discover"), "Lieu à découvrir");
+  assert.equal(listingLabel("discover", true), "Lieu à découvrir · Vérifié");
+  assert.equal(listingLabel("partner"), "Partenaire");
+});
+
+test("kindNoun reste neutre dans un pays à risque", () => {
+  assert.equal(kindNoun("sauna", true), "Établissement");
+  assert.equal(kindNoun("bar", true), "Bar");
+  assert.equal(kindNoun("sauna", false), "Sauna");
+});
+
+test("publicDescription retire les mots sensibles dans un pays à risque", () => {
+  const t = publicDescription("Bar gay du centre, soirées LGBT.", "MA");
+  assert.equal(/gay|lgbt/i.test(t), false);
+  assert.equal(publicDescription("Bar du centre.", "FR"), "Bar du centre.");
+});

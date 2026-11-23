@@ -3,7 +3,7 @@ import type { LayerKey } from "@/lib/hdar/map-layers";
 
 /** Une case du menu des calques : icône au trait (jamais d'emoji), libellé, précision éventuelle. */
 const ROWS: Record<LayerKey, { icon: LucideIcon; label: string; hint?: string; color: string }> = {
-  partners: { icon: BadgeCheck, label: "Lieux partenaires", hint: "bars, clubs, saunas", color: "text-pink-400" },
+  partners: { icon: BadgeCheck, label: "Lieux à découvrir", hint: "bars, clubs, saunas — et partenaires", color: "text-pink-400" },
   station: { icon: TrainFront, label: "Gares", hint: "zoom proche", color: "text-sky-400" },
   metro: { icon: TramFront, label: "Métro et tram", hint: "zoom proche", color: "text-sky-300" },
   bus: { icon: Bus, label: "Bus", hint: "zoom proche", color: "text-sky-200" },
