@@ -162,6 +162,8 @@ export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {
   const [p, setP] = useState<PlaceDetail | null>(null);
   const [claim, setClaim] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useOpenAtTop(sheetRef, id);
   useEffect(() => {
     if (discoverDemoActive()) {
       const d = discoverDemoCard(id);
@@ -191,8 +193,6 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
     );
   }
   const k = p ? PLACE_KINDS[p.kind] : null;
-  const sheetRef = useRef<HTMLDivElement>(null);
-  useOpenAtTop(sheetRef, id);
   return (
     <div ref={sheetRef} data-sheet-root className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
       <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
