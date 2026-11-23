@@ -2242,5 +2242,11 @@
 "Club échangiste": "نادي",
 "Bar cruising": "بار",
 "Halo + pastille : partenaire": "هالة وشارة: شريك",
-"même couleur selon le type, halo pour les partenaires": "نفس اللون حسب النوع، هالة للشركاء"
+"même couleur selon le type, halo pour les partenaires": "نفس اللون حسب النوع، هالة للشركاء",
+"Photo : {n}": "الصورة: {n}",
+"{n} / 5 · {n} note": "{n} / 5 · تقييم {n}",
+"{n} / 5 · {n} notes": "{n} / 5 · {n} تقييمات",
+"1 étoile": "نجمة واحدة",
+"{n} étoiles": "{n} نجوم",
+"Réservé aux personnes majeures. Si c'est votre établissement, vous pouvez réclamer la fiche et la compléter après preuve.": "مخصص للبالغين فقط. إذا كان هذا مكانك، يمكنك المطالبة بالبطاقة وإكمالها بعد إثبات الهوية."
 }

@@ -3,7 +3,7 @@ import { venueOf } from "./venue.ts";
 import { useHdar } from "./store";
 
 export {
-  DEFAULT_COVERS, RISK_COUNTRIES, defaultCover, listingLabel, kindNoun, kindIcon,
+  DEFAULT_COVERS, RISK_COUNTRIES, defaultCover, isPaidPartner, listingLabel, kindNoun, kindIcon,
   maskEmail, emailDomain, websiteDomain, emailMatchesWebsite, isDisplayableOutreach,
   publicDescription, type MapListing, type OutreachLike,
 } from "./discover-utils";
@@ -27,6 +27,8 @@ export type DiscoverCard = {
   cover_credit: string | null;
   photos: string[];
   partner: boolean;
+  paid_partner?: boolean;
+  stripe_subscription?: string | null;
   source?: string;
   source_ref?: string | null;
   country?: string | null;

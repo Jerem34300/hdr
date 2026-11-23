@@ -1,15 +1,16 @@
 import { VideoSection } from "./video-section";
 import { startPoll } from "@/lib/hdar/poll";
-import { GoButton } from "./go-sheet";
 import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { scrollListEnd } from "@/lib/hdar/scroll-end";
-import { locale } from "@/lib/hdar/i18n";
+import { locale, t, tf, useLang } from "@/lib/hdar/i18n";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { LinkifiedText, PlaceLinkButtons, placeLinks } from "./place-links";
+import { PlaceLinkButtons, placeLinks } from "./place-links";
 import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, placeWriteKm, distLabel, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
 import { discoverDemoActive, discoverDemoCard, discoverDemoPins } from "@/lib/hdar/discover";
+import { isPaidPartner } from "@/lib/hdar/discover-utils";
+import { venueOf } from "@/lib/hdar/venue";
 import { DiscoverClaimFromStore, DiscoverFiche, toDiscoverCard } from "./discover-sheet";
 import { locatedInRiskCountry } from "@/lib/hdar/safe-countries";
 import { useCountry } from "@/lib/hdar/country";
@@ -159,6 +160,28 @@ export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
   return [...demo, ...live.filter((p) => !ids.has(p.id))];
 }
 
+function PlaceBeforeYouGo() {
+  useLang();
+  return (
+    <div className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
+      <p className="font-bold text-ink">{t("Avant d'y aller")}</p>
+      <ul className="mt-1 list-disc space-y-1 ps-4">
+        <li>{t("Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.")}</li>
+        <li>{t("La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.")}</li>
+        <li>{t("Consentement toujours, et uniquement entre adultes.")}</li>
+        <li>{t("Préviens un proche, garde ton téléphone chargé, méfie-toi des guet-apens.")}</li>
+        <li>
+          {t("Préservatifs, PrEP, dépistage :")}{" "}
+          <a className="underline" href="https://www.aides.org" target="_blank" rel="noopener" translate="no">
+            AIDES
+          </a>
+          .
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {
   const [p, setP] = useState<PlaceDetail | null>(null);
   const [claim, setClaim] = useState(false);
@@ -177,65 +200,43 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
     setClaim(false);
     return () => setOpenPlace(null);
   }, [id]);
-  const commercial = p && (p.listing === "discover" || p.listing === "partner" || p.kind === "bar" || p.kind === "club" || p.kind === "sauna") && p.kind !== "toilets";
-  if (p && commercial && claim) {
+  useLang();
+  if (p && claim) {
     return <DiscoverClaimFromStore place={toDiscoverCard(p)} onClose={() => setClaim(false)} />;
   }
-  if (p && commercial) {
-    const risk = locatedInRiskCountry(useCountry.getState().auto, useCountry.getState().cdn);
+  if (!p) {
     return (
-      <DiscoverFiche
-        place={toDiscoverCard({ ...p, photos: p.photos ?? [] })}
-        onClose={onClose}
-        onClaim={p.listing !== "partner" && !p.verified ? () => setClaim(true) : undefined}
-        risk={risk}
-      />
+      <div ref={sheetRef} data-sheet-root className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
+        <button type="button" aria-label={t("Fermer")} className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
+          <X className="size-5" />
+        </button>
+        <p className="py-8 text-center text-sm text-muted">{t("Chargement…")}</p>
+      </div>
     );
   }
-  const k = p ? PLACE_KINDS[p.kind] : null;
+  const risk = locatedInRiskCountry(useCountry.getState().auto, useCountry.getState().cdn);
+  const paid = isPaidPartner(p);
+  const venue = p.venue ?? venueOf(p.kind);
+  const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || p.listing === "discover" || p.listing === "partner";
+  const claimable = !paid && p.kind !== "toilets" && isVenue;
   return (
-    <div ref={sheetRef} data-sheet-root className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8 shadow-2xl">
-      <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center" onClick={onClose}>
-        <X className="size-5" />
-      </button>
-      {!p ? (
-        <p className="py-8 text-center text-sm text-muted">Chargement…</p>
+    <DiscoverFiche
+      place={toDiscoverCard({ ...p, photos: p.photos ?? [] })}
+      onClose={onClose}
+      onClaim={claimable ? () => setClaim(true) : undefined}
+      risk={risk}
+    >
+      {p.kind !== "toilets" && <PlaceExtras id={p.id} description={p.description} />}
+      {p.kind === "toilets" ? (
+        <p className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
+          {t("Toilettes publiques issues d'OpenStreetMap : horaires et accès peuvent varier. Respecte les lieux et les autres usagers.")}
+        </p>
       ) : (
-        <>
-          <p className="text-sm" style={{ color: k!.color }}>
-            {k!.icon} {k!.label}
-          </p>
-          <h2 className="mt-1 pe-10 font-display text-2xl font-extrabold">{p.name}</h2>
-          {p.description && <LinkifiedText text={p.description} className="mt-2 whitespace-pre-line text-sm" />}
-          {p.kind !== "toilets" && <PlaceExtras id={p.id} description={p.description} />}
-          <GoButton lat={p.lat} lng={p.lng} />
-          {p.kind === "toilets" ? (
-            <p className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
-              Toilettes publiques issues d'OpenStreetMap : horaires et accès peuvent varier. Respecte les lieux et les autres usagers.
-            </p>
-          ) : (
-          <div className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
-            <p className="font-bold text-ink">Avant d'y aller</p>
-            <ul className="mt-1 list-disc space-y-1 ps-4">
-              <li>Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.</li>
-              <li>La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.</li>
-              <li>Consentement toujours, et uniquement entre adultes.</li>
-              <li>Préviens un proche, garde ton téléphone chargé, méfie-toi des guet-apens.</li>
-              <li>
-                Préservatifs, PrEP, dépistage :{" "}
-                <a className="underline" href="https://www.aides.org" target="_blank" rel="noopener">
-                  AIDES
-                </a>
-                .
-              </li>
-            </ul>
-          </div>
-          )}
-          <PlaceChat place={p} />
-          {p.source === "osm" && <p className="mt-3 text-[11px] text-muted">Données © OpenStreetMap contributors (ODbL).</p>}
-        </>
+        <PlaceBeforeYouGo />
       )}
-    </div>
+      <PlaceChat place={p} />
+      {p.source === "osm" && <p className="mt-3 text-[11px] text-muted">{t("Données © OpenStreetMap contributors (ODbL).")}</p>}
+    </DiscoverFiche>
   );
 }
 
@@ -299,6 +300,7 @@ export function ProposePlaceSheet({ at, onClose }: { at: { lat: number; lng: num
 }
 
 export function PlaceChat({ place }: { place: PlaceDetail }) {
+  useLang();
   const here = useHdar((s) => s.here);
   const isAdmin = useAmAdmin();
   const [lines, setLines] = useState<PlaceLine[]>([]);
@@ -345,19 +347,19 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
       .finally(() => setBusy(false));
   };
   return (
-    <div className="mt-4">
-      <h3 className="font-display font-bold">Chat du lieu</h3>
-      <p className="text-xs text-muted">{`Lisible par tous · messages effacés après 24 h · écrire : à moins de ${distLabel(maxKm)}.`}</p>
+    <div className="mt-4" data-testid="place-chat">
+      <h3 className="font-display font-bold">{t("Chat du lieu")}</h3>
+      <p className="text-xs text-muted">{tf("Lisible par tous · messages effacés après 24 h · écrire : à moins de {n}.", distLabel(maxKm))}</p>
       <div className="mt-2 max-h-80 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
-        {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">Aucun message pour l'instant.</p>}
+        {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">{t("Aucun message pour l'instant.")}</p>}
         {lines.map((l) => (
           <p key={l.id} className={l.mine ? "text-end" : ""}>
-            <span className="text-xs font-bold text-muted">{l.mine ? "Toi" : l.pseudo}</span>{" "}
-            {l.body ? <span className="break-words">{l.body}</span> : <span className="mt-1 block"><RoomMedia scope="place" id={l.id} mine={l.mine} /></span>}
+            <span className="text-xs font-bold text-muted" translate="no">{l.mine ? t("Toi") : l.pseudo}</span>{" "}
+            {l.body ? <span className="break-words" translate="no">{l.body}</span> : <span className="mt-1 block"><RoomMedia scope="place" id={l.id} mine={l.mine} /></span>}
             {(l.mine || isAdmin) && (
               <button
                 type="button"
-                aria-label="Supprimer"
+                aria-label={t("Supprimer")}
                 className="ms-1 text-xs text-muted"
                 onClick={() => void placeHide(l.id).then(() => setLines((x) => x.filter((y) => y.id !== l.id)))}
               >
@@ -383,22 +385,22 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
           />
           <input
             className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 text-sm outline-none focus:border-signal"
-            placeholder="Écrire aux gens du coin…"
+            placeholder={t("Écrire aux gens du coin…")}
             maxLength={240}
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
           <button type="submit" disabled={busy || !text.trim()} className="h-11 rounded-full bg-signal px-4 text-sm font-bold text-night disabled:opacity-50">
-            Envoyer
+            {t("Envoyer")}
           </button>
         </form>
       ) : (
         <p className="mt-2 rounded-2xl border border-line px-3 py-2 text-xs text-muted">
           {!registered
-            ? "Crée ton profil pour écrire dans le chat d'un lieu."
+            ? t("Crée ton profil pour écrire dans le chat d'un lieu.")
             : distKm == null
-              ? "Active ta localisation (bouton viseur) pour écrire ici."
-              : `Tu es à ${distLabel(distKm)} : rapproche-toi à moins de ${distLabel(maxKm)} pour écrire.`}
+              ? t("Active ta localisation (bouton viseur) pour écrire ici.")
+              : tf("Tu es à {n} : rapproche-toi à moins de {n} pour écrire.", distLabel(distKm), distLabel(maxKm))}
         </p>
       )}
     </div>
@@ -406,11 +408,12 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
 }
 
 export function Stars({ value, onPick, size = "text-2xl" }: { value: number; onPick?: (n: number) => void; size?: string }) {
+  useLang();
   return (
     <span className={"inline-flex " + size}>
       {[1, 2, 3, 4, 5].map((n) =>
         onPick ? (
-          <button key={n} type="button" aria-label={`${n} étoile${n > 1 ? "s" : ""}`} className="px-0.5" onClick={() => onPick(n)}>
+          <button key={n} type="button" aria-label={n > 1 ? tf("{n} étoiles", n) : t("1 étoile")} className="px-0.5" onClick={() => onPick(n)}>
             <span className={n <= value ? "text-[#fbbf24]" : "text-line"}>★</span>
           </button>
         ) : (
@@ -423,12 +426,26 @@ export function Stars({ value, onPick, size = "text-2xl" }: { value: number; onP
 
 /** Photos, site, contact (lieux partenaires), puis notes et commentaires selon les réglages du propriétaire. */
 function PlaceExtras({ id, description = null }: { id: string; description?: string | null }) {
+  useLang();
   const onboarded = useHdar((s) => s.me.onboarded);
   const openGate = useHdar((s) => s.openGate);
   const [info, setInfo] = useState<PlaceInfo | null>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = () => void placeInfo(id).then(setInfo).catch(() => undefined);
+  const demoInfo = (): PlaceInfo => ({
+    website: null, contact: null, photos: [], owner: false,
+    ratings_on: true, comments_on: true, comments_public: true,
+    avg: null, count: 0, mine: null, comments: [],
+  });
+  const load = () =>
+    void placeInfo(id)
+      .then((r) => {
+        if (r) setInfo(r);
+        else if (discoverDemoActive()) setInfo(demoInfo());
+      })
+      .catch(() => {
+        if (discoverDemoActive()) setInfo(demoInfo());
+      });
   useEffect(load, [id]);
   if (!info) return null;
   const rate = (n: number) => {
@@ -440,7 +457,7 @@ function PlaceExtras({ id, description = null }: { id: string; description?: str
     placeComment(id, text)
       .then(() => {
         setText("");
-        toast(info.comments_public ? "Commentaire publié" : "Commentaire envoyé au lieu");
+        toast(info.comments_public ? t("Commentaire publié") : t("Commentaire envoyé au lieu"));
         load();
       })
       .catch((e: Error) => toast(e.message))
@@ -455,52 +472,52 @@ function PlaceExtras({ id, description = null }: { id: string; description?: str
           ))}
         </div>
       )}
-      <VideoSection target="place" id={id} canEdit={info.owner} title="Vidéos du lieu" />
+      <VideoSection target="place" id={id} canEdit={info.owner} title={t("Vidéos du lieu")} />
       <PlaceLinkButtons links={placeLinks(info.website, info.contact, description)} onOpen={(l) => l.kind === "web" && void placeClick(id).catch(() => undefined)} />
       {info.ratings_on && (
-        <div className="mt-4">
+        <div className="mt-4" data-testid="place-ratings">
           <div className="flex items-center gap-2">
             <Stars value={info.avg ?? 0} size="text-lg" />
-            <span className="text-sm text-muted">{info.count ? `${info.avg} / 5 · ${info.count} note${info.count > 1 ? "s" : ""}` : "Pas encore de note"}</span>
+            <span className="text-sm text-muted">{info.count ? (info.count > 1 ? tf("{n} / 5 · {n} notes", info.avg ?? 0, info.count) : tf("{n} / 5 · {n} note", info.avg ?? 0, info.count)) : t("Pas encore de note")}</span>
           </div>
           {!info.owner && (
             <p className="mt-1 flex items-center gap-2 text-xs text-muted">
-              {info.mine ? "Ta note (touche pour changer, retouche pour retirer) :" : "Note ce lieu :"} <Stars value={info.mine ?? 0} onPick={rate} />
+              {info.mine ? t("Ta note (touche pour changer, retouche pour retirer) :") : t("Note ce lieu :")} <Stars value={info.mine ?? 0} onPick={rate} />
             </p>
           )}
         </div>
       )}
       {info.comments_on && (
-        <div className="mt-4">
-          <h3 className="font-display font-bold">{info.comments_public || info.owner ? "Commentaires" : "Laisser un commentaire au lieu"}</h3>
-          {!info.comments_public && !info.owner && <p className="text-xs text-muted">Ton commentaire sera lu uniquement par l'établissement.</p>}
+        <div className="mt-4" data-testid="place-comments">
+          <h3 className="font-display font-bold">{info.comments_public || info.owner ? t("Commentaires") : t("Laisser un commentaire au lieu")}</h3>
+          {!info.comments_public && !info.owner && <p className="text-xs text-muted">{t("Ton commentaire sera lu uniquement par l'établissement.")}</p>}
           <ul className="mt-2 space-y-2">
             {info.comments.map((c) => (
               <li key={c.id} className="rounded-2xl bg-night p-3 text-sm">
                 <p className="text-xs text-muted">
-                  <b className="text-ink">{c.mine ? "Toi" : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString(locale())}
+                  <b className="text-ink" translate="no">{c.mine ? t("Toi") : c.pseudo}</b> {c.stars ? `· ${"★".repeat(c.stars)}` : ""} · {new Date(c.at).toLocaleDateString(locale())}
                 </p>
-                <p className="mt-1 break-words">{c.body}</p>
-                {c.reply && <p className="mt-1.5 rounded-xl border-s-2 border-[#fbbf24] bg-night px-3 py-1.5 text-xs"><b className="text-[#fbbf24]">Réponse du lieu :</b> {c.reply}</p>}
+                <p className="mt-1 break-words" translate="no">{c.body}</p>
+                {c.reply && <p className="mt-1.5 rounded-xl border-s-2 border-[#fbbf24] bg-night px-3 py-1.5 text-xs"><b className="text-[#fbbf24]">{t("Réponse du lieu :")}</b> <span translate="no">{c.reply}</span></p>}
                 <div className="mt-1 text-end text-xs text-muted">
                   {c.mine ? (
-                    <button type="button" className="underline" onClick={() => void placeCommentDelete(c.id).then(load)}>Supprimer</button>
+                    <button type="button" className="underline" onClick={() => void placeCommentDelete(c.id).then(load)}>{t("Supprimer")}</button>
                   ) : (
                     <button
                       type="button"
                       className="underline"
                       onClick={() => {
-                        const r = window.prompt("Pourquoi signaler ce commentaire ?");
-                        if (r !== null) void placeCommentReport(c.id, r).then(() => toast("Merci, on regarde ça."));
+                        const r = window.prompt(t("Pourquoi signaler ce commentaire ?"));
+                        if (r !== null) void placeCommentReport(c.id, r).then(() => toast(t("Merci, on regarde ça.")));
                       }}
                     >
-                      Signaler
+                      {t("Signaler")}
                     </button>
                   )}
                 </div>
               </li>
             ))}
-            {info.comments.length === 0 && (info.comments_public || info.owner) && <li className="text-xs text-muted">Aucun commentaire pour l'instant.</li>}
+            {info.comments.length === 0 && (info.comments_public || info.owner) && <li className="text-xs text-muted">{t("Aucun commentaire pour l'instant.")}</li>}
           </ul>
           {!info.owner &&
             (onboarded ? (
@@ -513,18 +530,18 @@ function PlaceExtras({ id, description = null }: { id: string; description?: str
               >
                 <input
                   className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 text-sm outline-none focus:border-signal"
-                  placeholder="Ton avis sur ce lieu…"
+                  placeholder={t("Ton avis sur ce lieu…")}
                   maxLength={500}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                 />
                 <button type="submit" disabled={busy || text.trim().length < 2} className="h-11 rounded-full bg-signal px-4 text-sm font-bold text-night disabled:opacity-50">
-                  Publier
+                  {t("Publier")}
                 </button>
               </form>
             ) : (
               <button type="button" className="mt-2 text-sm text-signal underline" onClick={openGate}>
-                Crée ton profil pour commenter
+                {t("Crée ton profil pour commenter")}
               </button>
             ))}
         </div>

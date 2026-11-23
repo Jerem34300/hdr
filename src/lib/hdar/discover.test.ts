@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  emailMatchesWebsite, isDisplayableOutreach, kindNoun, listingLabel, maskEmail,
+  emailMatchesWebsite, isDisplayableOutreach, isPaidPartner, kindNoun, listingLabel, maskEmail,
   publicDescription, websiteDomain,
 } from "./discover-utils.ts";
 
@@ -32,10 +32,16 @@ test("isDisplayableOutreach exclut refus, désinscrits, rebonds et l'absence de 
   assert.equal(isDisplayableOutreach({ status: "sent", lat: null, lng: 2.3 }), false);
 });
 
-test("listingLabel distingue découvrir, vérifié et partenaire", () => {
+test("listingLabel : partenaires actuels = lieu à découvrir, badge Partenaire seulement si payant", () => {
   assert.equal(listingLabel("discover"), "Lieu à découvrir");
   assert.equal(listingLabel("discover", true), "Lieu à découvrir · Vérifié");
-  assert.equal(listingLabel("partner"), "Partenaire");
+  assert.equal(listingLabel("partner"), "Lieu à découvrir");
+  assert.equal(listingLabel("partner", false, true), "Partenaire");
+  assert.equal(listingLabel("partner", true, false), "Lieu à découvrir · Vérifié");
+  assert.equal(isPaidPartner({}), false);
+  assert.equal(isPaidPartner({ paid_partner: true }), true);
+  assert.equal(isPaidPartner({ stripe_subscription: "sub_x" }), true);
+  assert.equal(isPaidPartner({ stripe_subscription: "  " }), false);
 });
 
 test("kindNoun reste neutre dans un pays à risque", () => {

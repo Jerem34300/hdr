@@ -1,5 +1,5 @@
-import { readdirSync } from "node:fs";
-import { join } from "node:path";
+import { createReadStream, existsSync, readdirSync, statSync } from "node:fs";
+import { extname, join, resolve, sep } from "node:path";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -11,6 +11,35 @@ import { grokPwaPlugin } from "./scripts/grok-pwa-plugin.mjs";
 // @ts-expect-error JS plugin alongside the TS vite config
 import { appEnvPlugin } from "./scripts/app-env-plugin.mjs";
 import { isMigrationFile } from "./scripts/migration-plan.mjs";
+
+
+/** Lecture seule du manifest / fichiers photos préparés en local (jamais d'écriture). */
+const PLACE_PHOTOS_DIR = "/workspace/hdar-seo/decouvrir/photos";
+function placePhotosDevPlugin(): Plugin {
+  const root = resolve(PLACE_PHOTOS_DIR);
+  const mime: Record<string, string> = {
+    ".json": "application/json; charset=utf-8",
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+    ".webp": "image/webp", ".gif": "image/gif", ".avif": "image/avif", ".svg": "image/svg+xml",
+  };
+  return {
+    name: "place-photos-dev",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const raw = req.url?.split("?")[0] ?? "";
+        if (!raw.startsWith("/__place-photos/")) return next();
+        let rel = decodeURIComponent(raw.slice("/__place-photos/".length));
+        if (!rel || rel.includes("\0")) { res.statusCode = 400; res.end(); return; }
+        const abs = resolve(root, rel);
+        if (abs !== root && !abs.startsWith(root + sep)) { res.statusCode = 403; res.end(); return; }
+        if (!existsSync(abs) || !statSync(abs).isFile()) { res.statusCode = 404; res.end(); return; }
+        res.setHeader("Content-Type", mime[extname(abs).toLowerCase()] ?? "application/octet-stream");
+        res.setHeader("Cache-Control", "no-store");
+        createReadStream(abs).pipe(res);
+      });
+    },
+  };
+}
 
 /** The files `src/lib/db.ts` globs — same directory, same non-recursive scope. */
 function hasGlobbedMigrations(root: string): boolean {
@@ -197,6 +226,7 @@ export default defineConfig(({ command, isPreview }) => ({
     authPopupPlugin(),
     // Dev-only /__app-env, read by scripts/check-auth-invariant.mjs.
     appEnvPlugin(),
+    placePhotosDevPlugin(),
     // PWA head + ?install=1 tutorial page; runs before Start/Nitro.
     grokPwaPlugin(),
     tailwindcss(),

@@ -21,6 +21,7 @@ import { TrainFront } from "lucide-react";
 import { TipBubble } from "./tip-bubble";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { venueColor, venueIcon, venueOf, type VenueKind } from "@/lib/hdar/venue";
+import { isPaidPartner } from "@/lib/hdar/discover-utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
 import { Layers, LocateFixed, Rocket } from "lucide-react";
@@ -1052,18 +1053,20 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         }
         const pl = c.items[0];
         const k = PLACE_KINDS[pl.kind];
-        const isPartner = pl.partner || pl.listing === "partner";
-        const isDiscover = pl.listing === "discover" || (!isPartner && (pl.kind === "bar" || pl.kind === "club" || pl.kind === "sauna"));
+        const paid = isPaidPartner(pl);
+        const venueGuess = pl.venue ?? venueOf(pl.kind);
+        const isDiscover = !paid && (pl.listing === "discover" || pl.listing === "partner" || pl.kind === "bar" || pl.kind === "club" || pl.kind === "sauna" || venueGuess === "shop" || venueGuess === "exchange");
+        const isPartner = paid;
         const commercial = isPartner || isDiscover;
-        const venue: VenueKind | null = commercial ? (pl.venue ?? venueOf(pl.kind)) : null;
+        const venue: VenueKind | null = commercial ? venueGuess : null;
         const pinColor = pl.pro_boost ? "#fbbf24" : venue ? venueColor(venue) : k.color;
         const pinIcon = venue ? venueIcon(venue) : k.icon;
-        const status = isPartner ? "Partenaire" : isDiscover ? "Lieu à découvrir" : k.label;
+        const status = isPartner ? t("Partenaire") : isDiscover ? t("Lieu à découvrir") : t(k.label);
         return (
           <button
             key={pl.id}
             type="button"
-            data-listing={pl.listing ?? (isPartner ? "partner" : isDiscover ? "discover" : undefined)}
+            data-listing={isPartner ? "partner" : isDiscover ? "discover" : undefined}
             data-venue={venue ?? undefined}
             aria-label={`${status} : ${pl.name}`}
             className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "venue-glow z-[16] size-12" : isPartner ? "venue-glow z-[15] size-10" : isDiscover ? "z-[15] size-10" : "z-10 size-8")}

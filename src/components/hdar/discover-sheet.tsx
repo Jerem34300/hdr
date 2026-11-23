@@ -1,19 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Clock, Globe, Loader2, MapPin, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { GoButton } from "./go-sheet";
+import { LinkifiedText } from "./place-links";
+import { t, useLang } from "@/lib/hdar/i18n";
 import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { readImage } from "@/lib/hdar/media";
 import { ensureSession } from "@/lib/hdar/session";
 import { useHdar } from "@/lib/hdar/store";
 import {
-  DEMO_METHODS, DEMO_VERIFY_CODE, defaultCover, discoverConfirmCode, discoverDemoActive,
+  DEMO_METHODS, DEMO_VERIFY_CODE, discoverConfirmCode, discoverDemoActive,
   discoverDemoCard, discoverMethods, discoverOwnerSave, discoverRequestManual, discoverSendCode,
   emailMatchesWebsite, kindIcon, kindNoun, listingLabel, type DiscoverCard, type DiscoverMethods, type MapListing,
   publicDescription,
 } from "@/lib/hdar/discover";
 import type { PlaceKind, PlaceVenue } from "@/lib/hdar/live";
 import { displayPlaceName, venueColor, venueOf } from "@/lib/hdar/venue";
+import { isPaidPartner } from "@/lib/hdar/discover-utils";
+import { sourceHost, usePlacePhotos } from "@/lib/hdar/place-photos";
 
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
 
@@ -21,7 +25,8 @@ export function toDiscoverCard(p: {
   id: string; kind: PlaceKind; name: string; description?: string; lat: number; lng: number;
   city?: string | null; address?: string | null; hours?: string | null; tags?: string[] | null;
   website?: string | null; listing?: MapListing; verified?: boolean; cover_credit?: string | null;
-  photos?: string[]; partner?: boolean; country?: string | null; venue?: PlaceVenue;
+  photos?: string[]; partner?: boolean; paid_partner?: boolean; stripe_subscription?: string | null;
+  country?: string | null; venue?: PlaceVenue;
 }): DiscoverCard {
   const listing: MapListing = p.listing ?? (p.partner ? "partner" : "discover");
   const venue = p.venue ?? venueOf(p.kind);
@@ -43,70 +48,83 @@ export function toDiscoverCard(p: {
     cover_credit: p.cover_credit ?? null,
     photos: p.photos ?? [],
     partner: listing === "partner",
+    paid_partner: p.paid_partner,
+    stripe_subscription: p.stripe_subscription ?? null,
     country: p.country ?? null,
   };
 }
 
-function coverOf(p: DiscoverCard): string {
-  return p.photos[0] || defaultCover(p.venue ?? p.kind);
-}
-
 export function DiscoverFiche({
-  place, onClose, onClaim, risk = false,
+  place, onClose, onClaim, risk = false, children,
 }: {
   place: DiscoverCard;
   onClose: () => void;
   onClaim?: () => void;
   risk?: boolean;
+  children?: ReactNode;
 }) {
+  useLang();
   const sheetRef = useRef<HTMLDivElement>(null);
   useOpenAtTop(sheetRef, place.id);
-  const badge = listingLabel(place.listing, place.verified);
+  const photos = usePlacePhotos(place);
+  const cover = photos[0]?.url ?? null;
+  const gallery = photos.slice(cover ? 1 : 0);
+  const paid = isPaidPartner(place);
   const venue = place.venue ?? venueOf(place.kind);
+  const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || place.listing === "discover" || place.listing === "partner";
+  const badge = isVenue ? listingLabel(place.listing, place.verified, paid) : kindNoun(venue, risk);
   const noun = kindNoun(venue, risk);
   const accent = venueColor(venue);
-  const gallery = place.photos.length > 1 ? place.photos : place.photos.length === 1 ? place.photos : [];
-  const claimable = place.listing === "discover" && !place.verified && onClaim;
+  const credit = place.cover_credit || sourceHost(photos[0]?.source_url);
+  const claimable = !paid && !!onClaim && place.kind !== "toilets" && isVenue;
   return (
     <div ref={sheetRef} data-sheet-root data-testid="discover-fiche" className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[88%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface shadow-2xl">
       <div className="relative h-52 w-full overflow-hidden rounded-t-3xl bg-night">
-        <img src={coverOf(place)} alt="" className="size-full object-cover" />
+        {cover ? (
+          <img src={cover} alt="" className="size-full object-cover" />
+        ) : (
+          <div className="size-full" style={{ background: `radial-gradient(120% 80% at 50% 0%, ${accent}66, transparent 60%), #0b0b12` }} />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
-        <button type="button" aria-label="Fermer" className="absolute top-3 end-3 flex size-10 items-center justify-center rounded-full bg-night/70" onClick={onClose}>
+        <button type="button" aria-label={t("Fermer")} className="absolute top-3 end-3 flex size-10 items-center justify-center rounded-full bg-night/70" onClick={onClose}>
           <X className="size-5" />
         </button>
         <div className="absolute bottom-3 start-4 end-14">
           <p className="inline-flex items-center gap-1 rounded-full bg-night/80 px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase" style={{ color: accent }}>
-            {kindIcon(venue, risk)} {badge}
+            {kindIcon(venue, risk)} {t(badge)}
           </p>
-          <h2 className="mt-1 font-display text-2xl font-extrabold leading-tight">{displayPlaceName(place.name)}</h2>
+          <h2 className="mt-1 font-display text-2xl font-extrabold leading-tight" translate="no">{displayPlaceName(place.name)}</h2>
         </div>
       </div>
       <div className="space-y-3 px-5 pb-8 pt-2">
         <p className="text-sm text-muted">
-          {noun}
-          {place.city ? ` · ${place.city}` : ""}
-          {place.address ? ` · ${place.address}` : ""}
+          {t(noun)}
+          {place.city ? <span translate="no">{` · ${place.city}`}</span> : ""}
+          {place.address ? <span translate="no">{` · ${place.address}`}</span> : ""}
         </p>
         {place.verified && (
           <p className="inline-flex items-center gap-1.5 rounded-full border border-online/40 bg-online/10 px-3 py-1 text-xs font-bold text-online">
-            <ShieldCheck className="size-3.5" /> Vérifié
+            <ShieldCheck className="size-3.5" /> {t("Vérifié")}
           </p>
         )}
-        {place.description && <p className="whitespace-pre-line text-sm leading-relaxed">{place.description}</p>}
+        {place.description && (
+          <div translate="no">
+            <LinkifiedText text={place.description} className="whitespace-pre-line text-sm leading-relaxed" />
+          </div>
+        )}
         {place.hours && (
           <p className="flex items-start gap-2 text-sm">
             <Clock className="mt-0.5 size-4 shrink-0 text-[#fbbf24]" />
-            <span>{place.hours}</span>
+            <span translate="no">{place.hours}</span>
           </p>
         )}
         {place.website && (
           <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-signal underline" onClick={() => undefined}>
-            <Globe className="size-4 shrink-0" /> Site web
+            <Globe className="size-4 shrink-0" /> {t("Site web")}
           </a>
         )}
         {place.tags.length > 0 && !risk && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5" translate="no">
             {place.tags.map((tag) => (
               <span key={tag} className="rounded-full border border-line bg-night px-2.5 py-0.5 text-[11px] text-muted">{tag}</span>
             ))}
@@ -114,20 +132,21 @@ export function DiscoverFiche({
         )}
         {gallery.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pt-1">
-            {gallery.map((src, i) => (
-              <img key={i} src={src} alt="" className="h-28 w-40 shrink-0 rounded-2xl object-cover" />
+            {gallery.map((ph, i) => (
+              <img key={i} src={ph.url} alt="" className="h-28 w-40 shrink-0 rounded-2xl object-cover" />
             ))}
           </div>
         )}
-        {place.cover_credit && <p className="text-[11px] text-muted">Photo : {place.cover_credit}</p>}
-        <GoButton lat={place.lat} lng={place.lng} label="Itinéraire" />
+        {credit && <p className="text-[11px] text-muted">{t("Photo : {n}").replace("{n}", credit)}</p>}
+        <GoButton lat={place.lat} lng={place.lng} label={t("Itinéraire")} />
         {claimable && (
           <button type="button" data-testid="claim-cta" onClick={onClaim} className="flex h-12 w-full items-center justify-center rounded-full bg-signal font-display font-extrabold text-night">
-            C'est votre lieu ?
+            {t("C'est votre lieu ?")}
           </button>
         )}
+        {children}
         <p className="text-[11px] leading-relaxed text-muted">
-          Réservé aux personnes majeures. Si c'est votre établissement, vous pouvez réclamer la fiche et la compléter après preuve.
+          {t("Réservé aux personnes majeures. Si c'est votre établissement, vous pouvez réclamer la fiche et la compléter après preuve.")}
         </p>
       </div>
     </div>
