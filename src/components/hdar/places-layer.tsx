@@ -160,49 +160,94 @@ export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
   return [...demo, ...live.filter((p) => !ids.has(p.id))];
 }
 
-function PlaceBeforeYouGo() {
+function PlaceBeforeYouGo({ establishment }: { establishment: boolean }) {
   useLang();
+  const aides = (
+    <li>
+      {t("Préservatifs, PrEP, dépistage :")}{" "}
+      <a className="underline" href="https://www.aides.org" target="_blank" rel="noopener" translate="no">
+        AIDES
+      </a>
+      .
+    </li>
+  );
   return (
     <div className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
       <p className="font-bold text-ink">{t("Avant d'y aller")}</p>
       <ul className="mt-1 list-disc space-y-1 ps-4">
-        <li>{t("Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.")}</li>
-        <li>{t("La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.")}</li>
-        <li>{t("Consentement toujours, et uniquement entre adultes.")}</li>
-        <li>{t("Préviens un proche, garde ton téléphone chargé, méfie-toi des guet-apens.")}</li>
-        <li>
-          {t("Préservatifs, PrEP, dépistage :")}{" "}
-          <a className="underline" href="https://www.aides.org" target="_blank" rel="noopener" translate="no">
-            AIDES
-          </a>
-          .
-        </li>
+        {establishment ? (
+          <>
+            <li>{t("Le consentement est obligatoire, uniquement entre adultes.")}</li>
+            <li>{t("Entrée réservée aux personnes majeures (18 ans et plus).")}</li>
+            {aides}
+            <li>{t("Préviens un proche et garde ton téléphone chargé.")}</li>
+            <li>{t("Respecte le lieu, l'équipe et les autres personnes présentes.")}</li>
+          </>
+        ) : (
+          <>
+            <li>{t("Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.")}</li>
+            <li>{t("La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.")}</li>
+            <li>{t("Consentement toujours, et uniquement entre adultes.")}</li>
+            <li>{t("Préviens un proche, garde ton téléphone chargé, méfie-toi des guet-apens.")}</li>
+            {aides}
+          </>
+        )}
       </ul>
     </div>
   );
 }
 
+function samePlaceName(a: string, b: string) {
+  const n = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+  return n(a) === n(b);
+}
+
+function mergePlacePhotos(base: PlaceDetail, live: PlaceDetail): PlaceDetail {
+  const photos = (live.photos && live.photos.length ? live.photos : base.photos) ?? [];
+  return { ...base, ...live, photos, name: base.name || live.name };
+}
+
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {
   const [p, setP] = useState<PlaceDetail | null>(null);
   const [claim, setClaim] = useState(false);
+  const [edit, setEdit] = useState(false);
+  const [owner, setOwner] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   useOpenAtTop(sheetRef, id);
   useEffect(() => {
-    if (discoverDemoActive()) {
-      const d = discoverDemoCard(id);
-      if (d) setP({ ...d, source: d.source ?? "demo", source_ref: d.source_ref ?? null } as PlaceDetail);
-    } else {
-      void getPlace(id).then(setP).catch(() => undefined);
+    let stop = false;
+    const demo = discoverDemoActive() ? discoverDemoCard(id) : null;
+    if (demo) {
+      setP({ ...demo, source: demo.source ?? "demo", source_ref: demo.source_ref ?? null, photos: demo.photos ?? [] } as PlaceDetail);
     }
+    const applyLive = (live: PlaceDetail) => {
+      if (stop) return;
+      setP((prev) => (prev ? mergePlacePhotos(prev, live) : live));
+    };
+    void getPlace(id).then((live) => { if (live) applyLive(live); }).catch(() => undefined);
+    // Fiche démo (ex. demo-impact) : récupérer les photos déjà en colonne sur le lieu réel homonyme.
+    if (demo && !(demo.photos && demo.photos.length)) {
+      const pad = 0.03;
+      void listPlaces(demo.lat - pad, demo.lng - pad, demo.lat + pad, demo.lng + pad)
+        .then(async (pins) => {
+          const match = pins.find((x) => x.id !== demo.id && samePlaceName(x.name, demo.name));
+          if (!match) return null;
+          return getPlace(match.id);
+        })
+        .then((live) => { if (live) applyLive(live); })
+        .catch(() => undefined);
+    }
+    void placeInfo(id).then((info) => { if (!stop) setOwner(!!info?.owner); }).catch(() => undefined);
     const h = useHdar.getState().here;
     void placeSeen(id, h?.lat ?? null, h?.lng ?? null).catch(() => undefined);
     setOpenPlace(id);
     setClaim(false);
-    return () => setOpenPlace(null);
+    setEdit(false);
+    return () => { stop = true; setOpenPlace(null); };
   }, [id]);
   useLang();
-  if (p && claim) {
-    return <DiscoverClaimFromStore place={toDiscoverCard(p)} onClose={() => setClaim(false)} />;
+  if (p && (claim || edit)) {
+    return <DiscoverClaimFromStore place={toDiscoverCard(p)} startAt={edit ? "edit" : "intro"} onClose={() => { setClaim(false); setEdit(false); }} />;
   }
   if (!p) {
     return (
@@ -218,23 +263,25 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
   const paid = isPaidPartner(p);
   const venue = p.venue ?? venueOf(p.kind);
   const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || p.listing === "discover" || p.listing === "partner";
-  const claimable = !paid && p.kind !== "toilets" && isVenue;
+  const claimable = !paid && !p.verified && p.kind !== "toilets" && isVenue;
+  const establishment = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange";
   return (
     <DiscoverFiche
       place={toDiscoverCard({ ...p, photos: p.photos ?? [] })}
       onClose={onClose}
       onClaim={claimable ? () => setClaim(true) : undefined}
+      onEdit={owner ? () => setEdit(true) : undefined}
       risk={risk}
-    >
-      {p.kind !== "toilets" && <PlaceExtras id={p.id} description={p.description} />}
-      {p.kind === "toilets" ? (
+      reviews={p.kind !== "toilets" ? <PlaceExtras id={p.id} description={p.description} onlyReviews /> : undefined}
+      chat={<PlaceChat place={p} />}
+      notice={p.kind === "toilets" ? (
         <p className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
           {t("Toilettes publiques issues d'OpenStreetMap : horaires et accès peuvent varier. Respecte les lieux et les autres usagers.")}
         </p>
       ) : (
-        <PlaceBeforeYouGo />
+        <PlaceBeforeYouGo establishment={establishment} />
       )}
-      <PlaceChat place={p} />
+    >
       {p.source === "osm" && <p className="mt-3 text-[11px] text-muted">{t("Données © OpenStreetMap contributors (ODbL).")}</p>}
     </DiscoverFiche>
   );
@@ -307,6 +354,7 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const registered = useHdar((s) => s.me.onboarded);
   const distKm = here ? haversine(here, { lat: place.lat, lng: place.lng }) / 1000 : null;
   // Même règle que le serveur (v104), pour tout le monde : profil + position + distance selon le type de lieu.
@@ -346,13 +394,16 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
       .catch((e: Error) => toast(e.message))
       .finally(() => setBusy(false));
   };
+  const preview = lines.slice(-5);
   return (
-    <div className="mt-4" data-testid="place-chat">
+    <div className="mt-2 rounded-2xl border border-line bg-night/40 p-3" data-testid="place-chat">
       <h3 className="font-display font-bold">{t("Chat du lieu")}</h3>
+      <p className="mt-0.5 text-sm text-ink">{t("Discute du lieu et donne-toi rendez-vous ici.")}</p>
       <p className="text-xs text-muted">{tf("Lisible par tous · messages effacés après 24 h · écrire : à moins de {n}.", distLabel(maxKm))}</p>
-      <div className="mt-2 max-h-80 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
-        {lines.length === 0 && <p className="py-4 text-center text-xs text-muted">{t("Aucun message pour l'instant.")}</p>}
-        {lines.map((l) => (
+      <div className="mt-2 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl bg-night p-3 text-sm">
+        {lines.length === 0 && <p className="py-3 text-center text-xs text-muted">{t("Aucun message pour l'instant. Écris pour discuter ou proposer un rendez-vous.")}</p>}
+        {lines.length > 5 && <p className="text-[11px] text-muted">{tf("Aperçu des {n} derniers messages.", 5)}</p>}
+        {preview.map((l) => (
           <p key={l.id} className={l.mine ? "text-end" : ""}>
             <span className="text-xs font-bold text-muted" translate="no">{l.mine ? t("Toi") : l.pseudo}</span>{" "}
             {l.body ? <span className="break-words" translate="no">{l.body}</span> : <span className="mt-1 block"><RoomMedia scope="place" id={l.id} mine={l.mine} /></span>}
@@ -385,7 +436,8 @@ export function PlaceChat({ place }: { place: PlaceDetail }) {
           />
           <input
             className="h-11 min-w-0 flex-1 rounded-full border border-line bg-night px-4 text-sm outline-none focus:border-signal"
-            placeholder={t("Écrire aux gens du coin…")}
+            ref={inputRef}
+            placeholder={t("Écrire ou proposer un rendez-vous…")}
             maxLength={240}
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -425,7 +477,7 @@ export function Stars({ value, onPick, size = "text-2xl" }: { value: number; onP
 }
 
 /** Photos, site, contact (lieux partenaires), puis notes et commentaires selon les réglages du propriétaire. */
-function PlaceExtras({ id, description = null }: { id: string; description?: string | null }) {
+function PlaceExtras({ id, description = null, onlyReviews = false }: { id: string; description?: string | null; onlyReviews?: boolean }) {
   useLang();
   const onboarded = useHdar((s) => s.me.onboarded);
   const openGate = useHdar((s) => s.openGate);
@@ -465,15 +517,15 @@ function PlaceExtras({ id, description = null }: { id: string; description?: str
   };
   return (
     <>
-      {info.photos.length > 0 && (
+      {!onlyReviews && info.photos.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {info.photos.map((src, i) => (
             <img key={i} src={src.startsWith("data:image/") ? src : ""} alt="" className="h-32 shrink-0 rounded-2xl object-cover" />
           ))}
         </div>
       )}
-      <VideoSection target="place" id={id} canEdit={info.owner} title={t("Vidéos du lieu")} />
-      <PlaceLinkButtons links={placeLinks(info.website, info.contact, description)} onOpen={(l) => l.kind === "web" && void placeClick(id).catch(() => undefined)} />
+      {!onlyReviews && <VideoSection target="place" id={id} canEdit={info.owner} title={t("Vidéos du lieu")} />}
+      {!onlyReviews && <PlaceLinkButtons links={placeLinks(info.website, info.contact, description)} onOpen={(l) => l.kind === "web" && void placeClick(id).catch(() => undefined)} />}
       {info.ratings_on && (
         <div className="mt-4" data-testid="place-ratings">
           <div className="flex items-center gap-2">

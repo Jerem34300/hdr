@@ -1068,6 +1068,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             type="button"
             data-listing={isPartner ? "partner" : isDiscover ? "discover" : undefined}
             data-venue={venue ?? undefined}
+            data-place-id={pl.id}
             aria-label={`${status} : ${pl.name}`}
             className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "venue-glow z-[16] size-12" : isPartner ? "venue-glow z-[15] size-10" : isDiscover ? "z-[15] size-10" : "z-10 size-8")}
             style={{ left: c.x, top: c.y, borderColor: pinColor, boxShadow: isPartner || pl.pro_boost ? `0 0 12px 3px ${pinColor}cc, 0 0 26px 8px ${pinColor}66` : undefined }}

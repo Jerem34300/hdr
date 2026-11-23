@@ -18,6 +18,7 @@ type ManifestRow = {
 };
 
 const DEV_MANIFEST = "/__place-photos/photos.json";
+const COLUMN_CACHE = "/__column-photos.json";
 const PHOTOS_PREFIX = "/__place-photos/";
 
 let manifestPromise: Promise<Map<string, PlacePhoto[]>> | null = null;
@@ -56,27 +57,38 @@ function rowsFromUnknown(data: unknown): ManifestRow[] {
   return [];
 }
 
+function addRows(map: Map<string, PlacePhoto[]>, rows: ManifestRow[]) {
+  for (const row of rows) {
+    const id = row.place_id || row.id;
+    if (!id) continue;
+    const photos: PlacePhoto[] = [];
+    for (const p of row.photos ?? []) {
+      const raw = p.url_storage_ou_fichier || p.url || "";
+      const url = resolveUrl(raw);
+      if (!url) continue;
+      photos.push({ url, source_url: p.source_url ?? p.sourceUrl ?? null });
+    }
+    if (!photos.length) continue;
+    const prev = map.get(id) ?? [];
+    map.set(id, mergePhotos(prev, photos));
+  }
+}
+
+async function loadOne(url: string, map: Map<string, PlacePhoto[]>) {
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) return;
+    addRows(map, rowsFromUnknown(await r.json()));
+  } catch {
+    /* source absente */
+  }
+}
+
 async function loadManifest(): Promise<Map<string, PlacePhoto[]>> {
   const map = new Map<string, PlacePhoto[]>();
-  try {
-    const r = await fetch(DEV_MANIFEST, { cache: "no-store" });
-    if (!r.ok) return map;
-    const rows = rowsFromUnknown(await r.json());
-    for (const row of rows) {
-      const id = row.place_id || row.id;
-      if (!id) continue;
-      const photos: PlacePhoto[] = [];
-      for (const p of row.photos ?? []) {
-        const raw = p.url_storage_ou_fichier || p.url || "";
-        const url = resolveUrl(raw);
-        if (!url) continue;
-        photos.push({ url, source_url: p.source_url ?? p.sourceUrl ?? null });
-      }
-      if (photos.length) map.set(id, photos);
-    }
-  } catch {
-    /* manifest absent : on s'en tient à la colonne photos */
-  }
+  // Cache local des photos déjà en colonne (dev, sans session) + manifest de l'agent photos.
+  await loadOne(COLUMN_CACHE, map);
+  await loadOne(DEV_MANIFEST, map);
   return map;
 }
 

@@ -55,12 +55,16 @@ export function toDiscoverCard(p: {
 }
 
 export function DiscoverFiche({
-  place, onClose, onClaim, risk = false, children,
+  place, onClose, onClaim, onEdit, risk = false, reviews, chat, notice, children,
 }: {
   place: DiscoverCard;
   onClose: () => void;
   onClaim?: () => void;
+  onEdit?: () => void;
   risk?: boolean;
+  reviews?: ReactNode;
+  chat?: ReactNode;
+  notice?: ReactNode;
   children?: ReactNode;
 }) {
   useLang();
@@ -76,7 +80,7 @@ export function DiscoverFiche({
   const noun = kindNoun(venue, risk);
   const accent = venueColor(venue);
   const credit = place.cover_credit || sourceHost(photos[0]?.source_url);
-  const claimable = !paid && !!onClaim && place.kind !== "toilets" && isVenue;
+  const claimable = !paid && !place.verified && !!onClaim && place.kind !== "toilets" && isVenue;
   return (
     <div ref={sheetRef} data-sheet-root data-testid="discover-fiche" className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[88%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface shadow-2xl">
       <div className="relative h-52 w-full overflow-hidden rounded-t-3xl bg-night">
@@ -96,7 +100,7 @@ export function DiscoverFiche({
           <h2 className="mt-1 font-display text-2xl font-extrabold leading-tight" translate="no">{displayPlaceName(place.name)}</h2>
         </div>
       </div>
-      <div className="space-y-3 px-5 pb-8 pt-2">
+      <div className="space-y-3 px-5 pb-24 pt-2">
         <p className="text-sm text-muted">
           {t(noun)}
           {place.city ? <span translate="no">{` · ${place.city}`}</span> : ""}
@@ -112,24 +116,6 @@ export function DiscoverFiche({
             <LinkifiedText text={place.description} className="whitespace-pre-line text-sm leading-relaxed" />
           </div>
         )}
-        {place.hours && (
-          <p className="flex items-start gap-2 text-sm">
-            <Clock className="mt-0.5 size-4 shrink-0 text-[#fbbf24]" />
-            <span translate="no">{place.hours}</span>
-          </p>
-        )}
-        {place.website && (
-          <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-signal underline" onClick={() => undefined}>
-            <Globe className="size-4 shrink-0" /> {t("Site web")}
-          </a>
-        )}
-        {place.tags.length > 0 && !risk && (
-          <div className="flex flex-wrap gap-1.5" translate="no">
-            {place.tags.map((tag) => (
-              <span key={tag} className="rounded-full border border-line bg-night px-2.5 py-0.5 text-[11px] text-muted">{tag}</span>
-            ))}
-          </div>
-        )}
         {gallery.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pt-1">
             {gallery.map((ph, i) => (
@@ -138,16 +124,46 @@ export function DiscoverFiche({
           </div>
         )}
         {credit && <p className="text-[11px] text-muted">{t("Photo : {n}").replace("{n}", credit)}</p>}
-        <GoButton lat={place.lat} lng={place.lng} label={t("Itinéraire")} />
-        {claimable && (
-          <button type="button" data-testid="claim-cta" onClick={onClaim} className="flex h-12 w-full items-center justify-center rounded-full bg-signal font-display font-extrabold text-night">
-            {t("C'est votre lieu ?")}
-          </button>
+        {reviews}
+        {chat}
+        {(place.hours || place.website || place.tags.length > 0) && (
+          <div className="space-y-2 pt-1">
+            {place.hours && (
+              <p className="flex items-start gap-2 text-sm">
+                <Clock className="mt-0.5 size-4 shrink-0 text-[#fbbf24]" />
+                <span translate="no">{place.hours}</span>
+              </p>
+            )}
+            {place.website && (
+              <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-signal underline" onClick={() => undefined}>
+                <Globe className="size-4 shrink-0" /> {t("Site web")}
+              </a>
+            )}
+            {place.tags.length > 0 && !risk && (
+              <div className="flex flex-wrap gap-1.5" translate="no">
+                {place.tags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-line bg-night px-2.5 py-0.5 text-[11px] text-muted">{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
         )}
+        <GoButton lat={place.lat} lng={place.lng} label={t("Itinéraire")} />
+        {notice}
         {children}
-        <p className="text-[11px] leading-relaxed text-muted">
-          {t("Réservé aux personnes majeures. Si c'est votre établissement, vous pouvez réclamer la fiche et la compléter après preuve.")}
-        </p>
+        {onEdit ? (
+          <p className="pt-1 text-center text-xs">
+            <button type="button" data-testid="edit-cta" onClick={onEdit} className="text-signal underline underline-offset-2">
+              {t("Modifier ma fiche")}
+            </button>
+          </p>
+        ) : claimable ? (
+          <p className="pt-1 text-center text-xs text-muted">
+            <button type="button" data-testid="claim-cta" onClick={onClaim} className="underline underline-offset-2">
+              {t("C'est votre lieu ?")}
+            </button>
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -451,20 +467,20 @@ export function DiscoverStandalone({ mode }: { mode: string }) {
 }
 
 /** Utilisé par le bouton de la fiche démo sur la carte. */
-export function DiscoverClaimFromStore({ place, onClose }: { place: DiscoverCard; onClose: () => void }) {
+export function DiscoverClaimFromStore({ place, onClose, startAt }: { place: DiscoverCard; onClose: () => void; startAt?: ClaimStep }) {
   const onboarded = useHdar((s) => s.me.onboarded);
   const openGate = useHdar((s) => s.openGate);
   if (!onboarded && !discoverDemoActive()) {
     return (
       <div className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 rounded-t-3xl border border-b-0 border-line bg-surface p-5 pb-8">
-        <h2 className="font-display text-xl font-extrabold">C'est votre lieu ?</h2>
-        <p className="mt-2 text-sm text-muted">Crée d'abord un profil, réservé aux personnes majeures.</p>
-        <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={openGate}>Créer mon profil</button>
-        <button type="button" className="mt-2 h-11 w-full rounded-full border border-line" onClick={onClose}>Retour</button>
+        <h2 className="font-display text-xl font-extrabold">{startAt === "edit" ? t("Modifier ma fiche") : t("C'est votre lieu ?")}</h2>
+        <p className="mt-2 text-sm text-muted">{t("Crée d'abord un profil, réservé aux personnes majeures.")}</p>
+        <button type="button" className="mt-4 h-12 w-full rounded-full bg-signal font-bold text-night" onClick={openGate}>{t("Créer mon profil")}</button>
+        <button type="button" className="mt-2 h-11 w-full rounded-full border border-line" onClick={onClose}>{t("Retour")}</button>
       </div>
     );
   }
-  return <DiscoverClaimFlow place={place} demo={discoverDemoActive()} methods={discoverDemoActive() ? DEMO_METHODS : undefined} onClose={onClose} />;
+  return <DiscoverClaimFlow place={place} demo={discoverDemoActive()} methods={discoverDemoActive() ? DEMO_METHODS : undefined} startAt={startAt} onClose={onClose} />;
 }
 
 export function DiscoverMapPinHint({ listing, verified }: { listing?: MapListing; verified?: boolean }) {

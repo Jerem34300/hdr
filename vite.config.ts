@@ -27,6 +27,14 @@ function placePhotosDevPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const raw = req.url?.split("?")[0] ?? "";
+        if (raw === "/__column-photos.json") {
+          const col = resolve("/tmp/hdar-column-photos.json");
+          if (!existsSync(col) || !statSync(col).isFile()) { res.statusCode = 404; res.end(); return; }
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.setHeader("Cache-Control", "no-store");
+          createReadStream(col).pipe(res);
+          return;
+        }
         if (!raw.startsWith("/__place-photos/")) return next();
         let rel = decodeURIComponent(raw.slice("/__place-photos/".length));
         if (!rel || rel.includes("\0")) { res.statusCode = 400; res.end(); return; }
