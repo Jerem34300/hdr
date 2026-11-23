@@ -7,8 +7,10 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { PlaceLinkButtons, placeLinks } from "./place-links";
-import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, placeWriteKm, distLabel, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, placeWriteKm, distLabel, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin, type PlaceVenue } from "@/lib/hdar/live";
 import { discoverDemoActive, discoverDemoCard, discoverDemoPins } from "@/lib/hdar/discover";
+import { hasPlaceFacts, isEstablishmentPlace, placeFactsFallbackKey } from "@/lib/hdar/place-facts";
+import { usePlaceFacts } from "@/lib/hdar/place-photos";
 import { isPaidPartner } from "@/lib/hdar/discover-utils";
 import { venueOf } from "@/lib/hdar/venue";
 import { DiscoverClaimFromStore, DiscoverFiche, toDiscoverCard } from "./discover-sheet";
@@ -160,8 +162,11 @@ export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
   return [...demo, ...live.filter((p) => !ids.has(p.id))];
 }
 
-function PlaceBeforeYouGo({ establishment }: { establishment: boolean }) {
+function PlaceBeforeYouGo({ place }: { place: { id: string; name?: string | null; city?: string | null; kind: PlaceKind; venue?: PlaceVenue | null; hours?: string | null; tags?: string[] | null } }) {
   useLang();
+  const facts = usePlaceFacts(place);
+  const known = hasPlaceFacts(facts);
+  const establishment = isEstablishmentPlace(place);
   const aides = (
     <li>
       {t("Préservatifs, PrEP, dépistage :")}{" "}
@@ -171,28 +176,51 @@ function PlaceBeforeYouGo({ establishment }: { establishment: boolean }) {
       .
     </li>
   );
+  const factItems = (
+    <>
+      {facts.hours && (
+        <li>
+          <span className="font-semibold text-ink">{t("Horaires")} : </span>
+          <span translate="no">{facts.hours}</span>
+        </li>
+      )}
+      {facts.entry && (
+        <li>
+          <span className="font-semibold text-ink">{t("Entrée")} : </span>
+          <span translate="no">{facts.entry}</span>
+        </li>
+      )}
+      {facts.events.length > 0 && facts.events.map((line, i) => (
+        <li key={`ev-${i}`}>
+          {i === 0 ? <span className="font-semibold text-ink">{t("Soirées")} : </span> : null}
+          <span translate="no">{line}</span>
+        </li>
+      ))}
+      {facts.tags.length > 0 && (
+        <li>
+          <span className="font-semibold text-ink">{t("Ambiance")} : </span>
+          <span translate="no">{facts.tags.join(" · ")}</span>
+        </li>
+      )}
+    </>
+  );
   return (
-    <div className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
+    <div data-testid="before-you-go" className="mt-4 rounded-2xl bg-night p-4 text-xs leading-relaxed text-muted">
       <p className="font-bold text-ink">{t("Avant d'y aller")}</p>
-      <ul className="mt-1 list-disc space-y-1 ps-4">
-        {establishment ? (
-          <>
-            <li>{t("Le consentement est obligatoire, uniquement entre adultes.")}</li>
-            <li>{t("Entrée réservée aux personnes majeures (18 ans et plus).")}</li>
-            {aides}
-            <li>{t("Préviens un proche et garde ton téléphone chargé.")}</li>
-            <li>{t("Respecte le lieu, l'équipe et les autres personnes présentes.")}</li>
-          </>
-        ) : (
-          <>
-            <li>{t("Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.")}</li>
-            <li>{t("La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.")}</li>
-            <li>{t("Consentement toujours, et uniquement entre adultes.")}</li>
-            <li>{t("Préviens un proche, garde ton téléphone chargé, méfie-toi des guet-apens.")}</li>
-            {aides}
-          </>
-        )}
-      </ul>
+      {establishment ? (
+        <ul className="mt-1 list-disc space-y-1 ps-4">
+          {known ? factItems : <li>{t(placeFactsFallbackKey(place))}</li>}
+        </ul>
+      ) : (
+        <ul className="mt-1 list-disc space-y-1 ps-4">
+          {known && factItems}
+          <li>{t("Discrétion : c'est un lieu public, respecte les autres usagers, les familles et les riverains.")}</li>
+          <li>{t("La loi s'applique : l'exhibition sexuelle dans un lieu accessible au public est un délit. Le naturisme n'est autorisé que sur les zones prévues.")}</li>
+          <li>{t("Consentement toujours, et uniquement entre adultes.")}</li>
+          <li>{t("Préviens un proche, garde ton téléphone chargé, méfie-toi des guet-apens.")}</li>
+          {aides}
+        </ul>
+      )}
     </div>
   );
 }
@@ -264,7 +292,6 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
   const venue = p.venue ?? venueOf(p.kind);
   const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || p.listing === "discover" || p.listing === "partner";
   const claimable = !paid && !p.verified && p.kind !== "toilets" && isVenue;
-  const establishment = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange";
   return (
     <DiscoverFiche
       place={toDiscoverCard({ ...p, photos: p.photos ?? [] })}
@@ -279,7 +306,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
           {t("Toilettes publiques issues d'OpenStreetMap : horaires et accès peuvent varier. Respecte les lieux et les autres usagers.")}
         </p>
       ) : (
-        <PlaceBeforeYouGo establishment={establishment} />
+        <PlaceBeforeYouGo place={p} />
       )}
     >
       {p.source === "osm" && <p className="mt-3 text-[11px] text-muted">{t("Données © OpenStreetMap contributors (ODbL).")}</p>}

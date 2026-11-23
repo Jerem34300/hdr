@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Clock, Globe, Loader2, MapPin, ShieldCheck, X } from "lucide-react";
+import { Check, Globe, Loader2, MapPin, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { GoButton } from "./go-sheet";
 import { LinkifiedText } from "./place-links";
@@ -124,45 +124,33 @@ export function DiscoverFiche({
           </div>
         )}
         {credit && <p className="text-[11px] text-muted">{t("Photo : {n}").replace("{n}", credit)}</p>}
+        <div data-testid="place-links" className="flex flex-wrap items-center gap-3 pt-1">
+          {place.website && (
+            <a href={place.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-signal underline" onClick={() => undefined}>
+              <Globe className="size-4 shrink-0" /> {t("Site web")}
+            </a>
+          )}
+          <GoButton lat={place.lat} lng={place.lng} label={t("Itinéraire")} className="inline-flex h-10 items-center gap-2 rounded-full border border-line px-4 text-sm font-semibold text-signal" />
+        </div>
         {reviews}
         {chat}
-        {(place.hours || place.website || place.tags.length > 0) && (
-          <div className="space-y-2 pt-1">
-            {place.hours && (
-              <p className="flex items-start gap-2 text-sm">
-                <Clock className="mt-0.5 size-4 shrink-0 text-[#fbbf24]" />
-                <span translate="no">{place.hours}</span>
-              </p>
-            )}
-            {place.website && (
-              <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-signal underline" onClick={() => undefined}>
-                <Globe className="size-4 shrink-0" /> {t("Site web")}
-              </a>
-            )}
-            {place.tags.length > 0 && !risk && (
-              <div className="flex flex-wrap gap-1.5" translate="no">
-                {place.tags.map((tag) => (
-                  <span key={tag} className="rounded-full border border-line bg-night px-2.5 py-0.5 text-[11px] text-muted">{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        <GoButton lat={place.lat} lng={place.lng} label={t("Itinéraire")} />
         {notice}
         {children}
         {onEdit ? (
-          <p className="pt-1 text-center text-xs">
-            <button type="button" data-testid="edit-cta" onClick={onEdit} className="text-signal underline underline-offset-2">
+          <div data-testid="edit-box" className="rounded-2xl border border-signal/40 bg-signal/10 p-4">
+            <p className="font-display text-sm font-bold text-ink">{t("Vous êtes le propriétaire ?")}</p>
+            <button type="button" data-testid="edit-cta" onClick={onEdit} className="mt-3 inline-flex h-10 items-center rounded-full bg-signal px-4 text-sm font-bold text-night">
               {t("Modifier ma fiche")}
             </button>
-          </p>
+          </div>
         ) : claimable ? (
-          <p className="pt-1 text-center text-xs text-muted">
-            <button type="button" data-testid="claim-cta" onClick={onClaim} className="underline underline-offset-2">
-              {t("C'est votre lieu ?")}
+          <div data-testid="claim-box" className="rounded-2xl border border-signal/40 bg-signal/10 p-4">
+            <p className="font-display text-sm font-bold text-ink">{t("Vous êtes le propriétaire ?")}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">{t("Réclamez votre fiche gratuitement pour ajouter vos photos, horaires et soirées.")}</p>
+            <button type="button" data-testid="claim-cta" onClick={onClaim} className="mt-3 inline-flex h-10 items-center rounded-full bg-signal px-4 text-sm font-bold text-night">
+              {t("Réclamer ma fiche")}
             </button>
-          </p>
+          </div>
         ) : null}
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { mergePlaceFacts, textOrNull, type PlaceFacts, type PlaceFactsSource } from "./place-facts";
 
 /** Photo d'un lieu : fichier/stockage + URL d'origine (pour retrait sur demande). */
 export type PlacePhoto = {
@@ -6,12 +7,25 @@ export type PlacePhoto = {
   source_url: string | null;
 };
 
+export type PlaceManifestInfo = {
+  photos: PlacePhoto[];
+  hours: string | null;
+  entry: string | null;
+  events: unknown;
+};
+
 type ManifestRow = {
   place_id?: string;
   id?: string;
+  name?: string;
+  city?: string;
+  hours?: unknown;
+  entry?: unknown;
+  events?: unknown;
   photos?: Array<{
     url_storage_ou_fichier?: string;
     url?: string;
+    file?: string;
     source_url?: string | null;
     sourceUrl?: string | null;
   }>;
@@ -21,7 +35,16 @@ const DEV_MANIFEST = "/__place-photos/photos.json";
 const COLUMN_CACHE = "/__column-photos.json";
 const PHOTOS_PREFIX = "/__place-photos/";
 
-let manifestPromise: Promise<Map<string, PlacePhoto[]>> | null = null;
+function normName(s: string): string {
+  return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, " ").trim();
+}
+
+function nameKey(name: string, city?: string | null): string {
+  return `name:${normName(name)}|${normName(city || "")}`;
+}
+
+
+let manifestPromise: Promise<Map<string, PlaceManifestInfo>> | null = null;
 
 function resolveUrl(raw: string): string {
   const u = raw.trim();
@@ -57,24 +80,47 @@ function rowsFromUnknown(data: unknown): ManifestRow[] {
   return [];
 }
 
-function addRows(map: Map<string, PlacePhoto[]>, rows: ManifestRow[]) {
+function emptyInfo(): PlaceManifestInfo {
+  return { photos: [], hours: null, entry: null, events: null };
+}
+
+function writeInfo(map: Map<string, PlaceManifestInfo>, key: string, photos: PlacePhoto[], row: ManifestRow) {
+  const prev = map.get(key) ?? emptyInfo();
+  map.set(key, {
+    photos: mergePhotos(prev.photos, photos),
+    hours: textOrNull(row.hours) ?? prev.hours,
+    entry: textOrNull(row.entry) ?? prev.entry,
+    events: row.events !== undefined && row.events !== null ? row.events : prev.events,
+  });
+}
+
+function addRows(map: Map<string, PlaceManifestInfo>, rows: ManifestRow[]) {
   for (const row of rows) {
-    const id = row.place_id || row.id;
-    if (!id) continue;
     const photos: PlacePhoto[] = [];
     for (const p of row.photos ?? []) {
-      const raw = p.url_storage_ou_fichier || p.url || "";
+      const raw = p.url_storage_ou_fichier || p.url || p.file || "";
       const url = resolveUrl(raw);
       if (!url) continue;
       photos.push({ url, source_url: p.source_url ?? p.sourceUrl ?? null });
     }
-    if (!photos.length) continue;
-    const prev = map.get(id) ?? [];
-    map.set(id, mergePhotos(prev, photos));
+    const id = row.place_id || row.id;
+    if (id) writeInfo(map, id, photos, row);
+    if (row.name) writeInfo(map, nameKey(row.name, row.city), photos, row);
   }
 }
 
-async function loadOne(url: string, map: Map<string, PlacePhoto[]>) {
+function pickInfo(map: Map<string, PlaceManifestInfo>, place: { id: string; name?: string | null; city?: string | null }): PlaceManifestInfo {
+  const byId = map.get(place.id);
+  const byName = place.name ? map.get(nameKey(place.name, place.city)) : undefined;
+  return {
+    photos: byId?.photos.length ? byId.photos : (byName?.photos ?? []),
+    hours: byId?.hours ?? byName?.hours ?? null,
+    entry: byId?.entry ?? byName?.entry ?? null,
+    events: byId?.events ?? byName?.events ?? null,
+  };
+}
+
+async function loadOne(url: string, map: Map<string, PlaceManifestInfo>) {
   try {
     const r = await fetch(url, { cache: "no-store" });
     if (!r.ok) return;
@@ -84,15 +130,15 @@ async function loadOne(url: string, map: Map<string, PlacePhoto[]>) {
   }
 }
 
-async function loadManifest(): Promise<Map<string, PlacePhoto[]>> {
-  const map = new Map<string, PlacePhoto[]>();
+async function loadManifest(): Promise<Map<string, PlaceManifestInfo>> {
+  const map = new Map<string, PlaceManifestInfo>();
   // Cache local des photos déjà en colonne (dev, sans session) + manifest de l'agent photos.
   await loadOne(COLUMN_CACHE, map);
   await loadOne(DEV_MANIFEST, map);
   return map;
 }
 
-function manifestMap(): Promise<Map<string, PlacePhoto[]>> {
+function manifestMap(): Promise<Map<string, PlaceManifestInfo>> {
   if (!manifestPromise) manifestPromise = loadManifest();
   return manifestPromise;
 }
@@ -121,20 +167,31 @@ function mergePhotos(column: PlacePhoto[], extra: PlacePhoto[]): PlacePhoto[] {
   return out;
 }
 
-/** Photos d'une fiche : colonne `photos` + manifest local (dev), sans couverture générique. */
-export function usePlacePhotos(place: { id: string; photos?: string[] | null }): PlacePhoto[] {
-  const column = fromColumn(place.photos);
-  const [extra, setExtra] = useState<PlacePhoto[]>([]);
+function useManifest(place: { id: string; name?: string | null; city?: string | null }): PlaceManifestInfo {
+  const [info, setInfo] = useState<PlaceManifestInfo>(emptyInfo);
   useEffect(() => {
     let stop = false;
     void manifestMap().then((m) => {
-      if (!stop) setExtra(m.get(place.id) ?? []);
+      if (!stop) setInfo(pickInfo(m, place));
     });
     return () => {
       stop = true;
     };
-  }, [place.id]);
-  return mergePhotos(column, extra);
+  }, [place.id, place.name, place.city]);
+  return info;
+}
+
+/** Photos d'une fiche : colonne `photos` + manifest local (dev), sans couverture générique. */
+export function usePlacePhotos(place: { id: string; name?: string | null; city?: string | null; photos?: string[] | null }): PlacePhoto[] {
+  const column = fromColumn(place.photos);
+  const extra = useManifest(place);
+  return mergePhotos(column, extra.photos);
+}
+
+/** Horaires, entrée, soirées : colonnes du lieu, puis champs du manifest s'ils arrivent. */
+export function usePlaceFacts(place: PlaceFactsSource & { id: string; name?: string | null; city?: string | null }): PlaceFacts {
+  const extra = useManifest(place);
+  return mergePlaceFacts(place, extra);
 }
 
 export function sourceHost(url: string | null | undefined): string | null {

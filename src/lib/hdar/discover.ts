@@ -224,7 +224,24 @@ function verifiedPartner(): DiscoverCard {
   return cardFrom({ ...seed, listing: "partner", verified: true });
 }
 
-const ALL_DEMO = [...PARIS, ...BERLIN].map(cardFrom);
+// Fiches démo hors Paris/Berlin (captures, ouverture par ?fiche=), données réelles seulement.
+const EXTRA: DemoSeed[] = [
+  {
+    id: "b728bcc2-2f5c-44c7-b7a6-cb8761bd1299",
+    kind: "sauna",
+    venue: "sauna",
+    name: "Koncept Sauna",
+    lat: 43.6094894,
+    lng: 3.8655883,
+    city: "Montpellier",
+    address: "10 bis avenue de Lodève, 34070",
+    website: "https://konceptsauna.com",
+    description: "Sauna gay aux Arceaux : bar, sauna, hammam, jacuzzi et espaces détente, avec une soirée à thème chaque jour de la semaine (cruising, bears, jeunes, naturiste, blackout…). Gratuit pour les moins de 22 ans.",
+    country: "FR",
+  },
+];
+
+const ALL_DEMO = [...PARIS, ...BERLIN, ...EXTRA].map(cardFrom);
 
 export function discoverDemoCards(city: "paris" | "berlin" | "all" = "all"): DiscoverCard[] {
   if (city === "paris") return PARIS.map(cardFrom);

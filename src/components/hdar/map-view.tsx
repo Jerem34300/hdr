@@ -111,7 +111,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const outingsOn = layers.nature || layers.public;
   const transitOn = layers.station || layers.metro || layers.bus || layers.airport;
   const adsOn = layers.ads;
-  const [placeId, setPlaceId] = useState<string | null>(null);
+  const [placeId, setPlaceId] = useState<string | null>(() => {
+    if (!import.meta.env.DEV || typeof location === "undefined") return null;
+    return new URLSearchParams(location.search).get("fiche");
+  });
   const [transitStop, setTransitStop] = useState<TransitStop | null>(() => (import.meta.env.DEV && typeof location !== "undefined" && location.search.includes("stopdemo") ? (location.search.includes("stopdemo=agde-bus") ? { ref: "osm:way/202628237", kind: "bus", name: "Gare SNCF", lat: 43.316946, lng: 3.4660526 } : location.search.includes("stopdemo=agde") ? { ref: "osm:node/agde", kind: "station", name: "Agde", lat: 43.3171, lng: 3.4659 } : { ref: "node/demo", kind: "station", name: "La Crau", lat: 43.1497, lng: 6.0735 }) : null));
   const [proposing, setProposing] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);

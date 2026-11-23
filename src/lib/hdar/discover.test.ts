@@ -79,3 +79,35 @@ test("displayPlaceName humanise un identifiant technique", () => {
   assert.equal(displayPlaceName("le-mask"), "Le Mask");
   assert.equal(displayPlaceName("la-bonbonniere-2"), "La Bonbonniere");
 });
+
+import { hasPlaceFacts, isEstablishmentPlace, mergePlaceFacts, placeFactsFallbackKey, textOrNull } from "./place-facts.ts";
+
+test("mergePlaceFacts privilégie la colonne et ne comble qu'avec le manifest", () => {
+  const merged = mergePlaceFacts(
+    { hours: "  19 h – 2 h  ", tags: ["cocktails", ""], entry: null },
+    { hours: "autre", entry: "18+", events: [{ name: "Cruising", when: "lundi", price: 15 }, { name: "Bears", when: "mardi" }] },
+  );
+  assert.equal(merged.hours, "19 h – 2 h");
+  assert.equal(merged.entry, "18+");
+  assert.deepEqual(merged.events, ["Cruising · lundi · 15 €", "Bears · mardi"]);
+  assert.deepEqual(merged.tags, ["cocktails"]);
+  assert.equal(hasPlaceFacts(merged), true);
+  assert.equal(hasPlaceFacts(mergePlaceFacts({})), false);
+  assert.equal(textOrNull("  "), null);
+  assert.equal(textOrNull(["", "  "]), null);
+});
+
+test("isEstablishmentPlace distingue un établissement d'un lieu public", () => {
+  assert.equal(isEstablishmentPlace({ kind: "bar" }), true);
+  assert.equal(isEstablishmentPlace({ kind: "sauna", venue: "sauna" }), true);
+  assert.equal(isEstablishmentPlace({ kind: "club", venue: "cruising" }), true);
+  assert.equal(isEstablishmentPlace({ kind: "park" }), false);
+  assert.equal(isEstablishmentPlace({ kind: "cruising", venue: "cruising" }), false);
+});
+
+test("placeFactsFallbackKey suit le type du lieu", () => {
+  assert.match(placeFactsFallbackKey({ kind: "sauna" }), /sauna/);
+  assert.match(placeFactsFallbackKey({ kind: "bar" }), /bar/);
+  assert.match(placeFactsFallbackKey({ kind: "club" }), /club/);
+  assert.match(placeFactsFallbackKey({ kind: "other", venue: "shop" }), /boutique/);
+});
