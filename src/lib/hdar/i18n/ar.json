@@ -2234,5 +2234,13 @@
 "Réservé aux personnes majeures. Tes justificatifs servent uniquement à cette vérification, et sont effacés après décision.": "مخصّص للبالغين. تُستخدم وثائقك لهذه المراجعة فقط وتُحذف بعد القرار.",
 "Sinon, une demande manuelle, validée par un administrateur, avec un justificatif.": "وإلا فطلب يدوي يراجعه مشرف مع وثيقة إثبات.",
 "Vous êtes le propriétaire de « {n} » ?": "هل أنت صاحب « {n} »؟",
-"Vérifié": "موثّق"
+"Vérifié": "موثّق",
+"Bar": "بار",
+"Club": "نادي",
+"Sauna": "ساونا",
+"Boutique": "متجر",
+"Club échangiste": "نادي",
+"Bar cruising": "بار",
+"Halo + pastille : partenaire": "هالة وشارة: شريك",
+"même couleur selon le type, halo pour les partenaires": "نفس اللون حسب النوع، هالة للشركاء"
 }

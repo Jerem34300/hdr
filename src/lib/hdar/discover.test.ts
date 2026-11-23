@@ -49,3 +49,27 @@ test("publicDescription retire les mots sensibles dans un pays à risque", () =>
   assert.equal(/gay|lgbt/i.test(t), false);
   assert.equal(publicDescription("Bar du centre.", "FR"), "Bar du centre.");
 });
+
+import { displayPlaceName, venueColor, venueOf } from "./venue.ts";
+
+test("venueOf mappe les types de prospection, pas les restos inventés", () => {
+  assert.equal(venueOf("bar"), "bar");
+  assert.equal(venueOf("club"), "club");
+  assert.equal(venueOf("sauna"), "sauna");
+  assert.equal(venueOf("other"), "shop");
+  assert.equal(venueOf("club-echange"), "exchange");
+  assert.equal(venueOf("cruising-bar"), "cruising");
+  assert.equal(venueOf("club", "club-echange"), "exchange");
+  assert.equal(kindNoun("club-echange"), "Club échangiste");
+  assert.equal(kindNoun("other"), "Boutique");
+  assert.equal(kindNoun("sauna", true), "Établissement");
+  assert.notEqual(venueColor("bar"), venueColor("club"));
+  assert.notEqual(venueColor("bar"), venueColor("sauna"));
+  assert.notEqual(venueColor("shop"), venueColor("exchange"));
+});
+
+test("displayPlaceName humanise un identifiant technique", () => {
+  assert.equal(displayPlaceName("L'Impact Bar"), "L'Impact Bar");
+  assert.equal(displayPlaceName("le-mask"), "Le Mask");
+  assert.equal(displayPlaceName("la-bonbonniere-2"), "La Bonbonniere");
+});

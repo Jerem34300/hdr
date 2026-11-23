@@ -2227,5 +2227,13 @@
 "Réservé aux personnes majeures. Tes justificatifs servent uniquement à cette vérification, et sont effacés après décision.": "Riservato ai maggiorenni. I tuoi giustificativi servono solo a questa verifica e vengono cancellati dopo la decisione.",
 "Sinon, une demande manuelle, validée par un administrateur, avec un justificatif.": "Altrimenti, una richiesta manuale con un giustificativo, convalidata da un amministratore.",
 "Vous êtes le propriétaire de « {n} » ?": "Sei il titolare di « {n} »?",
-"Vérifié": "Verificato"
+"Vérifié": "Verificato",
+"Bar": "Bar",
+"Club": "Club",
+"Sauna": "Sauna",
+"Boutique": "Negozio",
+"Club échangiste": "Club scambista",
+"Bar cruising": "Bar cruising",
+"Halo + pastille : partenaire": "Aureola e distintivo: partner",
+"même couleur selon le type, halo pour les partenaires": "stesso colore per tipo, alone per i partner"
 }

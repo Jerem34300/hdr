@@ -211,6 +211,14 @@
 }
 @media (prefers-reduced-motion: reduce) { .partner-glow { animation: none; } }
 
+/* Halo partenaire : la couleur vient du type de lieu (box-shadow en ligne). */
+.venue-glow { animation: venue-glow 1.8s ease-in-out infinite; }
+@keyframes venue-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.28); }
+}
+@media (prefers-reduced-motion: reduce) { .venue-glow { animation: none; } }
+
 /* Boost: shiny CTA / cards */
 .boost-text { background: linear-gradient(90deg, #FA6F6C, #f472b6, #fbbf24); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .boost-cta, .boost-card { position: relative; overflow: hidden; isolation: isolate;

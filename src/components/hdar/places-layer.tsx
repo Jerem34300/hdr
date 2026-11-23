@@ -30,9 +30,9 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   promenade: { label: "Promenade", icon: "🚶", color: "#5eead4" },
   other: { label: "Autre lieu", icon: "📌", color: "#c4b5fd" },
   toilets: { label: "Toilettes publiques", icon: "🚻", color: "#94a3b8" },
-  bar: { label: "Bar", icon: "🍸", color: "#f472b6" },
-  club: { label: "Club", icon: "🪩", color: "#a78bfa" },
-  sauna: { label: "Sauna", icon: "♨️", color: "#fbbf24" },
+  bar: { label: "Bar", icon: "🍸", color: "#FF6B9A" },
+  club: { label: "Club", icon: "🪩", color: "#8B7CFF" },
+  sauna: { label: "Sauna", icon: "♨️", color: "#F5B942" },
 };
 const PROPOSABLE: PlaceKind[] = ["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"];
 const LAYER_KEY = "hdar-places-layer";

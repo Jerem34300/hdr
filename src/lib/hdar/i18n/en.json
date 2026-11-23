@@ -2234,5 +2234,13 @@
 "Réservé aux personnes majeures. Tes justificatifs servent uniquement à cette vérification, et sont effacés après décision.": "18+ only. Your documents are used only for this check and are deleted after a decision.",
 "Sinon, une demande manuelle, validée par un administrateur, avec un justificatif.": "Otherwise, a manual request reviewed by an admin, with a supporting document.",
 "Vous êtes le propriétaire de « {n} » ?": "Are you the owner of “{n}”?",
-"Vérifié": "Verified"
+"Vérifié": "Verified",
+"Bar": "Bar",
+"Club": "Club",
+"Sauna": "Sauna",
+"Boutique": "Shop",
+"Club échangiste": "Swinger club",
+"Bar cruising": "Cruising bar",
+"Halo + pastille : partenaire": "Glow + badge: partner",
+"même couleur selon le type, halo pour les partenaires": "same color by type, glow for partners"
 }

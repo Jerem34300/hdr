@@ -2232,5 +2232,13 @@
 "Réservé aux personnes majeures. Tes justificatifs servent uniquement à cette vérification, et sont effacés après décision.": "Solo mayores de 18. Tus justificantes sirven solo para esta comprobación y se borran tras la decisión.",
 "Sinon, une demande manuelle, validée par un administrateur, avec un justificatif.": "Si no, una solicitud manual validada por un administrador, con un justificante.",
 "Vous êtes le propriétaire de « {n} » ?": "¿Eres el propietario de « {n} »?",
-"Vérifié": "Verificado"
+"Vérifié": "Verificado",
+"Bar": "Bar",
+"Club": "Club",
+"Sauna": "Sauna",
+"Boutique": "Tienda",
+"Club échangiste": "Club liberal",
+"Bar cruising": "Bar cruising",
+"Halo + pastille : partenaire": "Halo y distintivo: partner",
+"même couleur selon le type, halo pour les partenaires": "el mismo color según el tipo, halo para los partners"
 }

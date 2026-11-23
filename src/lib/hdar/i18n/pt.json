@@ -2230,5 +2230,13 @@
 "Réservé aux personnes majeures. Tes justificatifs servent uniquement à cette vérification, et sont effacés après décision.": "Reservado a maiores de 18 anos. Os teus comprovativos servem só para esta verificação e são apagados após a decisão.",
 "Sinon, une demande manuelle, validée par un administrateur, avec un justificatif.": "Senão, um pedido manual validado por um administrador, com um comprovativo.",
 "Vous êtes le propriétaire de « {n} » ?": "És o proprietário de « {n} »?",
-"Vérifié": "Verificado"
+"Vérifié": "Verificado",
+"Bar": "Bar",
+"Club": "Clube",
+"Sauna": "Sauna",
+"Boutique": "Loja",
+"Club échangiste": "Clube liberal",
+"Bar cruising": "Bar cruising",
+"Halo + pastille : partenaire": "Brilho e crachá: parceiro",
+"même couleur selon le type, halo pour les partenaires": "a mesma cor por tipo, brilho para os parceiros"
 }

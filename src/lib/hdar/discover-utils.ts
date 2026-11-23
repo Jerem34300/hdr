@@ -1,16 +1,23 @@
 export type MapListing = "discover" | "partner";
 
+import { venueCover, venueIcon as venueGlyph, venueLabel, venueOf } from "./venue.ts";
+
 export const DEFAULT_COVERS: Record<string, string> = {
   bar: "/places/cover-bar.svg",
   club: "/places/cover-club.svg",
   sauna: "/places/cover-sauna.svg",
-  other: "/places/cover-other.svg",
+  shop: "/places/cover-shop.svg",
+  other: "/places/cover-shop.svg",
+  exchange: "/places/cover-exchange.svg",
+  "club-echange": "/places/cover-exchange.svg",
+  cruising: "/places/cover-cruising.svg",
+  "cruising-bar": "/places/cover-cruising.svg",
 };
 
 export const RISK_COUNTRIES = new Set(["DZ", "MA", "TN", "SN", "CM"]);
 
 export function defaultCover(kind: string): string {
-  return DEFAULT_COVERS[kind] ?? DEFAULT_COVERS.other;
+  return venueCover(venueOf(kind));
 }
 
 export function listingLabel(listing: MapListing | undefined, verified = false): string {
@@ -20,23 +27,11 @@ export function listingLabel(listing: MapListing | undefined, verified = false):
 }
 
 export function kindNoun(kind: string, risk = false): string {
-  if (risk) {
-    if (kind === "bar" || kind === "cruising-bar") return "Bar";
-    if (kind === "club" || kind === "club-echange") return "Club";
-    if (kind === "sauna") return "Établissement";
-    return "Lieu";
-  }
-  if (kind === "bar" || kind === "cruising-bar") return "Bar";
-  if (kind === "club" || kind === "club-echange") return "Club";
-  if (kind === "sauna") return "Sauna";
-  return "Établissement";
+  return venueLabel(venueOf(kind), risk);
 }
 
-export function kindIcon(kind: string): string {
-  if (kind === "bar" || kind === "cruising-bar") return "🍸";
-  if (kind === "club" || kind === "club-echange") return "🪩";
-  if (kind === "sauna") return "♨️";
-  return "📌";
+export function kindIcon(kind: string, risk = false): string {
+  return venueGlyph(venueOf(kind), risk);
 }
 
 export function maskEmail(email: string | null | undefined): string | null {

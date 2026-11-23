@@ -12,7 +12,8 @@ import {
   emailMatchesWebsite, kindIcon, kindNoun, listingLabel, type DiscoverCard, type DiscoverMethods, type MapListing,
   publicDescription,
 } from "@/lib/hdar/discover";
-import type { PlaceKind } from "@/lib/hdar/live";
+import type { PlaceKind, PlaceVenue } from "@/lib/hdar/live";
+import { displayPlaceName, venueColor, venueOf } from "@/lib/hdar/venue";
 
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
 
@@ -20,12 +21,14 @@ export function toDiscoverCard(p: {
   id: string; kind: PlaceKind; name: string; description?: string; lat: number; lng: number;
   city?: string | null; address?: string | null; hours?: string | null; tags?: string[] | null;
   website?: string | null; listing?: MapListing; verified?: boolean; cover_credit?: string | null;
-  photos?: string[]; partner?: boolean; country?: string | null;
+  photos?: string[]; partner?: boolean; country?: string | null; venue?: PlaceVenue;
 }): DiscoverCard {
   const listing: MapListing = p.listing ?? (p.partner ? "partner" : "discover");
+  const venue = p.venue ?? venueOf(p.kind);
   return {
     id: p.id,
     kind: p.kind,
+    venue,
     name: p.name,
     description: publicDescription(p.description, p.country),
     lat: p.lat,
@@ -45,7 +48,7 @@ export function toDiscoverCard(p: {
 }
 
 function coverOf(p: DiscoverCard): string {
-  return p.photos[0] || defaultCover(p.kind);
+  return p.photos[0] || defaultCover(p.venue ?? p.kind);
 }
 
 export function DiscoverFiche({
@@ -59,7 +62,9 @@ export function DiscoverFiche({
   const sheetRef = useRef<HTMLDivElement>(null);
   useOpenAtTop(sheetRef, place.id);
   const badge = listingLabel(place.listing, place.verified);
-  const noun = kindNoun(place.kind, risk);
+  const venue = place.venue ?? venueOf(place.kind);
+  const noun = kindNoun(venue, risk);
+  const accent = venueColor(venue);
   const gallery = place.photos.length > 1 ? place.photos : place.photos.length === 1 ? place.photos : [];
   const claimable = place.listing === "discover" && !place.verified && onClaim;
   return (
@@ -71,10 +76,10 @@ export function DiscoverFiche({
           <X className="size-5" />
         </button>
         <div className="absolute bottom-3 start-4 end-14">
-          <p className="inline-flex items-center gap-1 rounded-full bg-night/80 px-2.5 py-1 text-[11px] font-bold tracking-wide text-[#fde68a] uppercase">
-            {kindIcon(place.kind)} {badge}
+          <p className="inline-flex items-center gap-1 rounded-full bg-night/80 px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase" style={{ color: accent }}>
+            {kindIcon(venue, risk)} {badge}
           </p>
-          <h2 className="mt-1 font-display text-2xl font-extrabold leading-tight">{place.name}</h2>
+          <h2 className="mt-1 font-display text-2xl font-extrabold leading-tight">{displayPlaceName(place.name)}</h2>
         </div>
       </div>
       <div className="space-y-3 px-5 pb-8 pt-2">
@@ -122,7 +127,7 @@ export function DiscoverFiche({
           </button>
         )}
         <p className="text-[11px] leading-relaxed text-muted">
-          Infos publiques uniquement (nom, type, ville, site). Réservé aux personnes majeures. Si c'est votre établissement, vous pouvez réclamer la fiche et la compléter après preuve.
+          Réservé aux personnes majeures. Si c'est votre établissement, vous pouvez réclamer la fiche et la compléter après preuve.
         </p>
       </div>
     </div>
@@ -403,15 +408,18 @@ export function DiscoverClaimFlow({
 
 /** Écrans isolés pour les captures (fond nuit, pas de carte). */
 export function DiscoverStandalone({ mode }: { mode: string }) {
-  const place = discoverDemoCard(mode === "verified" ? "demo-comptoir" : "demo-comptoir")!;
-  const verified = mode === "verified" ? { ...place, verified: true, photos: [defaultCover("bar"), defaultCover("club")] } : place;
+  const ficheId = mode === "fiche-sauna" ? "demo-sauna" : mode === "verified" ? "demo-impact" : "demo-bar";
+  const place = discoverDemoCard(ficheId)!;
+  const verified = mode === "verified"
+    ? { ...place, listing: "partner" as const, partner: true, verified: true }
+    : place;
   const [open, setOpen] = useState(true);
   if (!open) return <div className="flex h-dvh items-center justify-center bg-night text-muted">Fermé</div>;
-  if (mode === "fiche" || mode === "verified") {
+  if (mode === "fiche" || mode === "fiche-bar" || mode === "fiche-sauna" || mode === "verified") {
     return (
       <main className="relative h-dvh overflow-hidden bg-night text-ink">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#2a1020,transparent_45%)]" />
-        <DiscoverFiche place={verified} onClose={() => setOpen(false)} onClaim={mode === "fiche" ? () => undefined : undefined} />
+        <DiscoverFiche place={verified} onClose={() => setOpen(false)} onClaim={mode === "verified" ? undefined : () => undefined} />
       </main>
     );
   }
