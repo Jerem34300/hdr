@@ -20,11 +20,12 @@ import { setTransitLayer, transitLayerOn, useTransit, type TransitStop } from "@
 import { TrainFront } from "lucide-react";
 import { TipBubble } from "./tip-bubble";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
+import { venueColor, venueIcon, venueOf, type VenueKind } from "@/lib/hdar/venue";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
 import { Layers, LocateFixed, Rocket } from "lucide-react";
 import { layerOfPlace, useLayers, type LayerKey } from "@/lib/hdar/map-layers";
-import { LayerRow } from "./map-layer-row";
+import { LayerRow, VenueLegend } from "./map-layer-row";
 import { Link } from "@tanstack/react-router";
 import { Safe } from "./safe";
 import { BoostNudge } from "./boost-nudge";
@@ -1051,17 +1052,29 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         }
         const pl = c.items[0];
         const k = PLACE_KINDS[pl.kind];
+        const isPartner = pl.partner || pl.listing === "partner";
+        const isDiscover = pl.listing === "discover" || (!isPartner && (pl.kind === "bar" || pl.kind === "club" || pl.kind === "sauna"));
+        const commercial = isPartner || isDiscover;
+        const venue: VenueKind | null = commercial ? (pl.venue ?? venueOf(pl.kind)) : null;
+        const pinColor = pl.pro_boost ? "#fbbf24" : venue ? venueColor(venue) : k.color;
+        const pinIcon = venue ? venueIcon(venue) : k.icon;
+        const status = isPartner ? "Partenaire" : isDiscover ? "Lieu à découvrir" : k.label;
         return (
           <button
             key={pl.id}
             type="button"
-            aria-label={`${k.label} : ${pl.name}`}
-            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "partner-glow z-[16] size-12 shadow-[0_0_24px_#fbbf24]" : pl.partner ? "partner-glow z-[15] size-10" : "z-10 size-8")}
-            style={{ left: c.x, top: c.y, borderColor: pl.pro_boost ? "#fbbf24" : k.color }}
+            data-listing={pl.listing ?? (isPartner ? "partner" : isDiscover ? "discover" : undefined)}
+            data-venue={venue ?? undefined}
+            aria-label={`${status} : ${pl.name}`}
+            className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "venue-glow z-[16] size-12" : isPartner ? "venue-glow z-[15] size-10" : isDiscover ? "z-[15] size-10" : "z-10 size-8")}
+            style={{ left: c.x, top: c.y, borderColor: pinColor, boxShadow: isPartner || pl.pro_boost ? `0 0 12px 3px ${pinColor}cc, 0 0 26px 8px ${pinColor}66` : undefined }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setPlaceId(pl.id)}
           >
-            {k.icon}
+            {pinIcon}
+            {isPartner && (
+              <span className="absolute -bottom-0.5 -end-0.5 flex size-3.5 items-center justify-center rounded-full border border-night bg-white text-[8px] font-black leading-none text-night" aria-hidden>✓</span>
+            )}
             {act.places.has(pl.id) && <span className="absolute -top-1 -end-1 size-3 rounded-full border-2 border-night bg-signal" />}
           </button>
         );
@@ -1195,8 +1208,11 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           </div>
         )}
         {layersOpen && (
-          <div data-sheet-root className="mt-2 w-56 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
-            <p className="px-2 pt-1 text-[11px] font-bold tracking-wider text-muted uppercase">Lieux publics</p>
+          <div data-sheet-root className="mt-2 w-64 rounded-2xl border border-line bg-night/95 p-2 text-sm shadow-xl">
+            <p className="px-2 pt-1 text-[11px] font-bold tracking-wider text-muted uppercase">{t("Lieux à découvrir")}</p>
+            <LayerRow k="partners" on={layers.partners} set={setLayer} />
+            <VenueLegend />
+            <p className="px-2 pt-2 text-[11px] font-bold tracking-wider text-muted uppercase">Lieux publics</p>
             {(["station", "metro", "bus", "airport", "beach", "nature", "public", "toilets", "ads"] as const).map((k) => <LayerRow key={k} k={k} on={layers[k]} set={setLayer} />)}
             <button
               type="button"

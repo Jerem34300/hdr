@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Sauna">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a1208"/>
+      <stop offset="1" stop-color="#3a2410"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="80%" r="70%">
+      <stop offset="0" stop-color="#F5B942" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#F5B942" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8A5A2B"/>
+      <stop offset="1" stop-color="#5C3A18"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect width="1200" height="800" fill="url(#glow)"/>
+  <!-- wooden benches -->
+  <g fill="url(#wood)">
+    <rect x="80" y="620" width="1040" height="36" rx="6"/>
+    <rect x="140" y="540" width="920" height="32" rx="6"/>
+    <rect x="200" y="460" width="800" height="28" rx="6"/>
+  </g>
+  <g fill="#F5B942" opacity=".15">
+    <rect x="80" y="620" width="1040" height="8" rx="4"/>
+    <rect x="140" y="540" width="920" height="8" rx="4"/>
+    <rect x="200" y="460" width="800" height="8" rx="4"/>
+  </g>
+  <!-- stove -->
+  <g transform="translate(600 390)">
+    <rect x="-70" y="10" width="140" height="80" rx="8" fill="#2a1a0c"/>
+    <rect x="-70" y="10" width="140" height="80" rx="8" fill="none" stroke="#F5B942" stroke-width="4" opacity=".7"/>
+    <circle cx="-30" cy="40" r="14" fill="#F5B942"/>
+    <circle cx="0" cy="52" r="16" fill="#FFD27A"/>
+    <circle cx="28" cy="38" r="13" fill="#F5B942"/>
+    <circle cx="-8" cy="28" r="10" fill="#FFE8B0"/>
+  </g>
+  <!-- steam -->
+  <g fill="none" stroke="#FFE8B0" stroke-linecap="round" opacity=".55">
+    <path d="M560 380 C550 320 580 300 570 250" stroke-width="8"/>
+    <path d="M600 360 C620 300 580 270 610 210" stroke-width="10"/>
+    <path d="M640 380 C660 320 640 290 655 240" stroke-width="8"/>
+  </g>
+  <g fill="#F5B942" opacity=".2" filter="url(#soft)">
+    <ellipse cx="570" cy="240" rx="28" ry="16"/>
+    <ellipse cx="615" cy="200" rx="36" ry="20"/>
+    <ellipse cx="655" cy="230" rx="26" ry="14"/>
+  </g>
+</svg>

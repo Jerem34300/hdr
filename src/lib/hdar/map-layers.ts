@@ -1,19 +1,18 @@
 import { create } from "zustand";
 import type { PlaceKind } from "./live";
 
-/** Calques de la carte, un par catégorie (menu « couches »). Les lieux partenaires sont un calque à part. */
+/** Calques de la carte, un par catégorie (menu « couches »). Lieux à découvrir et partenaires partagent un calque. */
 export type LayerKey = "station" | "metro" | "bus" | "airport" | "beach" | "nature" | "public" | "toilets" | "ads" | "partners";
 export const LAYER_ORDER: LayerKey[] = ["partners", "station", "metro", "bus", "airport", "beach", "nature", "public", "toilets", "ads"];
 export type Layers = Record<LayerKey, boolean>;
-/** v3 : calques publics importés OFF par défaut ; partenaires ON. Les lieux membres
- *  (bars, clubs, propositions…) restent visibles hors calques (voir map-view). */
+/** v3 : calques publics importés OFF par défaut ; lieux à découvrir / partenaires ON. */
 const KEY = "hdar-layers-v3";
 const DEFAULTS: Layers = { station: false, metro: false, bus: false, airport: false, beach: false, nature: false, public: false, toilets: false, ads: false, partners: true };
 
 /** Groupe d'un lieu de la carte (les partenaires ne sont jamais mélangés aux lieux publics). */
-export function layerOfPlace(kind: PlaceKind, partner: boolean): LayerKey {
-  // Partenaires : toujours affichés (aucun calque ne les masque, voir map-view).
-  if (partner) return "partners";
+export function layerOfPlace(kind: PlaceKind, partner: boolean, listing?: string): LayerKey {
+  // Lieux à découvrir et partenaires : même calque (voir map-view).
+  if (listing === "discover" || listing === "partner" || partner) return "partners";
   if (kind === "toilets") return "toilets";
   if (kind === "beach") return "beach";
   if (kind === "park" || kind === "garden" || kind === "viewpoint" || kind === "promenade") return "nature";

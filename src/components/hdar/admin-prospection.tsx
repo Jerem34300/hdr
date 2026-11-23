@@ -12,6 +12,7 @@ import {
   outreachToCsv, type OutreachFilters, type OutreachRow, type OutreachStats,
 } from "@/lib/hdar/prospection-admin";
 import { prospectionDemoData } from "@/lib/hdar/prospection-demo-data";
+import { adminClaimRequests, adminClaimReview, adminPendingPhotos, adminPhotosReview, type AdminClaimRow, type AdminPhotoRow } from "@/lib/hdar/discover";
 
 const COUNTER_META: { key: keyof OutreachStats; label: string; Icon: typeof Mail; tone: string }[] = [
   { key: "envoyes", label: "Envoyés", Icon: Mail, tone: "text-ink" },
@@ -283,6 +284,7 @@ export function ProspectionTab({ adminKey, demo }: { adminKey: string; demo?: { 
           ))}
         </ul>
       )}
+      <DiscoverAdmin adminKey={adminKey} demo={!!demo} />
     </div>
   );
 }
@@ -296,5 +298,59 @@ export function ProspectionTabDemo() {
       <p className="mb-4 text-xs text-muted">Aperçu local — données réelles sanitizées (domaines seulement). Migration v131 non appliquée.</p>
       <ProspectionTab adminKey="demo" demo={prospectionDemoData} />
     </main>
+  );
+}
+
+
+function DiscoverAdmin({ adminKey, demo }: { adminKey: string; demo?: boolean }) {
+  const [claims, setClaims] = useState<AdminClaimRow[] | null>(demo ? [] : null);
+  const [photos, setPhotos] = useState<AdminPhotoRow[] | null>(demo ? [] : null);
+  const load = useCallback(async () => {
+    if (demo) return;
+    try {
+      setClaims(await adminClaimRequests(adminKey));
+      setPhotos(await adminPendingPhotos(adminKey));
+    } catch {
+      setClaims([]);
+      setPhotos([]);
+    }
+  }, [adminKey, demo]);
+  useEffect(() => { void load(); }, [load]);
+  return (
+    <section className="mt-8 space-y-4">
+      <h3 className="font-display text-lg font-extrabold">Réclamations et photos</h3>
+      <p className="text-xs text-muted">Demandes manuelles « C'est votre lieu ? » et photos envoyées par un propriétaire vérifié. Le badge Vérifié n'est donné qu'après preuve.</p>
+      <div className="space-y-2">
+        <p className="text-sm font-bold">Demandes en attente</p>
+        {claims && claims.filter((c) => c.status === "pending").length === 0 && <p className="text-sm text-muted">Aucune demande pour le moment.</p>}
+        {claims?.filter((c) => c.status === "pending").map((c) => (
+          <div key={c.id} className="rounded-2xl border border-line bg-night p-3 text-sm">
+            <p className="font-bold">{c.name}{c.city ? ` · ${c.city}` : ""}</p>
+            <p className="mt-1 text-muted">{c.justification}</p>
+            <p className="mt-1 text-xs text-muted">{c.email || "pas d'e-mail"}{c.has_proof ? " · justificatif joint" : ""}</p>
+            <div className="mt-2 flex gap-2">
+              <button type="button" className="h-9 rounded-full bg-online px-3 text-xs font-bold text-night" onClick={() => void adminClaimReview(adminKey, c.id, true).then(load)}>Approuver</button>
+              <button type="button" className="h-9 rounded-full border border-line px-3 text-xs" onClick={() => void adminClaimReview(adminKey, c.id, false).then(load)}>Refuser</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="space-y-2">
+        <p className="text-sm font-bold">Photos à valider</p>
+        {photos && photos.length === 0 && <p className="text-sm text-muted">Aucune photo en attente.</p>}
+        {photos?.map((ph) => (
+          <div key={ph.id} className="rounded-2xl border border-line bg-night p-3 text-sm">
+            <p className="font-bold">{ph.name}{ph.city ? ` · ${ph.city}` : ""} · {ph.pending_n} photo{ph.pending_n > 1 ? "s" : ""}</p>
+            <div className="mt-2 flex gap-2 overflow-x-auto">
+              {ph.pending_photos.map((src, i) => <img key={i} src={src} alt="" className="h-20 w-28 shrink-0 rounded-xl object-cover" />)}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button type="button" className="h-9 rounded-full bg-online px-3 text-xs font-bold text-night" onClick={() => void adminPhotosReview(adminKey, ph.id, true).then(load)}>Publier</button>
+              <button type="button" className="h-9 rounded-full border border-line px-3 text-xs" onClick={() => void adminPhotosReview(adminKey, ph.id, false).then(load)}>Refuser</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

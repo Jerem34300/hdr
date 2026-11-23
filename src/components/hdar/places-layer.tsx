@@ -9,6 +9,10 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { LinkifiedText, PlaceLinkButtons, placeLinks } from "./place-links";
 import { getPlace, placeClick, placeComment, placeCommentDelete, placeCommentReport, placeInfo, placeRate, placeSeen, type PlaceInfo, listPlaces, listToilets, listOutings, placeHide, placeMessages, placeSend, placeSendMedia, placeWriteKm, distLabel, proposePlace, type PlaceDetail, type PlaceKind, type PlaceLine, type PlacePin } from "@/lib/hdar/live";
+import { discoverDemoActive, discoverDemoCard, discoverDemoPins } from "@/lib/hdar/discover";
+import { DiscoverClaimFromStore, DiscoverFiche, toDiscoverCard } from "./discover-sheet";
+import { locatedInRiskCountry } from "@/lib/hdar/safe-countries";
+import { useCountry } from "@/lib/hdar/country";
 import { setOpenPlace } from "@/lib/hdar/activity";
 import { haversine } from "@/lib/hdar/rules";
 import { RoomAttach, RoomMedia } from "./media-composer";
@@ -26,10 +30,9 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   promenade: { label: "Promenade", icon: "🚶", color: "#5eead4" },
   other: { label: "Autre lieu", icon: "📌", color: "#c4b5fd" },
   toilets: { label: "Toilettes publiques", icon: "🚻", color: "#94a3b8" },
-  // Réservés aux futurs partenaires (annonces payantes) — aucun affiché aujourd'hui.
-  bar: { label: "Bar partenaire", icon: "🍸", color: "#f472b6" },
-  club: { label: "Club partenaire", icon: "🪩", color: "#f472b6" },
-  sauna: { label: "Sauna partenaire", icon: "♨️", color: "#f472b6" },
+  bar: { label: "Bar", icon: "🍸", color: "#FF6B9A" },
+  club: { label: "Club", icon: "🪩", color: "#8B7CFF" },
+  sauna: { label: "Sauna", icon: "♨️", color: "#F5B942" },
 };
 const PROPOSABLE: PlaceKind[] = ["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"];
 const LAYER_KEY = "hdar-places-layer";
@@ -149,18 +152,44 @@ export function usePlaces(on: boolean, vb?: PlacesView | null, zoom = 0) {
       document.removeEventListener("visibilitychange", vis);
     };
   }, [on, vbKey, city]);
-  return on ? rows : [];
+  const live = on ? rows : [];
+  if (!discoverDemoActive()) return live;
+  const demo = discoverDemoPins();
+  const ids = new Set(demo.map((p) => p.id));
+  return [...demo, ...live.filter((p) => !ids.has(p.id))];
 }
 
 export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void }) {
   const [p, setP] = useState<PlaceDetail | null>(null);
+  const [claim, setClaim] = useState(false);
   useEffect(() => {
-    void getPlace(id).then(setP).catch(() => undefined);
+    if (discoverDemoActive()) {
+      const d = discoverDemoCard(id);
+      if (d) setP({ ...d, source: d.source ?? "demo", source_ref: d.source_ref ?? null } as PlaceDetail);
+    } else {
+      void getPlace(id).then(setP).catch(() => undefined);
+    }
     const h = useHdar.getState().here;
     void placeSeen(id, h?.lat ?? null, h?.lng ?? null).catch(() => undefined);
     setOpenPlace(id);
+    setClaim(false);
     return () => setOpenPlace(null);
   }, [id]);
+  const commercial = p && (p.listing === "discover" || p.listing === "partner" || p.kind === "bar" || p.kind === "club" || p.kind === "sauna") && p.kind !== "toilets";
+  if (p && commercial && claim) {
+    return <DiscoverClaimFromStore place={toDiscoverCard(p)} onClose={() => setClaim(false)} />;
+  }
+  if (p && commercial) {
+    const risk = locatedInRiskCountry(useCountry.getState().auto, useCountry.getState().cdn);
+    return (
+      <DiscoverFiche
+        place={toDiscoverCard({ ...p, photos: p.photos ?? [] })}
+        onClose={onClose}
+        onClaim={p.listing !== "partner" && !p.verified ? () => setClaim(true) : undefined}
+        risk={risk}
+      />
+    );
+  }
   const k = p ? PLACE_KINDS[p.kind] : null;
   const sheetRef = useRef<HTMLDivElement>(null);
   useOpenAtTop(sheetRef, id);
