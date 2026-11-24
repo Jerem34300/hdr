@@ -136,22 +136,22 @@ test("isGenericPlaceDescription détecte les phrases auto mixées", () => {
 });
 
 test("defaultCover suit le type, sans photo stock", () => {
-  assert.equal(defaultCover("sauna"), "/places/cover-sauna.svg");
-  assert.equal(defaultCover("bar"), "/places/cover-bar.svg");
-  assert.equal(defaultCover("club"), "/places/cover-club.svg");
-  assert.equal(defaultCover("shop"), "/places/cover-shop.svg");
-  assert.equal(defaultCover("exchange"), "/places/cover-exchange.svg");
-  assert.equal(defaultCover("cruising"), "/places/cover-cruising.svg");
-  assert.equal(defaultCover("park"), "/places/cover-outdoor.svg");
-  assert.equal(defaultCover("beach"), "/places/cover-outdoor.svg");
-  assert.equal(defaultCover("toilets"), "/places/cover-toilets.svg");
-  assert.equal(defaultCover("station"), "/places/cover-transit.svg");
-  assert.equal(defaultCover("metro"), "/places/cover-transit.svg");
-  assert.equal(defaultCover("bus"), "/places/cover-transit.svg");
-  assert.equal(defaultCover("airport"), "/places/cover-transit.svg");
-  assert.equal(defaultCover("other"), "/places/cover-other.svg");
-  assert.equal(defaultCover("inconnu-xyz"), "/places/cover-other.svg");
-  assert.equal(defaultCover(""), "/places/cover-other.svg");
+  assert.equal(defaultCover("sauna"), "/places/cover-sauna.webp");
+  assert.equal(defaultCover("bar"), "/places/cover-bar.webp");
+  assert.equal(defaultCover("club"), "/places/cover-club.webp");
+  assert.equal(defaultCover("shop"), "/places/cover-shop.webp");
+  assert.equal(defaultCover("exchange"), "/places/cover-exchange.webp");
+  assert.equal(defaultCover("cruising"), "/places/cover-cruising.webp");
+  assert.equal(defaultCover("park"), "/places/cover-outdoor.webp");
+  assert.equal(defaultCover("beach"), "/places/cover-outdoor.webp");
+  assert.equal(defaultCover("toilets"), "/places/cover-toilets.webp");
+  assert.equal(defaultCover("station"), "/places/cover-transit.webp");
+  assert.equal(defaultCover("metro"), "/places/cover-transit.webp");
+  assert.equal(defaultCover("bus"), "/places/cover-transit.webp");
+  assert.equal(defaultCover("airport"), "/places/cover-transit.webp");
+  assert.equal(defaultCover("other"), "/places/cover-other.webp");
+  assert.equal(defaultCover("inconnu-xyz"), "/places/cover-other.webp");
+  assert.equal(defaultCover(""), "/places/cover-other.webp");
 });
 
 test("pickPlaceDescription choisit la langue de l'app, avec repli français", () => {
@@ -173,7 +173,7 @@ test("pickPlaceDescription choisit la langue de l'app, avec repli français", ()
 });
 
 test("association est un établissement, avec couverture sportive", () => {
-  assert.equal(defaultCover("association"), "/places/cover-association.svg");
+  assert.equal(defaultCover("association"), "/places/cover-association.webp");
   assert.equal(venueOf("association"), "association");
   assert.equal(isEstablishmentPlace({ kind: "association", venue: "association" }), true);
   assert.match(placeFactsFallbackKey({ kind: "association", venue: "association" }), /association/);

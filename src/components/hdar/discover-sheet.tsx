@@ -100,7 +100,7 @@ export function DiscoverFiche({
             data-testid="place-cover-fallback"
             onError={(e) => {
               const img = e.currentTarget;
-              if (!img.src.endsWith("/places/cover-other.svg")) img.src = "/places/cover-other.svg";
+              if (!img.src.endsWith("/places/cover-other.webp")) img.src = "/places/cover-other.webp";
             }}
           />
         )}

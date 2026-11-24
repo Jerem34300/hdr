@@ -3,38 +3,38 @@ export type MapListing = "discover" | "partner";
 import { venueIcon as venueGlyph, venueLabel, venueOf } from "./venue.ts";
 
 export const DEFAULT_COVERS: Record<string, string> = {
-  bar: "/places/cover-bar.svg",
-  club: "/places/cover-club.svg",
-  sauna: "/places/cover-sauna.svg",
-  shop: "/places/cover-shop.svg",
-  other: "/places/cover-other.svg",
-  exchange: "/places/cover-exchange.svg",
-  "club-echange": "/places/cover-exchange.svg",
-  cruising: "/places/cover-cruising.svg",
-  "cruising-bar": "/places/cover-cruising.svg",
-  association: "/places/cover-association.svg",
-  sport: "/places/cover-association.svg",
-  toilets: "/places/cover-toilets.svg",
-  station: "/places/cover-transit.svg",
-  metro: "/places/cover-transit.svg",
-  bus: "/places/cover-transit.svg",
-  airport: "/places/cover-transit.svg",
-  park: "/places/cover-outdoor.svg",
-  beach: "/places/cover-outdoor.svg",
-  garden: "/places/cover-outdoor.svg",
-  viewpoint: "/places/cover-outdoor.svg",
-  square: "/places/cover-outdoor.svg",
-  promenade: "/places/cover-outdoor.svg",
-  aire: "/places/cover-outdoor.svg",
+  bar: "/places/cover-bar.webp",
+  club: "/places/cover-club.webp",
+  sauna: "/places/cover-sauna.webp",
+  shop: "/places/cover-shop.webp",
+  other: "/places/cover-other.webp",
+  exchange: "/places/cover-exchange.webp",
+  "club-echange": "/places/cover-exchange.webp",
+  cruising: "/places/cover-cruising.webp",
+  "cruising-bar": "/places/cover-cruising.webp",
+  association: "/places/cover-association.webp",
+  sport: "/places/cover-association.webp",
+  toilets: "/places/cover-toilets.webp",
+  station: "/places/cover-transit.webp",
+  metro: "/places/cover-transit.webp",
+  bus: "/places/cover-transit.webp",
+  airport: "/places/cover-transit.webp",
+  park: "/places/cover-outdoor.webp",
+  beach: "/places/cover-outdoor.webp",
+  garden: "/places/cover-outdoor.webp",
+  viewpoint: "/places/cover-outdoor.webp",
+  square: "/places/cover-outdoor.webp",
+  promenade: "/places/cover-outdoor.webp",
+  aire: "/places/cover-outdoor.webp",
 };
 
 export const RISK_COUNTRIES = new Set(["DZ", "MA", "TN", "SN", "CM"]);
 
-/** Couverture illustrée par type (SVG en trait dans /public/places), jamais une photo stock. Type inconnu → cover-other, pas bar. */
+/** Couverture illustrée par type (WebP 1200×600 dans /public/places), jamais une photo stock. Type inconnu → cover-other, pas bar. */
 export function defaultCover(kind: string): string {
   const k = (kind || "").toLowerCase();
   if (DEFAULT_COVERS[k]) return DEFAULT_COVERS[k];
-  return "/places/cover-other.svg";
+  return "/places/cover-other.webp";
 }
 
 /** Vrai partenaire payant (futur). Pas le flag `partner` / `map_listing` actuel, ni `partner_until` (offert au lancement). */
