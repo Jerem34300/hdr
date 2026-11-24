@@ -12,6 +12,8 @@ export const DEFAULT_COVERS: Record<string, string> = {
   "club-echange": "/places/cover-exchange.svg",
   cruising: "/places/cover-cruising.svg",
   "cruising-bar": "/places/cover-cruising.svg",
+  association: "/places/cover-association.svg",
+  sport: "/places/cover-association.svg",
 };
 
 export const RISK_COUNTRIES = new Set(["DZ", "MA", "TN", "SN", "CM"]);

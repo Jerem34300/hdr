@@ -76,7 +76,7 @@ export function DiscoverFiche({
   const gallery = photos.slice(cover ? 1 : 0);
   const paid = isPaidPartner(place);
   const venue = place.venue ?? venueOf(place.kind);
-  const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || place.listing === "discover" || place.listing === "partner";
+  const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || venue === "association" || place.listing === "discover" || place.listing === "partner";
   const badge = isVenue ? listingLabel(place.listing, place.verified, paid) : kindNoun(venue, risk);
   const noun = kindNoun(venue, risk);
   const accent = venueColor(venue);

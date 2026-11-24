@@ -814,8 +814,8 @@ export function activity(lat: number | null, lng: number | null, areaSince: stri
   return rpc<{ area: number; spots: ActivitySpot[]; places?: { id: string; last: string }[] }>("hdar_activity", { p_lat: lat, p_lng: lng, p_area_since: areaSince });
 }
 
-export type PlaceKind = "cruising" | "beach" | "park" | "garden" | "viewpoint" | "square" | "promenade" | "aire" | "other" | "toilets" | "bar" | "club" | "sauna";
-export type PlaceVenue = "bar" | "club" | "sauna" | "shop" | "exchange" | "cruising";
+export type PlaceKind = "cruising" | "beach" | "park" | "garden" | "viewpoint" | "square" | "promenade" | "aire" | "other" | "toilets" | "bar" | "club" | "sauna" | "association";
+export type PlaceVenue = "bar" | "club" | "sauna" | "shop" | "exchange" | "cruising" | "association";
 export type PlacePin = { id: string; kind: PlaceKind; name: string; lat: number; lng: number; partner: boolean; pro_boost?: boolean; listing?: "discover" | "partner"; verified?: boolean; venue?: PlaceVenue; paid_partner?: boolean; stripe_subscription?: string | null };
 export type PlaceDetail = PlacePin & { description: string; description_i18n?: Partial<Record<"fr"|"en"|"es"|"de"|"it"|"pt"|"ar", string>> | null; source: string; source_ref: string | null; city?: string | null; address?: string | null; hours?: string | null; tags?: string[]; website?: string | null; cover_credit?: string | null; photos?: string[] };
 export function listPlaces(s: number, w: number, n: number, e: number) {
