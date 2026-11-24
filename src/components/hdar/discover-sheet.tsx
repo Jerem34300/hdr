@@ -11,8 +11,8 @@ import { useHdar } from "@/lib/hdar/store";
 import {
   DEMO_METHODS, DEMO_VERIFY_CODE, discoverConfirmCode, discoverDemoActive,
   discoverDemoCard, discoverMethods, discoverOwnerSave, discoverRequestManual, discoverSendCode,
-  defaultCover, emailMatchesWebsite, isGenericPlaceDescription, kindIcon, kindNoun, listingLabel, photoCreditLabel, type DiscoverCard, type DiscoverMethods, type MapListing,
-  publicDescription,
+  defaultCover, emailMatchesWebsite, isGenericPlaceDescription, kindIcon, kindNoun, listingLabel, photoCreditLabel, pickPlaceDescription, type DiscoverCard, type DiscoverMethods, type MapListing,
+  publicDescription, type PlaceDescriptionI18n,
 } from "@/lib/hdar/discover";
 import type { PlaceKind, PlaceVenue } from "@/lib/hdar/live";
 import { displayPlaceName, venueColor, venueOf } from "@/lib/hdar/venue";
@@ -22,7 +22,7 @@ import { usePlacePhotos } from "@/lib/hdar/place-photos";
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
 
 export function toDiscoverCard(p: {
-  id: string; kind: PlaceKind; name: string; description?: string; lat: number; lng: number;
+  id: string; kind: PlaceKind; name: string; description?: string; description_i18n?: PlaceDescriptionI18n | null; lat: number; lng: number;
   city?: string | null; address?: string | null; hours?: string | null; tags?: string[] | null;
   website?: string | null; listing?: MapListing; verified?: boolean; cover_credit?: string | null;
   photos?: string[]; partner?: boolean; paid_partner?: boolean; stripe_subscription?: string | null;
@@ -35,7 +35,8 @@ export function toDiscoverCard(p: {
     kind: p.kind,
     venue,
     name: p.name,
-    description: publicDescription(p.description, p.country),
+    description: pickPlaceDescription(p.description_i18n, useLang.getState().lang, p.description, p.country),
+    description_i18n: p.description_i18n ?? null,
     lat: p.lat,
     lng: p.lng,
     city: p.city ?? null,
@@ -80,7 +81,7 @@ export function DiscoverFiche({
   const noun = kindNoun(venue, risk);
   const accent = venueColor(venue);
   const credit = cover ? photoCreditLabel(place.cover_credit, photos[0]?.source_url) : null;
-  const rawDesc = publicDescription(place.description, place.country);
+  const rawDesc = pickPlaceDescription(place.description_i18n, useLang.getState().lang, place.description, place.country);
   const desc = rawDesc && !isGenericPlaceDescription(rawDesc)
     ? rawDesc
     : (place.city ? tf("{n} à {n}.", t(noun), place.city) : t(noun));

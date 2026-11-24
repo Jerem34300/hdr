@@ -106,6 +106,21 @@ export function publicDescription(text: string | null | undefined, country?: str
   return v;
 }
 
+export type PlaceLang = "fr" | "en" | "es" | "de" | "it" | "pt" | "ar";
+export type PlaceDescriptionI18n = Partial<Record<PlaceLang, string>>;
+
+/** Description de fiche dans la langue de l'app, repli sur le français. */
+export function pickPlaceDescription(
+  i18n: PlaceDescriptionI18n | null | undefined,
+  lang: string,
+  fallback?: string | null,
+  country?: string | null,
+): string {
+  const key = (lang || "fr").toLowerCase().slice(0, 2) as PlaceLang;
+  const picked = (i18n && (i18n[key] || i18n.fr || i18n.en)) || (fallback ?? "") || "";
+  return publicDescription(picked, country);
+}
+
 const GENERIC_DESC = /^(Bar|Club|Sauna|Boutique|Sex-shop|Club échangiste|Bar cruising|Parc|Plage|Cruising|Établissement)(\s+échangiste)?\s+(à|au|aux|en|in|im|aan|bei|in der)(?=\s|,|$)/i;
 
 /** Descriptions auto du type « Club en Valencia. » / « Sauna au Cour Brasserie, à Uckange. ». */

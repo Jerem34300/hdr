@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   emailMatchesWebsite, isDisplayableOutreach, isPaidPartner, kindNoun, listingLabel, maskEmail,
   defaultCover, isGenericPlaceDescription, photoCreditLabel,
-  publicDescription, websiteDomain,
+  publicDescription, pickPlaceDescription, websiteDomain,
 } from "./discover-utils.ts";
 
 test("maskEmail cache le début et garde le domaine", () => {
@@ -144,4 +144,22 @@ test("defaultCover suit le type, sans photo stock", () => {
   assert.equal(defaultCover("cruising"), "/places/cover-cruising.svg");
   assert.equal(defaultCover("park"), "/places/cover-other.svg");
   assert.equal(defaultCover("beach"), "/places/cover-other.svg");
+});
+
+test("pickPlaceDescription choisit la langue de l'app, avec repli français", () => {
+  const i18n = {
+    fr: "Club à Valencia. Ouvert le vendredi et le samedi de 22h à 4h.",
+    es: "Club en Valencia. Abierto viernes y sábado de 22:00 a 4:00.",
+    en: "Club in Valencia. Open Friday and Saturday from 10 pm to 4 am.",
+  };
+  assert.equal(pickPlaceDescription(i18n, "fr"), i18n.fr);
+  assert.equal(pickPlaceDescription(i18n, "es"), i18n.es);
+  assert.equal(pickPlaceDescription(i18n, "ar"), i18n.fr);
+  assert.equal(pickPlaceDescription(undefined, "es", i18n.fr), i18n.fr);
+  assert.equal(
+    pickPlaceDescription({ fr: "Club lesbien et ouvert aux femmes queer, à Paris, depuis 1992." }, "fr"),
+    "Club lesbien et ouvert aux femmes queer, à Paris, depuis 1992.",
+  );
+  assert.equal(isGenericPlaceDescription(i18n.fr), false);
+  assert.equal(isGenericPlaceDescription("Club à Paris."), true);
 });
