@@ -142,8 +142,16 @@ test("defaultCover suit le type, sans photo stock", () => {
   assert.equal(defaultCover("shop"), "/places/cover-shop.svg");
   assert.equal(defaultCover("exchange"), "/places/cover-exchange.svg");
   assert.equal(defaultCover("cruising"), "/places/cover-cruising.svg");
-  assert.equal(defaultCover("park"), "/places/cover-other.svg");
-  assert.equal(defaultCover("beach"), "/places/cover-other.svg");
+  assert.equal(defaultCover("park"), "/places/cover-outdoor.svg");
+  assert.equal(defaultCover("beach"), "/places/cover-outdoor.svg");
+  assert.equal(defaultCover("toilets"), "/places/cover-toilets.svg");
+  assert.equal(defaultCover("station"), "/places/cover-transit.svg");
+  assert.equal(defaultCover("metro"), "/places/cover-transit.svg");
+  assert.equal(defaultCover("bus"), "/places/cover-transit.svg");
+  assert.equal(defaultCover("airport"), "/places/cover-transit.svg");
+  assert.equal(defaultCover("other"), "/places/cover-other.svg");
+  assert.equal(defaultCover("inconnu-xyz"), "/places/cover-other.svg");
+  assert.equal(defaultCover(""), "/places/cover-other.svg");
 });
 
 test("pickPlaceDescription choisit la langue de l'app, avec repli français", () => {

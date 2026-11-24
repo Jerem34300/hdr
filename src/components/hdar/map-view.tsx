@@ -22,6 +22,7 @@ import { TipBubble } from "./tip-bubble";
 import { PLACE_KINDS, PlaceSheet, ProposePlaceSheet, placesLayerOn, setPlacesLayer, setToiletsLayer, toiletsLayerOn, usePlaces, useOutings, useToilets } from "./places-layer";
 import { venueColor, venueIcon, venueOf, type VenueKind } from "@/lib/hdar/venue";
 import { isPaidPartner } from "@/lib/hdar/discover-utils";
+import { spiderfyOffsets } from "@/lib/hdar/map-pins";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AD_CATEGORIES, adPins, adsLayerOn, setAdsLayer, type AdPin } from "@/lib/hdar/ads";
 import { Layers, LocateFixed, Rocket } from "lucide-react";
@@ -504,7 +505,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const community = basePlaces.filter((pl) => pl.partner || !OSM_KINDS.has(pl.kind) || layers[layerOfBase(pl.kind)]);
   const osmLayered = [...outings, ...toilets].filter((pl) => layers[layerOfPlace(pl.kind, false)]);
   const places = [...community, ...osmLayered];
-  const placeClusterPx = zoom < 14 ? 44 : 0; // numbered bubbles that split as you zoom in
+  const placeClusterPx = 44; // toujours grouper les pins proches ; à partir du zoom 14 on les écarte (spiderfy)
   const placeClusters: { key: string; x: number; y: number; lat: number; lng: number; items: typeof places }[] = [];
   for (const pl of places) {
     const pt = project(pl.lat, pl.lng);
@@ -583,7 +584,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
   const face = zoom >= 10.5 ? 46 : 34;
 
   // Group pins that would overlap on screen (only matters when zoomed out).
-  const clusterPx = zoom < 12 ? 56 : 0;
+  const clusterPx = zoom < 12 ? 56 : 8; // personnes : bulle jusqu'au zoom 12, puis écarte les superpositions
   const clusters: { key: string; x: number; y: number; lat: number; lng: number; pins: typeof pins }[] = [];
   for (const pin of pins) {
     const pt = project(pin.at.lat, pin.at.lng);
@@ -887,7 +888,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={fitNearest}
         >
-          Le plus proche : {bucketDistance(nearest.d)} · <span className="text-signal">Voir</span>
+          {t("La personne la plus proche")} : {bucketDistance(nearest.d)} · <span className="text-signal">Voir</span>
         </button>
       )}
       {finding && (
@@ -942,20 +943,24 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
       </div>
       {clusters.map((c) => {
         if (c.x < -40 || c.y < -40 || c.x > size.w + 40 || c.y > size.h + 40) return null;
-        if (c.pins.length === 1) {
-          const pin = c.pins[0];
+        if (c.pins.length === 1 || zoom >= 12) {
+          const offs = spiderfyOffsets(c.pins.length);
+          return (
+            <span key={c.key} className="contents">
+            {c.pins.map((pin, pi) => {
+          const pinX = c.x + offs[pi].dx, pinY = c.y + offs[pi].dy;
           const live = inLive.has(pin.id), convo = convoIds.has(pin.id), fav = favIds.has(pin.id);
           return (
             <span key={pin.id} className="contents">
-            {(live || hl === pin.id) && <span className={`pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border-2 ${hl === pin.id ? "border-[#A1E3C3]" : "border-red-500"}`} style={{ left: c.x, top: c.y, width: face + 10, height: face + 10 }} />}
-            {live && <span className="pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-red-500" style={{ left: c.x, top: c.y, width: face + 4, height: face + 4 }} />}
+            {(live || hl === pin.id) && <span className={`pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border-2 ${hl === pin.id ? "border-[#A1E3C3]" : "border-red-500"}`} style={{ left: pinX, top: pinY, width: face + 10, height: face + 10 }} />}
+            {live && <span className="pointer-events-none absolute z-[19] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-red-500" style={{ left: pinX, top: pinY, width: face + 4, height: face + 4 }} />}
             {chosenIds.has(pin.id) && (
-              <span aria-label="Position choisie" title="Position choisie" className="pointer-events-none absolute z-[22] grid size-4 place-items-center rounded-full bg-night text-[#FACC15] ring-1 ring-[#FACC15]/70" style={{ left: c.x - face / 2 - 4, top: c.y + face / 2 - 12 }}>
+              <span aria-label="Position choisie" title="Position choisie" className="pointer-events-none absolute z-[22] grid size-4 place-items-center rounded-full bg-night text-[#FACC15] ring-1 ring-[#FACC15]/70" style={{ left: pinX - face / 2 - 4, top: pinY + face / 2 - 12 }}>
                 <MapPinned className="size-2.5" strokeWidth={2.5} />
               </span>
             )}
             {(live || convo || fav) && (
-              <span className="pointer-events-none absolute z-[22] flex items-center gap-px" style={{ left: c.x + face / 2 - 10, top: c.y - face / 2 - 6 }}>
+              <span className="pointer-events-none absolute z-[22] flex items-center gap-px" style={{ left: pinX + face / 2 - 10, top: pinY - face / 2 - 6 }}>
                 {live && <span className="flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white shadow" aria-label="En Live">🎥</span>}
                 {convo && <span className="flex size-4 items-center justify-center rounded-full bg-[#A1E3C3] text-[9px] shadow" aria-label="Conversation">💬</span>}
                 {fav && <span className="flex size-4 items-center justify-center rounded-full bg-amber-400 text-[9px] shadow" aria-label="Favori">⭐</span>}
@@ -972,7 +977,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 (hl === pin.id ? "border-[#A1E3C3] ring-4 ring-[#A1E3C3]/60 z-[23] " : favIds.has(pin.id) ? "border-amber-400 ring-2 ring-amber-400/50 " : "border-white ") +
                 (boosted.has(pin.id) ? "partner-glow z-[21] " : pin.hot ? "pin-hot" : "")
               }
-              style={{ left: c.x, top: c.y, width: boosted.has(pin.id) ? face * 1.25 : face, height: boosted.has(pin.id) ? face * 1.25 : face, borderColor: boosted.has(pin.id) ? "#fbbf24" : undefined }}
+              style={{ left: pinX, top: pinY, width: boosted.has(pin.id) ? face * 1.25 : face, height: boosted.has(pin.id) ? face * 1.25 : face, borderColor: boosted.has(pin.id) ? "#fbbf24" : undefined }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}
             >
@@ -980,7 +985,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               {pin.premium && <PremiumBadge className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 scale-75 !px-1" />}
             </button>
             {card === pin.id && (
-              <span className="absolute z-[30] -translate-x-1/2 -translate-y-full" style={{ left: c.x, top: c.y - face / 2 - 10 }} onPointerDown={(e) => e.stopPropagation()}>
+              <span className="absolute z-[30] -translate-x-1/2 -translate-y-full" style={{ left: pinX, top: pinY - face / 2 - 10 }} onPointerDown={(e) => e.stopPropagation()}>
                 <span className="relative flex items-center gap-2 rounded-2xl border border-[#A1E3C3]/60 bg-night/95 py-1.5 pe-1.5 ps-3 whitespace-nowrap shadow-[0_0_24px_rgba(161,227,195,.45)]">
                   <b className="font-display text-sm">{pin.pseudo}</b>
                   <button type="button" className="rounded-full bg-signal px-2.5 py-1 text-xs font-bold text-night" onClick={() => useHdar.getState().openProfile(pin.id, pin.pseudo)}>Voir le profil</button>
@@ -989,7 +994,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
                 </span>
               </span>
             )}
-            {boosted.has(pin.id) && <span className="pointer-events-none absolute z-[22] grid size-4 -translate-x-1/2 place-items-center rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] text-night shadow" style={{ left: c.x, top: c.y + face / 2 - 2 }}><Rocket className="size-2.5" strokeWidth={2.5} /></span>}
+            {boosted.has(pin.id) && <span className="pointer-events-none absolute z-[22] grid size-4 -translate-x-1/2 place-items-center rounded-full bg-gradient-to-r from-[#FA6F6C] to-[#fbbf24] text-night shadow" style={{ left: pinX, top: pinY + face / 2 - 2 }}><Rocket className="size-2.5" strokeWidth={2.5} /></span>}
+            </span>
+          );
+            })}
             </span>
           );
         }
@@ -1031,7 +1039,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
         return <TransitPin key={st.ref} s={st} x={pt.x} y={pt.y} onOpen={() => setTransitStop(st)} />;
       })}
       {placeClusters.map((c) => {
-        if (c.items.length > 1) {
+        if (c.items.length > 1 && zoom < 14) {
           const d = Math.min(52, 26 + c.items.length * 2);
           return (
             <button
@@ -1044,7 +1052,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
               onClick={() => {
                 follow.current = false;
                 setView((v) => ({ ...v, lat: c.lat, lng: c.lng }));
-                animateTo(Math.min(17, Math.max(viewRef.current.zoom + 2, 10)));
+                animateTo(Math.min(17, Math.max(viewRef.current.zoom + 2, 14)));
               }}
             >
               {c.items.length}
@@ -1054,7 +1062,10 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             </button>
           );
         }
-        const pl = c.items[0];
+        const offs = spiderfyOffsets(c.items.length);
+        return (
+          <span key={c.key} className="contents">
+            {c.items.map((pl, i) => {
         const k = PLACE_KINDS[pl.kind];
         const paid = isPaidPartner(pl);
         const venueGuess = pl.venue ?? venueOf(pl.kind);
@@ -1074,7 +1085,7 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             data-place-id={pl.id}
             aria-label={`${status} : ${pl.name}`}
             className={"absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-night/90 text-sm shadow " + (pl.pro_boost ? "venue-glow z-[16] size-12" : isPartner ? "venue-glow z-[15] size-10" : isDiscover ? "z-[15] size-10" : "z-10 size-8")}
-            style={{ left: c.x, top: c.y, borderColor: pinColor, boxShadow: isPartner || pl.pro_boost ? `0 0 12px 3px ${pinColor}cc, 0 0 26px 8px ${pinColor}66` : undefined }}
+            style={{ left: c.x + offs[i].dx, top: c.y + offs[i].dy, borderColor: pinColor, boxShadow: isPartner || pl.pro_boost ? `0 0 12px 3px ${pinColor}cc, 0 0 26px 8px ${pinColor}66` : undefined }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setPlaceId(pl.id)}
           >
@@ -1084,6 +1095,9 @@ export function MapView({ place, spots, onPerson, onSpot, onArea }: Props) {
             )}
             {act.places.has(pl.id) && <span className="absolute -top-1 -end-1 size-3 rounded-full border-2 border-night bg-signal" />}
           </button>
+        );
+            })}
+          </span>
         );
       })}
       {spotClusters.map((c) => {

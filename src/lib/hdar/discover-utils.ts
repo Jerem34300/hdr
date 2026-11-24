@@ -1,34 +1,40 @@
 export type MapListing = "discover" | "partner";
 
-import { venueCover, venueIcon as venueGlyph, venueLabel, venueOf } from "./venue.ts";
+import { venueIcon as venueGlyph, venueLabel, venueOf } from "./venue.ts";
 
 export const DEFAULT_COVERS: Record<string, string> = {
   bar: "/places/cover-bar.svg",
   club: "/places/cover-club.svg",
   sauna: "/places/cover-sauna.svg",
   shop: "/places/cover-shop.svg",
-  other: "/places/cover-shop.svg",
+  other: "/places/cover-other.svg",
   exchange: "/places/cover-exchange.svg",
   "club-echange": "/places/cover-exchange.svg",
   cruising: "/places/cover-cruising.svg",
   "cruising-bar": "/places/cover-cruising.svg",
   association: "/places/cover-association.svg",
   sport: "/places/cover-association.svg",
+  toilets: "/places/cover-toilets.svg",
+  station: "/places/cover-transit.svg",
+  metro: "/places/cover-transit.svg",
+  bus: "/places/cover-transit.svg",
+  airport: "/places/cover-transit.svg",
+  park: "/places/cover-outdoor.svg",
+  beach: "/places/cover-outdoor.svg",
+  garden: "/places/cover-outdoor.svg",
+  viewpoint: "/places/cover-outdoor.svg",
+  square: "/places/cover-outdoor.svg",
+  promenade: "/places/cover-outdoor.svg",
+  aire: "/places/cover-outdoor.svg",
 };
 
 export const RISK_COUNTRIES = new Set(["DZ", "MA", "TN", "SN", "CM"]);
 
-const PUBLIC_COVER_KINDS = new Set([
-  "park", "beach", "garden", "viewpoint", "square", "promenade", "aire", "toilets",
-]);
-
-/** Couverture illustrée par type (SVG en trait, déjà dans /public/places), jamais une photo stock. */
+/** Couverture illustrée par type (SVG en trait dans /public/places), jamais une photo stock. Type inconnu → cover-other, pas bar. */
 export function defaultCover(kind: string): string {
   const k = (kind || "").toLowerCase();
-  if (k === "cruising" || k === "cruising-bar") return "/places/cover-cruising.svg";
-  if (PUBLIC_COVER_KINDS.has(k)) return "/places/cover-other.svg";
   if (DEFAULT_COVERS[k]) return DEFAULT_COVERS[k];
-  return venueCover(venueOf(kind));
+  return "/places/cover-other.svg";
 }
 
 /** Vrai partenaire payant (futur). Pas le flag `partner` / `map_listing` actuel, ni `partner_until` (offert au lancement). */
