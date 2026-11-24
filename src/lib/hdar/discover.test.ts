@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   emailMatchesWebsite, isDisplayableOutreach, isPaidPartner, kindNoun, listingLabel, maskEmail,
+  defaultCover, isGenericPlaceDescription, photoCreditLabel,
   publicDescription, websiteDomain,
 } from "./discover-utils.ts";
 
@@ -110,4 +111,37 @@ test("placeFactsFallbackKey suit le type du lieu", () => {
   assert.match(placeFactsFallbackKey({ kind: "bar" }), /bar/);
   assert.match(placeFactsFallbackKey({ kind: "club" }), /club/);
   assert.match(placeFactsFallbackKey({ kind: "other", venue: "shop" }), /boutique/);
+});
+
+test("photoCreditLabel n'affiche que le domaine, une fois, sans URL", () => {
+  assert.equal(photoCreditLabel("Photo : https://data.strobomag.com/assets/businesses/the-muse/main.jpg"), "data.strobomag.com");
+  assert.equal(
+    photoCreditLabel("Photo : Photo : https://www.redsauna.fr/a.jpg · https://www.redsauna.fr/b.jpg?x=1"),
+    "redsauna.fr",
+  );
+  assert.equal(photoCreditLabel("redsauna.fr"), "redsauna.fr");
+  assert.equal(photoCreditLabel("Photo du lieu (source à confirmer)"), null);
+  assert.equal(photoCreditLabel(null, "https://www.exemple.fr/x.jpg"), "exemple.fr");
+});
+
+test("isGenericPlaceDescription détecte les phrases auto mixées", () => {
+  assert.equal(isGenericPlaceDescription("Club en Valencia."), true);
+  assert.equal(isGenericPlaceDescription("Sauna au Cour Brasserie, à Uckange."), true);
+  assert.equal(isGenericPlaceDescription("Club à Paris."), true);
+  assert.equal(isGenericPlaceDescription(""), true);
+  assert.equal(
+    isGenericPlaceDescription("Le Koncept Sauna se trouve à Montpellier. Hammam, sauna et jacuzzi."),
+    false,
+  );
+});
+
+test("defaultCover suit le type, sans photo stock", () => {
+  assert.equal(defaultCover("sauna"), "/places/cover-sauna.svg");
+  assert.equal(defaultCover("bar"), "/places/cover-bar.svg");
+  assert.equal(defaultCover("club"), "/places/cover-club.svg");
+  assert.equal(defaultCover("shop"), "/places/cover-shop.svg");
+  assert.equal(defaultCover("exchange"), "/places/cover-exchange.svg");
+  assert.equal(defaultCover("cruising"), "/places/cover-cruising.svg");
+  assert.equal(defaultCover("park"), "/places/cover-other.svg");
+  assert.equal(defaultCover("beach"), "/places/cover-other.svg");
 });

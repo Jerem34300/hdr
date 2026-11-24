@@ -16,7 +16,16 @@ export const DEFAULT_COVERS: Record<string, string> = {
 
 export const RISK_COUNTRIES = new Set(["DZ", "MA", "TN", "SN", "CM"]);
 
+const PUBLIC_COVER_KINDS = new Set([
+  "park", "beach", "garden", "viewpoint", "square", "promenade", "aire", "toilets",
+]);
+
+/** Couverture illustrée par type (SVG en trait, déjà dans /public/places), jamais une photo stock. */
 export function defaultCover(kind: string): string {
+  const k = (kind || "").toLowerCase();
+  if (k === "cruising" || k === "cruising-bar") return "/places/cover-cruising.svg";
+  if (PUBLIC_COVER_KINDS.has(k)) return "/places/cover-other.svg";
+  if (DEFAULT_COVERS[k]) return DEFAULT_COVERS[k];
   return venueCover(venueOf(kind));
 }
 
@@ -95,4 +104,36 @@ export function publicDescription(text: string | null | undefined, country?: str
   if (!v) return "";
   if (country && RISK_COUNTRIES.has(country.toUpperCase())) return v.replace(RISK_WORDS, "").replace(/\s{2,}/g, " ").trim();
   return v;
+}
+
+const GENERIC_DESC = /^(Bar|Club|Sauna|Boutique|Sex-shop|Club échangiste|Bar cruising|Parc|Plage|Cruising|Établissement)(\s+échangiste)?\s+(à|au|aux|en|in|im|aan|bei|in der)(?=\s|,|$)/i;
+
+/** Descriptions auto du type « Club en Valencia. » / « Sauna au Cour Brasserie, à Uckange. ». */
+export function isGenericPlaceDescription(text: string | null | undefined): boolean {
+  const v = (text ?? "").trim();
+  if (!v) return true;
+  if (!GENERIC_DESC.test(v)) return false;
+  const sentences = v.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
+  return v.length < 120 && sentences.length <= 1;
+}
+
+/** Crédit photo : domaine(s) uniquement, sans URL, sans préfixe « Photo : » répété. */
+export function photoCreditLabel(credit: string | null | undefined, sourceUrl?: string | null): string | null {
+  const raw = [credit, sourceUrl].filter((x): x is string => !!x && !!x.trim()).join(" · ").trim();
+  if (!raw) return null;
+  const stripped = raw.replace(/^(photo\s*:\s*)+/i, "").trim();
+  const hosts: string[] = [];
+  const seen = new Set<string>();
+  const urlRe = /https?:\/\/[^\s·,]+/gi;
+  for (const u of stripped.match(urlRe) ?? []) {
+    const h = websiteDomain(u);
+    if (h && !seen.has(h)) {
+      seen.add(h);
+      hosts.push(h);
+    }
+  }
+  if (hosts.length) return hosts.join(" · ");
+  const bare = websiteDomain(stripped);
+  if (bare && !/\s/.test(stripped) && stripped.length < 80) return bare;
+  return null;
 }
