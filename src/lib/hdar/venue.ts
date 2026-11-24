@@ -5,13 +5,13 @@ export const VENUE_ORDER: VenueKind[] = ["bar", "club", "sauna", "shop", "exchan
 
 /** Couleurs lisibles sur la carte sombre, une teinte par type (partenaire et à découvrir partagent la même). */
 export const VENUE: Record<VenueKind, { label: string; icon: string; color: string; cover: string }> = {
-  bar: { label: "Bar", icon: "🍸", color: "#FF6B9A", cover: "/places/cover-bar.svg" },
-  club: { label: "Club", icon: "🪩", color: "#8B7CFF", cover: "/places/cover-club.svg" },
-  sauna: { label: "Sauna", icon: "♨️", color: "#F5B942", cover: "/places/cover-sauna.svg" },
-  shop: { label: "Boutique", icon: "🛍️", color: "#3DC4F5", cover: "/places/cover-shop.svg" },
-  exchange: { label: "Club échangiste", icon: "🔑", color: "#FF7A5C", cover: "/places/cover-exchange.svg" },
-  cruising: { label: "Bar cruising", icon: "🔻", color: "#FF8A1F", cover: "/places/cover-cruising.svg" },
-  association: { label: "Association", icon: "🏅", color: "#34D399", cover: "/places/cover-association.svg" },
+  bar: { label: "Bar", icon: "🍸", color: "#FF6B9A", cover: "/places/cover-bar.webp" },
+  club: { label: "Club", icon: "🪩", color: "#8B7CFF", cover: "/places/cover-club.webp" },
+  sauna: { label: "Sauna", icon: "♨️", color: "#F5B942", cover: "/places/cover-sauna.webp" },
+  shop: { label: "Boutique", icon: "🛍️", color: "#3DC4F5", cover: "/places/cover-shop.webp" },
+  exchange: { label: "Club échangiste", icon: "🔑", color: "#FF7A5C", cover: "/places/cover-exchange.webp" },
+  cruising: { label: "Bar cruising", icon: "🔻", color: "#FF8A1F", cover: "/places/cover-cruising.webp" },
+  association: { label: "Association", icon: "🏅", color: "#34D399", cover: "/places/cover-association.webp" },
 };
 
 export function venueOf(kind: string | null | undefined, outreachKind?: string | null): VenueKind {

@@ -23,7 +23,7 @@ export const DEMO_FICHE_ROWS: FicheRow[] = [
     photos: [
       {
         id: "ph-gibus-1",
-        url: "/places/cover-club.svg",
+        url: "/places/cover-club.webp",
         source_url: "https://www.gibus.fr/",
         credit: "gibus.fr",
         hidden: false,
@@ -50,7 +50,7 @@ export const DEMO_FICHE_ROWS: FicheRow[] = [
     photos: [
       {
         id: "ph-ede-1",
-        url: "/places/cover-sauna.svg",
+        url: "/places/cover-sauna.webp",
         source_url: "https://www.entredeuxeaux.com/",
         credit: "entredeuxeaux.com",
         hidden: false,
@@ -77,7 +77,7 @@ export const DEMO_FICHE_ROWS: FicheRow[] = [
     photos: [
       {
         id: "ph-quez-1",
-        url: "/places/cover-bar.svg",
+        url: "/places/cover-bar.webp",
         source_url: "https://www.facebook.com/quetzalbarbrussels",
         credit: "Page officielle",
         hidden: false,
@@ -104,14 +104,14 @@ export const DEMO_FICHE_ROWS: FicheRow[] = [
     photos: [
       {
         id: "ph-shop-1",
-        url: "/places/cover-shop.svg",
+        url: "/places/cover-shop.webp",
         source_url: "https://exemple-boutique.fr/",
         credit: "exemple-boutique.fr",
         hidden: false,
       },
       {
         id: "ph-shop-2",
-        url: "/places/cover-shop.svg",
+        url: "/places/cover-shop.webp",
         source_url: null,
         credit: null,
         hidden: true,
@@ -139,7 +139,7 @@ export const DEMO_FICHE_ROWS: FicheRow[] = [
     photos: [
       {
         id: "ph-ber-1",
-        url: "/places/cover-exchange.svg",
+        url: "/places/cover-exchange.webp",
         source_url: "https://exemple-club.de/",
         credit: "exemple-club.de",
         hidden: false,
@@ -160,7 +160,7 @@ export const DEMO_CLAIMS: FicheClaim[] = [
     email: "contact@gibus-demo.example",
     justification: "Je gère la communication du lieu. Voici un justificatif officiel (document d'exemple pour l'aperçu).",
     has_proof: true,
-    proof: "/places/cover-club.svg",
+    proof: "/places/cover-club.webp",
     requester_pseudo: "Alex",
     admin_note: null,
     created_at: T(40),

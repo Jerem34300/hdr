@@ -94,13 +94,13 @@ export function DiscoverFiche({
           <img src={cover} alt="" className="size-full object-cover object-top" />
         ) : (
           <img
-            src={defaultCover(venue ?? place.kind)}
+            src={defaultCover(venue ?? place.kind, { id: place.id, kind: place.kind, venue_kind: venue, name: place.name, description: place.description, website: place.website, tags: place.tags })}
             alt=""
             className="size-full object-cover object-top"
             data-testid="place-cover-fallback"
             onError={(e) => {
               const img = e.currentTarget;
-              if (!img.src.endsWith("/places/cover-other.svg")) img.src = "/places/cover-other.svg";
+              if (!img.src.endsWith("/places/cover-other.webp")) img.src = "/places/cover-other.webp";
             }}
           />
         )}
