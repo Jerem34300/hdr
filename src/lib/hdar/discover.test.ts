@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  emailMatchesWebsite, isDisplayableOutreach, kindNoun, listingLabel, maskEmail,
+  emailMatchesWebsite, isDisplayableOutreach, isPaidPartner, kindNoun, listingLabel, maskEmail,
   publicDescription, websiteDomain,
 } from "./discover-utils.ts";
 
@@ -32,10 +32,16 @@ test("isDisplayableOutreach exclut refus, désinscrits, rebonds et l'absence de 
   assert.equal(isDisplayableOutreach({ status: "sent", lat: null, lng: 2.3 }), false);
 });
 
-test("listingLabel distingue découvrir, vérifié et partenaire", () => {
+test("listingLabel : partenaires actuels = lieu à découvrir, badge Partenaire seulement si payant", () => {
   assert.equal(listingLabel("discover"), "Lieu à découvrir");
   assert.equal(listingLabel("discover", true), "Lieu à découvrir · Vérifié");
-  assert.equal(listingLabel("partner"), "Partenaire");
+  assert.equal(listingLabel("partner"), "Lieu à découvrir");
+  assert.equal(listingLabel("partner", false, true), "Partenaire");
+  assert.equal(listingLabel("partner", true, false), "Lieu à découvrir · Vérifié");
+  assert.equal(isPaidPartner({}), false);
+  assert.equal(isPaidPartner({ paid_partner: true }), true);
+  assert.equal(isPaidPartner({ stripe_subscription: "sub_x" }), true);
+  assert.equal(isPaidPartner({ stripe_subscription: "  " }), false);
 });
 
 test("kindNoun reste neutre dans un pays à risque", () => {
@@ -72,4 +78,36 @@ test("displayPlaceName humanise un identifiant technique", () => {
   assert.equal(displayPlaceName("L'Impact Bar"), "L'Impact Bar");
   assert.equal(displayPlaceName("le-mask"), "Le Mask");
   assert.equal(displayPlaceName("la-bonbonniere-2"), "La Bonbonniere");
+});
+
+import { hasPlaceFacts, isEstablishmentPlace, mergePlaceFacts, placeFactsFallbackKey, textOrNull } from "./place-facts.ts";
+
+test("mergePlaceFacts privilégie la colonne et ne comble qu'avec le manifest", () => {
+  const merged = mergePlaceFacts(
+    { hours: "  19 h – 2 h  ", tags: ["cocktails", ""], entry: null },
+    { hours: "autre", entry: "18+", events: [{ name: "Cruising", when: "lundi", price: 15 }, { name: "Bears", when: "mardi" }] },
+  );
+  assert.equal(merged.hours, "19 h – 2 h");
+  assert.equal(merged.entry, "18+");
+  assert.deepEqual(merged.events, ["Cruising · lundi · 15 €", "Bears · mardi"]);
+  assert.deepEqual(merged.tags, ["cocktails"]);
+  assert.equal(hasPlaceFacts(merged), true);
+  assert.equal(hasPlaceFacts(mergePlaceFacts({})), false);
+  assert.equal(textOrNull("  "), null);
+  assert.equal(textOrNull(["", "  "]), null);
+});
+
+test("isEstablishmentPlace distingue un établissement d'un lieu public", () => {
+  assert.equal(isEstablishmentPlace({ kind: "bar" }), true);
+  assert.equal(isEstablishmentPlace({ kind: "sauna", venue: "sauna" }), true);
+  assert.equal(isEstablishmentPlace({ kind: "club", venue: "cruising" }), true);
+  assert.equal(isEstablishmentPlace({ kind: "park" }), false);
+  assert.equal(isEstablishmentPlace({ kind: "cruising", venue: "cruising" }), false);
+});
+
+test("placeFactsFallbackKey suit le type du lieu", () => {
+  assert.match(placeFactsFallbackKey({ kind: "sauna" }), /sauna/);
+  assert.match(placeFactsFallbackKey({ kind: "bar" }), /bar/);
+  assert.match(placeFactsFallbackKey({ kind: "club" }), /club/);
+  assert.match(placeFactsFallbackKey({ kind: "other", venue: "shop" }), /boutique/);
 });

@@ -20,8 +20,16 @@ export function defaultCover(kind: string): string {
   return venueCover(venueOf(kind));
 }
 
-export function listingLabel(listing: MapListing | undefined, verified = false): string {
-  if (listing === "partner") return "Partenaire";
+/** Vrai partenaire payant (futur). Pas le flag `partner` / `map_listing` actuel, ni `partner_until` (offert au lancement). */
+export function isPaidPartner(p: { paid_partner?: boolean | null; stripe_subscription?: string | null } | null | undefined): boolean {
+  if (!p) return false;
+  if (p.paid_partner === true) return true;
+  const sub = (p.stripe_subscription ?? "").trim();
+  return sub.length > 0;
+}
+
+export function listingLabel(listing: MapListing | undefined, verified = false, paid = false): string {
+  if (paid) return "Partenaire";
   if (verified) return "Lieu à découvrir · Vérifié";
   return "Lieu à découvrir";
 }
