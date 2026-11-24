@@ -3,7 +3,7 @@ import { Check, Globe, Loader2, MapPin, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { GoButton } from "./go-sheet";
 import { LinkifiedText } from "./place-links";
-import { t, useLang } from "@/lib/hdar/i18n";
+import { t, tf, useLang } from "@/lib/hdar/i18n";
 import { useOpenAtTop } from "@/lib/hdar/scroll-end";
 import { readImage } from "@/lib/hdar/media";
 import { ensureSession } from "@/lib/hdar/session";
@@ -11,13 +11,13 @@ import { useHdar } from "@/lib/hdar/store";
 import {
   DEMO_METHODS, DEMO_VERIFY_CODE, discoverConfirmCode, discoverDemoActive,
   discoverDemoCard, discoverMethods, discoverOwnerSave, discoverRequestManual, discoverSendCode,
-  emailMatchesWebsite, kindIcon, kindNoun, listingLabel, type DiscoverCard, type DiscoverMethods, type MapListing,
+  defaultCover, emailMatchesWebsite, isGenericPlaceDescription, kindIcon, kindNoun, listingLabel, photoCreditLabel, type DiscoverCard, type DiscoverMethods, type MapListing,
   publicDescription,
 } from "@/lib/hdar/discover";
 import type { PlaceKind, PlaceVenue } from "@/lib/hdar/live";
 import { displayPlaceName, venueColor, venueOf } from "@/lib/hdar/venue";
 import { isPaidPartner } from "@/lib/hdar/discover-utils";
-import { sourceHost, usePlacePhotos } from "@/lib/hdar/place-photos";
+import { usePlacePhotos } from "@/lib/hdar/place-photos";
 
 const field = "w-full rounded-2xl border border-line bg-night px-4 py-3 text-ink outline-none focus:border-signal";
 
@@ -79,7 +79,12 @@ export function DiscoverFiche({
   const badge = isVenue ? listingLabel(place.listing, place.verified, paid) : kindNoun(venue, risk);
   const noun = kindNoun(venue, risk);
   const accent = venueColor(venue);
-  const credit = place.cover_credit || sourceHost(photos[0]?.source_url);
+  const credit = cover ? photoCreditLabel(place.cover_credit, photos[0]?.source_url) : null;
+  const rawDesc = publicDescription(place.description, place.country);
+  const desc = rawDesc && !isGenericPlaceDescription(rawDesc)
+    ? rawDesc
+    : (place.city ? tf("{n} à {n}.", t(noun), place.city) : t(noun));
+  const descIsUnique = !!(rawDesc && !isGenericPlaceDescription(rawDesc));
   const claimable = !paid && !place.verified && !!onClaim && place.kind !== "toilets" && isVenue;
   return (
     <div ref={sheetRef} data-sheet-root data-testid="discover-fiche" className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[88%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface shadow-2xl">
@@ -87,7 +92,7 @@ export function DiscoverFiche({
         {cover ? (
           <img src={cover} alt="" className="size-full object-cover" />
         ) : (
-          <div className="size-full" style={{ background: `radial-gradient(120% 80% at 50% 0%, ${accent}66, transparent 60%), #0b0b12` }} />
+          <img src={defaultCover(venue ?? place.kind)} alt="" className="size-full object-cover" data-testid="place-cover-fallback" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
         <button type="button" aria-label={t("Fermer")} className="absolute top-3 end-3 flex size-10 items-center justify-center rounded-full bg-night/70" onClick={onClose}>
@@ -111,9 +116,9 @@ export function DiscoverFiche({
             <ShieldCheck className="size-3.5" /> {t("Vérifié")}
           </p>
         )}
-        {place.description && (
-          <div translate="no">
-            <LinkifiedText text={place.description} className="whitespace-pre-line text-sm leading-relaxed" />
+        {desc && (
+          <div translate={descIsUnique ? "no" : undefined}>
+            <LinkifiedText text={desc} className="whitespace-pre-line text-sm leading-relaxed" />
           </div>
         )}
         {gallery.length > 0 && (

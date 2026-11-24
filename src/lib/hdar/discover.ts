@@ -5,7 +5,7 @@ import { useHdar } from "./store";
 export {
   DEFAULT_COVERS, RISK_COUNTRIES, defaultCover, isPaidPartner, listingLabel, kindNoun, kindIcon,
   maskEmail, emailDomain, websiteDomain, emailMatchesWebsite, isDisplayableOutreach,
-  publicDescription, type MapListing, type OutreachLike,
+  publicDescription, isGenericPlaceDescription, photoCreditLabel, type MapListing, type OutreachLike,
 } from "./discover-utils";
 import { type MapListing } from "./discover-utils";
 
@@ -236,7 +236,36 @@ const EXTRA: DemoSeed[] = [
     city: "Montpellier",
     address: "10 bis avenue de Lodève, 34070",
     website: "https://konceptsauna.com",
+    hours: "tous les jours 13h–1h",
     description: "Sauna gay aux Arceaux : bar, sauna, hammam, jacuzzi et espaces détente, avec une soirée à thème chaque jour de la semaine (cruising, bears, jeunes, naturiste, blackout…). Gratuit pour les moins de 22 ans.",
+    country: "FR",
+  },
+  {
+    id: "a7222436-514a-4b75-b854-b267b1b17785",
+    kind: "club",
+    venue: "club",
+    name: "The Muse",
+    lat: 39.48581535,
+    lng: -0.37751125693732,
+    city: "Valencia",
+    hours: "viernes, sábado 22:00–04:00",
+    cover_credit: "data.strobomag.com",
+    description: "The Muse es un club situado en Valencia, en 48, Carrer de Ruaya, Valence, 46009. Horario indicado: viernes, sábado 22:00–04:00.",
+    country: "ES",
+  },
+  {
+    id: "c23ca87f-4543-4514-bfc3-632bc57621bf",
+    kind: "sauna",
+    venue: "sauna",
+    name: "Red sauna",
+    lat: 49.3055105,
+    lng: 6.1518485,
+    city: "Uckange",
+    address: "Cour Brasserie",
+    website: "https://www.redsauna.fr/",
+    hours: "dimanche, lundi, samedi 14h–19h",
+    cover_credit: "redsauna.fr",
+    description: "Red sauna est un sauna situé Cour Brasserie,Uckange,57270. On y trouve un hammam. Horaires indiqués : dimanche, lundi, samedi 14h–19h.",
     country: "FR",
   },
 ];
