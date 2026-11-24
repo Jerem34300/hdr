@@ -5,6 +5,7 @@ import {
   defaultCover, isGenericPlaceDescription, photoCreditLabel,
   publicDescription, pickPlaceDescription, websiteDomain,
 } from "./discover-utils.ts";
+import { coverSubtype, coverForPlace } from "./cover-subtype.ts";
 
 test("maskEmail cache le début et garde le domaine", () => {
   assert.equal(maskEmail("contact@lecomptoir.fr"), "c***@lecomptoir.fr");
@@ -142,13 +143,13 @@ test("defaultCover suit le type, sans photo stock", () => {
   assert.equal(defaultCover("shop"), "/places/cover-shop.webp");
   assert.equal(defaultCover("exchange"), "/places/cover-exchange.webp");
   assert.equal(defaultCover("cruising"), "/places/cover-cruising.webp");
-  assert.equal(defaultCover("park"), "/places/cover-outdoor.webp");
-  assert.equal(defaultCover("beach"), "/places/cover-outdoor.webp");
+  assert.equal(defaultCover("park"), "/places/cover-outdoor-park.webp");
+  assert.equal(defaultCover("beach"), "/places/cover-outdoor-beach.webp");
   assert.equal(defaultCover("toilets"), "/places/cover-toilets.webp");
-  assert.equal(defaultCover("station"), "/places/cover-transit.webp");
-  assert.equal(defaultCover("metro"), "/places/cover-transit.webp");
-  assert.equal(defaultCover("bus"), "/places/cover-transit.webp");
-  assert.equal(defaultCover("airport"), "/places/cover-transit.webp");
+  assert.equal(defaultCover("station"), "/places/cover-transit-train.webp");
+  assert.equal(defaultCover("metro"), "/places/cover-transit-metro.webp");
+  assert.equal(defaultCover("bus"), "/places/cover-transit-bus-station.webp");
+  assert.equal(defaultCover("airport"), "/places/cover-transit-airport.webp");
   assert.equal(defaultCover("other"), "/places/cover-other.webp");
   assert.equal(defaultCover("inconnu-xyz"), "/places/cover-other.webp");
   assert.equal(defaultCover(""), "/places/cover-other.webp");
@@ -177,4 +178,32 @@ test("association est un établissement, avec couverture sportive", () => {
   assert.equal(venueOf("association"), "association");
   assert.equal(isEstablishmentPlace({ kind: "association", venue: "association" }), true);
   assert.match(placeFactsFallbackKey({ kind: "association", venue: "association" }), /association/);
+});
+
+test("defaultCover choisit le sous-type (sport, gare, extérieur, bar)", () => {
+  assert.equal(coverSubtype({ kind: "association", name: "Football club Paris arc-en-ciel" }), "football");
+  assert.equal(coverSubtype({ kind: "association", name: "Front runner Paris" }), "running");
+  assert.equal(coverSubtype({ kind: "association", name: "Les Gaillards", description: "Club de rugby inclusif à Paris" }), "rugby");
+  assert.equal(coverSubtype({ kind: "association", id: "0391af6c-c1ef-4bd1-8930-c598e8705428", name: "Paname boxing club" }), "boxing");
+  assert.equal(coverSubtype({ kind: "association", name: "Visible Cycling Club" }), "cycling");
+  assert.equal(defaultCover("association", { name: "Football club Paris arc-en-ciel" }), "/places/cover-sport-football.webp");
+  assert.equal(defaultCover("association", { name: "Front runners Strasbourg" }), "/places/cover-sport-running.webp");
+  assert.equal(coverSubtype({ kind: "station", name: "Gare de Lyon" }), "train");
+  assert.equal(coverSubtype({ kind: "bus", name: "Gare Routière de Nantes" }), "bus-station");
+  assert.equal(coverSubtype({ kind: "metro", name: "Châtelet" }), "metro");
+  assert.equal(coverSubtype({ kind: "metro", name: "Fortunestown Tram Stop" }), "tram");
+  assert.equal(coverSubtype({ kind: "metro", name: "Meyzieu Lycée Beltrame" }), "metro");
+  assert.equal(coverSubtype({ kind: "park", name: "Parc de la Villette" }), "park");
+  assert.equal(coverSubtype({ kind: "park", name: "Jardin du Luxembourg" }), "garden");
+  assert.equal(coverSubtype({ kind: "park", name: "Aire de Pique-nique de la Capitainerie" }), "aire");
+  assert.equal(coverSubtype({ kind: "park", name: "Square Pierre Germain" }), "square");
+  assert.equal(coverSubtype({ kind: "square", name: "Place de la République" }), "square");
+  assert.equal(coverSubtype({ kind: "bar", name: "Aux Trois Petits Cochons" }), "bar");
+  assert.equal(coverSubtype({ kind: "bar", name: "Café Voulez-vous" }), "cafe");
+  assert.equal(coverSubtype({ kind: "bar", name: "Bad Mother Fucker Pub" }), "pub");
+  assert.equal(coverSubtype({ kind: "bar", name: "Cabaret des Merveilles" }), "cabaret");
+  assert.equal(coverSubtype({ kind: "sauna", name: "Sauna Soho" }), "sauna");
+  assert.equal(coverSubtype({ kind: "sauna", name: "Euphoria Spa" }), "spa");
+  assert.equal(coverForPlace({ kind: "inconnu-xyz" }), "/places/cover-other.webp");
+  assert.equal(defaultCover("association"), "/places/cover-association.webp");
 });

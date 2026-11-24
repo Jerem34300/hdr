@@ -1,6 +1,7 @@
 export type MapListing = "discover" | "partner";
 
 import { venueIcon as venueGlyph, venueLabel, venueOf } from "./venue.ts";
+import { coverForPlace, type CoverPlace } from "./cover-subtype.ts";
 
 export const DEFAULT_COVERS: Record<string, string> = {
   bar: "/places/cover-bar.webp",
@@ -30,12 +31,13 @@ export const DEFAULT_COVERS: Record<string, string> = {
 
 export const RISK_COUNTRIES = new Set(["DZ", "MA", "TN", "SN", "CM"]);
 
-/** Couverture illustrée par type (WebP 1200×600 dans /public/places), jamais une photo stock. Type inconnu → cover-other, pas bar. */
-export function defaultCover(kind: string): string {
-  const k = (kind || "").toLowerCase();
-  if (DEFAULT_COVERS[k]) return DEFAULT_COVERS[k];
-  return "/places/cover-other.webp";
+/** Couverture illustrée par sous-type (WebP 1200×600 dans /public/places), jamais une photo stock.
+ *  Choix : sous-type (nom, description, ids) → famille → cover-other. Type inconnu → cover-other, pas bar.
+ */
+export function defaultCover(kind: string, place?: CoverPlace): string {
+  return coverForPlace({ ...place, kind: place?.kind || kind, venue_kind: place?.venue_kind ?? place?.venue ?? null });
 }
+export type { CoverPlace };
 
 /** Vrai partenaire payant (futur). Pas le flag `partner` / `map_listing` actuel, ni `partner_until` (offert au lancement). */
 export function isPaidPartner(p: { paid_partner?: boolean | null; stripe_subscription?: string | null } | null | undefined): boolean {

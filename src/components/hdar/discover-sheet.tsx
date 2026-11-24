@@ -94,7 +94,7 @@ export function DiscoverFiche({
           <img src={cover} alt="" className="size-full object-cover object-top" />
         ) : (
           <img
-            src={defaultCover(venue ?? place.kind)}
+            src={defaultCover(venue ?? place.kind, { id: place.id, kind: place.kind, venue_kind: venue, name: place.name, description: place.description, website: place.website, tags: place.tags })}
             alt=""
             className="size-full object-cover object-top"
             data-testid="place-cover-fallback"
