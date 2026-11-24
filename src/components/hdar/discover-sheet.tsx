@@ -91,11 +91,20 @@ export function DiscoverFiche({
     <div ref={sheetRef} data-sheet-root data-testid="discover-fiche" className="hdar-sheet-up absolute inset-x-0 bottom-0 z-40 max-h-[88%] overflow-y-auto rounded-t-3xl border border-b-0 border-line bg-surface shadow-2xl">
       <div className="relative h-52 w-full overflow-hidden rounded-t-3xl bg-night">
         {cover ? (
-          <img src={cover} alt="" className="size-full object-cover" />
+          <img src={cover} alt="" className="size-full object-cover object-top" />
         ) : (
-          <img src={defaultCover(venue ?? place.kind)} alt="" className="size-full object-cover" data-testid="place-cover-fallback" />
+          <img
+            src={defaultCover(venue ?? place.kind)}
+            alt=""
+            className="size-full object-cover object-top"
+            data-testid="place-cover-fallback"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.src.endsWith("/places/cover-other.svg")) img.src = "/places/cover-other.svg";
+            }}
+          />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-surface to-transparent" />
         <button type="button" aria-label={t("Fermer")} className="absolute top-3 end-3 flex size-10 items-center justify-center rounded-full bg-night/70" onClick={onClose}>
           <X className="size-5" />
         </button>

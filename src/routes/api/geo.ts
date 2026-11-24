@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { isCountryCentroid } from "@/lib/hdar/map-pins";
 
 /** Ville approximative du visiteur, d'après la géolocalisation de Netlify (en-tête x-nf-geo)
  *  ou un en-tête pays CDN (x-nf-country, x-country, cf-ipcountry…).
@@ -37,7 +38,14 @@ export const Route = createFileRoute("/api/geo")({
               lat = Math.round(g.latitude * 10) / 10;
               lng = Math.round(g.longitude * 10) / 10;
             }
-            if (g.city) city = [g.city, g.country?.code && g.country.code !== "FR" ? g.country.code : null].filter(Boolean).join(", ");
+            // Centroïde pays (ex. France → Sarzay) : ville inconnue, ne pas centrer la carte là.
+            if (lat != null && lng != null && isCountryCentroid(lat, lng)) {
+              lat = null;
+              lng = null;
+              city = null;
+            } else if (g.city) {
+              city = [g.city, g.country?.code && g.country.code !== "FR" ? g.country.code : null].filter(Boolean).join(", ");
+            }
           }
         } catch {
           city = null;

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Extérieur">
+  <defs>
+    <linearGradient id="outdoor-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06140c"/>
+      <stop offset="1" stop-color="#0c2414"/>
+    </linearGradient>
+    <radialGradient id="outdoor-glow" cx="50%" cy="32%" r="55%">
+      <stop offset="0" stop-color="#4ADE80" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#4ADE80" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#outdoor-bg)"/>
+  <rect width="1200" height="800" fill="url(#outdoor-glow)"/>
+  <g fill="none" stroke="#4ADE80" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M200 380 Q600 300 1000 380"/>
+    <path d="M600 420 v120"/>
+    <path d="M600 250 l-130 170 h260 Z"/>
+    <path d="M600 200 l-100 140 h200 Z"/>
+  </g>
+  <g fill="none" stroke="#86EFAC" stroke-width="8" stroke-linecap="round">
+    <circle cx="880" cy="160" r="40"/>
+    <path d="M880 100 v20"/>
+    <path d="M880 200 v20"/>
+    <path d="M820 160 h-20"/>
+    <path d="M960 160 h20"/>
+  </g>
+
+</svg>
