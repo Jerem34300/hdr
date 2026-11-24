@@ -1,7 +1,7 @@
 /** Types de lieux commerciaux réellement présents en base (prospection). */
-export type VenueKind = "bar" | "club" | "sauna" | "shop" | "exchange" | "cruising";
+export type VenueKind = "bar" | "club" | "sauna" | "shop" | "exchange" | "cruising" | "association";
 
-export const VENUE_ORDER: VenueKind[] = ["bar", "club", "sauna", "shop", "exchange", "cruising"];
+export const VENUE_ORDER: VenueKind[] = ["bar", "club", "sauna", "shop", "exchange", "cruising", "association"];
 
 /** Couleurs lisibles sur la carte sombre, une teinte par type (partenaire et à découvrir partagent la même). */
 export const VENUE: Record<VenueKind, { label: string; icon: string; color: string; cover: string }> = {
@@ -11,10 +11,12 @@ export const VENUE: Record<VenueKind, { label: string; icon: string; color: stri
   shop: { label: "Boutique", icon: "🛍️", color: "#3DC4F5", cover: "/places/cover-shop.svg" },
   exchange: { label: "Club échangiste", icon: "🔑", color: "#FF7A5C", cover: "/places/cover-exchange.svg" },
   cruising: { label: "Bar cruising", icon: "🔻", color: "#FF8A1F", cover: "/places/cover-cruising.svg" },
+  association: { label: "Association", icon: "🏅", color: "#34D399", cover: "/places/cover-association.svg" },
 };
 
 export function venueOf(kind: string | null | undefined, outreachKind?: string | null): VenueKind {
   const k = (outreachKind || kind || "").toLowerCase();
+  if (k === "association" || k === "sport") return "association";
   if (k === "club-echange" || k === "exchange") return "exchange";
   if (k === "cruising-bar" || k === "cruising") return "cruising";
   if (k === "other" || k === "shop" || k === "sex-shop") return "shop";

@@ -74,10 +74,10 @@ const PUBLIC_KINDS: PlaceKind[] = ["cruising", "beach", "park", "garden", "viewp
 
 /** Bar, club, sauna, boutique : établissement. Bois, parking, plage : lieu public. */
 export function isEstablishmentPlace(place: { kind: PlaceKind; venue?: PlaceVenue | null }): boolean {
-  if (place.kind === "bar" || place.kind === "club" || place.kind === "sauna") return true;
+  if (place.kind === "bar" || place.kind === "club" || place.kind === "sauna" || place.kind === "association") return true;
   if (place.kind === "other") return true;
   const venue = place.venue ?? (PUBLIC_KINDS.includes(place.kind) ? null : venueOf(place.kind));
-  return venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange";
+  return venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || venue === "association";
 }
 
 /** Court texte de repli, selon le type, quand horaires / entrée / soirées manquent. */
@@ -97,6 +97,9 @@ export function placeFactsFallbackKey(place: { kind: PlaceKind; venue?: PlaceVen
   }
   if (venue === "exchange") {
     return "Les horaires et les conditions d'entrée de ce club ne sont pas encore indiqués. Vérifie auprès du lieu avant de te déplacer.";
+  }
+  if (venue === "association") {
+    return "Les horaires et les infos pratiques de cette association ne sont pas encore indiqués. Vérifie auprès du lieu avant de te déplacer.";
   }
   return "Les horaires et les infos pratiques de ce lieu ne sont pas encore indiqués. Vérifie auprès du lieu avant de te déplacer.";
 }

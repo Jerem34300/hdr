@@ -36,6 +36,7 @@ export const PLACE_KINDS: Record<PlaceKind, { label: string; icon: string; color
   bar: { label: "Bar", icon: "🍸", color: "#FF6B9A" },
   club: { label: "Club", icon: "🪩", color: "#8B7CFF" },
   sauna: { label: "Sauna", icon: "♨️", color: "#F5B942" },
+  association: { label: "Association", icon: "🏅", color: "#34D399" },
 };
 const PROPOSABLE: PlaceKind[] = ["park", "garden", "viewpoint", "square", "promenade", "beach", "aire", "cruising", "other"];
 const LAYER_KEY = "hdar-places-layer";
@@ -290,7 +291,7 @@ export function PlaceSheet({ id, onClose }: { id: string; onClose: () => void })
   const risk = locatedInRiskCountry(useCountry.getState().auto, useCountry.getState().cdn);
   const paid = isPaidPartner(p);
   const venue = p.venue ?? venueOf(p.kind);
-  const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || p.listing === "discover" || p.listing === "partner";
+  const isVenue = venue === "bar" || venue === "club" || venue === "sauna" || venue === "shop" || venue === "exchange" || venue === "association" || p.listing === "discover" || p.listing === "partner";
   const claimable = !paid && !p.verified && p.kind !== "toilets" && isVenue;
   return (
     <DiscoverFiche

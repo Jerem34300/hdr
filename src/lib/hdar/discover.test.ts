@@ -163,3 +163,10 @@ test("pickPlaceDescription choisit la langue de l'app, avec repli français", ()
   assert.equal(isGenericPlaceDescription(i18n.fr), false);
   assert.equal(isGenericPlaceDescription("Club à Paris."), true);
 });
+
+test("association est un établissement, avec couverture sportive", () => {
+  assert.equal(defaultCover("association"), "/places/cover-association.svg");
+  assert.equal(venueOf("association"), "association");
+  assert.equal(isEstablishmentPlace({ kind: "association", venue: "association" }), true);
+  assert.match(placeFactsFallbackKey({ kind: "association", venue: "association" }), /association/);
+});
