@@ -5,9 +5,9 @@ import { useHdar } from "./store";
 export {
   DEFAULT_COVERS, RISK_COUNTRIES, defaultCover, isPaidPartner, listingLabel, kindNoun, kindIcon,
   maskEmail, emailDomain, websiteDomain, emailMatchesWebsite, isDisplayableOutreach,
-  publicDescription, isGenericPlaceDescription, photoCreditLabel, type MapListing, type OutreachLike,
+  publicDescription, isGenericPlaceDescription, pickPlaceDescription, photoCreditLabel, type MapListing, type OutreachLike, type PlaceDescriptionI18n,
 } from "./discover-utils";
-import { type MapListing } from "./discover-utils";
+import { type MapListing, type PlaceDescriptionI18n } from "./discover-utils";
 
 export type DiscoverCard = {
   id: string;
@@ -32,6 +32,7 @@ export type DiscoverCard = {
   source?: string;
   source_ref?: string | null;
   country?: string | null;
+  description_i18n?: PlaceDescriptionI18n | null;
 };
 
 export type DiscoverMethods = {
@@ -104,7 +105,7 @@ export function discoverDemoActive(): boolean {
 type DemoSeed = {
   id: string; kind: PlaceKind; name: string; lat: number; lng: number;
   city: string; address?: string; hours?: string; tags?: string[];
-  website?: string; description: string; listing?: MapListing; verified?: boolean;
+  website?: string; description: string; description_i18n?: PlaceDescriptionI18n; listing?: MapListing; verified?: boolean;
   photos?: string[]; country?: string; cover_credit?: string | null; venue?: PlaceVenue;
 };
 
@@ -116,6 +117,7 @@ function cardFrom(s: DemoSeed): DiscoverCard {
     venue,
     name: s.name,
     description: s.description,
+    description_i18n: s.description_i18n,
     lat: s.lat,
     lng: s.lng,
     city: s.city,
@@ -155,7 +157,7 @@ const PARIS: DemoSeed[] = [
   { id: "demo-paris-11", kind: "club", venue: "club", name: "Double jeu", lat: 48.86307, lng: 2.35434, city: "Paris", website: "http://djtp.net/", description: "Club à Paris.", country: "FR" },
   { id: "demo-paris-12", kind: "bar", venue: "bar", name: "Entre Deux Eaux", lat: 48.86386, lng: 2.37195, city: "Paris", address: "45 rue de la Folie Méricourt", website: "http://www.nudebarparis.com", description: "Bar au 45 rue de la Folie Méricourt, à Paris.", country: "FR" },
   { id: "demo-paris-13", kind: "club", venue: "club", name: "Football club Paris arc-en-ciel", lat: 48.86302, lng: 2.35431, city: "Paris", website: "http://fcparisarcenciel.fr", description: "Club à Paris.", country: "FR" },
-  { id: "demo-paris-14", kind: "club", venue: "club", name: "Front runner Paris", lat: 48.86307, lng: 2.35434, city: "Paris", website: "http://frontrunnersparis.org", description: "Club à Paris.", country: "FR" },
+  { id: "demo-paris-14", kind: "club", venue: "club", name: "Front runner Paris", lat: 48.86307, lng: 2.35434, city: "Paris", website: "http://frontrunnersparis.org", description: "Club lesbien et ouvert aux femmes queer, à Paris, depuis 1992. Il se tient au Centre LGBTQI+ Paris Île-de-France.", description_i18n: { fr: "Club lesbien et ouvert aux femmes queer, à Paris, depuis 1992. Il se tient au Centre LGBTQI+ Paris Île-de-France.", en: "A lesbian club, also open to queer women, in Paris, since 1992. It is held at the Centre LGBTQI+ Paris Île-de-France.", es: "Club lésbico y abierto a mujeres queer, en París, desde 1992. Se celebra en el Centre LGBTQI+ Paris Île-de-France.", de: "Lesbischer Club, auch offen für queere Frauen, in Paris, seit 1992. Er findet im Centre LGBTQI+ Paris Île-de-France statt.", it: "Club lesbico e aperto alle donne queer, a Parigi, dal 1992. Si tiene al Centre LGBTQI+ Paris Île-de-France.", pt: "Clube lésbico e aberto a mulheres queer, em Paris, desde 1992. Realiza-se no Centre LGBTQI+ Paris Île-de-France.", ar: "نادٍ للمثليات ومفتوح أيضاً للنساء الكوير، في باريس، منذ 1992. يُقام في مركز LGBTQI+ باريس إيل دو فرانس." }, country: "FR" },
   { id: "demo-paris-15", kind: "club", venue: "club", name: "Gambetta club", lat: 48.85956, lng: 2.40306, city: "Paris", address: "104 Rue de Bagnolet", description: "Club au 104 Rue de Bagnolet, à Paris.", country: "FR" },
   { id: "demo-paris-16", kind: "club", venue: "club", name: "Gibus club", lat: 48.86829, lng: 2.36613, city: "Paris", address: "18 Rue du Faubourg du Temple", website: "http://www.gibus.fr", description: "Club au 18 Rue du Faubourg du Temple, à Paris.", country: "FR" },
   { id: "demo-paris-17", kind: "other", venue: "shop", name: "IEM", lat: 48.85816, lng: 2.35646, city: "Paris", address: "18 Rue Sainte-Croix de la Bretonnerie", website: "https://www.iem.fr", description: "Boutique au 18 Rue Sainte-Croix de la Bretonnerie, à Paris.", country: "FR" },
@@ -237,7 +239,8 @@ const EXTRA: DemoSeed[] = [
     address: "10 bis avenue de Lodève, 34070",
     website: "https://konceptsauna.com",
     hours: "tous les jours 13h–1h",
-    description: "Sauna gay aux Arceaux : bar, sauna, hammam, jacuzzi et espaces détente, avec une soirée à thème chaque jour de la semaine (cruising, bears, jeunes, naturiste, blackout…). Gratuit pour les moins de 22 ans.",
+    description: "Sauna à Montpellier, dans le quartier Arceaux. Avec hammam et jacuzzi. Soirées mixtes le mardi et le vendredi à partir de 20h. Ouvert tous les jours de 13h à 1h.",
+    description_i18n: { fr: "Sauna à Montpellier, dans le quartier Arceaux. Avec hammam et jacuzzi. Soirées mixtes le mardi et le vendredi à partir de 20h. Ouvert tous les jours de 13h à 1h.", en: "Sauna in Montpellier, in the Arceaux district. It has a hammam and a jacuzzi. Mixed nights on Tuesday and Friday from 8 pm. Open every day from 1 pm to 1 am.", es: "Sauna en Montpellier, en el barrio Arceaux. Cuenta con hammam y jacuzzi. Noches mixtas los martes y viernes a partir de las 20:00. Abierto todos los días de 13:00 a 1:00.", de: "Sauna in Montpellier, im Viertel Arceaux. Mit Hammam und Whirlpool. Gemischte Abende dienstags und freitags ab 20 Uhr. Geöffnet täglich von 13:00 bis 1:00.", it: "Sauna a Montpellier, nel quartiere Arceaux. Con hammam e jacuzzi. Sere miste il martedì e il venerdì a partire dalle 20. Aperto tutti i giorni dalle 13:00 alle 1:00.", pt: "Sauna em Montpellier, no bairro Arceaux. Com hammam e jacuzzi. Noites mistas à terça e à sexta a partir das 20h. Aberto todos os dias das 13h às 1h.", ar: "ساونا في مونبلييه، في حي Arceaux. يضم حمام مغربي وجاكوزي. أمسيات مختلطة الثلاثاء والجمعة ابتداءً من الساعة 20. مفتوح كل يوم من 13:00 إلى 1:00." },
     country: "FR",
   },
   {
@@ -250,7 +253,8 @@ const EXTRA: DemoSeed[] = [
     city: "Valencia",
     hours: "viernes, sábado 22:00–04:00",
     cover_credit: "data.strobomag.com",
-    description: "The Muse es un club situado en Valencia, en 48, Carrer de Ruaya, Valence, 46009. Horario indicado: viernes, sábado 22:00–04:00.",
+    description: "Club à Valencia. Ouvert le vendredi et le samedi de 22h à 4h.",
+    description_i18n: { fr: "Club à Valencia. Ouvert le vendredi et le samedi de 22h à 4h.", en: "Club in Valencia. Open Friday and Saturday from 10 pm to 4 am.", es: "Club en Valencia. Abierto viernes y sábado de 22:00 a 4:00.", de: "Club in Valencia. Geöffnet Freitag und Samstag von 22:00 bis 4:00.", it: "Club a Valencia. Aperto venerdì e sabato dalle 22:00 alle 4:00.", pt: "Clube em Valência. Aberto sexta e sábado das 22h às 4h.", ar: "نادٍ في فالنسيا. مفتوح الجمعة والسبت من 22:00 إلى 4:00." },
     country: "ES",
   },
   {
@@ -265,7 +269,8 @@ const EXTRA: DemoSeed[] = [
     website: "https://www.redsauna.fr/",
     hours: "dimanche, lundi, samedi 14h–19h",
     cover_credit: "redsauna.fr",
-    description: "Red sauna est un sauna situé Cour Brasserie,Uckange,57270. On y trouve un hammam. Horaires indiqués : dimanche, lundi, samedi 14h–19h.",
+    description: "Sauna à Uckange. Avec hammam. Ouvert le lundi, le samedi et le dimanche de 14h à 19h.",
+    description_i18n: { fr: "Sauna à Uckange. Avec hammam. Ouvert le lundi, le samedi et le dimanche de 14h à 19h.", en: "Sauna in Uckange. It has a hammam. Open Monday, Saturday and Sunday from 2 pm to 7 pm.", es: "Sauna en Uckange. Cuenta con hammam. Abierto lunes, sábado y domingo de 14:00 a 19:00.", de: "Sauna in Uckange. Mit Hammam. Geöffnet Montag, Samstag und Sonntag von 14:00 bis 19:00.", it: "Sauna a Uckange. Con hammam. Aperto lunedì, sabato e domenica dalle 14:00 alle 19:00.", pt: "Sauna em Uckange. Com hammam. Aberto segunda, sábado e domingo das 14h às 19h.", ar: "ساونا في أوكانج. يضم حمام مغربي. مفتوح الاثنين والسبت والأحد من 14:00 إلى 19:00." },
     country: "FR",
   },
 ];
